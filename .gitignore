@@ -4,7 +4,8 @@ obj/
 out/
 
 # 编译生成的文件
-*.dll
+src/*.dll
+obj/*.dll
 *.exe
 *.pdb
 *.user
