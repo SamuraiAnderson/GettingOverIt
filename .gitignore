@@ -1,0 +1,122 @@
+# C# 编译输出
+bin/
+obj/
+out/
+
+# 编译生成的文件
+*.dll
+*.exe
+*.pdb
+*.user
+*.suo
+*.cache
+*.ilk
+*.log
+[Bb]in
+[Oo]bj
+[Dd]ebug*/
+[Rr]elease*/
+Ankh.NoLoad
+
+# MSBuild 相关
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio 相关
+.vscode
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# MonoDevelop/Xamarin Studio
+*.userprefs
+
+# 构建结果
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet 包
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!packages/build/
+!packages/*/build/
+
+# 测试结果
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Unity/游戏相关
+HitboxDump/
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE 配置（保留有用的配置）
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+
+# 备份文件
+*.bak
+*.backup
+*.old
+
+# 压缩文件
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# 本地配置文件
+appsettings.local.json
+config.local.json
+
+# 证书和密钥
+*.pfx
+*.p12
+*.key
+*.pem
+
+# 游戏特定的输出目录
+/build/
+/dist/

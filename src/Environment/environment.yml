@@ -1,0 +1,16 @@
+name: getting-over-it-analysis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pandas>=1.3.0
+  - numpy>=1.20.0
+  - matplotlib>=3.3.0
+  - seaborn>=0.11.0
+  - scipy>=1.7.0
+  - jupyter
+  - ipykernel
+  - pip
+  - pip:
+    - watchdog

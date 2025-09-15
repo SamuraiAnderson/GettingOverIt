@@ -1,0 +1,79 @@
+<!-- GoiHitboxLogger.csproj ：目标 .NET Framework 3.5 -->
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{12345678-1234-1234-1234-123456789012}</ProjectGuid>
+    <AssemblyName>GoiHitboxLogger</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <RootNamespace>GoiHitboxLogger</RootNamespace>
+    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\$(Configuration)\</IntermediateOutputPath>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <Prefer32Bit>false</Prefer32Bit>
+
+    <!-- 把 GameRoot 改成你的游戏根目录 -->
+    <GameRoot>C:\Users\Symbol\software\game_store\steam\steamapps\common\Getting Over It</GameRoot>
+    <BepInExDir>$(GameRoot)\BepInEx\core</BepInExDir>
+    <GameManagedDir>$(GameRoot)\GettingOverIt_Data\Managed</GameManagedDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Core\GoiHitboxLogger.cs" />
+    <Compile Include="Colliders\HitboxCollector.cs" />
+    <Compile Include="PlayerAnalysis\PlayerAnalyzer.cs" />
+    <Compile Include="Monitoring\StateMonitor.cs" />
+    <Compile Include="Monitoring\ActionMonitor.cs" />
+    <Compile Include="Tracking\ContinuousTracker.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExDir)\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameManagedDir)\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="mscorlib" />
+  </ItemGroup>
+
+  <!-- 编译后自动拷到 BepInEx/plugins -->
+  <Target Name="PostBuild" AfterTargets="Build">
+    <MakeDir Directories="$(GameRoot)\BepInEx\plugins" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameRoot)\BepInEx\plugins" />
+  </Target>
+  
+  <!-- Import the C# targets -->
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

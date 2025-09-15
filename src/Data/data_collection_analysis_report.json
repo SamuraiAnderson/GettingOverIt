@@ -1,0 +1,81 @@
+{
+  "analysis_timestamp": "2025-09-14T23:40:17.044561",
+  "data_summary": {
+    "total_data_points": 469,
+    "time_span_seconds": 15.599999999999998,
+    "sampling_frequency": 30.06410256410257
+  },
+  "analysis_results": {
+    "mouse_features": [
+      "mouseX",
+      "mouseY",
+      "mouseDeltaX",
+      "mouseDeltaY",
+      "mouseMoveDistance",
+      "mouseMoveSpeed"
+    ],
+    "state_features": [
+      "playerX",
+      "playerY",
+      "velocityX",
+      "velocityY",
+      "hammerAngle",
+      "hammerAngularVel",
+      "isGrounded"
+    ],
+    "response_features": [
+      "positionDelta",
+      "velocityDelta",
+      "angleDelta",
+      "physicsResponseDelay"
+    ],
+    "ai_data_structure": {
+      "observation_space": {
+        "player_position": [
+          "playerX",
+          "playerY"
+        ],
+        "player_velocity": [
+          "velocityX",
+          "velocityY"
+        ],
+        "hammer_state": [
+          "hammerAngle",
+          "hammerAngularVel"
+        ],
+        "environment_state": [
+          "isGrounded"
+        ],
+        "total_dimensions": 6
+      },
+      "action_space": {
+        "mouse_position": [
+          "mouseX",
+          "mouseY"
+        ],
+        "mouse_movement": [
+          "mouseDeltaX",
+          "mouseDeltaY"
+        ],
+        "total_dimensions": 4
+      },
+      "reward_features": {
+        "progress_reward": [
+          "positionDelta"
+        ],
+        "stability_reward": [
+          "velocityDelta"
+        ],
+        "control_reward": [
+          "angleDelta"
+        ],
+        "efficiency_reward": [
+          "physicsResponseDelay"
+        ]
+      },
+      "sampling_frequency": 30,
+      "sequence_length": 10,
+      "data_format": "continuous"
+    },
+    "data_quality": {
+      "missing_values": 

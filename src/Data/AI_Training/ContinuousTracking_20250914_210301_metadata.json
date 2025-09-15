@@ -1,0 +1,55 @@
+{
+  "observation_features": [
+    "playerX",
+    "playerY",
+    "velocityX",
+    "velocityY",
+    "hammerAngle",
+    "hammerAngularVel",
+    "isGrounded"
+  ],
+  "action_features": [
+    "mouseDeltaX",
+    "mouseDeltaY"
+  ],
+  "sequence_length": 10,
+  "overlap": 5,
+  "normalization_ranges": {
+    "playerX": [
+      -100,
+      100
+    ],
+    "playerY": [
+      -100,
+      100
+    ],
+    "velocityX": [
+      -50,
+      50
+    ],
+    "velocityY": [
+      -50,
+      50
+    ],
+    "hammerAngle": [
+      -180,
+      180
+    ],
+    "hammerAngularVel": [
+      -1000,
+      1000
+    ],
+    "isGrounded": [
+      0,
+      1
+    ],
+    "mouseDeltaX": [
+      -10,
+      10
+    ],
+    "mouseDeltaY": [
+      -10,
+      10
+    ]
+  }
+}
