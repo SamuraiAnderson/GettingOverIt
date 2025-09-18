@@ -21,17 +21,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- 原版复杂系统（保留备用） -->
     <Compile Include="Core\GoiHitboxLogger.cs" />
     <Compile Include="Colliders\HitboxCollector.cs" />
     <Compile Include="PlayerAnalysis\PlayerAnalyzer.cs" />
     <Compile Include="Monitoring\StateMonitor.cs" />
     <Compile Include="Monitoring\ActionMonitor.cs" />
     <Compile Include="Tracking\ContinuousTracker.cs" />
+    
+    <!-- 自主版本（推荐使用） -->
+    <Compile Include="Core\GoiHitboxLogger_Autonomous.cs" />
+    <Compile Include="Tracking\ContinuousTracker_Autonomous.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="BepInEx">
       <HintPath>$(BepInExDir)\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExDir)\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(GameManagedDir)\UnityEngine.dll</HintPath>

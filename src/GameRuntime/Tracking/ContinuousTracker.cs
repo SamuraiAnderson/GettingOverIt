@@ -564,8 +564,17 @@ namespace GoiHitboxLogger
 		/// </summary>
 		public static void SetSamplingRate(float frequency)
 		{
-			trackingInterval = 1f / Mathf.Clamp(frequency, 1f, 200f); // 1-200Hz
-			Debug.Log($"📊 采样频率已设置为: {frequency:F0}Hz (间隔{trackingInterval * 1000f:F1}ms)");
+			// 在自动化采集模式下强制使用30Hz
+			if (autoCollectionMode)
+			{
+				trackingInterval = 1f / 30f; // 固定30Hz
+				Debug.Log($"🤖 自动化模式: 强制使用30Hz采样频率 (间隔{trackingInterval * 1000f:F1}ms)");
+			}
+			else
+			{
+				trackingInterval = 1f / Mathf.Clamp(frequency, 1f, 200f); // 1-200Hz
+				Debug.Log($"📊 采样频率已设置为: {frequency:F0}Hz (间隔{trackingInterval * 1000f:F1}ms)");
+			}
 		}
 
 		/// <summary>
