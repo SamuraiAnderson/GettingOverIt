@@ -1,0 +1,6 @@
+{
+  "game_exe_path": "C:/Users/Symbol/software/game_store/steam/steamapps/common/Getting Over It/GettingOverIt.exe",
+  "game_data_path": "C:/Users/Symbol/software/game_store/steam/steamapps/common/Getting Over It/GoiData",
+  "startup_wait": 15,
+  "notes": "游戏会自动采集并停止，无需手动触发F8"
+}

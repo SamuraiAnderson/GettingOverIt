@@ -5,7 +5,6 @@ out/
 
 # 编译生成的文件
 src/*.dll
-obj/*.dll
 *.exe
 *.pdb
 *.user
@@ -121,3 +120,5 @@ config.local.json
 # 游戏特定的输出目录
 /build/
 /dist/
+
+__pycache__

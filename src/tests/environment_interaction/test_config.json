@@ -1,0 +1,12 @@
+{
+  "game_exe_path": "C:/Program Files/Steam/steamapps/common/Getting Over It/Getting Over It.exe",
+  "game_data_dir": "C:/Program Files/Steam/steamapps/common/Getting Over It/GoiData",
+  "test_duration": 5.0,
+  "action_interval": 0.1,
+  "action_duration": 3.0,
+  "num_episodes": 10,
+  "num_trials": 5,
+  "checkpoint_intervals": [0, 2, 5, 8, 10],
+  "consistency_threshold": 1e-5
+}
+

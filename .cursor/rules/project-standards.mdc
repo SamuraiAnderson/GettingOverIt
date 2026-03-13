@@ -1,0 +1,29 @@
+---
+description: Getting Over It项目的编码标准和组织规则
+globs: 
+alwaysApply: true
+---
+
+# Project rules for Cursor
+
+- Organization: group code by feature, not by layer or language.
+  - src/GameRuntime/Core: plugin entry and orchestration only
+  - src/GameRuntime/Monitoring: frame-based monitors (StateMonitor, ActionMonitor)
+  - src/GameRuntime/Tracking: high-frequency data capture (ContinuousTracker)
+  - src/GameRuntime/PlayerAnalysis: player inspection and report
+  - src/GameRuntime/Colliders: collider collection and export
+  - src/Python: orchestration and analysis scripts
+  - src/Data: IPC signals and generated datasets
+  - src/Environment: env and dependency setup
+  - src/Documentation: human docs; each module has its own readme.md
+
+- Module docs: every feature directory must contain readme.md explaining:
+  - purpose, inputs/outputs, dependencies, and maintenance notes
+
+- File moves: when relocating files, update project files (e.g., csproj) accordingly.
+
+- Paths: prefer Path.Combine nesting for 2-arg overload compatibility.
+
+- Logging: use concise, high-signal logs; avoid noisy loops in Update.
+
+- Indentation/style: preserve existing style; do not reformat unrelated code.

@@ -1,0 +1,115 @@
+<!-- GameRuntime_v2.csproj: 新架构项目文件 -->
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{87654321-4321-4321-4321-210987654321}</ProjectGuid>
+    <AssemblyName>GameRuntime_v2</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <RootNamespace>GoiRuntime</RootNamespace>
+    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\$(Configuration)\</IntermediateOutputPath>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <Prefer32Bit>false</Prefer32Bit>
+
+    <!-- 游戏根目录 -->
+    <GameRoot>C:\Users\Symbol\software\game_store\steam\steamapps\common\Getting Over It</GameRoot>
+    <BepInExDir>$(GameRoot)\BepInEx\core</BepInExDir>
+    <GameManagedDir>$(GameRoot)\GettingOverIt_Data\Managed</GameManagedDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Core: 核心基础设施 -->
+    <Compile Include="Core\ModeManager.cs" />
+    <Compile Include="Core\GameRuntimeManager.cs" />
+    
+    <!-- Core/Interfaces: 接口定义 -->
+    <Compile Include="Core\Interfaces\IGameControl.cs" />
+    <Compile Include="Core\Interfaces\IPlayerServices.cs" />
+    <Compile Include="Core\Interfaces\ICommunication.cs" />
+    <Compile Include="Core\Interfaces\IColliderService.cs" />
+    <Compile Include="Core\Interfaces\ITesting.cs" />
+    
+    <!-- Core/Services: 核心服务实现 -->
+    <Compile Include="Core\Services\GameControlService.cs" />
+    
+    <!-- Core/Events: 事件系统 -->
+    <Compile Include="Core\Events\EventBus.cs" />
+    <Compile Include="Core\Events\GameEvents.cs" />
+    
+    <!-- Core/Utilities: 工具类 -->
+    <Compile Include="Core\Utilities\ReflectionHelper.cs" />
+    <Compile Include="Core\Utilities\InputValidator.cs" />
+    <Compile Include="Core\Utilities\PathManager.cs" />
+    <Compile Include="Core\Utilities\SignalFileHelper.cs" />
+    
+    <!-- Core/Configuration: 配置管理 -->
+    <Compile Include="Core\Configuration\RuntimeConfig.cs" />
+    
+    <!-- ColliderCollection: 碰撞箱采集服务 -->
+    <Compile Include="ColliderCollection\ColliderCollectorBase.cs" />
+    <Compile Include="ColliderCollection\EnvironmentColliderService.cs" />
+    <Compile Include="ColliderCollection\PlayerColliderService.cs" />
+    <Compile Include="ColliderCollection\ColliderDataFormatter.cs" />
+    
+    <!-- PlayerControl: Player 控制服务 -->
+    <Compile Include="PlayerControl\PlayerInputService.cs" />
+    <Compile Include="PlayerControl\PlayerStateService.cs" />
+    <Compile Include="PlayerControl\PlayerDuplicateManager.cs" />
+    
+    <!-- Testing: 测试工具 -->
+    <Compile Include="Testing\PlayerDebugTool.cs" />
+    <Compile Include="Testing\InputCharacteristicsTest.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BepInEx 引用 -->
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExDir)\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExDir)\0Harmony.dll</HintPath>
+    </Reference>
+    
+    <!-- Unity 引用 -->
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameManagedDir)\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(GameManagedDir)\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    
+    <!-- .NET 引用 -->
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="mscorlib" />
+  </ItemGroup>
+
+  <!-- 编译后自动拷到 BepInEx/plugins -->
+  <Target Name="PostBuild" AfterTargets="Build">
+    <MakeDir Directories="$(GameRoot)\BepInEx\plugins" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameRoot)\BepInEx\plugins" />
+    <Message Text="✅ 已部署到: $(GameRoot)\BepInEx\plugins\$(TargetFileName)" Importance="high" />
+  </Target>
+  
+  <!-- Import the C# targets -->
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
+
