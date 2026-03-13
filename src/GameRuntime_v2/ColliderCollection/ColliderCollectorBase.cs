@@ -168,23 +168,6 @@ namespace GoiRuntime.ColliderCollection
 			return allVertices.ToArray();
 		}
 
-		/// <summary>
-		/// 获取 GameObject 的完整路径
-		/// </summary>
-		protected string GetGameObjectPath(GameObject obj)
-		{
-			string path = obj.name;
-			Transform parent = obj.transform.parent;
-
-			while (parent != null)
-			{
-				path = parent.name + "/" + path;
-				parent = parent.parent;
-			}
-
-			return path;
-		}
-
 		#endregion
 
 		#region 数据导出
@@ -240,12 +223,12 @@ namespace GoiRuntime.ColliderCollection
 				PathManager.EnsureDirectory(Path.GetDirectoryName(filePath));
 				File.WriteAllText(filePath, sb.ToString());
 
-				Debug.Log($"✅ 碰撞箱数据已导出: {filePath}");
+				Debug.Log($"碰撞箱数据已导出: {filePath}");
 				return filePath;
 			}
 			catch (System.Exception e)
 			{
-				Debug.LogError($"❌ 导出碰撞箱数据失败: {e.Message}");
+				Debug.LogError($"导出碰撞箱数据失败: {e.Message}");
 				return null;
 			}
 		}

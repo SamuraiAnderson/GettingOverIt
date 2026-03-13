@@ -9,25 +9,27 @@ namespace GoiRuntime.Testing
 	/// Player 调试工具
 	/// 提供热键调试功能，使用 PlayerControl 和 GameControl 服务
 	/// </summary>
-	public class PlayerDebugTool
+	public class PlayerDebugTool : IDebugTool
 	{
 		private PlayerInputService inputService;
 		private PlayerStateService stateService;
 		private PlayerColliderService colliderService;
 		private IGameControlService gameControl;
 		
-		// 复制体管理器
 		private PlayerDuplicateManager duplicateManager;
-		
-		// 原始输入特性测试（用于比较）
 		private InputCharacteristicsTest inputTest;
 		
-		// 单步测试状态
 		private bool stepTestActive = false;
 		private int stepTestPhase = 0;
 		private PlayerState stepTestS0;
 		
 		private bool isInitialized = false;
+
+		public string ToolName => "PlayerDebugTool";
+		public bool IsEnabled { get; private set; } = true;
+		public void Enable() => IsEnabled = true;
+		public void Disable() => IsEnabled = false;
+		public void OnGUI() { }
 		
 		/// <summary>
 		/// 初始化调试工具
@@ -53,7 +55,7 @@ namespace GoiRuntime.Testing
 				inputTest = new InputCharacteristicsTest();
 				inputTest.Initialize(gameControl, inputService, stateService);
 				
-				Debug.Log("✅ PlayerDebugTool 初始化成功");
+				Debug.Log("PlayerDebugTool 初始化成功");
 				PrintHelp();
 			}
 			
@@ -128,7 +130,7 @@ namespace GoiRuntime.Testing
 						Debug.Log($"Tip 位置变化: Δx={dTipX:F4}, Δy={dTipY:F4}");
 						
 						float totalDelta = Mathf.Abs(dx) + Mathf.Abs(dy) + Mathf.Abs(dAngle) + Mathf.Abs(dTipX) + Mathf.Abs(dTipY);
-						Debug.Log($"总变化量: {totalDelta:F4} {(totalDelta > 0.01f ? "✓ 有效" : "✗ 无变化")}");
+						Debug.Log($"总变化量: {totalDelta:F4} {(totalDelta > 0.01f ? "(有效)" : "(无变化)")}");
 						
 						stepTestActive = false;
 						stepTestPhase = 0;
@@ -257,25 +259,25 @@ namespace GoiRuntime.Testing
 		{
 			if (!gameControl.IsPaused)
 			{
-				Debug.LogWarning("⚠️ 请先按 F5 暂停游戏");
+				Debug.LogWarning("请先按 F5 暂停游戏");
 				return;
 			}
 			
 			if (stateService == null || !stateService.IsReady)
 			{
-				Debug.LogWarning("⚠️ PlayerStateService 未就绪");
+				Debug.LogWarning("PlayerStateService 未就绪");
 				return;
 			}
 			
 			if (inputService == null || !inputService.IsReady)
 			{
-				Debug.LogWarning("⚠️ PlayerInputService 未就绪");
+				Debug.LogWarning("PlayerInputService 未就绪");
 				return;
 			}
 			
 			if (stepTestActive)
 			{
-				Debug.LogWarning("⚠️ 上一次测试还未完成");
+				Debug.LogWarning("上一次测试还未完成");
 				return;
 			}
 			
@@ -344,7 +346,7 @@ namespace GoiRuntime.Testing
 				duplicateManager = new PlayerDuplicateManager();
 				if (!duplicateManager.Initialize())
 				{
-					Debug.LogError("❌ 复制体管理器初始化失败");
+					Debug.LogError("复制体管理器初始化失败");
 					return;
 				}
 			}
@@ -352,7 +354,7 @@ namespace GoiRuntime.Testing
 			// 如果已有复制体，先销毁
 			if (duplicateManager.GetDuplicateCount() > 0)
 			{
-				Debug.Log("⚠️ 已存在复制体，先销毁后重新创建");
+				Debug.Log("已存在复制体，先销毁后重新创建");
 				duplicateManager.DestroyAll();
 			}
 			
@@ -361,7 +363,7 @@ namespace GoiRuntime.Testing
 			
 			if (success)
 			{
-				Debug.Log("✅ 复制体创建成功！按 F10 设置不同输入");
+				Debug.Log("复制体创建成功！按 F10 设置不同输入");
 				duplicateManager.PrintStatus();
 			}
 		}
@@ -373,7 +375,7 @@ namespace GoiRuntime.Testing
 		{
 			if (duplicateManager == null || duplicateManager.GetDuplicateCount() == 0)
 			{
-				Debug.LogWarning("⚠️ 请先按 F9 创建复制体");
+				Debug.LogWarning("请先按 F9 创建复制体");
 				return;
 			}
 			
@@ -387,7 +389,7 @@ namespace GoiRuntime.Testing
 			
 			duplicateManager.SetInputForAll(inputs);
 			
-			Debug.Log("✅ 已为复制体设置不同输入:");
+			Debug.Log("已为复制体设置不同输入:");
 			Debug.Log("  #0: (50, 0) - 向右");
 			Debug.Log("  #1: (-50, 0) - 向左");
 			Debug.Log("  #2: (0, 50) - 向上");
@@ -400,7 +402,7 @@ namespace GoiRuntime.Testing
 		{
 			if (duplicateManager == null || duplicateManager.GetDuplicateCount() == 0)
 			{
-				Debug.LogWarning("⚠️ 没有复制体，请先按 F9 创建");
+				Debug.LogWarning("没有复制体，请先按 F9 创建");
 				return;
 			}
 			

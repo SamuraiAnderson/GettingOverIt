@@ -51,7 +51,7 @@ namespace GoiRuntime.PlayerControl
 		#region IPlayerStateService 实现
 		
 		/// <summary>
-		/// 初始化服务
+		/// 初始化服务（自动查找场景中名为 "Player" 的对象）
 		/// </summary>
 		public bool Initialize()
 		{
@@ -61,7 +61,16 @@ namespace GoiRuntime.PlayerControl
 				return true;
 			}
 			
-			return FindGameComponents();
+			return FindGameComponents(null);
+		}
+
+		/// <summary>
+		/// 初始化服务并绑定到指定 GameObject（用于复制体）
+		/// </summary>
+		public bool InitializeFor(GameObject targetPlayer)
+		{
+			isInitialized = false;
+			return FindGameComponents(targetPlayer);
 		}
 		
 		/// <summary>
@@ -84,12 +93,11 @@ namespace GoiRuntime.PlayerControl
 		}
 		
 		/// <summary>
-		/// 获取状态数组（用于 UDP 发送）
+		/// 获取状态数组（29 维浮点向量，用于 TCP 步进回包）
 		/// </summary>
 		public float[] GetStateArray()
 		{
-			PlayerState state = GetCurrentState();
-			return StateToArray(state);
+			return GetCurrentState().ToFloatArray();
 		}
 		
 		#endregion
@@ -192,67 +200,25 @@ namespace GoiRuntime.PlayerControl
 			return state;
 		}
 		
-		/// <summary>
-		/// 将状态转换为数组（39 个浮点数）
-		/// </summary>
-		private float[] StateToArray(PlayerState state)
-		{
-			return new float[]
-			{
-				// Player 主体 (0-4)
-				state.playerX, state.playerY,
-				state.velocityX, state.velocityY,
-				state.angularVelocity,
-				
-				// Hub (5-9)
-				state.hubX, state.hubY,
-				state.hubVelX, state.hubVelY,
-				state.hubAngle,
-				
-				// Slider (10-14)
-				state.sliderX, state.sliderY,
-				state.sliderVelX, state.sliderVelY,
-				state.sliderAngle,
-				
-				// Handle (15-18)
-				state.handleX, state.handleY,
-				state.handleVelX, state.handleVelY,
-				
-				// PoleMiddle (19-22)
-				state.poleX, state.poleY,
-				state.poleVelX, state.poleVelY,
-				
-				// Tip (23-26)
-				state.tipX, state.tipY,
-				state.tipVelX, state.tipVelY,
-				
-				// 额外状态 (27-38)
-				state.hammerAngle,
-				state.timestamp,
-				0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f  // 预留位
-			};
-		}
-		
 		#endregion
 		
 		#region 组件查找
 		
 		/// <summary>
-		/// 查找游戏组件
+		/// 查找游戏组件；targetPlayer 为 null 时自动 Find("Player")
 		/// </summary>
-		private bool FindGameComponents()
+		private bool FindGameComponents(GameObject targetPlayer)
 		{
-			Debug.Log("🔍 查找 Player 组件...");
-			
-			player = GameObject.Find("Player");
+			player = targetPlayer != null ? targetPlayer : GameObject.Find("Player");
 			if (player == null)
 			{
-				Debug.LogError("❌ 未找到 Player 对象");
+				Debug.LogError("PlayerStateService: 未找到 Player 对象");
 				return false;
 			}
+
+			Debug.Log($"PlayerStateService: 绑定到 {player.name}");
 			
-			Debug.Log("✅ 找到 Player 对象");
-			
+				
 			// Player 主体组件
 			playerTransform = player.transform;
 			playerRigidbody = player.GetComponent<Rigidbody2D>();
@@ -301,7 +267,7 @@ namespace GoiRuntime.PlayerControl
 				potCollider = potColliderTransform.GetComponent<PolygonCollider2D>();
 			}
 			
-			Debug.Log($"✅ 组件查找完成 - Hub:{hubRigidbody != null}, Slider:{sliderRigidbody != null}, Tip:{tipRigidbody != null}");
+			Debug.Log($"组件查找完成 - Hub:{hubRigidbody != null}, Slider:{sliderRigidbody != null}, Tip:{tipRigidbody != null}");
 			
 			isInitialized = playerRigidbody != null;
 			return isInitialized;

@@ -36,7 +36,7 @@ namespace GoiRuntime.PlayerControl
 		#region IPlayerInputService 实现
 		
 		/// <summary>
-		/// 初始化服务
+		/// 初始化服务（自动查找场景中名为 "Player" 的对象）
 		/// </summary>
 		public bool Initialize()
 		{
@@ -46,7 +46,16 @@ namespace GoiRuntime.PlayerControl
 				return true;
 			}
 			
-			return InitializePlayerControl();
+			return InitializePlayerControl(null);
+		}
+
+		/// <summary>
+		/// 初始化服务并绑定到指定 GameObject（用于复制体）
+		/// </summary>
+		public bool InitializeFor(GameObject targetPlayer)
+		{
+			isInitialized = false;
+			return InitializePlayerControl(targetPlayer);
 		}
 		
 		/// <summary>
@@ -156,31 +165,30 @@ namespace GoiRuntime.PlayerControl
 		#region 初始化
 		
 		/// <summary>
-		/// 初始化 Player 控制
+		/// 初始化 Player 控制；targetPlayer 为 null 时自动 Find("Player")
 		/// </summary>
-		private bool InitializePlayerControl()
+		private bool InitializePlayerControl(GameObject targetPlayer)
 		{
 			try
 			{
-				// 查找 Player
-				playerObject = GameObject.Find("Player");
+				playerObject = targetPlayer != null ? targetPlayer : GameObject.Find("Player");
 				if (playerObject == null)
 				{
-					Debug.LogWarning("⚠️ 未找到 Player 对象");
+					Debug.LogWarning("PlayerInputService: 未找到 Player 对象");
 					return false;
 				}
-				
-				Debug.Log($"✅ 找到 Player: {playerObject.name}");
+
+				Debug.Log($"PlayerInputService: 绑定到 {playerObject.name}");
 				
 				// 获取 PlayerControl 组件
 				playerControlComponent = playerObject.GetComponent("PlayerControl");
 				if (playerControlComponent == null)
 				{
-					Debug.LogError("❌ 未找到 PlayerControl 组件");
-					return false;
-				}
-				
-				Debug.Log($"✅ 找到 PlayerControl 组件");
+			Debug.LogError("未找到 PlayerControl 组件");
+				return false;
+			}
+
+			Debug.Log($"找到 PlayerControl 组件");
 				
 				// 反射获取字段
 				Type playerControlType = playerControlComponent.GetType();
@@ -193,28 +201,21 @@ namespace GoiRuntime.PlayerControl
 				
 				if (mouseInputField == null)
 				{
-					Debug.LogError("❌ 未找到 mouseInput 字段");
-					return false;
-				}
-				
-				Debug.Log("✅ 成功获取 mouseInput 字段");
-				
-				if (inputEnabledField != null)
-				{
-					Debug.Log("✅ 成功获取 input_enabled 字段");
-				}
-				else
-				{
-					Debug.LogWarning("⚠️ 未找到 input_enabled 字段（可能不需要）");
-				}
-				
-				isInitialized = true;
-				Debug.Log("🎉 PlayerInputService 初始化完成");
-				return true;
+			Debug.LogError("未找到 mouseInput 字段");
+				return false;
 			}
-			catch (Exception e)
-			{
-				Debug.LogError($"❌ 初始化失败: {e.Message}");
+
+			Debug.Log("成功获取 mouseInput 字段");
+
+			if (inputEnabledField == null)
+				Debug.LogWarning("未找到 input_enabled 字段（可能不需要）");
+
+			isInitialized = true;
+			return true;
+		}
+		catch (Exception e)
+		{
+			Debug.LogError($"PlayerInputService 初始化失败: {e.Message}");
 				Debug.LogError($"堆栈跟踪: {e.StackTrace}");
 				return false;
 			}

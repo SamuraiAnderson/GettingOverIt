@@ -1,29 +1,7 @@
 {
-  "external_test_commands": {
-    "file_path": "src/Data/input_commands.csv",
-    "test_interval": 5,
-    "target_fps": 60
-  },
-  "training": {
-    "episodes": 10,
-    "horizon": 1,
-    "action_amp": 40.0,
-    "seed": 42,
-    "total_steps": 5,
-    "logdir": "runs/sac_goi_5s",
-    "learning_rate": 0.0003,
-    "batch_size": 60,
-    "max_train_time": 0
-  },
-  "pipeline": {
-    "use_external_generation": false
-  },
-  "data": {
-    "archive_runs": true,
-    "dataset_root": "src/Data/Datasets"
-  },
   "game": {
     "executable_path": "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GettingOverIt.exe",
     "max_execution_time": 300
-  }
+  },
+  "tcp_port": 9000
 }

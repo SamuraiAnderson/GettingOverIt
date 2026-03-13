@@ -1,0 +1,221 @@
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using UnityEngine;
+using GoiRuntime.Core.Interfaces;
+
+namespace GoiRuntime.Communication
+{
+	/// <summary>
+	/// TCP 阻塞步进服务器
+	///
+	/// 线路协议（小端二进制）：
+	///   Python → C#  RESET: [cmd:1B='R']
+	///   Python → C#  STEP:  [cmd:1B='S'][n:1B][actions: n×2×4B]
+	///   Python → C#  CLOSE: [cmd:1B='X']
+	///
+	///   C# → Python  STATE: [n:1B][states: n×29×4B][dones: n×1B]
+	///
+	/// 线程模型：
+	///   - 后台线程（_bgThread）：阻塞等待 Python 命令，写入 _pendingCommand，设置 _commandReady
+	///   - Unity 主线程协程：轮询 TryGetCommand()，执行物理步进后调用 SendResponse()
+	///   - 两方向通过 ManualResetEventSlim 和 volatile 变量交换，不需要锁
+	/// </summary>
+	public class TcpStepServer : IStepServer
+	{
+		private readonly int _stateDim;
+
+		private TcpListener _listener;
+		private TcpClient  _client;
+		private NetworkStream _stream;
+		private Thread _bgThread;
+
+		private volatile bool _running;
+		private volatile bool _connected;
+
+		public TcpStepServer(int stateDim = 29)
+		{
+			_stateDim = stateDim > 0 ? stateDim : 29;
+		}
+
+		// 主线程 ↔ 后台线程共享的命令槽
+		private StepCommand _pendingCommand;
+		private readonly ManualResetEventSlim _commandReady  = new ManualResetEventSlim(false);
+		private readonly ManualResetEventSlim _responseSent  = new ManualResetEventSlim(true);
+
+		// 发送缓冲区（在主线程写好，后台线程读取发出）
+		private byte[] _responseBytes;
+		private readonly ManualResetEventSlim _responseReady = new ManualResetEventSlim(false);
+
+		public bool IsRunning   => _running;
+		public bool IsConnected => _connected;
+
+		// ── 公共 API ──────────────────────────────────────────────
+
+		public void StartListening(int port)
+		{
+			_running = true;
+			_listener = new TcpListener(IPAddress.Loopback, port);
+			_listener.Start();
+			Debug.Log($"[TcpStepServer] 监听 127.0.0.1:{port}，等待 Python 连接...");
+
+			_bgThread = new Thread(BackgroundLoop) { IsBackground = true, Name = "TcpStepServer-BG" };
+			_bgThread.Start();
+		}
+
+		public void Stop()
+		{
+			_running = false;
+
+			// 解除后台线程可能的阻塞
+			_commandReady.Set();
+			_responseReady.Set();
+
+			try { _stream?.Close(); } catch { }
+			try { _client?.Close(); } catch { }
+			try { _listener?.Stop(); } catch { }
+
+			_bgThread?.Join(1000);
+			_connected = false;
+			Debug.Log("[TcpStepServer] 已停止");
+		}
+
+		/// <summary>
+		/// Unity 主线程（协程）调用：非阻塞检查是否有新命令
+		/// </summary>
+		public bool TryGetCommand(out StepCommand command)
+		{
+			if (_commandReady.IsSet)
+			{
+				command = _pendingCommand;
+				_commandReady.Reset();
+				return true;
+			}
+			command = default;
+			return false;
+		}
+
+		/// <summary>
+		/// Unity 主线程（协程）调用：在物理步进完成后，将状态打包发出
+		/// </summary>
+		public void SendResponse(StepResponse response)
+		{
+			if (!_connected) return;
+
+		// 编码：[n:1B][states: n×stateDim×4B][dones: n×1B]
+		int n = response.Dones?.Length ?? 0;
+		byte[] buf = new byte[1 + n * _stateDim * 4 + n];
+			int offset = 0;
+
+			buf[offset++] = (byte)n;
+
+			for (int i = 0; i < n; i++)
+			{
+				for (int j = 0; j < _stateDim; j++)
+				{
+					float v = (response.States != null && i * _stateDim + j < response.States.Length)
+						? response.States[i * _stateDim + j] : 0f;
+					byte[] fb = BitConverter.GetBytes(v);
+					if (!BitConverter.IsLittleEndian) Array.Reverse(fb);
+					Buffer.BlockCopy(fb, 0, buf, offset, 4);
+					offset += 4;
+				}
+				buf[offset++] = (response.Dones != null && i < response.Dones.Length && response.Dones[i])
+					? (byte)1 : (byte)0;
+			}
+
+			// 传给后台线程发送（避免在主线程阻塞 socket write）
+			_responseBytes = buf;
+			_responseReady.Set();
+		}
+
+		// ── 后台线程 ──────────────────────────────────────────────
+
+		private void BackgroundLoop()
+		{
+			try
+			{
+				// 等待 Python 连接
+				_client = _listener.AcceptTcpClient();
+				_client.NoDelay = true;
+				_stream = _client.GetStream();
+				_connected = true;
+				Debug.Log("[TcpStepServer] Python 已连接");
+
+				while (_running && _connected)
+				{
+					// --- 读取命令 ---
+					int cmdByte = _stream.ReadByte();
+					if (cmdByte < 0) break;  // 连接关闭
+
+					CommandType cmdType = (CommandType)cmdByte;
+					StepCommand cmd = new StepCommand { Type = cmdType };
+
+					if (cmdType == CommandType.Step)
+					{
+						// 读 n（agent 数量）
+						int n = _stream.ReadByte();
+						if (n < 0) break;
+
+						// 读 n×2 个 float（actions）
+						int actionBytes = n * 2 * 4;
+						byte[] actionBuf = ReadExact(actionBytes);
+						if (actionBuf == null) break;
+
+						float[] actions = new float[n * 2];
+						for (int i = 0; i < actions.Length; i++)
+						{
+							actions[i] = BitConverter.ToSingle(actionBuf, i * 4);
+						}
+						cmd.Actions = actions;
+					}
+
+					// --- 通知主线程 ---
+					_pendingCommand = cmd;
+					_responseReady.Reset();
+					_commandReady.Set();
+
+					if (cmdType == CommandType.Close) break;
+
+					// --- 等待主线程执行完物理步进并准备好回包 ---
+					_responseReady.Wait();
+					if (!_running) break;
+
+					// --- 发送回包 ---
+					byte[] resp = _responseBytes;
+					if (resp != null)
+					{
+						_stream.Write(resp, 0, resp.Length);
+						_stream.Flush();
+					}
+				}
+			}
+			catch (Exception e) when (_running)
+			{
+				Debug.LogError($"[TcpStepServer] 后台线程异常: {e.Message}");
+			}
+			finally
+			{
+				_connected = false;
+				Debug.Log("[TcpStepServer] 后台线程退出");
+			}
+		}
+
+		/// <summary>
+		/// 从 stream 精确读取 count 字节，连接断开时返回 null
+		/// </summary>
+		private byte[] ReadExact(int count)
+		{
+			byte[] buf = new byte[count];
+			int received = 0;
+			while (received < count)
+			{
+				int n = _stream.Read(buf, received, count - received);
+				if (n <= 0) return null;
+				received += n;
+			}
+			return buf;
+		}
+	}
+}

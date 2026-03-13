@@ -44,24 +44,9 @@ namespace GoiRuntime.Core.Configuration
 		#region 通信配置
 
 		/// <summary>
-		/// UDP 接收主机地址
+		/// TCP 步进服务器监听端口（Python 连接此端口进行帧级别交互）
 		/// </summary>
-		public string receiveHost = "localhost";
-
-		/// <summary>
-		/// UDP 接收端口（接收动作）
-		/// </summary>
-		public int receivePort = 12345;
-
-		/// <summary>
-		/// UDP 发送主机地址
-		/// </summary>
-		public string sendHost = "localhost";
-
-		/// <summary>
-		/// UDP 发送端口（发送状态）
-		/// </summary>
-		public int sendPort = 12346;
+		public int tcpPort = 9000;
 
 		#endregion
 
@@ -70,7 +55,7 @@ namespace GoiRuntime.Core.Configuration
 		/// <summary>
 		/// 状态维度（每个复制体的浮点数数量）
 		/// </summary>
-		public int stateDimension = 39;
+		public int stateDimension = 29;
 
 		/// <summary>
 		/// 动作维度（每个复制体的动作数量）
@@ -78,9 +63,9 @@ namespace GoiRuntime.Core.Configuration
 		public int actionDimension = 2;
 
 		/// <summary>
-		/// 更新频率 (Hz)
+		/// 每个 RL step 推进的物理帧数
 		/// </summary>
-		public int updateFrequency = 40;
+		public int stepFrames = 1;
 
 		#endregion
 
@@ -137,21 +122,6 @@ namespace GoiRuntime.Core.Configuration
 		/// 是否启用调试日志
 		/// </summary>
 		public bool enableDebugLogs = true;
-
-		/// <summary>
-		/// 是否显示 GUI
-		/// </summary>
-		public bool showGUI = true;
-
-		/// <summary>
-		/// GUI 显示位置 X
-		/// </summary>
-		public float guiPositionX = 10f;
-
-		/// <summary>
-		/// GUI 显示位置 Y
-		/// </summary>
-		public float guiPositionY = 10f;
 
 		#endregion
 
@@ -261,22 +231,6 @@ namespace GoiRuntime.Core.Configuration
 		#region 辅助方法
 
 		/// <summary>
-		/// 获取接收端点字符串
-		/// </summary>
-		public string GetReceiveEndpoint()
-		{
-			return $"{receiveHost}:{receivePort}";
-		}
-
-		/// <summary>
-		/// 获取发送端点字符串
-		/// </summary>
-		public string GetSendEndpoint()
-		{
-			return $"{sendHost}:{sendPort}";
-		}
-
-		/// <summary>
 		/// 获取总状态维度（所有复制体）
 		/// </summary>
 		public int GetTotalStateDimension()
@@ -290,69 +244,6 @@ namespace GoiRuntime.Core.Configuration
 		public int GetTotalActionDimension()
 		{
 			return actionDimension * numDuplicates;
-		}
-
-		/// <summary>
-		/// 验证配置
-		/// </summary>
-		public bool Validate()
-		{
-			bool isValid = true;
-
-			if (stateDimension <= 0)
-			{
-				Debug.LogError("状态维度必须大于 0");
-				isValid = false;
-			}
-
-			if (actionDimension <= 0)
-			{
-				Debug.LogError("动作维度必须大于 0");
-				isValid = false;
-			}
-
-			if (numDuplicates <= 0)
-			{
-				Debug.LogError("复制体数量必须大于 0");
-				isValid = false;
-			}
-
-			if (updateFrequency <= 0)
-			{
-				Debug.LogError("更新频率必须大于 0");
-				isValid = false;
-			}
-
-			if (receivePort < 1024 || receivePort > 65535)
-			{
-				Debug.LogError("接收端口必须在 1024-65535 范围内");
-				isValid = false;
-			}
-
-			if (sendPort < 1024 || sendPort > 65535)
-			{
-				Debug.LogError("发送端口必须在 1024-65535 范围内");
-				isValid = false;
-			}
-
-			return isValid;
-		}
-
-		/// <summary>
-		/// 获取配置摘要
-		/// </summary>
-		public string GetSummary()
-		{
-			return $@"
-运行时配置:
-- 接收端点: {GetReceiveEndpoint()}
-- 发送端点: {GetSendEndpoint()}
-- 复制体数量: {numDuplicates}
-- 状态维度: {stateDimension} (总计: {GetTotalStateDimension()})
-- 动作维度: {actionDimension} (总计: {GetTotalActionDimension()})
-- 更新频率: {updateFrequency} Hz
-- 输入范围: [{minInput}, {maxInput}]
-";
 		}
 
 		#endregion

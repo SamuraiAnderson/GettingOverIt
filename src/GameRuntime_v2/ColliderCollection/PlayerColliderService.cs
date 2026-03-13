@@ -1,7 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using GoiRuntime.Core.Interfaces;
-using GoiRuntime.Core.Utilities;
 using GoiRuntime.Core.Events;
 
 namespace GoiRuntime.ColliderCollection
@@ -35,7 +33,7 @@ namespace GoiRuntime.ColliderCollection
 			playerObject = player;
 			namedColliders = new Dictionary<string, ColliderData>();
 
-			Debug.Log($"✅ PlayerColliderService 初始化成功，Player: {player.name}");
+			Debug.Log($"PlayerColliderService 初始化成功，Player: {player.name}");
 			isInitialized = true;
 			return true;
 		}
@@ -116,48 +114,6 @@ namespace GoiRuntime.ColliderCollection
 			string[] names = new string[namedColliders.Count];
 			namedColliders.Keys.CopyTo(names, 0);
 			return names;
-		}
-
-		/// <summary>
-		/// 获取碰撞箱顶点数（用于状态数据）
-		/// </summary>
-		public int GetPotVertexCount()
-		{
-			var pot = GetPotCollider();
-			return pot?.vertexCount ?? 0;
-		}
-
-		public int GetTipVertexCount()
-		{
-			var tip = GetTipCollider();
-			return tip?.vertexCount ?? 0;
-		}
-
-		public int GetBodyVertexCount()
-		{
-			var body = GetBodyCollider();
-			return body?.vertexCount ?? 0;
-		}
-
-		/// <summary>
-		/// 获取碰撞箱世界坐标顶点
-		/// </summary>
-		public Vector2[] GetPotVertices()
-		{
-			var pot = GetPotCollider();
-			return pot?.worldVertices ?? new Vector2[0];
-		}
-
-		public Vector2[] GetTipVertices()
-		{
-			var tip = GetTipCollider();
-			return tip?.worldVertices ?? new Vector2[0];
-		}
-
-		public Vector2[] GetBodyVertices()
-		{
-			var body = GetBodyCollider();
-			return body?.worldVertices ?? new Vector2[0];
 		}
 
 		/// <summary>

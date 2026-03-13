@@ -4,8 +4,7 @@ using System;
 namespace GoiRuntime.Core.Interfaces
 {
 	/// <summary>
-	/// Player 状态数据（39个浮点数）
-	/// 对应 goi-rl 项目中的状态格式
+	/// Player 状态数据（29个浮点数）
 	/// </summary>
 	[Serializable]
 	public struct PlayerState
@@ -36,46 +35,45 @@ namespace GoiRuntime.Core.Interfaces
 		// Tip（锤子尖端）
 		public float tipX, tipY, tipVelX, tipVelY;
 
-		/// <summary>
-		/// 转换为浮点数组（39个元素）
-		/// </summary>
-		public float[] ToFloatArray()
+	/// <summary>
+	/// 转换为浮点数组（29个元素）
+	/// </summary>
+	public float[] ToFloatArray()
+	{
+		return new float[]
 		{
-			return new float[]
-			{
-				// Player 主体 (0-4)
-				playerX, playerY,
-				velocityX, velocityY,
-				angularVelocity,
-				
-				// Hub (5-9)
-				hubX, hubY,
-				hubVelX, hubVelY,
-				hubAngle,
-				
-				// Slider (10-14)
-				sliderX, sliderY,
-				sliderVelX, sliderVelY,
-				sliderAngle,
-				
-				// Handle (15-18)
-				handleX, handleY,
-				handleVelX, handleVelY,
-				
-				// PoleMiddle (19-22)
-				poleX, poleY,
-				poleVelX, poleVelY,
-				
-				// Tip (23-26)
-				tipX, tipY,
-				tipVelX, tipVelY,
-				
-				// 额外状态 (27-38)
-				hammerAngle,
-				timestamp,
-				0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f  // 预留位
-			};
-		}
+			// Player 主体 (0-4)
+			playerX, playerY,
+			velocityX, velocityY,
+			angularVelocity,
+
+			// Hub (5-9)
+			hubX, hubY,
+			hubVelX, hubVelY,
+			hubAngle,
+
+			// Slider (10-14)
+			sliderX, sliderY,
+			sliderVelX, sliderVelY,
+			sliderAngle,
+
+			// Handle (15-18)
+			handleX, handleY,
+			handleVelX, handleVelY,
+
+			// PoleMiddle (19-22)
+			poleX, poleY,
+			poleVelX, poleVelY,
+
+			// Tip (23-26)
+			tipX, tipY,
+			tipVelX, tipVelY,
+
+			// 派生量 (27-28)
+			hammerAngle,
+			timestamp,
+		};
+	}
 	}
 
 	/// <summary>
@@ -174,7 +172,7 @@ namespace GoiRuntime.Core.Interfaces
 		PlayerState GetCurrentState();
 
 		/// <summary>
-		/// 获取状态数组（用于 UDP 发送）
+		/// 获取状态数组（29 维，用于 TCP 步进回包）
 		/// </summary>
 		float[] GetStateArray();
 	}

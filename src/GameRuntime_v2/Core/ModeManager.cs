@@ -34,7 +34,7 @@ namespace GoiRuntime.Core
 			// 从配置或信号文件确定模式
 			currentMode = DetermineMode();
 
-			Debug.Log($"🎮 模式管理器初始化: {GetModeDisplayName(currentMode)}");
+			Debug.Log($"模式管理器初始化: {GetModeDisplayName(currentMode)}");
 			
 			// 发布模式切换事件
 			EventBus.Publish(GameEvents.SystemInitialized, currentMode);
@@ -49,48 +49,28 @@ namespace GoiRuntime.Core
 			// 1. 检查信号文件（优先级最高）
 			if (SignalFileHelper.CheckSignal(SIGNAL_DATA_COLLECTION))
 			{
-				Debug.Log("📄 检测到数据采集模式信号文件");
+				Debug.Log("检测到数据采集模式信号文件");
 				SignalFileHelper.DeleteSignal(SIGNAL_DATA_COLLECTION);
 				return GameMode.DataCollection;
 			}
 
 			if (SignalFileHelper.CheckSignal(SIGNAL_GAME_RUNTIME))
 			{
-				Debug.Log("📄 检测到游戏运行模式信号文件");
+				Debug.Log("检测到游戏运行模式信号文件");
 				SignalFileHelper.DeleteSignal(SIGNAL_GAME_RUNTIME);
 				return GameMode.GameRuntime;
 			}
 
 			if (SignalFileHelper.CheckSignal(SIGNAL_GAME_TESTING))
 			{
-				Debug.Log("📄 检测到游戏测试模式信号文件");
+				Debug.Log("检测到游戏测试模式信号文件");
 				SignalFileHelper.DeleteSignal(SIGNAL_GAME_TESTING);
 				return GameMode.GameTesting;
 			}
 
 			// 2. 使用配置文件中的模式
-			Debug.Log($"📋 使用配置文件模式: {config.mode}");
+			Debug.Log($"使用配置文件模式: {config.mode}");
 			return config.mode;
-		}
-
-		/// <summary>
-		/// 切换模式（运行时切换，如果需要）
-		/// </summary>
-		public void SwitchMode(GameMode newMode)
-		{
-			if (currentMode == newMode)
-			{
-				Debug.LogWarning($"已经处于 {GetModeDisplayName(newMode)} 模式");
-				return;
-			}
-
-			GameMode oldMode = currentMode;
-			currentMode = newMode;
-
-			Debug.Log($"🔄 模式切换: {GetModeDisplayName(oldMode)} → {GetModeDisplayName(newMode)}");
-
-			// 发布模式切换事件（如果需要其他模块响应）
-			EventBus.Publish("mode.switched", new { oldMode, newMode });
 		}
 
 		/// <summary>
@@ -144,8 +124,8 @@ namespace GoiRuntime.Core
 			{
 				case GameMode.DataCollection:
 					return "前期数据采集（Mountain 碰撞箱等）";
-				case GameMode.GameRuntime:
-					return "AI 训练交互（UDP 通信）";
+			case GameMode.GameRuntime:
+				return "AI 训练交互（TCP 帧级别步进）";
 				case GameMode.GameTesting:
 					return "游戏交互性测试";
 				default:
@@ -164,44 +144,6 @@ namespace GoiRuntime.Core
 			Debug.Log($"配置模式: {GetModeDisplayName(config.mode)}");
 		}
 
-		/// <summary>
-		/// 创建模式信号文件（用于 Python 控制）
-		/// </summary>
-		public static void CreateModeSignal(GameMode mode)
-		{
-			string signalName = GetModeSignalName(mode);
-			SignalFileHelper.CreateSignal(signalName);
-			Debug.Log($"✅ 已创建模式信号: {signalName}");
-		}
-
-		/// <summary>
-		/// 获取模式信号文件名
-		/// </summary>
-		private static string GetModeSignalName(GameMode mode)
-		{
-			switch (mode)
-			{
-				case GameMode.DataCollection:
-					return SIGNAL_DATA_COLLECTION;
-				case GameMode.GameRuntime:
-					return SIGNAL_GAME_RUNTIME;
-				case GameMode.GameTesting:
-					return SIGNAL_GAME_TESTING;
-				default:
-					return "mode_unknown";
-			}
-		}
-
-		/// <summary>
-		/// 清除所有模式信号文件
-		/// </summary>
-		public static void ClearAllModeSignals()
-		{
-			SignalFileHelper.DeleteSignal(SIGNAL_DATA_COLLECTION);
-			SignalFileHelper.DeleteSignal(SIGNAL_GAME_RUNTIME);
-			SignalFileHelper.DeleteSignal(SIGNAL_GAME_TESTING);
-			Debug.Log("🧹 已清除所有模式信号文件");
-		}
 	}
 }
 

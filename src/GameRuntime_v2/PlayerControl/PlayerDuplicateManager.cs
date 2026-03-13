@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using GoiRuntime.Core.Interfaces;
@@ -74,11 +73,11 @@ namespace GoiRuntime.PlayerControl
 			originalPlayer = GameObject.Find("Player");
 			if (originalPlayer == null)
 			{
-				Debug.LogError("❌ 未找到原始 Player 对象");
+				Debug.LogError("未找到原始 Player 对象");
 				return false;
 			}
 			
-			Debug.Log($"✅ 找到原始 Player: {originalPlayer.name}");
+			Debug.Log($"找到原始 Player: {originalPlayer.name}");
 			isInitialized = true;
 			return true;
 		}
@@ -141,20 +140,20 @@ namespace GoiRuntime.PlayerControl
 		{
 			if (!isInitialized)
 			{
-				Debug.LogError("❌ 请先初始化 PlayerDuplicateManager");
+				Debug.LogError("请先初始化 PlayerDuplicateManager");
 				return false;
 			}
 			
 			if (count > MAX_DUPLICATES)
 			{
-				Debug.LogWarning($"⚠️ 最大复制体数量为 {MAX_DUPLICATES}，已限制");
+				Debug.LogWarning($"最大复制体数量为 {MAX_DUPLICATES}，已限制");
 				count = MAX_DUPLICATES;
 			}
 			
 			// 获取原始 Player 的所有碰撞体
 			List<Collider2D> originalColliders = new List<Collider2D>();
 			CollectAllColliders(originalPlayer, originalColliders);
-			Debug.Log($"📦 原始 Player 碰撞体数量: {originalColliders.Count}");
+			Debug.Log($"原始 Player 碰撞体数量: {originalColliders.Count}");
 			
 			// 创建复制体
 			for (int i = 0; i < count; i++)
@@ -163,14 +162,14 @@ namespace GoiRuntime.PlayerControl
 				if (instance != null)
 				{
 					duplicates.Add(instance);
-					Debug.Log($"✅ 创建复制体 #{i}: {instance.gameObject.name}, 碰撞体数量={instance.colliders.Count}");
+					Debug.Log($"创建复制体 #{i}: {instance.gameObject.name}, 碰撞体数量={instance.colliders.Count}");
 				}
 			}
 			
 			// 设置碰撞忽略（复制体之间 + 复制体与原始Player）
 			SetupCollisionIgnore(originalColliders);
 			
-			Debug.Log($"🎮 共创建 {duplicates.Count} 个复制体，已设置碰撞隔离");
+			Debug.Log($"共创建 {duplicates.Count} 个复制体，已设置碰撞隔离");
 			return duplicates.Count > 0;
 		}
 		
@@ -195,7 +194,7 @@ namespace GoiRuntime.PlayerControl
 				Component playerControl = clone.GetComponent("PlayerControl");
 				if (playerControl == null)
 				{
-					Debug.LogError($"❌ 复制体 #{index} 未找到 PlayerControl 组件");
+					Debug.LogError($"复制体 #{index} 未找到 PlayerControl 组件");
 					UnityEngine.Object.Destroy(clone);
 					return null;
 				}
@@ -209,7 +208,7 @@ namespace GoiRuntime.PlayerControl
 				
 				if (mouseInputField == null)
 				{
-					Debug.LogError($"❌ 复制体 #{index} 未找到 mouseInput 字段");
+					Debug.LogError($"复制体 #{index} 未找到 mouseInput 字段");
 					UnityEngine.Object.Destroy(clone);
 					return null;
 				}
@@ -255,7 +254,7 @@ namespace GoiRuntime.PlayerControl
 			}
 			catch (Exception e)
 			{
-				Debug.LogError($"❌ 创建复制体 #{index} 失败: {e.Message}");
+				Debug.LogError($"创建复制体 #{index} 失败: {e.Message}");
 				return null;
 			}
 		}
@@ -271,96 +270,54 @@ namespace GoiRuntime.PlayerControl
 		/// </summary>
 		private void FixJointConnections(GameObject clone, int index)
 		{
-			// 构建原始对象到复制体的 Rigidbody2D 映射
-			Dictionary<Rigidbody2D, Rigidbody2D> rbMapping = new Dictionary<Rigidbody2D, Rigidbody2D>();
-			
-			// 收集原始 Player 的所有 Rigidbody2D
+			// 按 GetComponentsInChildren 深度优先遍历顺序建立映射：
+			// Unity.Instantiate 保证克隆体子树结构与原始完全一致，因此同索引处的 RB 一一对应。
+			// 用 InstanceID（int）作 key，彻底消除同名子节点的歧义。
 			Rigidbody2D[] originalRBs = originalPlayer.GetComponentsInChildren<Rigidbody2D>(true);
-			Rigidbody2D[] cloneRBs = clone.GetComponentsInChildren<Rigidbody2D>(true);
-			
-			Debug.Log($"  复制体 #{index} 原始 RB 数量: {originalRBs.Length}, 复制 RB 数量: {cloneRBs.Length}");
-			
-			// 按名称/路径建立映射
-			foreach (var origRB in originalRBs)
+			Rigidbody2D[] cloneRBs    = clone.GetComponentsInChildren<Rigidbody2D>(true);
+
+			if (originalRBs.Length != cloneRBs.Length)
 			{
-				string path = GetRelativePath(origRB.transform, originalPlayer.transform);
-				
-				// 在复制体中找到对应的 Rigidbody2D
-				Transform cloneTransform = FindChildByPath(clone.transform, path);
-				if (cloneTransform != null)
-				{
-					Rigidbody2D cloneRB = cloneTransform.GetComponent<Rigidbody2D>();
-					if (cloneRB != null)
-					{
-						rbMapping[origRB] = cloneRB;
-					}
-				}
+				Debug.LogWarning($"  复制体 #{index}: 原始 RB({originalRBs.Length}) 与克隆 RB({cloneRBs.Length}) 数量不一致，跳过关节修复");
+				return;
 			}
-			
-			Debug.Log($"  复制体 #{index} 建立了 {rbMapping.Count} 个 RB 映射");
-			
+
+			// InstanceID → 克隆 RB
+			Dictionary<int, Rigidbody2D> idToCloneRB = new Dictionary<int, Rigidbody2D>(originalRBs.Length);
+			for (int i = 0; i < originalRBs.Length; i++)
+			{
+				idToCloneRB[originalRBs[i].GetInstanceID()] = cloneRBs[i];
+			}
+
+			Debug.Log($"  复制体 #{index} 建立了 {idToCloneRB.Count} 个 RB 映射（基于 InstanceID + 子树顺序）");
+
+			// 收集克隆体所有 RB 的 InstanceID，用于检测"已在克隆体内"的 connectedBody
+			HashSet<int> cloneRBIds = new HashSet<int>();
+			foreach (var rb in cloneRBs) cloneRBIds.Add(rb.GetInstanceID());
+
 			// 修复所有 Joint2D 的 connectedBody
 			Joint2D[] joints = clone.GetComponentsInChildren<Joint2D>(true);
 			int fixedCount = 0;
-			
+
 			foreach (var joint in joints)
 			{
-				if (joint.connectedBody != null)
+				if (joint.connectedBody == null) continue;
+
+				int origId = joint.connectedBody.GetInstanceID();
+				if (idToCloneRB.TryGetValue(origId, out Rigidbody2D mapped))
 				{
-					// 检查 connectedBody 是否指向原始对象
-					if (rbMapping.TryGetValue(joint.connectedBody, out Rigidbody2D newConnectedBody))
-					{
-						joint.connectedBody = newConnectedBody;
-						fixedCount++;
-					}
-					else if (!cloneRBs.Contains(joint.connectedBody))
-					{
-						// connectedBody 不在复制体内，可能是错误连接
-						Debug.LogWarning($"  复制体 #{index} 关节 {joint.name} 的 connectedBody 未找到映射");
-					}
+					joint.connectedBody = mapped;
+					fixedCount++;
+				}
+				else if (!cloneRBIds.Contains(origId))
+				{
+					Debug.LogWarning($"  复制体 #{index} 关节 [{joint.name}] 的 connectedBody 未找到映射（InstanceID={origId}）");
 				}
 			}
-			
+
 			Debug.Log($"  复制体 #{index} 修复了 {fixedCount} 个关节连接");
 		}
 		
-		/// <summary>
-		/// 获取相对路径
-		/// </summary>
-		private string GetRelativePath(Transform child, Transform root)
-		{
-			if (child == root) return "";
-			
-			List<string> path = new List<string>();
-			Transform current = child;
-			
-			while (current != root && current != null)
-			{
-				path.Insert(0, current.name);
-				current = current.parent;
-			}
-			
-			return string.Join("/", path.ToArray());
-		}
-		
-		/// <summary>
-		/// 按路径查找子对象
-		/// </summary>
-		private Transform FindChildByPath(Transform root, string path)
-		{
-			if (string.IsNullOrEmpty(path)) return root;
-			
-			string[] parts = path.Split('/');
-			Transform current = root;
-			
-			foreach (var part in parts)
-			{
-				current = current.Find(part);
-				if (current == null) return null;
-			}
-			
-			return current;
-		}
 		
 		#endregion
 		
@@ -491,67 +448,32 @@ namespace GoiRuntime.PlayerControl
 				}
 			}
 			
-			Debug.Log($"✅ 碰撞隔离已设置：共 {ignoreCount} 对碰撞体互相忽略");
+			Debug.Log($"碰撞隔离已设置：共 {ignoreCount} 对碰撞体互相忽略");
 		}
 		
 		#endregion
 		
 		#region 每帧更新
 		
-		// 存储每个复制体的目标输入
-		private Dictionary<int, Vector2> targetInputs = new Dictionary<int, Vector2>();
-		
-		private int debugCounter = 0;
-		
-		/// <summary>
-		/// 每帧更新复制体状态（在 LateUpdate 中调用）
-		/// 在游戏 Update 读取真实鼠标之后，覆盖 mouseInput 为我们想要的值
-		/// </summary>
-		public void UpdateDuplicates()
+	private Dictionary<int, Vector2> targetInputs = new Dictionary<int, Vector2>();
+
+	public void UpdateDuplicates()
+	{
+		foreach (var dup in duplicates)
 		{
-			foreach (var dup in duplicates)
+			if (dup == null || dup.gameObject == null) continue;
+
+			if (targetInputs.TryGetValue(dup.index, out Vector2 targetInput))
 			{
-				if (dup == null || dup.gameObject == null) continue;
-				
-				// 如果有设置的目标输入，覆盖 mouseInput
-				if (targetInputs.TryGetValue(dup.index, out Vector2 targetInput))
-				{
-					dup.SetMouseInput(targetInput);
-					
-					// 每 60 帧打印一次调试信息
-					if (debugCounter % 60 == 0)
-					{
-						Vector2 actual = dup.GetMouseInput();
-						Debug.Log($"[DEBUG] 复制体#{dup.index} 设置 mouseInput={targetInput}, 实际={actual}");
-					}
-				}
+				dup.SetMouseInput(targetInput);
 			}
-			debugCounter++;
 		}
-		
-		/// <summary>
-		/// 设置复制体的目标输入（会在每帧 LateUpdate 中持续应用）
-		/// </summary>
-		public void SetTargetInput(int index, Vector2 input)
-		{
-			targetInputs[index] = input;
-		}
-		
-		/// <summary>
-		/// 清除复制体的目标输入
-		/// </summary>
-		public void ClearTargetInput(int index)
-		{
-			targetInputs.Remove(index);
-		}
-		
-		/// <summary>
-		/// 清除所有目标输入
-		/// </summary>
-		public void ClearAllTargetInputs()
-		{
-			targetInputs.Clear();
-		}
+	}
+
+	public void SetTargetInput(int index, Vector2 input)
+	{
+		targetInputs[index] = input;
+	}
 		
 		#endregion
 		
@@ -569,25 +491,9 @@ namespace GoiRuntime.PlayerControl
 			return null;
 		}
 		
-		/// <summary>
-		/// 获取所有复制体的位置
-		/// </summary>
-		public Vector2[] GetAllPositions()
-		{
-			Vector2[] positions = new Vector2[duplicates.Count];
-			for (int i = 0; i < duplicates.Count; i++)
-			{
-				if (duplicates[i].gameObject != null)
-				{
-					positions[i] = duplicates[i].gameObject.transform.position;
-				}
-			}
-			return positions;
-		}
-		
-		/// <summary>
-		/// 打印所有复制体状态
-		/// </summary>
+	/// <summary>
+	/// 打印所有复制体状态
+	/// </summary>
 		public void PrintStatus()
 		{
 			Debug.Log($"=== 复制体状态 ({duplicates.Count}个) ===");
@@ -619,7 +525,7 @@ namespace GoiRuntime.PlayerControl
 				}
 			}
 			duplicates.Clear();
-			Debug.Log("🗑️ 所有复制体已销毁");
+			Debug.Log("所有复制体已销毁");
 		}
 		
 		#endregion

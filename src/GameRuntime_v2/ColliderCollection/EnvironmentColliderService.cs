@@ -25,11 +25,11 @@ namespace GoiRuntime.ColliderCollection
 			
 			if (mountainObject == null)
 			{
-				Debug.LogWarning($"⚠️ 未找到 {MOUNTAIN_NAME} 对象");
+				Debug.LogWarning($"未找到 {MOUNTAIN_NAME} 对象");
 				return false;
 			}
 
-			Debug.Log($"✅ EnvironmentColliderService 初始化成功，找到 {MOUNTAIN_NAME}");
+			Debug.Log($"EnvironmentColliderService 初始化成功，找到 {MOUNTAIN_NAME}");
 			isInitialized = true;
 			return true;
 		}

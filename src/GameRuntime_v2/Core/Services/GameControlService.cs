@@ -41,7 +41,7 @@ namespace GoiRuntime.Core.Services
 			Time.timeScale = 0f;
 			isPaused = true;
 			
-			Debug.Log("⏸️ 游戏已暂停");
+			Debug.Log("游戏已暂停");
 		}
 		
 		/// <summary>
@@ -56,7 +56,7 @@ namespace GoiRuntime.Core.Services
 			isStepping = false;
 			stepFramesRemaining = 0;
 			
-			Debug.Log("▶️ 游戏已恢复");
+			Debug.Log("游戏已恢复");
 		}
 		
 		/// <summary>
@@ -79,7 +79,7 @@ namespace GoiRuntime.Core.Services
 			isPaused = (scale == 0f);
 			savedTimeScale = scale > 0f ? scale : savedTimeScale;
 			
-			Debug.Log($"🎮 TimeScale: {scale}");
+			Debug.Log($"TimeScale: {scale}");
 		}
 		
 		/// <summary>
@@ -89,7 +89,7 @@ namespace GoiRuntime.Core.Services
 		{
 			if (!isPaused)
 			{
-				Debug.LogWarning("⚠️ 请先暂停游戏再使用单帧步进");
+				Debug.LogWarning("请先暂停游戏再使用单帧步进");
 				return;
 			}
 			
@@ -101,7 +101,7 @@ namespace GoiRuntime.Core.Services
 			stepStartedThisFrame = true;  // 标记这一帧刚开始步进
 			Time.timeScale = savedTimeScale > 0f ? savedTimeScale : 1f;
 			
-			Debug.Log($"⏯️ 步进 {frameCount} 帧...");
+			Debug.Log($"步进 {frameCount} 帧...");
 		}
 		
 		/// <summary>
@@ -126,61 +126,13 @@ namespace GoiRuntime.Core.Services
 				Time.timeScale = 0f;
 				isStepping = false;
 				isPaused = true;  // 重要：标记为暂停状态
-				Debug.Log("⏸️ 步进完成");
+				Debug.Log("步进完成");
 			}
 		}
 		
-		/// <summary>
-		/// 获取状态信息
-		/// </summary>
 		public string GetStatusInfo()
 		{
 			return $"暂停: {isPaused} | TimeScale: {Time.timeScale} | 步进中: {isStepping} | 剩余帧: {stepFramesRemaining}";
-		}
-		
-		/// <summary>
-		/// 手动推进物理（暂停状态下使用）
-		/// 使用 Physics2D.Simulate() 在 timeScale=0 时也能更新物理
-		/// </summary>
-		/// <param name="steps">物理步数（默认1步，每步 fixedDeltaTime）</param>
-		public void SimulatePhysics(int steps = 1)
-		{
-			if (steps <= 0) return;
-			
-			float dt = Time.fixedDeltaTime;
-			
-			// 保存原始模拟模式
-			var originalMode = Physics2D.simulationMode;
-			
-			// 切换到脚本模式以允许手动模拟
-			Physics2D.simulationMode = SimulationMode2D.Script;
-			
-			for (int i = 0; i < steps; i++)
-			{
-				// 手动推进 2D 物理
-				Physics2D.Simulate(dt);
-			}
-			
-			// 恢复原始模式
-			Physics2D.simulationMode = originalMode;
-			
-			Debug.Log($"🔬 物理模拟: {steps} 步 (dt={dt:F4}s)");
-		}
-		
-		/// <summary>
-		/// 暂停并执行一次物理步进
-		/// 用于同步训练模式
-		/// </summary>
-		public void PauseAndStep()
-		{
-			// 确保游戏暂停
-			if (!isPaused)
-			{
-				Pause();
-			}
-			
-			// 手动推进一步物理
-			SimulatePhysics(1);
 		}
 	}
 }
