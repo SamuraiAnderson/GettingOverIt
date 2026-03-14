@@ -7,6 +7,7 @@ using GoiRuntime.Core.Services;
 using GoiRuntime.ColliderCollection;
 using GoiRuntime.PlayerControl;
 using GoiRuntime.Communication;
+using GoiRuntime.ColliderCollection;
 using GoiRuntime.Testing;
 
 namespace GoiRuntime.Core
@@ -36,6 +37,9 @@ namespace GoiRuntime.Core
 		// 训练核心（GameRuntime 模式）
 		private StepController stepController;
 		private TcpStepServer tcpStepServer;
+
+		// 碰撞箱可视化
+		private ColliderVisualizer colliderVisualizer;
 
 		// 测试工具
 		private PlayerDebugTool playerDebugTool;
@@ -429,6 +433,20 @@ namespace GoiRuntime.Core
 		GoiRuntime.PlayerControl.RewiredMouseOverride.Active = true;
 		Logger.LogInfo("RL 模式已激活（Rewired 拦截 mouseX/mouseY，注入值将替换真实鼠标）");
 
+		// --- 碰撞箱可视化（默认关闭，由 Python 'V' 命令开启）---
+		var mainCam = Camera.main;
+		if (mainCam != null)
+		{
+			colliderVisualizer = mainCam.gameObject.AddComponent<ColliderVisualizer>();
+			colliderVisualizer.playerRoot = playerStateService.GetPlayerObject();
+			colliderVisualizer.enabled = false;
+			Logger.LogInfo("ColliderVisualizer 已附加到主摄像机（默认关闭）");
+		}
+		else
+		{
+			Logger.LogWarning("未找到主摄像机，ColliderVisualizer 未创建");
+		}
+
 		// --- 启动训练主循环协程 ---
 		StartCoroutine(TrainingLoop());
 		Logger.LogInfo("游戏运行模式初始化完成，等待 Python 连接...");
@@ -489,6 +507,16 @@ namespace GoiRuntime.Core
 							if (cmd.ConfigMouseYActionId >= 0)
 								GoiRuntime.PlayerControl.RewiredMouseOverride.MouseYActionId = cmd.ConfigMouseYActionId;
 							Logger.LogInfo($"[TrainingLoop] RewiredMouseOverride: Active={cmd.ConfigRewiredMouseActive} MouseX={cmd.ConfigMouseXActionId} MouseY={cmd.ConfigMouseYActionId}");
+							resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+							tcpStepServer.SendResponse(resp);
+							break;
+
+						case CommandType.Visualize:
+							if (colliderVisualizer != null)
+							{
+								colliderVisualizer.enabled = cmd.VisualizeEnabled;
+								Logger.LogInfo($"[TrainingLoop] ColliderVisualizer {(cmd.VisualizeEnabled ? "开启" : "关闭")}");
+							}
 							resp = new StepResponse { States = new float[0], Dones = new bool[0] };
 							tcpStepServer.SendResponse(resp);
 							break;
@@ -643,6 +671,11 @@ namespace GoiRuntime.Core
 			tcpStepServer = null;
 			stepController = null;
 			duplicateManager = null;
+			if (colliderVisualizer != null)
+			{
+				Destroy(colliderVisualizer);
+				colliderVisualizer = null;
+			}
 			environmentColliderService = null;
 			playerColliderService = null;
 			playerInputService = null;

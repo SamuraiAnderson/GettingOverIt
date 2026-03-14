@@ -25,5 +25,7 @@
       "mouse_y_action_id": -1
     }
   },
-  "l5":   { "num_agents": 2, "n_steps": 200, "warmup_steps": 300 }
+  "l5":   { "num_agents": 2, "n_steps": 200, "warmup_steps": 300 },
+  "l5_1": { "num_agents": 2, "n_steps": 200, "amplitude": 80, "warmup_steps": 500, "sep_threshold": 0.5 },
+  "l6":   { "duration_sec": 15, "amplitude": 200, "warmup_steps": 500 }
 }

@@ -29,6 +29,7 @@ CMD_RESET       = b'R'
 CMD_STEP        = b'S'
 CMD_NEW_SNAPSHOT = b'N'
 CMD_CONFIG      = b'C'
+CMD_VISUALIZE   = b'V'
 CMD_CLOSE       = b'X'
 
 
@@ -156,6 +157,16 @@ class GoiEnv:
         states, _ = self._recv_response()
         logger.info("[GoiEnv] new_snapshot() 完成，新基准状态已拍摄")
         return states
+
+    def toggle_collider_visual(self, enabled: bool = True) -> None:
+        """
+        开启/关闭游戏内碰撞箱描边可视化。
+        C# 侧 ColliderVisualizer 用 GL 绘制 Player 所有 Collider2D 轮廓。
+        """
+        buf = CMD_VISUALIZE + struct.pack("B", 1 if enabled else 0)
+        self._send_all(buf)
+        self._recv_response()
+        logger.info("[GoiEnv] collider visual %s", "ON" if enabled else "OFF")
 
     def step(self, actions: np.ndarray):
         """

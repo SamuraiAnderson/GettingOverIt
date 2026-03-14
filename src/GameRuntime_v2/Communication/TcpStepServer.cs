@@ -183,6 +183,13 @@ namespace GoiRuntime.Communication
 						cmd.ConfigMouseYActionId = BitConverter.ToInt32(configBuf, 5);
 					}
 
+					else if (cmdType == CommandType.Visualize)
+					{
+						byte[] vizBuf = ReadExact(1);
+						if (vizBuf == null) break;
+						cmd.VisualizeEnabled = vizBuf[0] != 0;
+					}
+
 				// --- 通知主线程 ---
 				_pendingCommand = cmd;
 				_responseReady.Reset();

@@ -40,6 +40,7 @@ namespace GoiRuntime.Core
 			public float angularVelocity;
 		}
 		private readonly List<List<RigidbodySnapshot>> initialSnapshots = new List<List<RigidbodySnapshot>>();
+		private readonly List<RigidbodySnapshot> fakeCursorSnapshots = new List<RigidbodySnapshot>();
 
 	private bool isInitialized;
 
@@ -69,6 +70,7 @@ namespace GoiRuntime.Core
 			initialSnapshots.Clear();
 
 			// --- Agent 0：原始 Player ---
+			originInputService.AgentIndex = 0;
 			inputServices.Add(originInputService);
 			stateServices.Add(originStateService);
 
@@ -85,6 +87,7 @@ namespace GoiRuntime.Core
 				}
 
 				var inputSvc = new PlayerInputService();
+				inputSvc.AgentIndex = i;
 				if (!inputSvc.InitializeFor(dup))
 					Debug.LogWarning($"[StepController] 复制体 #{i - 1} 输入服务初始化失败");
 
@@ -105,6 +108,23 @@ namespace GoiRuntime.Core
 			CaptureAllSnapshots();
 
 			isInitialized = true;
+
+			// 诊断：打印各 agent 的 Rigidbody2D / fakeCursorRB InstanceID 确认物理对象独立性
+			for (int a = 0; a < stateServices.Count; a++)
+			{
+				var ss = stateServices[a];
+				if (ss != null && ss.IsReady)
+				{
+					var go = ss.GetPlayerObject();
+					if (go != null)
+					{
+						var rb = go.GetComponent<Rigidbody2D>();
+						var fcRB = inputServices[a]?.GetFakeCursorRB();
+						Debug.Log($"[StepController] agent{a} PlayerObject={go.name} rb.ID={rb?.GetInstanceID()} fcRB.ID={fcRB?.GetInstanceID()} inputSvc.AgentIndex={inputServices[a]?.AgentIndex}");
+					}
+				}
+			}
+
 			Debug.Log($"[StepController] 初始化完成，管理 {numAgents} 个 agent");
 			return true;
 		}
@@ -119,8 +139,13 @@ namespace GoiRuntime.Core
 		/// actions 布局：[a0_x, a0_y, a1_x, a1_y, ...]，长度 = numAgents × 2
 		/// 返回 states 布局：[s0_0..s0_28, s1_0..s1_28, ...]，长度 = numAgents × 29
 		/// </summary>
+	private int _diagStepCount = 0;
+
 		public float[] ExecuteStep(float[] actions)
 		{
+			_diagStepCount++;
+			bool diag = _diagStepCount <= 5;
+
 			// 1. 分发动作 + 触发 FixedUpdate（必须在 Simulate 前调用，使关节电机力生效）
 			for (int i = 0; i < numAgents; i++)
 			{
@@ -129,6 +154,26 @@ namespace GoiRuntime.Core
 				float ay = (i * actionDim + 1 < actions.Length) ? actions[i * actionDim + 1] : 0f;
 				inputServices[i].SetMouseInput(new Vector2(ax, ay));
 				inputServices[i].InvokeFixedUpdate();
+
+				if (diag)
+				{
+					var ss = stateServices[i];
+					var rb = (ss != null && ss.IsReady) ? ss.GetPlayerObject()?.GetComponent<Rigidbody2D>() : null;
+					Debug.Log(string.Format("[StepDiag] step={0} agent={1} action=({2:F1},{3:F1}) agentIdx={4} rb.vel=({5:F4},{6:F4}) rb.ID={7}",
+						_diagStepCount, i, ax, ay, inputServices[i].AgentIndex,
+						rb != null ? rb.velocity.x : -999f,
+						rb != null ? rb.velocity.y : -999f,
+						rb != null ? rb.GetInstanceID() : 0));
+					Rigidbody2D fcRB = inputServices[i]?.GetFakeCursorRB();
+					if (fcRB != null)
+					{
+						Debug.Log(string.Format("[StepDiag] step={0} agent={1} fcRB.pos=({2:F4},{3:F4}) fcRB.vel=({4:F4},{5:F4}) fcRB.ID={6}",
+							_diagStepCount, i,
+							fcRB.position.x, fcRB.position.y,
+							fcRB.velocity.x, fcRB.velocity.y,
+							fcRB.GetInstanceID()));
+					}
+				}
 			}
 
 			// 2. 推进物理
@@ -138,8 +183,29 @@ namespace GoiRuntime.Core
 				Physics2D.Simulate(dt);
 			}
 
-			// 3. 采集状态
-			return CollectAllStates();
+			// 3. 采集状态（诊断：打印 Simulate 后的速度）
+			float[] result = CollectAllStates();
+
+			if (diag)
+			{
+				for (int i = 0; i < numAgents; i++)
+				{
+					var ss = stateServices[i];
+					var rb = (ss != null && ss.IsReady) ? ss.GetPlayerObject()?.GetComponent<Rigidbody2D>() : null;
+					Debug.Log(string.Format("[StepDiag] step={0} agent={1} AFTER_SIM rb.vel=({2:F4},{3:F4})",
+						_diagStepCount, i,
+						rb != null ? rb.velocity.x : -999f,
+						rb != null ? rb.velocity.y : -999f));
+					Rigidbody2D fcRB = inputServices[i]?.GetFakeCursorRB();
+					if (fcRB != null)
+					{
+						Debug.Log(string.Format("[StepDiag] step={0} agent={1} AFTER_SIM fcRB.pos=({2:F4},{3:F4})",
+							_diagStepCount, i, fcRB.position.x, fcRB.position.y));
+					}
+				}
+			}
+
+			return result;
 		}
 
 		/// <summary>
@@ -158,6 +224,17 @@ namespace GoiRuntime.Core
 					snap.rb.angularVelocity = snap.angularVelocity;
 				}
 			}
+	// 恢复各 agent 的 fakeCursorRB 状态
+	foreach (var snap in fakeCursorSnapshots)
+	{
+		if (snap.rb == null) continue;
+		snap.rb.position        = snap.position;
+		snap.rb.rotation        = snap.rotation;
+		snap.rb.velocity        = snap.velocity;
+		snap.rb.angularVelocity = snap.angularVelocity;
+	}
+	// 重置诊断计数器，使 Reset 后的前几步能被记录
+	_diagStepCount = 0;
 	// 清零注入值，避免上一 episode 的残余影响下一 episode
 	GoiRuntime.PlayerControl.RewiredMouseOverride.Reset();
 
@@ -212,6 +289,7 @@ namespace GoiRuntime.Core
 	private void CaptureAllSnapshots()
 		{
 			initialSnapshots.Clear();
+			fakeCursorSnapshots.Clear();
 			for (int agentIdx = 0; agentIdx < stateServices.Count; agentIdx++)
 			{
 				var stateSvc = stateServices[agentIdx];
@@ -233,7 +311,6 @@ namespace GoiRuntime.Core
 								angularVelocity = rb.angularVelocity,
 							});
 						}
-						// 打印 rb[0] 坐标，诊断快照是否捕获了正确位置
 						if (rbs.Length > 0)
 							Debug.Log($"[StepController] agent{agentIdx} 快照 rb[0].pos={rbs[0].position:F2} rb[0].vel={rbs[0].velocity:F1}");
 					}
@@ -243,8 +320,26 @@ namespace GoiRuntime.Core
 					Debug.LogWarning($"[StepController] agent{agentIdx} 状态服务未就绪，快照为空");
 				}
 				initialSnapshots.Add(list);
+
+				Rigidbody2D fcRB = (agentIdx < inputServices.Count) ? inputServices[agentIdx]?.GetFakeCursorRB() : null;
+				if (fcRB != null)
+				{
+					fakeCursorSnapshots.Add(new RigidbodySnapshot
+					{
+						rb              = fcRB,
+						position        = fcRB.position,
+						rotation        = fcRB.rotation,
+						velocity        = fcRB.velocity,
+						angularVelocity = fcRB.angularVelocity,
+					});
+					Debug.Log($"[StepController] agent{agentIdx} fakeCursor 快照 pos={fcRB.position:F2} ID={fcRB.GetInstanceID()}");
+				}
+				else
+				{
+					fakeCursorSnapshots.Add(default);
+				}
 			}
-			Debug.Log($"[StepController] 已保存 {initialSnapshots.Count} 个 agent 的初始快照");
+			Debug.Log($"[StepController] 已保存 {initialSnapshots.Count} 个 agent 的初始快照（含 fakeCursor）");
 		}
 	}
 }

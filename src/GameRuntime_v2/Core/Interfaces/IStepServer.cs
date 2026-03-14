@@ -55,6 +55,9 @@ namespace GoiRuntime.Core.Interfaces
 		/// <summary>配置 RewiredMouseOverride（L3 可重复性测试用）</summary>
 		Config = (byte)'C',
 
+		/// <summary>开启/关闭碰撞箱可视化描边</summary>
+		Visualize = (byte)'V',
+
 		/// <summary>关闭连接，退出训练</summary>
 		Close = (byte)'X',
 	}
@@ -81,6 +84,9 @@ namespace GoiRuntime.Core.Interfaces
 
 		/// <summary>Config 命令：鼠标 Y 轴 Rewired actionId（-1 表示未诊断）</summary>
 		public int ConfigMouseYActionId;
+
+		/// <summary>Visualize 命令：是否开启碰撞箱描边</summary>
+		public bool VisualizeEnabled;
 	}
 
 	/// <summary>

@@ -21,6 +21,9 @@ namespace GoiRuntime.PlayerControl
 	private MethodInfo fixedUpdateMethod;
 	
 	private bool isInitialized = false;
+
+	/// <summary>此服务绑定的 agent 索引，由 StepController 在 Initialize 时设置。</summary>
+	public int AgentIndex = 0;
 		
 		#endregion
 		
@@ -80,8 +83,7 @@ namespace GoiRuntime.PlayerControl
 			try
 			{
 			Vector2 clampedInput = ClampInput(input);
-			// 同步更新 Rewired 层注入值（Plan B），拦截 Player.GetAxis 时返回此值
-			RewiredMouseOverride.Set(clampedInput.x, clampedInput.y);
+			RewiredMouseOverride.SetForAgent(AgentIndex, clampedInput.x, clampedInput.y);
 			mouseInputField.SetValue(playerControlComponent, clampedInput);
 			}
 			catch (Exception e)
@@ -99,6 +101,7 @@ namespace GoiRuntime.PlayerControl
 			if (!isInitialized || fixedUpdateMethod == null) return;
 			try
 			{
+				RewiredMouseOverride.CurrentAgentIndex = AgentIndex;
 				RewiredMouseOverride.InsideInvokeFixedUpdate = true;
 				fixedUpdateMethod.Invoke(playerControlComponent, null);
 			}
@@ -108,6 +111,7 @@ namespace GoiRuntime.PlayerControl
 			}
 			finally
 			{
+				RewiredMouseOverride.CurrentAgentIndex = -1;
 				RewiredMouseOverride.InsideInvokeFixedUpdate = false;
 			}
 		}
@@ -221,10 +225,10 @@ namespace GoiRuntime.PlayerControl
 				mouseInputField = playerControlType.GetField("mouseInput", 
 					BindingFlags.NonPublic | BindingFlags.Instance);
 				
-				inputEnabledField = playerControlType.GetField("input_enabled", 
-					BindingFlags.NonPublic | BindingFlags.Instance);
-				
-				if (mouseInputField == null)
+		inputEnabledField = playerControlType.GetField("input_enabled", 
+				BindingFlags.NonPublic | BindingFlags.Instance);
+			
+			if (mouseInputField == null)
 				{
 			Debug.LogError("未找到 mouseInput 字段");
 				return false;
@@ -232,8 +236,8 @@ namespace GoiRuntime.PlayerControl
 
 		Debug.Log("成功获取 mouseInput 字段");
 
-		if (inputEnabledField == null)
-			Debug.LogWarning("未找到 input_enabled 字段（可能不需要）");
+	if (inputEnabledField == null)
+		Debug.LogWarning("未找到 input_enabled 字段（可能不需要）");
 
 		// 缓存 PlayerControl.FixedUpdate()，用于手动驱动游戏逻辑
 		fixedUpdateMethod = playerControlType.GetMethod("FixedUpdate",
@@ -243,21 +247,20 @@ namespace GoiRuntime.PlayerControl
 		else
 			Debug.LogWarning("未找到 PlayerControl.FixedUpdate()（输入将无法施力）");
 
-		// 用 Harmony 在运行时 patch PlayerControl.Update()，使其在 RL 模式下跳过
-		// 真实鼠标读取，避免覆盖我们通过反射写入的 mouseInput 值。
-		// FixedUpdate 保持不变，由我们手动驱动。
+		var harmony = new HarmonyLib.Harmony("com.symbol.goi.playercontrol.lifecycle");
+
+		// Patch Update()：RL 模式下跳过真实鼠标读取
 		var updateMethod = playerControlType.GetMethod("Update",
 			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 		if (updateMethod != null)
 		{
 			try
 			{
-				var harmony = new HarmonyLib.Harmony("com.symbol.goi.playercontrol.update");
-				var prefix  = new HarmonyLib.HarmonyMethod(
+				var prefix = new HarmonyLib.HarmonyMethod(
 					typeof(PlayerControlUpdatePatch),
 					nameof(PlayerControlUpdatePatch.Prefix));
 				harmony.Patch(updateMethod, prefix: prefix);
-				Debug.Log("PlayerControl.Update() 已被 Harmony patch（RL 模式下跳过真实鼠标读取）");
+				Debug.Log("PlayerControl.Update() 已被 Harmony patch（RL 模式下跳过）");
 			}
 			catch (Exception e)
 			{
@@ -265,7 +268,7 @@ namespace GoiRuntime.PlayerControl
 			}
 		}
 		else
-			Debug.LogWarning("未找到 PlayerControl.Update()，无法阻止真实鼠标读取");
+			Debug.LogWarning("未找到 PlayerControl.Update()");
 
 		if (inputEnabledField != null)
 		{
@@ -316,6 +319,22 @@ namespace GoiRuntime.PlayerControl
 			return playerObject;
 		}
 		
+		/// <summary>
+		/// 通过反射获取 PlayerControl 内部的 fakeCursorRB (Rigidbody2D)。
+		/// 用于 StepController 的快照/重置。
+		/// </summary>
+		public Rigidbody2D GetFakeCursorRB()
+		{
+			if (!isInitialized || playerControlComponent == null) return null;
+			try
+			{
+				FieldInfo field = playerControlComponent.GetType().GetField("fakeCursorRB",
+					BindingFlags.NonPublic | BindingFlags.Instance);
+				return field?.GetValue(playerControlComponent) as Rigidbody2D;
+			}
+			catch { return null; }
+		}
+		
 		#endregion
 	}
 
@@ -330,9 +349,9 @@ namespace GoiRuntime.PlayerControl
 
 		public static bool Prefix()
 		{
-			// 返回 false = 跳过原始 Update()；返回 true = 正常执行
 			return !RlModeActive;
 		}
 	}
+
 }
 

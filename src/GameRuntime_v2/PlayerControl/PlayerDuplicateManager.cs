@@ -36,6 +36,7 @@ namespace GoiRuntime.PlayerControl
 			public FieldInfo mouseInputField;
 			public FieldInfo inputEnabledField;
 			public Rigidbody2D rigidbody;
+			public GameObject fakeCursorObject;
 			public List<Collider2D> colliders = new List<Collider2D>();
 			
 			public void SetMouseInput(Vector2 input)
@@ -234,6 +235,10 @@ namespace GoiRuntime.PlayerControl
 				// 修复关节连接（关键！）
 				FixJointConnections(clone, index);
 				
+				// 创建独立 fakeCursor（解决共享 fakeCursorRB 导致的运动同步）
+				Component originalPC = originalPlayer.GetComponent("PlayerControl");
+				GameObject fakeCursorObj = CreateFakeCursorForDuplicate(index, originalPC, playerControl, playerControlType);
+				
 				// 收集所有碰撞体
 				List<Collider2D> colliders = new List<Collider2D>();
 				CollectAllColliders(clone, colliders);
@@ -247,6 +252,7 @@ namespace GoiRuntime.PlayerControl
 					mouseInputField = mouseInputField,
 					inputEnabledField = inputEnabledField,
 					rigidbody = clone.GetComponent<Rigidbody2D>(),
+					fakeCursorObject = fakeCursorObj,
 					colliders = colliders
 				};
 				
@@ -318,6 +324,66 @@ namespace GoiRuntime.PlayerControl
 			Debug.Log($"  复制体 #{index} 修复了 {fixedCount} 个关节连接");
 		}
 		
+		
+		/// <summary>
+		/// 为复制体创建独立的 fakeCursor + fakeCursorRB，
+		/// 解决所有 PlayerControl 共享同一场景 fakeCursor 导致运动同步的问题。
+		/// </summary>
+		private GameObject CreateFakeCursorForDuplicate(int index, Component originalPC, Component clonePC, Type pcType)
+		{
+			FieldInfo fcField = pcType.GetField("fakeCursor",
+				BindingFlags.Public | BindingFlags.Instance);
+			FieldInfo fcRBField = pcType.GetField("fakeCursorRB",
+				BindingFlags.NonPublic | BindingFlags.Instance);
+
+			if (fcField == null || fcRBField == null)
+			{
+				Debug.LogWarning($"  复制体 #{index} 未找到 fakeCursor/fakeCursorRB 字段，跳过独立 fakeCursor 创建");
+				return null;
+			}
+
+			Transform origFC = fcField.GetValue(originalPC) as Transform;
+			if (origFC == null)
+			{
+				Debug.LogWarning($"  复制体 #{index} 原始 fakeCursor 为 null，跳过");
+				return null;
+			}
+			Rigidbody2D origRB = origFC.GetComponent<Rigidbody2D>();
+
+			GameObject newFC = new GameObject($"FakeCursor_Dup_{index}");
+			newFC.transform.position = origFC.position;
+			newFC.transform.rotation = origFC.rotation;
+			newFC.transform.localScale = origFC.localScale;
+
+			SpriteRenderer origSR = origFC.GetComponent<SpriteRenderer>();
+			if (origSR != null)
+			{
+				SpriteRenderer newSR = newFC.AddComponent<SpriteRenderer>();
+				newSR.sprite = origSR.sprite;
+				newSR.color = new Color(1f, 1f, 1f, 0f);
+			}
+
+			Rigidbody2D newRB = newFC.AddComponent<Rigidbody2D>();
+			if (origRB != null)
+			{
+				newRB.bodyType = origRB.bodyType;
+				newRB.mass = origRB.mass;
+				newRB.gravityScale = origRB.gravityScale;
+				newRB.collisionDetectionMode = origRB.collisionDetectionMode;
+				newRB.interpolation = origRB.interpolation;
+				newRB.constraints = origRB.constraints;
+			}
+			else
+			{
+				newRB.bodyType = RigidbodyType2D.Kinematic;
+			}
+
+			fcField.SetValue(clonePC, newFC.transform);
+			fcRBField.SetValue(clonePC, newRB);
+
+			Debug.Log($"  复制体 #{index} 已创建独立 fakeCursor: {newFC.name} (rb.ID={newRB.GetInstanceID()})");
+			return newFC;
+		}
 		
 		#endregion
 		
@@ -519,13 +585,13 @@ namespace GoiRuntime.PlayerControl
 		{
 			foreach (var dup in duplicates)
 			{
+				if (dup.fakeCursorObject != null)
+					UnityEngine.Object.Destroy(dup.fakeCursorObject);
 				if (dup.gameObject != null)
-				{
 					UnityEngine.Object.Destroy(dup.gameObject);
-				}
 			}
 			duplicates.Clear();
-			Debug.Log("所有复制体已销毁");
+			Debug.Log("所有复制体及其 fakeCursor 已销毁");
 		}
 		
 		#endregion

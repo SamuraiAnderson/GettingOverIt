@@ -13,8 +13,14 @@ namespace GoiRuntime.PlayerControl
 	/// </summary>
 	public static class RewiredMouseOverride
 	{
-		public static volatile float InjectedX = 0f;
-		public static volatile float InjectedY = 0f;
+		public const int MAX_AGENTS = 8;
+
+		public static readonly float[] InjectedX = new float[MAX_AGENTS];
+		public static readonly float[] InjectedY = new float[MAX_AGENTS];
+
+		/// <summary>当前正在执行 FixedUpdate 的 agent 索引，-1 表示非 FixedUpdate 上下文。</summary>
+		public static volatile int CurrentAgentIndex = -1;
+
 		public static volatile bool  Active    = false;
 
 		/// <summary>手动调用 InvokeFixedUpdate() 期间设为 true，供 Postfix 标注日志。</summary>
@@ -27,8 +33,26 @@ namespace GoiRuntime.PlayerControl
 		public static string MouseXActionName = null;
 		public static string MouseYActionName = null;
 
-		public static void Set(float x, float y) { InjectedX = x; InjectedY = y; }
-		public static void Reset()               { InjectedX = 0f; InjectedY = 0f; }
+		public static void SetForAgent(int idx, float x, float y)
+		{
+			if (idx >= 0 && idx < MAX_AGENTS)
+			{
+				InjectedX[idx] = x;
+				InjectedY[idx] = y;
+			}
+		}
+
+		public static void Set(float x, float y) { SetForAgent(0, x, y); }
+
+		public static void Reset()
+		{
+			for (int i = 0; i < MAX_AGENTS; i++)
+			{
+				InjectedX[i] = 0f;
+				InjectedY[i] = 0f;
+			}
+			CurrentAgentIndex = -1;
+		}
 
 		/// <summary>在 GameRuntimeManager.Awake() 中调用一次，运行时注册 Rewired 相关补丁。</summary>
 		public static void ApplyPatches()
@@ -106,8 +130,20 @@ namespace GoiRuntime.PlayerControl
 		public static bool Prefix(string __0, ref float __result)
 		{
 			if (!RewiredMouseOverride.Active) return true;
-			if (__0 == RewiredMouseOverride.MouseXActionName) { __result = RewiredMouseOverride.InjectedX; return false; }
-			if (__0 == RewiredMouseOverride.MouseYActionName) { __result = RewiredMouseOverride.InjectedY; return false; }
+			int idx = RewiredMouseOverride.CurrentAgentIndex;
+			if (idx < 0)
+			{
+				// Unity 自动调用 FixedUpdate 时 CurrentAgentIndex=-1，
+				// 返回 0 使其成为无操作，只有手动 InvokeFixedUpdate 才提供真实输入。
+				if (__0 == RewiredMouseOverride.MouseXActionName || __0 == RewiredMouseOverride.MouseYActionName)
+				{
+					__result = 0f;
+					return false;
+				}
+				return true;
+			}
+			if (__0 == RewiredMouseOverride.MouseXActionName) { __result = RewiredMouseOverride.InjectedX[idx]; return false; }
+			if (__0 == RewiredMouseOverride.MouseYActionName) { __result = RewiredMouseOverride.InjectedY[idx]; return false; }
 			return true;
 		}
 
@@ -120,8 +156,9 @@ namespace GoiRuntime.PlayerControl
 			{
 				_logCount++;
 				_last[__0] = __result;
-				Debug.Log(string.Format("[Rewired.GetAxis(str)] name={0}  value={1:F4}  inFixedUpdate={2}",
-					__0, __result, RewiredMouseOverride.InsideInvokeFixedUpdate));
+				int idx = RewiredMouseOverride.CurrentAgentIndex;
+				Debug.Log(string.Format("[Rewired.GetAxis(str)] name={0}  value={1:F4}  agentIdx={2}  inFixedUpdate={3}",
+					__0, __result, idx, RewiredMouseOverride.InsideInvokeFixedUpdate));
 			}
 		}
 	}
@@ -132,8 +169,18 @@ namespace GoiRuntime.PlayerControl
 		public static bool Prefix(string __0, ref float __result)
 		{
 			if (!RewiredMouseOverride.Active) return true;
-			if (__0 == RewiredMouseOverride.MouseXActionName) { __result = RewiredMouseOverride.InjectedX; return false; }
-			if (__0 == RewiredMouseOverride.MouseYActionName) { __result = RewiredMouseOverride.InjectedY; return false; }
+			int idx = RewiredMouseOverride.CurrentAgentIndex;
+			if (idx < 0)
+			{
+				if (__0 == RewiredMouseOverride.MouseXActionName || __0 == RewiredMouseOverride.MouseYActionName)
+				{
+					__result = 0f;
+					return false;
+				}
+				return true;
+			}
+			if (__0 == RewiredMouseOverride.MouseXActionName) { __result = RewiredMouseOverride.InjectedX[idx]; return false; }
+			if (__0 == RewiredMouseOverride.MouseYActionName) { __result = RewiredMouseOverride.InjectedY[idx]; return false; }
 			return true;
 		}
 	}
