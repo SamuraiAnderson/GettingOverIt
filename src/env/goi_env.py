@@ -4,11 +4,13 @@ Getting Over It 强化学习环境接口
 与 C# TcpStepServer 通信，实现帧级别同步步进。
 
 线路协议（小端二进制）：
-  Python → C#  RESET: [cmd:1B='R']
-  Python → C#  STEP:  [cmd:1B='S'][n:1B][actions: n×2×4B]
-  Python → C#  CLOSE: [cmd:1B='X']
+  Python → C#  RESET:       [cmd:1B='R']
+  Python → C#  STEP:        [cmd:1B='S'][n:1B][actions: n×2×4B]
+  Python → C#  NEW_SNAPSHOT:[cmd:1B='N']  重新拍摄快照（warmup 后调用）
+  Python → C#  CONFIG:      [cmd:1B='C'][active:1B][mouseXId:4B][mouseYId:4B]  RewiredMouseOverride
+  Python → C#  CLOSE:       [cmd:1B='X']
 
-  C# → Python  STATE: [n:1B][states: n×29×4B][dones: n×1B]
+  C# → Python  STATE: [n:1B] 然后对每个 agent: [state_i: 29×4B][done_i: 1B]
 """
 import socket
 import struct
@@ -23,9 +25,11 @@ logger = logging.getLogger(__name__)
 STATE_DIM  = 29
 ACTION_DIM = 2
 
-CMD_RESET = b'R'
-CMD_STEP  = b'S'
-CMD_CLOSE = b'X'
+CMD_RESET       = b'R'
+CMD_STEP        = b'S'
+CMD_NEW_SNAPSHOT = b'N'
+CMD_CONFIG      = b'C'
+CMD_CLOSE       = b'X'
 
 
 class GoiEnv:
@@ -74,6 +78,8 @@ class GoiEnv:
                 s.settimeout(5.0)
                 s.connect((self.host, self.port))
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                # 连接成功后切换为阻塞模式（无超时），避免 C# 协程处理延迟触发 TimeoutError
+                s.settimeout(None)
                 self._sock = s
                 self._connected = True
                 logger.info("[GoiEnv] 已连接到 %s:%d", self.host, self.port)
@@ -121,6 +127,36 @@ class GoiEnv:
         logger.debug("[GoiEnv] reset() 完成")
         return states
 
+    def config_rewired_mouse(
+        self,
+        active: bool = True,
+        mouse_x_action_id: int = -1,
+        mouse_y_action_id: int = -1,
+    ) -> None:
+        """
+        配置 RewiredMouseOverride（L3 可重复性测试用）。
+        启用后屏蔽真实鼠标输入，仅使用注入值，避免测试期间鼠标移动影响轨迹。
+        mouse_x_action_id / mouse_y_action_id：诊断得到的 Rewired actionId，-1 表示未诊断。
+        """
+        buf = bytearray()
+        buf += CMD_CONFIG
+        buf += struct.pack("B", 1 if active else 0)
+        buf += struct.pack("<i", mouse_x_action_id)
+        buf += struct.pack("<i", mouse_y_action_id)
+        self._send_all(bytes(buf))
+        self._recv_response()
+
+    def new_snapshot(self) -> np.ndarray:
+        """
+        让 C# 以当前物理状态为基准重新拍快照（warmup 结束后调用）。
+        之后每次 reset() 都将回到此时刻的状态。
+        返回当前状态 shape: (num_agents, STATE_DIM)
+        """
+        self._send_all(CMD_NEW_SNAPSHOT)
+        states, _ = self._recv_response()
+        logger.info("[GoiEnv] new_snapshot() 完成，新基准状态已拍摄")
+        return states
+
     def step(self, actions: np.ndarray):
         """
         执行一步，actions shape: (num_agents, ACTION_DIM)。
@@ -163,19 +199,26 @@ class GoiEnv:
         读取 C# 回包，解析为 (states, dones)。
         states shape: (num_agents, STATE_DIM)
         dones  shape: (num_agents,) bool
+
+        C# 发送格式（TcpStepServer.SendResponse）：
+          [n: 1B] 然后对每个 agent: [state_i: STATE_DIM×4B][done_i: 1B]
+        注意：state 与 done 是按 agent 交错发送的，不能一次性读取所有 state 再读所有 done。
         """
-        # 第一字节：agent 数量
-        n_byte = self._recv_exact(1)
-        n = struct.unpack("B", n_byte)[0]
+        n = struct.unpack("B", self._recv_exact(1))[0]
 
-        state_bytes = n * STATE_DIM * 4
-        done_bytes  = n
+        all_states: list[np.ndarray] = []
+        all_dones:  list[bool]       = []
+        for _ in range(n):
+            raw_state = self._recv_exact(STATE_DIM * 4)
+            raw_done  = self._recv_exact(1)
+            all_states.append(np.frombuffer(raw_state, dtype="<f4").copy())
+            all_dones.append(bool(raw_done[0]))
 
-        raw_states = self._recv_exact(state_bytes)
-        raw_dones  = self._recv_exact(done_bytes)
-
-        states = np.frombuffer(raw_states, dtype="<f4").reshape(n, STATE_DIM).copy()
-        dones  = np.frombuffer(raw_dones,  dtype=np.uint8).astype(bool).copy()
+        if all_states:
+            states = np.stack(all_states)          # (n, STATE_DIM)
+        else:
+            states = np.zeros((0, STATE_DIM), dtype="<f4")
+        dones = np.array(all_dones, dtype=bool)    # (n,)
 
         return states, dones
 

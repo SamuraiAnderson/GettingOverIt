@@ -28,7 +28,7 @@
     <!-- Core/Interfaces: 接口定义 -->
     <Compile Include="Core\Interfaces\IGameControl.cs" />
     <Compile Include="Core\Interfaces\IPlayerServices.cs" />
-    <Compile Include="Core\Interfaces\ICommunication.cs" />
+    <Compile Include="Core\Interfaces\IStepServer.cs" />
     <Compile Include="Core\Interfaces\IColliderService.cs" />
     <Compile Include="Core\Interfaces\ITesting.cs" />
     
@@ -40,21 +40,25 @@
     <Compile Include="Core\Events\GameEvents.cs" />
     
     <!-- Core/Utilities: 工具类 -->
-    <Compile Include="Core\Utilities\ReflectionHelper.cs" />
-    <Compile Include="Core\Utilities\InputValidator.cs" />
     <Compile Include="Core\Utilities\PathManager.cs" />
     <Compile Include="Core\Utilities\SignalFileHelper.cs" />
     
     <!-- Core/Configuration: 配置管理 -->
     <Compile Include="Core\Configuration\RuntimeConfig.cs" />
+
+    <!-- Core: RL 步进控制器 -->
+    <Compile Include="Core\StepController.cs" />
+
+    <!-- Communication: TCP 步进服务器 -->
+    <Compile Include="Communication\TcpStepServer.cs" />
     
     <!-- ColliderCollection: 碰撞箱采集服务 -->
     <Compile Include="ColliderCollection\ColliderCollectorBase.cs" />
     <Compile Include="ColliderCollection\EnvironmentColliderService.cs" />
     <Compile Include="ColliderCollection\PlayerColliderService.cs" />
-    <Compile Include="ColliderCollection\ColliderDataFormatter.cs" />
     
     <!-- PlayerControl: Player 控制服务 -->
+    <Compile Include="PlayerControl\MouseInputOverride.cs" />
     <Compile Include="PlayerControl\PlayerInputService.cs" />
     <Compile Include="PlayerControl\PlayerStateService.cs" />
     <Compile Include="PlayerControl\PlayerDuplicateManager.cs" />

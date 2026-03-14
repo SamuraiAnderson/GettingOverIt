@@ -20,7 +20,7 @@ namespace GoiRuntime.Communication
 	/// 线程模型：
 	///   - 后台线程（_bgThread）：阻塞等待 Python 命令，写入 _pendingCommand，设置 _commandReady
 	///   - Unity 主线程协程：轮询 TryGetCommand()，执行物理步进后调用 SendResponse()
-	///   - 两方向通过 ManualResetEventSlim 和 volatile 变量交换，不需要锁
+	///   - 两方向通过 ManualResetEvent 和 volatile 变量交换，不需要锁
 	/// </summary>
 	public class TcpStepServer : IStepServer
 	{
@@ -39,14 +39,14 @@ namespace GoiRuntime.Communication
 			_stateDim = stateDim > 0 ? stateDim : 29;
 		}
 
-		// 主线程 ↔ 后台线程共享的命令槽
-		private StepCommand _pendingCommand;
-		private readonly ManualResetEventSlim _commandReady  = new ManualResetEventSlim(false);
-		private readonly ManualResetEventSlim _responseSent  = new ManualResetEventSlim(true);
+	// 主线程 ↔ 后台线程共享的命令槽
+	private StepCommand _pendingCommand;
+	private readonly ManualResetEvent _commandReady  = new ManualResetEvent(false);
+	private volatile bool _commandReadyFlag = false;
 
-		// 发送缓冲区（在主线程写好，后台线程读取发出）
-		private byte[] _responseBytes;
-		private readonly ManualResetEventSlim _responseReady = new ManualResetEventSlim(false);
+	// 发送缓冲区（在主线程写好，后台线程读取发出）
+	private byte[] _responseBytes;
+	private readonly ManualResetEvent _responseReady = new ManualResetEvent(false);
 
 		public bool IsRunning   => _running;
 		public bool IsConnected => _connected;
@@ -64,13 +64,14 @@ namespace GoiRuntime.Communication
 			_bgThread.Start();
 		}
 
-		public void Stop()
-		{
-			_running = false;
+	public void Stop()
+	{
+		_running = false;
 
-			// 解除后台线程可能的阻塞
-			_commandReady.Set();
-			_responseReady.Set();
+		// 解除后台线程可能的阻塞
+		_commandReadyFlag = true;
+		_commandReady.Set();
+		_responseReady.Set();
 
 			try { _stream?.Close(); } catch { }
 			try { _client?.Close(); } catch { }
@@ -81,20 +82,21 @@ namespace GoiRuntime.Communication
 			Debug.Log("[TcpStepServer] 已停止");
 		}
 
-		/// <summary>
-		/// Unity 主线程（协程）调用：非阻塞检查是否有新命令
-		/// </summary>
-		public bool TryGetCommand(out StepCommand command)
+	/// <summary>
+	/// Unity 主线程（协程）调用：非阻塞检查是否有新命令
+	/// </summary>
+	public bool TryGetCommand(out StepCommand command)
+	{
+		if (_commandReadyFlag)
 		{
-			if (_commandReady.IsSet)
-			{
-				command = _pendingCommand;
-				_commandReady.Reset();
-				return true;
-			}
-			command = default;
-			return false;
+			command = _pendingCommand;
+			_commandReadyFlag = false;
+			_commandReady.Reset();
+			return true;
 		}
+		command = default(StepCommand);
+		return false;
+	}
 
 		/// <summary>
 		/// Unity 主线程（协程）调用：在物理步进完成后，将状态打包发出
@@ -125,10 +127,11 @@ namespace GoiRuntime.Communication
 					? (byte)1 : (byte)0;
 			}
 
-			// 传给后台线程发送（避免在主线程阻塞 socket write）
-			_responseBytes = buf;
-			_responseReady.Set();
-		}
+		// 传给后台线程发送（避免在主线程阻塞 socket write）
+		_responseBytes = buf;
+		_responseReady.Set();
+	}
+
 
 		// ── 后台线程 ──────────────────────────────────────────────
 
@@ -170,16 +173,26 @@ namespace GoiRuntime.Communication
 						}
 						cmd.Actions = actions;
 					}
+					else if (cmdType == CommandType.Config)
+					{
+						// 读 [active:1B][mouseXActionId:4B][mouseYActionId:4B]
+						byte[] configBuf = ReadExact(9);
+						if (configBuf == null) break;
+						cmd.ConfigRewiredMouseActive = configBuf[0] != 0;
+						cmd.ConfigMouseXActionId = BitConverter.ToInt32(configBuf, 1);
+						cmd.ConfigMouseYActionId = BitConverter.ToInt32(configBuf, 5);
+					}
 
-					// --- 通知主线程 ---
-					_pendingCommand = cmd;
-					_responseReady.Reset();
-					_commandReady.Set();
+				// --- 通知主线程 ---
+				_pendingCommand = cmd;
+				_responseReady.Reset();
+				_commandReadyFlag = true;
+				_commandReady.Set();
 
-					if (cmdType == CommandType.Close) break;
+				if (cmdType == CommandType.Close) break;
 
-					// --- 等待主线程执行完物理步进并准备好回包 ---
-					_responseReady.Wait();
+				// --- 等待主线程执行完物理步进并准备好回包 ---
+				_responseReady.WaitOne();
 					if (!_running) break;
 
 					// --- 发送回包 ---

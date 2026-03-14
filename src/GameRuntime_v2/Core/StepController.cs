@@ -41,10 +41,10 @@ namespace GoiRuntime.Core
 		}
 		private readonly List<List<RigidbodySnapshot>> initialSnapshots = new List<List<RigidbodySnapshot>>();
 
-		private bool isInitialized;
+	private bool isInitialized;
 
-		public bool IsReady => isInitialized;
-		public int NumAgents => numAgents;
+	public bool IsReady => isInitialized;
+	public int NumAgents => numAgents;
 
 		public StepController(int numAgents, int stepFrames, int stateDim = 29, int actionDim = 2)
 		{
@@ -121,13 +121,14 @@ namespace GoiRuntime.Core
 		/// </summary>
 		public float[] ExecuteStep(float[] actions)
 		{
-			// 1. 分发动作
+			// 1. 分发动作 + 触发 FixedUpdate（必须在 Simulate 前调用，使关节电机力生效）
 			for (int i = 0; i < numAgents; i++)
 			{
 				if (inputServices[i] == null || !inputServices[i].IsReady) continue;
 				float ax = (i * actionDim + 0 < actions.Length) ? actions[i * actionDim + 0] : 0f;
 				float ay = (i * actionDim + 1 < actions.Length) ? actions[i * actionDim + 1] : 0f;
 				inputServices[i].SetMouseInput(new Vector2(ax, ay));
+				inputServices[i].InvokeFixedUpdate();
 			}
 
 			// 2. 推进物理
@@ -157,9 +158,23 @@ namespace GoiRuntime.Core
 					snap.rb.angularVelocity = snap.angularVelocity;
 				}
 			}
-			// 推进一帧让物理状态稳定
-			Physics2D.Simulate(Time.fixedDeltaTime);
-			Debug.Log("[StepController] 所有 agent 已重置");
+	// 清零注入值，避免上一 episode 的残余影响下一 episode
+	GoiRuntime.PlayerControl.RewiredMouseOverride.Reset();
+
+	// 关键修复：Reset 后的单步 Simulate 必须先调用 InvokeFixedUpdate，
+	// 以确保各 agent 的关节电机力在 Simulate 前被施加。
+	// 若跳过此步，关节约束求解器会因缺少电机对抗力而产生巨大修正冲量，
+	// 导致克隆体刚体被弹射到 (0,0) 附近，物理状态不可恢复。
+	for (int i = 0; i < numAgents; i++)
+	{
+		if (inputServices[i] == null || !inputServices[i].IsReady) continue;
+		inputServices[i].SetMouseInput(Vector2.zero);  // 零输入，只激活电机阻尼/稳定力
+		inputServices[i].InvokeFixedUpdate();
+	}
+
+	// 推进一帧让物理状态稳定
+	Physics2D.Simulate(Time.fixedDeltaTime);
+	Debug.Log("[StepController] 所有 agent 已重置");
 		}
 
 		/// <summary>
@@ -173,25 +188,41 @@ namespace GoiRuntime.Core
 				float[] s = (stateServices[i] != null && stateServices[i].IsReady)
 					? stateServices[i].GetStateArray()
 					: new float[stateDim];
+				if (s == null || s.Length < stateDim)
+				{
+					Debug.LogError($"[StepController] agent {i} GetStateArray 返回 {(s == null ? "null" : s.Length.ToString())} 元素，期望 {stateDim}，用零补全");
+					s = new float[stateDim];
+				}
 				System.Array.Copy(s, 0, result, i * stateDim, stateDim);
 			}
 			return result;
 		}
 
-		// ── 快照管理 ──────────────────────────────────────────────
+	// ── 快照管理 ──────────────────────────────────────────────
 
-		private void CaptureAllSnapshots()
+	/// <summary>
+	/// 以当前物理状态为基准重新拍快照（供 warmup 后调用）
+	/// </summary>
+	public void TakeNewSnapshot()
+	{
+		CaptureAllSnapshots();
+		Debug.Log("[StepController] 已重新拍摄初始快照（warmup 完成后的稳定状态）");
+	}
+
+	private void CaptureAllSnapshots()
 		{
 			initialSnapshots.Clear();
-			foreach (var stateSvc in stateServices)
+			for (int agentIdx = 0; agentIdx < stateServices.Count; agentIdx++)
 			{
+				var stateSvc = stateServices[agentIdx];
 				var list = new List<RigidbodySnapshot>();
 				if (stateSvc != null && stateSvc.IsReady)
 				{
 					GameObject go = stateSvc.GetPlayerObject();
 					if (go != null)
 					{
-						foreach (var rb in go.GetComponentsInChildren<Rigidbody2D>(true))
+						var rbs = go.GetComponentsInChildren<Rigidbody2D>(true);
+						foreach (var rb in rbs)
 						{
 							list.Add(new RigidbodySnapshot
 							{
@@ -202,7 +233,14 @@ namespace GoiRuntime.Core
 								angularVelocity = rb.angularVelocity,
 							});
 						}
+						// 打印 rb[0] 坐标，诊断快照是否捕获了正确位置
+						if (rbs.Length > 0)
+							Debug.Log($"[StepController] agent{agentIdx} 快照 rb[0].pos={rbs[0].position:F2} rb[0].vel={rbs[0].velocity:F1}");
 					}
+				}
+				else
+				{
+					Debug.LogWarning($"[StepController] agent{agentIdx} 状态服务未就绪，快照为空");
 				}
 				initialSnapshots.Add(list);
 			}

@@ -1,0 +1,29 @@
+{
+  "port": 9000,
+  "connect_timeout": 60,
+  "auto_launch": true,
+  "l1l2": { "n_steps": 100 },
+  "l3":   {
+    "n_trials": 5,
+    "warmup_steps": 500,
+    "csv_repeats": 2,
+    "rewired_mouse_override": {
+      "active": true,
+      "mouse_x_action_id": -1,
+      "mouse_y_action_id": -1
+    }
+  },
+  "l4":   {
+    "n_steps": 150,
+    "amplitude": 50,
+    "n_trials": 3,
+    "sep_threshold": 1.0,
+    "warmup_steps": 500,
+    "rewired_mouse_override": {
+      "active": true,
+      "mouse_x_action_id": -1,
+      "mouse_y_action_id": -1
+    }
+  },
+  "l5":   { "num_agents": 2, "n_steps": 200, "warmup_steps": 300 }
+}

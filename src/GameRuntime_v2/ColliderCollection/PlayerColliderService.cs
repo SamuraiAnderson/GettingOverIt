@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using GoiRuntime.Core.Events;
+using GoiRuntime.Core.Interfaces;
 
 namespace GoiRuntime.ColliderCollection
 {

@@ -49,6 +49,12 @@ namespace GoiRuntime.Core.Interfaces
 		/// <summary>执行一个 RL step（携带 N 个 agent 的动作）</summary>
 		Step  = (byte)'S',
 
+		/// <summary>以当前物理状态为基准重新拍快照（warmup 后调用）</summary>
+		NewSnapshot = (byte)'N',
+
+		/// <summary>配置 RewiredMouseOverride（L3 可重复性测试用）</summary>
+		Config = (byte)'C',
+
 		/// <summary>关闭连接，退出训练</summary>
 		Close = (byte)'X',
 	}
@@ -66,6 +72,15 @@ namespace GoiRuntime.Core.Interfaces
 		/// 布局：[agent0_x, agent0_y, agent1_x, agent1_y, ...]
 		/// </summary>
 		public float[] Actions;
+
+		/// <summary>Config 命令：是否激活 RewiredMouseOverride</summary>
+		public bool ConfigRewiredMouseActive;
+
+		/// <summary>Config 命令：鼠标 X 轴 Rewired actionId（-1 表示未诊断）</summary>
+		public int ConfigMouseXActionId;
+
+		/// <summary>Config 命令：鼠标 Y 轴 Rewired actionId（-1 表示未诊断）</summary>
+		public int ConfigMouseYActionId;
 	}
 
 	/// <summary>

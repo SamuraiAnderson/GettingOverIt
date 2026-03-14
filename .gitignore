@@ -122,3 +122,4 @@ config.local.json
 /dist/
 
 __pycache__
+src/Data/GameResults

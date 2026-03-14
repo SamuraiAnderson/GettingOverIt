@@ -46,6 +46,16 @@ namespace GoiRuntime.Core
 		{
 			Logger.LogInfo("=== Game Runtime v2 启动 ===");
 
+
+		// 注册 Rewired Player.GetAxis/GetAxisRaw Harmony patch（Plan B：Rewired 层拦截）
+		GoiRuntime.PlayerControl.RewiredMouseOverride.ApplyPatches();
+
+		// 允许后台运行（游戏最小化或失去焦点时 Unity 不降速）
+		Application.runInBackground = true;
+			QualitySettings.vSyncCount  = 0;   // 关闭垂直同步，避免帧率受后台限制
+			Application.targetFrameRate = -1;   // 不限制渲染帧率上限
+			Logger.LogInfo("后台运行模式已启用（runInBackground=true, vSync=0）");
+
 			// 加载配置
 			config = RuntimeConfig.Load();
 			config.Save(); // 首次运行时创建默认配置
@@ -413,9 +423,15 @@ namespace GoiRuntime.Core
 			tcpStepServer.StartListening(config.tcpPort);
 			Logger.LogInfo($"TcpStepServer 已启动，监听端口 {config.tcpPort}");
 
-			// --- 启动训练主循环协程 ---
-			StartCoroutine(TrainingLoop());
-			Logger.LogInfo("游戏运行模式初始化完成，等待 Python 连接...");
+		// 激活 RL 模式：阻止 PlayerControl.Update() 读取真实鼠标
+		GoiRuntime.PlayerControl.PlayerControlUpdatePatch.RlModeActive = true;
+		// action 名称已确认为 "mouseX"/"mouseY"，直接激活拦截
+		GoiRuntime.PlayerControl.RewiredMouseOverride.Active = true;
+		Logger.LogInfo("RL 模式已激活（Rewired 拦截 mouseX/mouseY，注入值将替换真实鼠标）");
+
+		// --- 启动训练主循环协程 ---
+		StartCoroutine(TrainingLoop());
+		Logger.LogInfo("游戏运行模式初始化完成，等待 Python 连接...");
 		}
 
 		/// <summary>
@@ -431,6 +447,8 @@ namespace GoiRuntime.Core
 				{
 					StepResponse resp;
 
+				try
+				{
 					switch (cmd.Type)
 					{
 						case CommandType.Reset:
@@ -453,11 +471,48 @@ namespace GoiRuntime.Core
 							tcpStepServer.SendResponse(resp);
 							break;
 
+						case CommandType.NewSnapshot:
+							stepController.TakeNewSnapshot();
+							resp = new StepResponse
+							{
+								States = stepController.CollectAllStates(),
+								Dones  = new bool[stepController.NumAgents],
+							};
+							tcpStepServer.SendResponse(resp);
+							break;
+
+						case CommandType.Config:
+							// L3 可重复性测试：启用 RewiredMouseOverride，屏蔽真实鼠标
+							GoiRuntime.PlayerControl.RewiredMouseOverride.Active = cmd.ConfigRewiredMouseActive;
+							if (cmd.ConfigMouseXActionId >= 0)
+								GoiRuntime.PlayerControl.RewiredMouseOverride.MouseXActionId = cmd.ConfigMouseXActionId;
+							if (cmd.ConfigMouseYActionId >= 0)
+								GoiRuntime.PlayerControl.RewiredMouseOverride.MouseYActionId = cmd.ConfigMouseYActionId;
+							Logger.LogInfo($"[TrainingLoop] RewiredMouseOverride: Active={cmd.ConfigRewiredMouseActive} MouseX={cmd.ConfigMouseXActionId} MouseY={cmd.ConfigMouseYActionId}");
+							resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+							tcpStepServer.SendResponse(resp);
+							break;
+
 						case CommandType.Close:
 							Logger.LogInfo("[TrainingLoop] 收到 CLOSE，退出训练循环");
 							tcpStepServer.Stop();
 							yield break;
 					}
+				}
+				catch (System.Exception ex)
+				{
+					Logger.LogError($"[TrainingLoop] cmd={cmd.Type} 处理异常: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+					// 发送空回包，避免 Python 永久阻塞
+					try
+					{
+						tcpStepServer.SendResponse(new StepResponse
+						{
+							States = new float[stepController.NumAgents * 29],
+							Dones  = new bool[stepController.NumAgents],
+						});
+					}
+					catch { }
+				}
 				}
 
 				yield return null;
