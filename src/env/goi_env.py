@@ -10,6 +10,7 @@ Getting Over It 强化学习环境接口
   Python → C#  CONFIG:           [cmd:1B='C'][active:1B][mouseXId:4B][mouseYId:4B]  RewiredMouseOverride
   Python → C#  EXPORT_COLLIDERS: [cmd:1B='E']  导出碰撞体几何到文件
   Python → C#  TELEPORT:         [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]  传送 agent 到目标坐标
+  Python → C#  CAMERA_FREE:      [cmd:1B='F'][enabled:1B]  启用/禁用自由相机
   Python → C#  CLOSE:            [cmd:1B='X']
 
   C# → Python  STATE: [n:1B] 然后对每个 agent: [state_i: 29×4B][done_i: 1B]
@@ -34,6 +35,7 @@ CMD_CONFIG      = b'C'
 CMD_VISUALIZE        = b'V'
 CMD_EXPORT_COLLIDERS = b'E'
 CMD_TELEPORT         = b'T'
+CMD_CAMERA_FREE      = b'F'
 CMD_CLOSE            = b'X'
 
 
@@ -197,6 +199,16 @@ class GoiEnv:
         states, _ = self._recv_response()
         logger.info("[GoiEnv] teleport agent %d → (%.2f, %.2f)", agent_index, x, y)
         return states
+
+    def set_camera_free(self, enabled: bool = True) -> None:
+        """
+        启用/禁用自由相机模式。
+        启用后解除原相机跟随锁定，允许滚轮缩放和鼠标中键拖动平移。
+        """
+        buf = CMD_CAMERA_FREE + struct.pack("B", 1 if enabled else 0)
+        self._send_all(buf)
+        self._recv_response()
+        logger.info("[GoiEnv] camera free %s", "ON" if enabled else "OFF")
 
     def step(self, actions: np.ndarray):
         """

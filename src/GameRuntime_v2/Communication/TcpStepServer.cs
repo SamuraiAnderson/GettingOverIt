@@ -13,8 +13,9 @@ namespace GoiRuntime.Communication
 	/// 线路协议（小端二进制）：
 	///   Python → C#  RESET:    [cmd:1B='R']
 	///   Python → C#  STEP:     [cmd:1B='S'][n:1B][actions: n×2×4B]
-	///   Python → C#  TELEPORT: [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]
-	///   Python → C#  CLOSE:    [cmd:1B='X']
+	///   Python → C#  TELEPORT:    [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]
+	///   Python → C#  CAMERA_FREE: [cmd:1B='F'][enabled:1B]
+	///   Python → C#  CLOSE:       [cmd:1B='X']
 	///
 	///   C# → Python  STATE: [n:1B][states: n×29×4B][dones: n×1B]
 	///
@@ -199,6 +200,13 @@ namespace GoiRuntime.Communication
 						byte[] vizBuf = ReadExact(1);
 						if (vizBuf == null) break;
 						cmd.VisualizeEnabled = vizBuf[0] != 0;
+					}
+
+					else if (cmdType == CommandType.CameraFree)
+					{
+						byte[] camBuf = ReadExact(1);
+						if (camBuf == null) break;
+						cmd.CameraFreeEnabled = camBuf[0] != 0;
 					}
 
 				// --- 通知主线程 ---

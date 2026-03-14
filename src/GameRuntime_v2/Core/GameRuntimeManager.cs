@@ -8,6 +8,7 @@ using GoiRuntime.Core.Utilities;
 using GoiRuntime.ColliderCollection;
 using GoiRuntime.PlayerControl;
 using GoiRuntime.Communication;
+using GoiRuntime.CameraControl;
 using GoiRuntime.Testing;
 
 namespace GoiRuntime.Core
@@ -36,6 +37,9 @@ namespace GoiRuntime.Core
 
 		// 碰撞箱可视化
 		private ColliderVisualizer colliderVisualizer;
+
+		// 自由相机
+		private FreeCameraController freeCameraController;
 
 		// 测试工具
 		private PlayerDebugTool playerDebugTool;
@@ -393,7 +397,7 @@ namespace GoiRuntime.Core
 		GoiRuntime.PlayerControl.RewiredMouseOverride.Active = true;
 		Logger.LogInfo("RL 模式已激活（Rewired 拦截 mouseX/mouseY，注入值将替换真实鼠标）");
 
-		// --- 碰撞箱可视化（默认关闭，由 Python 'V' 命令开启）---
+		// --- 碰撞箱可视化（默认开启，黑底白环境 + 彩色 Player）---
 		var mainCam = Camera.main;
 		if (mainCam != null)
 		{
@@ -407,13 +411,14 @@ namespace GoiRuntime.Core
 					roots.Add(dup);
 			}
 			colliderVisualizer.playerRoots = roots.ToArray();
-
-			colliderVisualizer.enabled = false;
-			Logger.LogInfo($"ColliderVisualizer 已附加到主摄像机（{roots.Count} 个 Player，默认关闭）");
+			Logger.LogInfo($"ColliderVisualizer 已附加到主摄像机（{roots.Count} 个 Player，默认开启）");
+			// 自由相机控制器（默认关闭，由 Python 'F' 命令开启）
+			freeCameraController = mainCam.gameObject.AddComponent<FreeCameraController>();
+			Logger.LogInfo("FreeCameraController 已附加到主摄像机（默认关闭）");
 		}
 		else
 		{
-			Logger.LogWarning("未找到主摄像机，ColliderVisualizer 未创建");
+			Logger.LogWarning("未找到主摄像机，ColliderVisualizer / FreeCameraController 未创建");
 		}
 
 		// --- 启动训练主循环协程 ---
@@ -507,6 +512,16 @@ namespace GoiRuntime.Core
 							resp = new StepResponse { States = new float[0], Dones = new bool[0] };
 							tcpStepServer.SendResponse(resp);
 							break;
+
+					case CommandType.CameraFree:
+						if (freeCameraController != null)
+						{
+							freeCameraController.SetFreeMode(cmd.CameraFreeEnabled);
+							Logger.LogInfo($"[TrainingLoop] FreeCameraController {(cmd.CameraFreeEnabled ? "启用" : "禁用")}");
+						}
+						resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+						tcpStepServer.SendResponse(resp);
+						break;
 
 						case CommandType.Close:
 							Logger.LogInfo("[TrainingLoop] 收到 CLOSE，退出训练循环");
@@ -651,6 +666,11 @@ namespace GoiRuntime.Core
 			{
 				Destroy(colliderVisualizer);
 				colliderVisualizer = null;
+			}
+			if (freeCameraController != null)
+			{
+				Destroy(freeCameraController);
+				freeCameraController = null;
 			}
 			playerInputService = null;
 			playerStateService = null;

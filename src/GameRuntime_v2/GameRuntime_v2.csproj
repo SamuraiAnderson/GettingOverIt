@@ -51,6 +51,9 @@
     <!-- Communication: TCP 步进服务器 -->
     <Compile Include="Communication\TcpStepServer.cs" />
     
+    <!-- Camera: 自由相机控制 -->
+    <Compile Include="Camera\FreeCameraController.cs" />
+    
     <!-- ColliderCollection: 碰撞体导出 + 可视化 -->
     <Compile Include="ColliderCollection\ColliderExporter.cs" />
     <Compile Include="ColliderCollection\ColliderVisualizer.cs" />

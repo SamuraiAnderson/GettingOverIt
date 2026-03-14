@@ -19,7 +19,7 @@ namespace GoiRuntime.PlayerControl
 		private List<DuplicateInstance> duplicates = new List<DuplicateInstance>();
 		private bool isInitialized = false;
 		
-		private const int MAX_DUPLICATES = 8;
+		private const int MAX_DUPLICATES = 64;
 		
 		#endregion
 		
@@ -420,7 +420,15 @@ namespace GoiRuntime.PlayerControl
 				disabledCount++;
 			}
 			
-			// 4. 只禁用特定的干扰脚本，保留物理相关脚本
+			// 4. 禁用所有 Renderer（去除贴图渲染，仅保留物理碰撞体）
+			Renderer[] renderers = clone.GetComponentsInChildren<Renderer>(true);
+			foreach (var r in renderers)
+			{
+				r.enabled = false;
+				disabledCount++;
+			}
+			
+			// 5. 只禁用特定的干扰脚本，保留物理相关脚本
 			MonoBehaviour[] scripts = clone.GetComponentsInChildren<MonoBehaviour>(true);
 			foreach (var script in scripts)
 			{

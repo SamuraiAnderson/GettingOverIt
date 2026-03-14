@@ -64,6 +64,9 @@ namespace GoiRuntime.Core.Interfaces
 		/// <summary>传送指定 agent 到目标世界坐标</summary>
 		Teleport = (byte)'T',
 
+		/// <summary>启用/禁用自由相机（滚轮缩放 + 拖动平移）</summary>
+		CameraFree = (byte)'F',
+
 		/// <summary>关闭连接，退出训练</summary>
 		Close = (byte)'X',
 	}
@@ -102,6 +105,9 @@ namespace GoiRuntime.Core.Interfaces
 
 		/// <summary>Teleport 命令：目标世界坐标 Y</summary>
 		public float TeleportY;
+
+		/// <summary>CameraFree 命令：是否启用自由相机</summary>
+		public bool CameraFreeEnabled;
 	}
 
 	/// <summary>

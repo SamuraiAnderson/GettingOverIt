@@ -1,23 +1,29 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace GoiRuntime.ColliderCollection
 {
 	/// <summary>
 	/// Player 碰撞箱 GL 描边可视化
 	/// 附加到 Camera 上，在 OnRenderObject 中用 GL.LINES 绘制所有 Collider2D 轮廓。
+	/// 启用时自动隐藏全场景 Renderer（贴图/精灵），仅用 GL 描边显示碰撞体。
 	/// </summary>
 	public class ColliderVisualizer : MonoBehaviour
 	{
 		public GameObject[] playerRoots;
 
 		private Material lineMaterial;
+		private Collider2D[] _envColliders;
+		private Color _originalBgColor;
 
 		private const int CIRCLE_SEGMENTS = 32;
+		private const float COLOR_SATURATION = 0.85f;
+		private const float COLOR_VALUE = 0.95f;
+		private const float COLOR_ALPHA = 0.9f;
 
-		private static readonly Color COLOR_POT    = new Color(0f, 1f, 0f, 0.9f);
-		private static readonly Color COLOR_TIP    = new Color(1f, 0.2f, 0.2f, 0.9f);
-		private static readonly Color COLOR_BODY   = new Color(1f, 1f, 0f, 0.9f);
-		private static readonly Color COLOR_DEFAULT = new Color(0f, 1f, 1f, 0.9f);
+		private static readonly Color COLOR_ENV = new Color(1f, 1f, 1f, 0.8f);
+
+		private List<Renderer> _hiddenRenderers = new List<Renderer>();
 
 		void Awake()
 		{
@@ -26,7 +32,84 @@ namespace GoiRuntime.ColliderCollection
 
 		void OnEnable()
 		{
+			HideAllSceneRenderers();
+			CollectEnvironmentColliders();
+			SetBlackBackground();
 			LogDetectedColliders();
+		}
+
+		void OnDisable()
+		{
+			RestoreHiddenRenderers();
+			RestoreBackground();
+		}
+
+		private void HideAllSceneRenderers()
+		{
+			_hiddenRenderers.Clear();
+			Renderer[] all = FindObjectsOfType<Renderer>(true);
+			foreach (var r in all)
+			{
+				if (r == null || !r.enabled) continue;
+				r.enabled = false;
+				_hiddenRenderers.Add(r);
+			}
+			Debug.Log($"[ColliderVisualizer] 隐藏了 {_hiddenRenderers.Count} 个场景 Renderer");
+		}
+
+		private void RestoreHiddenRenderers()
+		{
+			int count = 0;
+			foreach (var r in _hiddenRenderers)
+			{
+				if (r != null)
+				{
+					r.enabled = true;
+					count++;
+				}
+			}
+			_hiddenRenderers.Clear();
+			Debug.Log($"[ColliderVisualizer] 恢复了 {count} 个场景 Renderer");
+		}
+
+		private void CollectEnvironmentColliders()
+		{
+			var allPolys = FindObjectsOfType<PolygonCollider2D>();
+			var envList = new List<Collider2D>();
+			foreach (var poly in allPolys)
+			{
+				if (poly.GetComponentInParent<Rigidbody2D>() != null) continue;
+				if (poly.isTrigger) continue;
+				envList.Add(poly);
+			}
+			_envColliders = envList.ToArray();
+			Debug.Log($"[ColliderVisualizer] 收集到 {_envColliders.Length} 个环境碰撞体");
+		}
+
+		private void SetBlackBackground()
+		{
+			var cam = GetComponent<UnityEngine.Camera>();
+			if (cam != null)
+			{
+				_originalBgColor = cam.backgroundColor;
+				cam.backgroundColor = Color.black;
+				cam.clearFlags = CameraClearFlags.SolidColor;
+			}
+		}
+
+		private void RestoreBackground()
+		{
+			var cam = GetComponent<UnityEngine.Camera>();
+			if (cam != null)
+			{
+				cam.backgroundColor = _originalBgColor;
+			}
+		}
+
+		private Color GetPlayerColor(int rootIndex)
+		{
+			float hue = (rootIndex * 0.618034f) % 1f;
+			return Color.HSVToRGB(hue, COLOR_SATURATION, COLOR_VALUE) * new Color(1, 1, 1, COLOR_ALPHA);
 		}
 
 		private void LogDetectedColliders()
@@ -80,32 +163,46 @@ namespace GoiRuntime.ColliderCollection
 		void OnRenderObject()
 		{
 			if (Camera.current != Camera.main) return;
-			if (playerRoots == null || lineMaterial == null) return;
+			if (lineMaterial == null) return;
 
 			GL.PushMatrix();
 			lineMaterial.SetPass(0);
 
-			foreach (var root in playerRoots)
+			if (_envColliders != null)
 			{
-				if (root == null) continue;
-
-				var colliders = root.GetComponentsInChildren<Collider2D>(true);
-				foreach (var col in colliders)
+				foreach (var col in _envColliders)
 				{
 					if (col == null || !col.enabled) continue;
-
-					Color c = PickColor(col.gameObject.name);
-
 					if (col is PolygonCollider2D poly)
-						DrawPolygonCollider(poly, c);
-					else if (col is CircleCollider2D circle)
-						DrawCircleCollider(circle, c);
-					else if (col is BoxCollider2D box)
-						DrawBoxCollider(box, c);
-					else if (col is EdgeCollider2D edge)
-						DrawEdgeCollider(edge, c);
-					else if (col is CapsuleCollider2D capsule)
-						DrawCapsuleCollider(capsule, c);
+						DrawPolygonCollider(poly, COLOR_ENV);
+				}
+			}
+
+			if (playerRoots != null)
+			{
+				for (int r = 0; r < playerRoots.Length; r++)
+				{
+					var root = playerRoots[r];
+					if (root == null) continue;
+
+					Color c = GetPlayerColor(r);
+
+					var colliders = root.GetComponentsInChildren<Collider2D>(true);
+					foreach (var col in colliders)
+					{
+						if (col == null || !col.enabled) continue;
+
+						if (col is PolygonCollider2D poly)
+							DrawPolygonCollider(poly, c);
+						else if (col is CircleCollider2D circle)
+							DrawCircleCollider(circle, c);
+						else if (col is BoxCollider2D box)
+							DrawBoxCollider(box, c);
+						else if (col is EdgeCollider2D edge)
+							DrawEdgeCollider(edge, c);
+						else if (col is CapsuleCollider2D capsule)
+							DrawCapsuleCollider(capsule, c);
+					}
 				}
 			}
 
@@ -284,16 +381,6 @@ namespace GoiRuntime.ColliderCollection
 			}
 		}
 
-		// ── 颜色映射 ────────────────────────────────────────────
-
-		private Color PickColor(string objName)
-		{
-			if (objName == null) return COLOR_DEFAULT;
-			string lower = objName.ToLower();
-			if (lower.Contains("pot")) return COLOR_POT;
-			if (lower.Contains("tip")) return COLOR_TIP;
-			if (lower == "player" || lower.Contains("body")) return COLOR_BODY;
-			return COLOR_DEFAULT;
-		}
+		// ── 颜色映射（按 player root 索引，黄金比例色环分配）────
 	}
 }

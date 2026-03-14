@@ -28,5 +28,6 @@
   "l5":   { "num_agents": 2, "n_steps": 200, "warmup_steps": 300 },
   "l5_1": { "num_agents": 2, "n_steps": 200, "amplitude": 80, "warmup_steps": 500, "sep_threshold": 0.5 },
   "l6":   { "duration_sec": 15, "amplitude": 200, "warmup_steps": 500 },
-  "l7":   { "n_drops": 10, "drop_height": 2.0, "padding": 0.3, "settle_steps": 200, "warmup_steps": 300, "height_decay": 0.0, "y_max_cutoff": 380.0 }
+  "l7":   { "n_drops": 10, "drop_height": 2.0, "padding": 0.3, "settle_steps": 200, "warmup_steps": 300, "height_decay": 0.0, "y_max_cutoff": 380.0 },
+  "l8":   { "warmup_steps": 300, "settle_steps": 200, "motion_duration": 10.0, "motion_amplitude": 50.0 }
 }
