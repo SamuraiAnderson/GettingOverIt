@@ -255,6 +255,76 @@ namespace GoiRuntime.Core
 		}
 
 		/// <summary>
+		/// 将指定 agent 整体传送到目标世界坐标。
+		/// Player 是铰接体（body/hub/slider/handle/pole/tip 各有独立 Rigidbody2D），
+		/// 传送时以 Player 根刚体当前位置为基准，将 delta 平移应用到所有子刚体，
+		/// 然后清零速度并推进一帧物理使关节稳定。
+		/// </summary>
+		public float[] Teleport(int agentIndex, Vector2 target)
+		{
+			if (agentIndex < 0 || agentIndex >= stateServices.Count)
+			{
+				Debug.LogError($"[StepController] Teleport: agentIndex={agentIndex} 越界 (0..{stateServices.Count - 1})");
+				return CollectAllStates();
+			}
+
+			var stateSvc = stateServices[agentIndex];
+			if (stateSvc == null || !stateSvc.IsReady)
+			{
+				Debug.LogError($"[StepController] Teleport: agent{agentIndex} 状态服务未就绪");
+				return CollectAllStates();
+			}
+
+			GameObject playerObj = stateSvc.GetPlayerObject();
+			if (playerObj == null)
+			{
+				Debug.LogError($"[StepController] Teleport: agent{agentIndex} PlayerObject 为 null");
+				return CollectAllStates();
+			}
+
+			var rootRb = playerObj.GetComponent<Rigidbody2D>();
+			if (rootRb == null)
+			{
+				Debug.LogError($"[StepController] Teleport: agent{agentIndex} 无根 Rigidbody2D");
+				return CollectAllStates();
+			}
+
+			Vector2 delta = target - rootRb.position;
+			var allRbs = playerObj.GetComponentsInChildren<Rigidbody2D>(true);
+
+			foreach (var rb in allRbs)
+			{
+				rb.position += delta;
+				rb.velocity = Vector2.zero;
+				rb.angularVelocity = 0f;
+			}
+
+			// fakeCursor 也需要平移
+			if (agentIndex < inputServices.Count && inputServices[agentIndex] != null)
+			{
+				Rigidbody2D fcRB = inputServices[agentIndex].GetFakeCursorRB();
+				if (fcRB != null)
+				{
+					fcRB.position += delta;
+					fcRB.velocity = Vector2.zero;
+					fcRB.angularVelocity = 0f;
+				}
+			}
+
+			// 零输入 + InvokeFixedUpdate + Simulate 稳定关节
+			if (agentIndex < inputServices.Count && inputServices[agentIndex] != null && inputServices[agentIndex].IsReady)
+			{
+				inputServices[agentIndex].SetMouseInput(Vector2.zero);
+				inputServices[agentIndex].InvokeFixedUpdate();
+			}
+			Physics2D.Simulate(Time.fixedDeltaTime);
+
+			Debug.Log($"[StepController] Teleport agent{agentIndex} → ({target.x:F2}, {target.y:F2}), delta=({delta.x:F2}, {delta.y:F2}), {allRbs.Length} rigidbodies moved");
+
+			return CollectAllStates();
+		}
+
+		/// <summary>
 		/// 采集各 agent 当前状态，返回 flat float[]
 		/// </summary>
 		public float[] CollectAllStates()

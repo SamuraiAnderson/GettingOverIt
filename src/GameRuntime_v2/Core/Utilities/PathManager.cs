@@ -22,7 +22,7 @@ namespace GoiRuntime.Core.Utilities
 
 		public static string DebugPath => Path.Combine(DataRootPath, "Debug");
 
-		public static string CollidersPath => Path.Combine(DebugPath, "Colliders");
+		public static string CollidersPath => Path.Combine(DataRootPath, "Colliders");
 
 		public static string ControlSignalsPath => Path.Combine(DataRootPath, "ControlSignals");
 

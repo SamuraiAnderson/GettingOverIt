@@ -29,7 +29,6 @@
     <Compile Include="Core\Interfaces\IGameControl.cs" />
     <Compile Include="Core\Interfaces\IPlayerServices.cs" />
     <Compile Include="Core\Interfaces\IStepServer.cs" />
-    <Compile Include="Core\Interfaces\IColliderService.cs" />
     <Compile Include="Core\Interfaces\ITesting.cs" />
     
     <!-- Core/Services: 核心服务实现 -->
@@ -52,10 +51,8 @@
     <!-- Communication: TCP 步进服务器 -->
     <Compile Include="Communication\TcpStepServer.cs" />
     
-    <!-- ColliderCollection: 碰撞箱采集服务 -->
-    <Compile Include="ColliderCollection\ColliderCollectorBase.cs" />
-    <Compile Include="ColliderCollection\EnvironmentColliderService.cs" />
-    <Compile Include="ColliderCollection\PlayerColliderService.cs" />
+    <!-- ColliderCollection: 碰撞体导出 + 可视化 -->
+    <Compile Include="ColliderCollection\ColliderExporter.cs" />
     <Compile Include="ColliderCollection\ColliderVisualizer.cs" />
     
     <!-- PlayerControl: Player 控制服务 -->

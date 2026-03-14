@@ -1,13 +1,13 @@
 using BepInEx;
 using UnityEngine;
+using System.IO;
 using GoiRuntime.Core.Configuration;
-using GoiRuntime.Core.Events;
 using GoiRuntime.Core.Interfaces;
 using GoiRuntime.Core.Services;
+using GoiRuntime.Core.Utilities;
 using GoiRuntime.ColliderCollection;
 using GoiRuntime.PlayerControl;
 using GoiRuntime.Communication;
-using GoiRuntime.ColliderCollection;
 using GoiRuntime.Testing;
 
 namespace GoiRuntime.Core
@@ -24,10 +24,6 @@ namespace GoiRuntime.Core
 
 		// 核心服务
 		private GameControlService gameControlService;
-		
-		// 碰撞箱服务
-		private EnvironmentColliderService environmentColliderService;
-		private PlayerColliderService playerColliderService;
 		
 		// Player 控制服务
 		private PlayerInputService playerInputService;
@@ -308,60 +304,24 @@ namespace GoiRuntime.Core
 
 		/// <summary>
 		/// 初始化数据采集模式
-		/// 仅启动碰撞箱采集服务
+		/// 采集环境碰撞体并导出后自动退出
 		/// </summary>
 		private void InitializeDataCollectionMode()
 		{
 			Logger.LogInfo("初始化数据采集模式");
-
-			// 创建环境碰撞箱采集服务
-			environmentColliderService = new EnvironmentColliderService();
-			if (environmentColliderService.Initialize())
-			{
-				Logger.LogInfo("环境碰撞箱服务初始化成功");
-
-				// 自动采集并导出 Mountain 数据
-				StartCoroutine(CollectMountainDataCoroutine());
-			}
-			else
-			{
-				Logger.LogError("环境碰撞箱服务初始化失败");
-			}
-
-			Logger.LogInfo("数据采集模式已启动，等待采集完成后游戏将自动退出");
+			StartCoroutine(DataCollectionCoroutine());
 		}
 
-		/// <summary>
-		/// 采集 Mountain 数据的协程
-		/// </summary>
-		private System.Collections.IEnumerator CollectMountainDataCoroutine()
+		private System.Collections.IEnumerator DataCollectionCoroutine()
 		{
-			// 等待一帧，确保场景完全加载
 			yield return null;
 
-			Logger.LogInfo("开始采集 Mountain 碰撞箱数据...");
+			Logger.LogInfo("开始导出碰撞体数据...");
+			string collidersDir = PathManager.CollidersPath;
+			ColliderExporter.ExportEnvironment(Path.Combine(collidersDir, "environment.json"));
 
-			var colliders = environmentColliderService.CollectEnvironmentColliders();
-			
-			if (colliders != null && colliders.Length > 0)
-			{
-				Logger.LogInfo($"采集到 {colliders.Length} 个碰撞箱");
-
-				// 导出数据
-				string exportPath = environmentColliderService.ExportEnvironmentColliders();
-				Logger.LogInfo($"📁 数据已导出到: {exportPath}");
-
-				// 发布采集完成事件
-				EventBus.Publish(GameEvents.ColliderDataExported, exportPath);
-			}
-			else
-			{
-				Logger.LogError("未能采集到 Mountain 碰撞箱");
-			}
-
-			// 等待 2 秒后退出游戏
 			yield return new WaitForSeconds(2f);
-			Logger.LogInfo("🚪 数据采集完成，退出游戏");
+			Logger.LogInfo("数据采集完成，退出游戏");
 			Application.Quit();
 
 #if UNITY_EDITOR
@@ -520,6 +480,24 @@ namespace GoiRuntime.Core
 							tcpStepServer.SendResponse(resp);
 							break;
 
+					case CommandType.ExportColliders:
+						ColliderExporter.ExportAll(playerStateService.GetPlayerObject(), PathManager.CollidersPath);
+						resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+						tcpStepServer.SendResponse(resp);
+						break;
+
+					case CommandType.Teleport:
+						float[] teleStates = stepController.Teleport(
+							cmd.TeleportAgentIndex,
+							new Vector2(cmd.TeleportX, cmd.TeleportY));
+						resp = new StepResponse
+						{
+							States = teleStates,
+							Dones  = new bool[stepController.NumAgents],
+						};
+						tcpStepServer.SendResponse(resp);
+						break;
+
 						case CommandType.Visualize:
 							if (colliderVisualizer != null)
 							{
@@ -590,20 +568,9 @@ namespace GoiRuntime.Core
 				Logger.LogError("PlayerInputService 初始化失败");
 			}
 
-			// 初始化 Player 碰撞箱采集服务
-			GameObject player = playerStateService.GetPlayerObject();
-			if (player != null)
-			{
-				playerColliderService = new PlayerColliderService();
-				if (playerColliderService.Initialize(player))
-				{
-					Logger.LogInfo("PlayerColliderService 初始化成功");
-				}
-			}
-
 			// 初始化 Player 调试工具（使用所有服务）
 			playerDebugTool = new PlayerDebugTool();
-			if (playerDebugTool.Initialize(playerInputService, playerStateService, playerColliderService, gameControlService))
+			if (playerDebugTool.Initialize(playerInputService, playerStateService, gameControlService))
 			{
 				Logger.LogInfo("PlayerDebugTool 初始化成功");
 			}
@@ -685,8 +652,6 @@ namespace GoiRuntime.Core
 				Destroy(colliderVisualizer);
 				colliderVisualizer = null;
 			}
-			environmentColliderService = null;
-			playerColliderService = null;
 			playerInputService = null;
 			playerStateService = null;
 			gameControlService = null;
@@ -701,22 +666,6 @@ namespace GoiRuntime.Core
 
 		void Update()
 		{
-			// F1: 打印模式信息（所有模式）
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				modeManager.PrintModeInfo();
-			}
-
-			// F2: 手动采集环境碰撞箱（仅数据采集模式）
-			if (Input.GetKeyDown(KeyCode.F2) && modeManager.IsDataCollectionMode())
-			{
-				if (environmentColliderService != null)
-				{
-					var colliders = environmentColliderService.CollectEnvironmentColliders();
-					Logger.LogInfo($"手动采集: {colliders?.Length ?? 0} 个碰撞箱");
-				}
-			}
-			
 			// 游戏测试模式：调用调试工具更新
 			if (modeManager.IsGameTestingMode() && playerDebugTool != null)
 			{

@@ -4,11 +4,13 @@ Getting Over It 强化学习环境接口
 与 C# TcpStepServer 通信，实现帧级别同步步进。
 
 线路协议（小端二进制）：
-  Python → C#  RESET:       [cmd:1B='R']
-  Python → C#  STEP:        [cmd:1B='S'][n:1B][actions: n×2×4B]
-  Python → C#  NEW_SNAPSHOT:[cmd:1B='N']  重新拍摄快照（warmup 后调用）
-  Python → C#  CONFIG:      [cmd:1B='C'][active:1B][mouseXId:4B][mouseYId:4B]  RewiredMouseOverride
-  Python → C#  CLOSE:       [cmd:1B='X']
+  Python → C#  RESET:            [cmd:1B='R']
+  Python → C#  STEP:             [cmd:1B='S'][n:1B][actions: n×2×4B]
+  Python → C#  NEW_SNAPSHOT:     [cmd:1B='N']  重新拍摄快照（warmup 后调用）
+  Python → C#  CONFIG:           [cmd:1B='C'][active:1B][mouseXId:4B][mouseYId:4B]  RewiredMouseOverride
+  Python → C#  EXPORT_COLLIDERS: [cmd:1B='E']  导出碰撞体几何到文件
+  Python → C#  TELEPORT:         [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]  传送 agent 到目标坐标
+  Python → C#  CLOSE:            [cmd:1B='X']
 
   C# → Python  STATE: [n:1B] 然后对每个 agent: [state_i: 29×4B][done_i: 1B]
 """
@@ -29,8 +31,10 @@ CMD_RESET       = b'R'
 CMD_STEP        = b'S'
 CMD_NEW_SNAPSHOT = b'N'
 CMD_CONFIG      = b'C'
-CMD_VISUALIZE   = b'V'
-CMD_CLOSE       = b'X'
+CMD_VISUALIZE        = b'V'
+CMD_EXPORT_COLLIDERS = b'E'
+CMD_TELEPORT         = b'T'
+CMD_CLOSE            = b'X'
 
 
 class GoiEnv:
@@ -167,6 +171,32 @@ class GoiEnv:
         self._send_all(buf)
         self._recv_response()
         logger.info("[GoiEnv] collider visual %s", "ON" if enabled else "OFF")
+
+    def export_colliders(self) -> None:
+        """
+        请求 C# 导出碰撞体几何到文件。
+        导出完成后文件位于 GoiData/Colliders/:
+          - environment.json    环境（Mountain）世界坐标顶点
+          - player_contour.json Player 轮廓本地坐标顶点
+        """
+        self._send_all(CMD_EXPORT_COLLIDERS)
+        self._recv_response()
+        logger.info("[GoiEnv] 碰撞体几何已导出到 GoiData/Colliders/")
+
+    def teleport(self, x: float, y: float, agent_index: int = 0) -> np.ndarray:
+        """
+        传送指定 agent 到目标世界坐标 (x, y)。
+        Player 是铰接体，C# 侧会整体平移所有子刚体并清零速度。
+        返回传送后的状态 shape: (num_agents, STATE_DIM)
+        """
+        buf = bytearray()
+        buf += CMD_TELEPORT
+        buf += struct.pack("B", agent_index)
+        buf += struct.pack("<ff", x, y)
+        self._send_all(bytes(buf))
+        states, _ = self._recv_response()
+        logger.info("[GoiEnv] teleport agent %d → (%.2f, %.2f)", agent_index, x, y)
+        return states
 
     def step(self, actions: np.ndarray):
         """

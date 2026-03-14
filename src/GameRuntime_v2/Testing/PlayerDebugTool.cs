@@ -1,6 +1,5 @@
 using UnityEngine;
 using GoiRuntime.PlayerControl;
-using GoiRuntime.ColliderCollection;
 using GoiRuntime.Core.Interfaces;
 
 namespace GoiRuntime.Testing
@@ -13,7 +12,6 @@ namespace GoiRuntime.Testing
 	{
 		private PlayerInputService inputService;
 		private PlayerStateService stateService;
-		private PlayerColliderService colliderService;
 		private IGameControlService gameControl;
 		
 		private PlayerDuplicateManager duplicateManager;
@@ -37,12 +35,10 @@ namespace GoiRuntime.Testing
 		public bool Initialize(
 			PlayerInputService input, 
 			PlayerStateService state, 
-			PlayerColliderService collider,
 			IGameControlService control)
 		{
 			inputService = input;
 			stateService = state;
-			colliderService = collider;
 			gameControl = control;
 			
 			isInitialized = gameControl != null &&
@@ -242,14 +238,26 @@ namespace GoiRuntime.Testing
 		/// </summary>
 		private void PrintPlayerColliders()
 		{
-			if (colliderService == null || !colliderService.IsReady)
+			if (stateService == null || !stateService.IsReady)
 			{
-				Debug.LogWarning("PlayerColliderService 未就绪");
+				Debug.LogWarning("PlayerStateService 未就绪");
 				return;
 			}
 			
-			colliderService.UpdateRealtime();
-			colliderService.PrintColliderInfo();
+			GameObject player = stateService.GetPlayerObject();
+			if (player == null)
+			{
+				Debug.LogWarning("Player 对象为 null");
+				return;
+			}
+
+			var polys = player.GetComponentsInChildren<PolygonCollider2D>(true);
+			Debug.Log($"=== Player 碰撞箱 ({polys.Length} 个 PolygonCollider2D) ===");
+			foreach (var poly in polys)
+			{
+				int totalPts = poly.GetTotalPointCount();
+				Debug.Log($"  {poly.gameObject.name}: {poly.pathCount} path(s), {totalPts} vertices, enabled={poly.enabled}");
+			}
 		}
 		
 		/// <summary>

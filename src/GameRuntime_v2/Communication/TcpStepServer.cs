@@ -11,9 +11,10 @@ namespace GoiRuntime.Communication
 	/// TCP 阻塞步进服务器
 	///
 	/// 线路协议（小端二进制）：
-	///   Python → C#  RESET: [cmd:1B='R']
-	///   Python → C#  STEP:  [cmd:1B='S'][n:1B][actions: n×2×4B]
-	///   Python → C#  CLOSE: [cmd:1B='X']
+	///   Python → C#  RESET:    [cmd:1B='R']
+	///   Python → C#  STEP:     [cmd:1B='S'][n:1B][actions: n×2×4B]
+	///   Python → C#  TELEPORT: [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]
+	///   Python → C#  CLOSE:    [cmd:1B='X']
 	///
 	///   C# → Python  STATE: [n:1B][states: n×29×4B][dones: n×1B]
 	///
@@ -181,6 +182,16 @@ namespace GoiRuntime.Communication
 						cmd.ConfigRewiredMouseActive = configBuf[0] != 0;
 						cmd.ConfigMouseXActionId = BitConverter.ToInt32(configBuf, 1);
 						cmd.ConfigMouseYActionId = BitConverter.ToInt32(configBuf, 5);
+					}
+
+					else if (cmdType == CommandType.Teleport)
+					{
+						// [agentIndex:1B][x:4B][y:4B] = 9 bytes
+						byte[] teleBuf = ReadExact(9);
+						if (teleBuf == null) break;
+						cmd.TeleportAgentIndex = teleBuf[0];
+						cmd.TeleportX = BitConverter.ToSingle(teleBuf, 1);
+						cmd.TeleportY = BitConverter.ToSingle(teleBuf, 5);
 					}
 
 					else if (cmdType == CommandType.Visualize)

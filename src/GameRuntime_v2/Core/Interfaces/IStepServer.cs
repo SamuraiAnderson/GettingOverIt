@@ -58,6 +58,12 @@ namespace GoiRuntime.Core.Interfaces
 		/// <summary>开启/关闭碰撞箱可视化描边</summary>
 		Visualize = (byte)'V',
 
+		/// <summary>导出碰撞体几何（环境 + Player 轮廓）到文件</summary>
+		ExportColliders = (byte)'E',
+
+		/// <summary>传送指定 agent 到目标世界坐标</summary>
+		Teleport = (byte)'T',
+
 		/// <summary>关闭连接，退出训练</summary>
 		Close = (byte)'X',
 	}
@@ -87,6 +93,15 @@ namespace GoiRuntime.Core.Interfaces
 
 		/// <summary>Visualize 命令：是否开启碰撞箱描边</summary>
 		public bool VisualizeEnabled;
+
+		/// <summary>Teleport 命令：目标 agent 索引</summary>
+		public int TeleportAgentIndex;
+
+		/// <summary>Teleport 命令：目标世界坐标 X</summary>
+		public float TeleportX;
+
+		/// <summary>Teleport 命令：目标世界坐标 Y</summary>
+		public float TeleportY;
 	}
 
 	/// <summary>
