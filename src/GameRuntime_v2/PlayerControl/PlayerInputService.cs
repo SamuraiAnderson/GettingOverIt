@@ -14,12 +14,13 @@ namespace GoiRuntime.PlayerControl
 	{
 		#region 组件引用
 		
-		private GameObject playerObject;
-		private Component playerControlComponent;
-		private FieldInfo mouseInputField;
-		private FieldInfo inputEnabledField;
-		
-		private bool isInitialized = false;
+	private GameObject playerObject;
+	private Component playerControlComponent;
+	private FieldInfo mouseInputField;
+	private FieldInfo inputEnabledField;
+	private MethodInfo fixedUpdateMethod;
+	
+	private bool isInitialized = false;
 		
 		#endregion
 		
@@ -64,7 +65,9 @@ namespace GoiRuntime.PlayerControl
 		public bool IsReady => isInitialized;
 		
 		/// <summary>
-		/// 设置鼠标输入
+		/// 设置鼠标输入。
+		/// 双路注入：① 反射写入 mouseInput 字段（兼容旧路径）；
+		///           ② 更新 MouseInputOverride 全局覆盖层（拦截 Input.GetAxis）。
 		/// </summary>
 		public void SetMouseInput(Vector2 input)
 		{
@@ -76,13 +79,36 @@ namespace GoiRuntime.PlayerControl
 			
 			try
 			{
-				// 限制输入范围
-				Vector2 clampedInput = ClampInput(input);
-				mouseInputField.SetValue(playerControlComponent, clampedInput);
+			Vector2 clampedInput = ClampInput(input);
+			// 同步更新 Rewired 层注入值（Plan B），拦截 Player.GetAxis 时返回此值
+			RewiredMouseOverride.Set(clampedInput.x, clampedInput.y);
+			mouseInputField.SetValue(playerControlComponent, clampedInput);
 			}
 			catch (Exception e)
 			{
 				Debug.LogError($"设置 mouseInput 失败: {e.Message}");
+			}
+		}
+
+		/// <summary>
+		/// 手动调用 PlayerControl.FixedUpdate()，让游戏逻辑读取 mouseInput 并对刚体施力。
+		/// 须在 SetMouseInput() 之后、Physics2D.Simulate() 之前调用。
+		/// </summary>
+		public void InvokeFixedUpdate()
+		{
+			if (!isInitialized || fixedUpdateMethod == null) return;
+			try
+			{
+				RewiredMouseOverride.InsideInvokeFixedUpdate = true;
+				fixedUpdateMethod.Invoke(playerControlComponent, null);
+			}
+			catch (Exception e)
+			{
+				Debug.LogError($"InvokeFixedUpdate 失败: {e.Message}");
+			}
+			finally
+			{
+				RewiredMouseOverride.InsideInvokeFixedUpdate = false;
 			}
 		}
 		
@@ -125,8 +151,7 @@ namespace GoiRuntime.PlayerControl
 			
 			try
 			{
-				inputEnabledField.SetValue(playerControlComponent, enabled);
-				Debug.Log($"输入已{(enabled ? "启用" : "禁用")}");
+			inputEnabledField.SetValue(playerControlComponent, enabled);
 			}
 			catch (Exception e)
 			{
@@ -205,12 +230,50 @@ namespace GoiRuntime.PlayerControl
 				return false;
 			}
 
-			Debug.Log("成功获取 mouseInput 字段");
+		Debug.Log("成功获取 mouseInput 字段");
 
-			if (inputEnabledField == null)
-				Debug.LogWarning("未找到 input_enabled 字段（可能不需要）");
+		if (inputEnabledField == null)
+			Debug.LogWarning("未找到 input_enabled 字段（可能不需要）");
 
-			isInitialized = true;
+		// 缓存 PlayerControl.FixedUpdate()，用于手动驱动游戏逻辑
+		fixedUpdateMethod = playerControlType.GetMethod("FixedUpdate",
+			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+		if (fixedUpdateMethod != null)
+			Debug.Log("成功缓存 PlayerControl.FixedUpdate()");
+		else
+			Debug.LogWarning("未找到 PlayerControl.FixedUpdate()（输入将无法施力）");
+
+		// 用 Harmony 在运行时 patch PlayerControl.Update()，使其在 RL 模式下跳过
+		// 真实鼠标读取，避免覆盖我们通过反射写入的 mouseInput 值。
+		// FixedUpdate 保持不变，由我们手动驱动。
+		var updateMethod = playerControlType.GetMethod("Update",
+			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+		if (updateMethod != null)
+		{
+			try
+			{
+				var harmony = new HarmonyLib.Harmony("com.symbol.goi.playercontrol.update");
+				var prefix  = new HarmonyLib.HarmonyMethod(
+					typeof(PlayerControlUpdatePatch),
+					nameof(PlayerControlUpdatePatch.Prefix));
+				harmony.Patch(updateMethod, prefix: prefix);
+				Debug.Log("PlayerControl.Update() 已被 Harmony patch（RL 模式下跳过真实鼠标读取）");
+			}
+			catch (Exception e)
+			{
+				Debug.LogWarning($"Harmony patch PlayerControl.Update 失败: {e.Message}");
+			}
+		}
+		else
+			Debug.LogWarning("未找到 PlayerControl.Update()，无法阻止真实鼠标读取");
+
+		if (inputEnabledField != null)
+		{
+			inputEnabledField.SetValue(playerControlComponent, true);
+			Debug.Log("PlayerInputService: input_enabled = true");
+		}
+
+		isInitialized = true;
 			return true;
 		}
 		catch (Exception e)
@@ -254,6 +317,22 @@ namespace GoiRuntime.PlayerControl
 		}
 		
 		#endregion
+	}
+
+	/// <summary>
+	/// Harmony prefix patch：RL 模式激活时跳过 PlayerControl.Update()，
+	/// 防止游戏从真实鼠标读取输入并覆盖我们注入的 mouseInput 值。
+	/// </summary>
+	public static class PlayerControlUpdatePatch
+	{
+		/// <summary>RL 模式激活后设为 true，阻止 Update() 读取真实鼠标。</summary>
+		public static volatile bool RlModeActive = false;
+
+		public static bool Prefix()
+		{
+			// 返回 false = 跳过原始 Update()；返回 true = 正常执行
+			return !RlModeActive;
+		}
 	}
 }
 
