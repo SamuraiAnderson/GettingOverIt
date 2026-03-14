@@ -8,7 +8,7 @@ namespace GoiRuntime.ColliderCollection
 	/// </summary>
 	public class ColliderVisualizer : MonoBehaviour
 	{
-		public GameObject playerRoot;
+		public GameObject[] playerRoots;
 
 		private Material lineMaterial;
 
@@ -22,6 +22,42 @@ namespace GoiRuntime.ColliderCollection
 		void Awake()
 		{
 			CreateLineMaterial();
+		}
+
+		void OnEnable()
+		{
+			LogDetectedColliders();
+		}
+
+		private void LogDetectedColliders()
+		{
+			if (playerRoots == null) return;
+
+			for (int r = 0; r < playerRoots.Length; r++)
+			{
+				var root = playerRoots[r];
+				if (root == null) continue;
+
+				var colliders = root.GetComponentsInChildren<Collider2D>(true);
+				Debug.Log($"[ColliderVisualizer] Root[{r}] \"{root.name}\" — {colliders.Length} 个 Collider2D:");
+				foreach (var col in colliders)
+				{
+					if (col == null) continue;
+					string path = GetHierarchyPath(col.transform, root.transform);
+					string extra = col is PolygonCollider2D pc ? $" pathCount={pc.pathCount}" : "";
+					Debug.Log($"  [{(col.enabled ? "ON" : "off")}] {col.GetType().Name} on \"{path}\"{extra}");
+				}
+			}
+		}
+
+		private static string GetHierarchyPath(Transform leaf, Transform root)
+		{
+			var parts = new System.Collections.Generic.List<string>();
+			for (Transform t = leaf; t != null && t != root; t = t.parent)
+				parts.Add(t.name);
+			parts.Add(root.name);
+			parts.Reverse();
+			return string.Join("/", parts.ToArray());
 		}
 
 		private void CreateLineMaterial()
@@ -43,31 +79,34 @@ namespace GoiRuntime.ColliderCollection
 
 		void OnRenderObject()
 		{
-			if (playerRoot == null || lineMaterial == null) return;
-
-			var colliders = playerRoot.GetComponentsInChildren<Collider2D>(true);
-			if (colliders.Length == 0) return;
+			if (Camera.current != Camera.main) return;
+			if (playerRoots == null || lineMaterial == null) return;
 
 			GL.PushMatrix();
 			lineMaterial.SetPass(0);
 
-			foreach (var col in colliders)
+			foreach (var root in playerRoots)
 			{
-				if (col == null || !col.enabled) continue;
+				if (root == null) continue;
 
-				Color c = PickColor(col.gameObject.name);
-				GL.Color(c);
+				var colliders = root.GetComponentsInChildren<Collider2D>(true);
+				foreach (var col in colliders)
+				{
+					if (col == null || !col.enabled) continue;
 
-				if (col is PolygonCollider2D poly)
-					DrawPolygonCollider(poly);
-				else if (col is CircleCollider2D circle)
-					DrawCircleCollider(circle);
-				else if (col is BoxCollider2D box)
-					DrawBoxCollider(box);
-				else if (col is EdgeCollider2D edge)
-					DrawEdgeCollider(edge);
-				else if (col is CapsuleCollider2D capsule)
-					DrawCapsuleCollider(capsule);
+					Color c = PickColor(col.gameObject.name);
+
+					if (col is PolygonCollider2D poly)
+						DrawPolygonCollider(poly, c);
+					else if (col is CircleCollider2D circle)
+						DrawCircleCollider(circle, c);
+					else if (col is BoxCollider2D box)
+						DrawBoxCollider(box, c);
+					else if (col is EdgeCollider2D edge)
+						DrawEdgeCollider(edge, c);
+					else if (col is CapsuleCollider2D capsule)
+						DrawCapsuleCollider(capsule, c);
+				}
 			}
 
 			GL.PopMatrix();
@@ -75,7 +114,7 @@ namespace GoiRuntime.ColliderCollection
 
 		// ── 各类碰撞体绘制 ───────────────────────────────────────
 
-		private void DrawPolygonCollider(PolygonCollider2D poly)
+		private void DrawPolygonCollider(PolygonCollider2D poly, Color c)
 		{
 			Transform t = poly.transform;
 			Vector2 offset = poly.offset;
@@ -86,6 +125,7 @@ namespace GoiRuntime.ColliderCollection
 				if (path.Length < 2) continue;
 
 				GL.Begin(GL.LINES);
+				GL.Color(c);
 				for (int i = 0; i < path.Length; i++)
 				{
 					Vector3 a = t.TransformPoint(path[i] + offset);
@@ -97,13 +137,14 @@ namespace GoiRuntime.ColliderCollection
 			}
 		}
 
-		private void DrawCircleCollider(CircleCollider2D circle)
+		private void DrawCircleCollider(CircleCollider2D circle, Color c)
 		{
 			Transform t = circle.transform;
 			Vector2 center = circle.offset;
 			float radius = circle.radius;
 
 			GL.Begin(GL.LINES);
+			GL.Color(c);
 			for (int i = 0; i < CIRCLE_SEGMENTS; i++)
 			{
 				float a0 = 2f * Mathf.PI * i / CIRCLE_SEGMENTS;
@@ -120,7 +161,7 @@ namespace GoiRuntime.ColliderCollection
 			GL.End();
 		}
 
-		private void DrawBoxCollider(BoxCollider2D box)
+		private void DrawBoxCollider(BoxCollider2D box, Color c)
 		{
 			Transform t = box.transform;
 			Vector2 center = box.offset;
@@ -135,6 +176,7 @@ namespace GoiRuntime.ColliderCollection
 			};
 
 			GL.Begin(GL.LINES);
+			GL.Color(c);
 			for (int i = 0; i < 4; i++)
 			{
 				Vector3 a = t.TransformPoint(corners[i]);
@@ -145,7 +187,7 @@ namespace GoiRuntime.ColliderCollection
 			GL.End();
 		}
 
-		private void DrawEdgeCollider(EdgeCollider2D edge)
+		private void DrawEdgeCollider(EdgeCollider2D edge, Color c)
 		{
 			Transform t = edge.transform;
 			Vector2 offset = edge.offset;
@@ -153,6 +195,7 @@ namespace GoiRuntime.ColliderCollection
 			if (pts.Length < 2) return;
 
 			GL.Begin(GL.LINES);
+			GL.Color(c);
 			for (int i = 0; i < pts.Length - 1; i++)
 			{
 				Vector3 a = t.TransformPoint(pts[i] + offset);
@@ -163,7 +206,7 @@ namespace GoiRuntime.ColliderCollection
 			GL.End();
 		}
 
-		private void DrawCapsuleCollider(CapsuleCollider2D capsule)
+		private void DrawCapsuleCollider(CapsuleCollider2D capsule, Color c)
 		{
 			Transform t = capsule.transform;
 			Vector2 center = capsule.offset;
@@ -185,6 +228,7 @@ namespace GoiRuntime.ColliderCollection
 			}
 
 			GL.Begin(GL.LINES);
+			GL.Color(c);
 
 			if (vertical)
 			{

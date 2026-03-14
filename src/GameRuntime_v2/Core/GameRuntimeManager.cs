@@ -438,9 +438,18 @@ namespace GoiRuntime.Core
 		if (mainCam != null)
 		{
 			colliderVisualizer = mainCam.gameObject.AddComponent<ColliderVisualizer>();
-			colliderVisualizer.playerRoot = playerStateService.GetPlayerObject();
+
+			var roots = new System.Collections.Generic.List<GameObject>();
+			roots.Add(playerStateService.GetPlayerObject());
+			if (duplicateManager != null)
+			{
+				foreach (var dup in duplicateManager.GetAllDuplicates())
+					roots.Add(dup);
+			}
+			colliderVisualizer.playerRoots = roots.ToArray();
+
 			colliderVisualizer.enabled = false;
-			Logger.LogInfo("ColliderVisualizer 已附加到主摄像机（默认关闭）");
+			Logger.LogInfo($"ColliderVisualizer 已附加到主摄像机（{roots.Count} 个 Player，默认关闭）");
 		}
 		else
 		{
