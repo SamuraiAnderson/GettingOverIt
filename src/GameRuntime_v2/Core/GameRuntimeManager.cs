@@ -377,7 +377,15 @@ namespace GoiRuntime.Core
 				}
 			}
 
-			// --- StepController ---
+			// --- 禁用水体重置组件 ---
+		// RestartOnContact 挂在水体碰撞器上，落水时会：
+		//   1. FadeOut 屏幕变暗
+		//   2. Saviour.ResetPlayerButNotDialogue() 强制重置 Player 位置
+		//   3. 将 Physics2D.simulationMode 从 Script 改回 FixedUpdate（破坏 StepController）
+		// 训练模式下必须禁用，否则任何 agent 落水都会破坏整个物理控制
+		DisableWaterReset();
+
+		// --- StepController ---
 			stepController = new StepController(numAgents, config.stepFrames, config.stateDimension, config.actionDimension);
 			if (!stepController.Initialize(playerStateService, playerInputService, duplicateManager))
 			{
@@ -645,6 +653,38 @@ namespace GoiRuntime.Core
 			Physics2D.simulationMode = originalMode;
 		Logger.LogInfo($"[PhysicsProbe] 已恢复 simulationMode → {originalMode}");
 		Logger.LogInfo("=== [PhysicsProbe] 探测完成 ===");
+		}
+
+		#endregion
+
+		#region 训练环境安全
+
+		/// <summary>
+		/// 销毁场景中所有 RestartOnContact 组件，防止落水触发重置链路。
+		/// 
+		/// 必须使用 Destroy 而非 enabled=false，因为 Unity 的碰撞回调
+		/// (OnCollisionEnter2D) 不受 MonoBehaviour.enabled 控制，
+		/// 只要组件存在就会被物理引擎调用。
+		/// </summary>
+		private void DisableWaterReset()
+		{
+			int destroyedCount = 0;
+			MonoBehaviour[] allScripts = FindObjectsOfType<MonoBehaviour>();
+			foreach (var script in allScripts)
+			{
+				if (script != null && script.GetType().Name == "RestartOnContact")
+				{
+					string objName = script.gameObject.name;
+					Destroy(script);
+					destroyedCount++;
+					Logger.LogInfo($"已销毁 RestartOnContact: {objName}");
+				}
+			}
+
+			if (destroyedCount > 0)
+				Logger.LogInfo($"共销毁 {destroyedCount} 个水体重置组件 — 落水不再触发视角重置和物理模式切换");
+			else
+				Logger.LogWarning("未找到 RestartOnContact 组件（水体重置可能使用了不同机制）");
 		}
 
 		#endregion
