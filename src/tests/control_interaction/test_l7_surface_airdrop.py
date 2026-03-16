@@ -47,11 +47,16 @@ def load_colliders(
     env=None,
 ) -> tuple[dict, dict]:
     """
-    加载环境和 Player 轮廓 JSON（cache 优先）。
-    若文件不存在且 env 不为 None，则通过 TCP 请求导出后再读取。
+    加载环境和 Player 轮廓 JSON。
+
+    environment.json 存放于 checkpoints/（仓库目录），
+    player_contour.json 存放于 game_root/GoiData/Colliders/。
+    若文件不存在且 env 不为 None，则通过 TCP 请求导出后复制到 checkpoints/。
     """
+    import shutil
+
+    env_path = _REPO_ROOT / "checkpoints" / "environment.json"
     colliders_dir = game_root / "GoiData" / "Colliders"
-    env_path = colliders_dir / "environment.json"
     player_path = colliders_dir / "player_contour.json"
 
     if not env_path.exists() or not player_path.exists():
@@ -60,9 +65,15 @@ def load_colliders(
             env.export_colliders()
             import time
             time.sleep(0.5)
+            # C# 导出到游戏目录，复制 environment.json 到 checkpoints/
+            game_env = colliders_dir / "environment.json"
+            if game_env.exists():
+                env_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(game_env, env_path)
+                logger.info("environment.json 已复制到 %s", env_path)
         else:
             raise FileNotFoundError(
-                f"碰撞体文件不存在: {colliders_dir}\n"
+                f"碰撞体文件不存在: env={env_path}, player={player_path}\n"
                 "请先运行游戏导出，或使用 --no-launch 以外的模式"
             )
 
@@ -80,14 +91,26 @@ def load_colliders(
 
 # ── 几何计算 ────────────────────────────────────────────────────
 
+_EXCLUDED_COLLIDERS = {"Snake"}
+
+
 def extract_polygons(env_data: dict) -> list[np.ndarray]:
-    """提取所有环境多边形，返回顶点数组列表，每个 shape (N, 2)。"""
+    """提取所有环境多边形，返回顶点数组列表，每个 shape (N, 2)。
+
+    跳过 _EXCLUDED_COLLIDERS 中列出的碰撞体（如 Snake）。
+    """
     polys = []
+    skipped = 0
     for collider in env_data.get("colliders", []):
+        if collider.get("name") in _EXCLUDED_COLLIDERS:
+            skipped += 1
+            continue
         for path in collider.get("paths", []):
             pts = np.array(path, dtype=np.float64)
             if len(pts) >= 3:
                 polys.append(pts)
+    if skipped:
+        logger.info("已过滤 %d 个排除碰撞体: %s", skipped, _EXCLUDED_COLLIDERS)
     return polys
 
 
@@ -355,6 +378,8 @@ def plot_map(
     # --- 环境多边形 ---
     env_patches = []
     for collider in env_data.get("colliders", []):
+        if collider.get("name") in _EXCLUDED_COLLIDERS:
+            continue
         for path in collider.get("paths", []):
             pts = np.array(path, dtype=np.float64)
             if len(pts) >= 3:
@@ -463,7 +488,7 @@ def main():
     logger.info("游戏根目录: %s", game_root)
 
     colliders_dir = game_root / "GoiData" / "Colliders"
-    has_cache = (colliders_dir / "environment.json").exists() and \
+    has_cache = (_REPO_ROOT / "checkpoints" / "environment.json").exists() and \
                 (colliders_dir / "player_contour.json").exists()
 
     env_conn = None
