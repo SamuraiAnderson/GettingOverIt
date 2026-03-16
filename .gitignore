@@ -123,3 +123,8 @@ config.local.json
 
 __pycache__
 src/Data/GameResults
+
+# 训练产物（模型权重、序列化状态、计算缓存）
+checkpoints/*.pt
+checkpoints/*.pkl
+checkpoints/cache/
