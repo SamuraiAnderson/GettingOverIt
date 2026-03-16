@@ -35,7 +35,8 @@ def base_score(states: np.ndarray, config: TrainConfig) -> float:
     summit = float(y.max() - start_y)
     peak_step = int(y.argmax()) + 1
     climb_speed = summit / peak_step
-    return summit + config.efficiency_weight * climb_speed
+    abs_height_bonus = float(y.max()) * config.abs_height_weight
+    return summit + config.efficiency_weight * climb_speed + abs_height_bonus
 
 
 def is_water_trajectory(states: np.ndarray, config: TrainConfig) -> bool:
@@ -93,16 +94,35 @@ class ClimbingEfficiencyMap:
         grid_resolution: float = 1.0,
         diffusion_iterations: int = 10,
         diffusion_alpha: float = 0.3,
+        cache_path: str | None = None,
+        height_prior_weight: float = 0.0,
     ):
         self.resolution = grid_resolution
         self.diffusion_iters = diffusion_iterations
         self.diffusion_alpha = diffusion_alpha
 
-        self.traversable, self._min_gx, self._min_gy = (
-            self._build_traversable_mask(polygons)
-        )
+        cached = self._load_cache(cache_path) if cache_path else None
+        if cached is not None:
+            self.traversable, self._min_gx, self._min_gy = cached
+        else:
+            self.traversable, self._min_gx, self._min_gy = (
+                self._build_traversable_mask(polygons)
+            )
+            if cache_path:
+                self._save_cache(cache_path)
+
         h, w = self.traversable.shape
         self._max_arr = np.full((h, w), -np.inf, dtype=np.float64)
+
+        if height_prior_weight > 0:
+            for gy_idx in range(h):
+                world_y = (self._min_gy + gy_idx + 0.5) * self.resolution
+                self._max_arr[gy_idx, :] = np.where(
+                    self.traversable[gy_idx, :],
+                    world_y * height_prior_weight,
+                    -np.inf,
+                )
+
         self._arr: np.ndarray | None = None
 
     # -- public helpers --
@@ -114,6 +134,26 @@ class ClimbingEfficiencyMap:
     def copy(self) -> ClimbingEfficiencyMap:
         """深拷贝，用于保存 prev_eff_map。"""
         return copy.deepcopy(self)
+
+    # -- 缓存 --
+
+    @staticmethod
+    def _load_cache(path: str) -> tuple[np.ndarray, int, int] | None:
+        from pathlib import Path as _P
+        p = _P(path)
+        if not p.exists():
+            return None
+        data = np.load(p)
+        return data["mask"].astype(bool), int(data["min_gx"]), int(data["min_gy"])
+
+    def _save_cache(self, path: str) -> None:
+        from pathlib import Path as _P
+        p = _P(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(
+            p, mask=self.traversable,
+            min_gx=np.array(self._min_gx), min_gy=np.array(self._min_gy),
+        )
 
     # -- 可通行性掩码 --
 

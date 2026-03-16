@@ -10,6 +10,8 @@ RolloutWorker:
 from __future__ import annotations
 
 import logging
+import subprocess
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -215,6 +217,7 @@ class RolloutWorker:
     def __init__(self, config: TrainConfig):
         self.config = config
         self.env: GoiEnv | None = None
+        self._game_process: subprocess.Popen | None = None
         self._terrain_mask: np.ndarray | None = None
         self._min_gx: int = 0
         self._min_gy: int = 0
@@ -271,14 +274,17 @@ class RolloutWorker:
         return []
 
     def setup(self) -> None:
-        """启动游戏、连接、warmup、拍快照。"""
+        """首次初始化：加载投放点 + 启动游戏。"""
         game_root = Path(self.config.game_root)
-
         self._fixed_drop_points = _load_drop_points(game_root)
+        self.launch_game()
 
+    def launch_game(self) -> None:
+        """启动游戏进程、TCP 连接、warmup、拍快照、开启自由相机。可多次调用。"""
+        game_root = Path(self.config.game_root)
         _write_num_duplicates(game_root, self.config.num_agents)
         GameModeController(str(game_root)).set_game_runtime_mode()
-        GameLauncher().launch(wait=False)
+        self._game_process = GameLauncher().launch(wait=False)
 
         self.env = GoiEnv(
             port=self.config.port,
@@ -290,8 +296,28 @@ class RolloutWorker:
         _warmup_and_snapshot(
             self.env, self.config.num_agents, self.config.warmup_steps
         )
+        self.env.set_camera_free(True)
 
-        logger.info("RolloutWorker setup 完成，%d agents 就绪", self.config.num_agents)
+        logger.info("游戏已启动，%d agents 就绪", self.config.num_agents)
+
+    def close_game(self) -> None:
+        """关闭 TCP 连接并终止游戏进程，释放资源。"""
+        if self.env is not None:
+            try:
+                self.env.close()
+            except Exception:
+                pass
+            self.env = None
+
+        if self._game_process is not None:
+            try:
+                self._game_process.terminate()
+                self._game_process.wait(timeout=10)
+            except Exception:
+                self._game_process.kill()
+            self._game_process = None
+
+        logger.info("游戏已关闭")
 
     def _reset_and_deploy_random(self) -> np.ndarray:
         """重置环境并将 agent 随机部署到表面上。"""
@@ -420,8 +446,6 @@ class RolloutWorker:
         return _filter_water_trajectories(trajectories, self.config.water_y_threshold)
 
     def teardown(self) -> None:
-        """关闭连接。"""
-        if self.env is not None:
-            self.env.close()
-            self.env = None
-            logger.info("RolloutWorker 已关闭")
+        """关闭连接并终止游戏进程。"""
+        self.close_game()
+        logger.info("RolloutWorker 已关闭")

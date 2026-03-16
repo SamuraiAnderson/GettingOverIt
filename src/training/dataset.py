@@ -63,12 +63,15 @@ def crop_centered(
 
     h, w = arr.shape
     crop = np.zeros((arr_size, arr_size), dtype=np.float32)
-    for dy in range(arr_size):
-        for dx in range(arr_size):
-            sy = gy_start + dy
-            sx = gx_start + dx
-            if 0 <= sy < h and 0 <= sx < w:
-                crop[dy, dx] = arr[sy, sx]
+
+    sy_lo = max(0, gy_start)
+    sy_hi = min(h, gy_start + arr_size)
+    sx_lo = max(0, gx_start)
+    sx_hi = min(w, gx_start + arr_size)
+
+    if sy_lo < sy_hi and sx_lo < sx_hi:
+        crop[sy_lo - gy_start : sy_hi - gy_start,
+             sx_lo - gx_start : sx_hi - gx_start] = arr[sy_lo:sy_hi, sx_lo:sx_hi]
 
     if scale > 1:
         crop = np.repeat(np.repeat(crop, scale, axis=0), scale, axis=1)

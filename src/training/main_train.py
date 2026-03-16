@@ -7,6 +7,7 @@ Phase 1..N: 模型采集 → 效率图更新 → 评分筛选 → Fine-tune → 
 用法:
   python -m src.training.main_train
   python -m src.training.main_train --num-agents 5 --max-iterations 50
+  python -m src.training.main_train --resume              # 跳过冷启动
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import pickle
 import sys
 from pathlib import Path
 
@@ -98,9 +100,12 @@ def save_efficiency_map(
 
     fig, ax = plt.subplots(figsize=(20, 12))
 
-    # 地形多边形
+    # 地形多边形（排除 Snake 等非地形碰撞体）
+    excluded = {"Snake"}
     env_patches = []
     for collider in env_data.get("colliders", []):
+        if collider.get("name") in excluded:
+            continue
         for path in collider.get("paths", []):
             pts = np.array(path, dtype=np.float64)
             if len(pts) >= 3:
@@ -139,7 +144,66 @@ def save_efficiency_map(
     fig.tight_layout()
     fig.savefig(path, dpi=150)
     plt.close(fig)
-    logger.info("效率图已保存: %s", path)
+
+    data_path = out_dir / f"effmap_iter_{iteration:04d}.npz"
+    np.savez_compressed(
+        data_path,
+        arr=arr,
+        max_arr=eff_map._max_arr,
+        min_gx=np.array(eff_map._min_gx),
+        min_gy=np.array(eff_map._min_gy),
+        resolution=np.array(eff_map.resolution),
+    )
+    logger.info("效率图已保存: %s + %s", path, data_path)
+
+
+_WARMUP_FILENAME = "warmup_state.pkl"
+
+
+def save_warmup_state(
+    checkpoint_dir: str,
+    good_trajs: list,
+) -> None:
+    """冷启动完成后将轨迹序列化到磁盘。"""
+    out_dir = Path(checkpoint_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / _WARMUP_FILENAME
+
+    traj_data = [
+        {
+            "raw_states": t.raw_states,
+            "actions": t.actions,
+            "score": t.score,
+            "iteration": t.iteration,
+        }
+        for t in good_trajs
+    ]
+    state = {"trajectories": traj_data}
+    with open(path, "wb") as f:
+        pickle.dump(state, f, protocol=pickle.HIGHEST_PROTOCOL)
+    logger.info("冷启动状态已保存: %s (%.1f MB)", path, path.stat().st_size / 1e6)
+
+
+def load_warmup_state(checkpoint_dir: str) -> list:
+    """从磁盘加载冷启动轨迹。"""
+    from training.dataset import Trajectory
+
+    path = Path(checkpoint_dir) / _WARMUP_FILENAME
+    with open(path, "rb") as f:
+        state = pickle.load(f)
+
+    good_trajs = [
+        Trajectory(
+            raw_states=d["raw_states"],
+            actions=d["actions"],
+            score=d["score"],
+            iteration=d["iteration"],
+        )
+        for d in state["trajectories"]
+    ]
+
+    logger.info("冷启动轨迹已恢复: %d 条", len(good_trajs))
+    return good_trajs
 
 
 def parse_args() -> argparse.Namespace:
@@ -150,6 +214,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--steps-per-rollout", type=int, default=None)
     parser.add_argument("--checkpoint-dir", type=str, default=None)
     parser.add_argument("--log-dir", type=str, default=None)
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="跳过冷启动，从上次保存的 warmup_state.pkl 恢复",
+    )
     return parser.parse_args()
 
 
@@ -182,24 +250,40 @@ def main() -> None:
     env_data, player_data = load_colliders(game_root)
     polygons = extract_polygons(env_data)
 
-    # 计算可着陆表面（用于随机投放位置采样）
-    player_height = compute_player_height(player_data)
-    min_clearance = player_height + config.surface_padding
-    segments = compute_landable_surfaces(
-        polygons, min_clearance,
-        resolution=0.1,
-        y_max_cutoff=config.y_max_cutoff,
-    )
-    logger.info(
-        "可着陆表面: %d 条线段 (min_clearance=%.2f)",
-        len(segments), min_clearance,
-    )
+    # 计算可着陆表面（缓存到磁盘，首次 ~11s，后续 <1s）
+    cache_dir = Path(config.checkpoint_dir) / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    segments_cache = cache_dir / "landable_segments.npz"
 
+    if segments_cache.exists():
+        seg_data = np.load(segments_cache, allow_pickle=True)
+        segments = list(seg_data["segments"])
+        min_clearance = float(seg_data["min_clearance"])
+        logger.info("可着陆表面 (缓存): %d 条线段 (min_clearance=%.2f)", len(segments), min_clearance)
+    else:
+        player_height = compute_player_height(player_data)
+        min_clearance = player_height + config.surface_padding
+        segments = compute_landable_surfaces(
+            polygons, min_clearance,
+            resolution=0.1,
+            y_max_cutoff=config.y_max_cutoff,
+        )
+        np.savez_compressed(
+            segments_cache,
+            segments=np.array(segments, dtype=object),
+            min_clearance=np.array(min_clearance),
+        )
+        logger.info("可着陆表面: %d 条线段 (min_clearance=%.2f, 已缓存)", len(segments), min_clearance)
+
+    # 构建效率图（traversable mask 缓存到磁盘，首次 ~87s，后续 <1s）
+    mask_cache = str(cache_dir / "traversable_mask.npz")
     eff_map = ClimbingEfficiencyMap(
         polygons,
         grid_resolution=config.grid_resolution,
         diffusion_iterations=config.diffusion_iterations,
         diffusion_alpha=config.diffusion_alpha,
+        cache_path=mask_cache,
+        height_prior_weight=config.height_prior_weight,
     )
     prev_eff_map = None
 
@@ -211,55 +295,96 @@ def main() -> None:
 
     rollout_worker.set_terrain_info(terrain_mask, eff_map._min_gx, eff_map._min_gy)
     rollout_worker.set_surface_segments(segments)
-    rollout_worker.setup()
+
+    warmup_path = Path(config.checkpoint_dir) / _WARMUP_FILENAME
+    resume = args.resume and warmup_path.exists()
 
     try:
-        # ── Phase 0: 冷启动 — 多轮随机采集凑够好轨迹 ──
-        logger.info("=== Phase 0: 冷启动 (%d 轮随机采集) ===", config.warmup_rollouts)
-        all_random_trajs = []
-        for r in range(config.warmup_rollouts):
-            trajs = rollout_worker.collect_random(config.steps_per_rollout)
-            all_random_trajs.extend(trajs)
-            logger.info("  冷启动 %d/%d: 采集 %d 条轨迹", r + 1, config.warmup_rollouts, len(trajs))
+        if resume:
+            # ── 恢复冷启动状态（无需启动游戏）──
+            logger.info("=== 恢复模式: 从 %s 加载冷启动状态 ===", warmup_path)
+            good_trajs = load_warmup_state(config.checkpoint_dir)
+            eff_map.update(good_trajs, config, prev_eff_map=None)
+            prev_eff_map = eff_map.copy()
+            dataset.update_efficiency_arr(eff_map.get_arr())
+            save_efficiency_map(eff_map, env_data, 0, config.log_dir)
 
-        for t in all_random_trajs:
-            t.score = base_score(t.raw_states, config)
-            t.iteration = 0
+            dataset.set_trajectories(good_trajs)
 
-        scores = [t.score for t in all_random_trajs]
-        threshold = float(np.percentile(scores, 100 * (1 - config.keep_ratio)))
-        good_trajs = [t for t in all_random_trajs if t.score >= threshold]
-        good_trajs.sort(key=lambda t: t.score, reverse=True)
-        good_trajs = good_trajs[: config.max_good_trajectories]
+            ckpt_path = Path(config.checkpoint_dir) / "model_iter_0000.pt"
+            if ckpt_path.exists():
+                model.load_state_dict(torch.load(ckpt_path, weights_only=True))
+                logger.info("模型权重已恢复: %s", ckpt_path)
+            else:
+                logger.info("未找到 model_iter_0000.pt，使用新模型进行首次训练")
+                logger.info("=== Phase 0: 首次训练 (数据集大小=%d) ===", len(dataset))
+                metrics = trainer.train(model, dataset, config)
+                log_metrics(0, metrics)
+                save_checkpoint(model, 0, config.checkpoint_dir)
+        else:
+            # ── Phase 0: 冷启动 — 启动游戏 → 采集 → 关闭游戏 → 训练 ──
+            rollout_worker.setup()
 
-        logger.info(
-            "冷启动完成: %d 条总轨迹 → %d 条好轨迹 (阈值=%.2f)",
-            len(all_random_trajs), len(good_trajs), threshold,
-        )
+            logger.info("=== Phase 0: 冷启动 (%d 轮随机采集) ===", config.warmup_rollouts)
+            all_random_trajs = []
+            for r in range(config.warmup_rollouts):
+                trajs = rollout_worker.collect_random(config.steps_per_rollout)
+                all_random_trajs.extend(trajs)
+                logger.info("  冷启动 %d/%d: 采集 %d 条轨迹", r + 1, config.warmup_rollouts, len(trajs))
 
-        # 初始化效率图
-        eff_map.update(all_random_trajs, config, prev_eff_map=None)
-        prev_eff_map = eff_map.copy()
-        dataset.update_efficiency_arr(eff_map.get_arr())
-        save_efficiency_map(eff_map, env_data, 0, config.log_dir)
+            # 采集完成，关闭游戏
+            rollout_worker.close_game()
 
-        # 首次训练
-        dataset.set_trajectories(good_trajs)
-        logger.info("=== Phase 0: 首次训练 (数据集大小=%d) ===", len(dataset))
-        metrics = trainer.train(model, dataset, config)
-        log_metrics(0, metrics)
-        save_checkpoint(model, 0, config.checkpoint_dir)
+            for t in all_random_trajs:
+                t.score = base_score(t.raw_states, config)
+                t.iteration = 0
+
+            scores = [t.score for t in all_random_trajs]
+            threshold = float(np.percentile(scores, 100 * (1 - config.keep_ratio)))
+            good_trajs = [t for t in all_random_trajs if t.score >= threshold]
+            good_trajs.sort(key=lambda t: t.score, reverse=True)
+            good_trajs = good_trajs[: config.max_good_trajectories]
+
+            logger.info(
+                "冷启动完成: %d 条总轨迹 → %d 条好轨迹 (阈值=%.2f)",
+                len(all_random_trajs), len(good_trajs), threshold,
+            )
+
+            # 初始化效率图
+            eff_map.update(all_random_trajs, config, prev_eff_map=None)
+            prev_eff_map = eff_map.copy()
+            dataset.update_efficiency_arr(eff_map.get_arr())
+            save_efficiency_map(eff_map, env_data, 0, config.log_dir)
+
+            # 保存冷启动状态到磁盘
+            save_warmup_state(config.checkpoint_dir, good_trajs)
+
+            # 首次训练（游戏已关闭）
+            dataset.set_trajectories(good_trajs)
+            logger.info("=== Phase 0: 首次训练 (数据集大小=%d) ===", len(dataset))
+            metrics = trainer.train(model, dataset, config)
+            log_metrics(0, metrics)
+            save_checkpoint(model, 0, config.checkpoint_dir)
 
         # ── 正式迭代循环 ──
         for iteration in range(1, config.max_iterations):
             logger.info("=== 迭代 %d/%d ===", iteration, config.max_iterations)
 
-            # Phase 1: 用模型采集
+            # Phase 1: 启动游戏 → 多轮模型采集 → 关闭游戏
+            rollout_worker.launch_game()
             noise = config.explore_noise_std * (config.noise_decay ** iteration)
-            logger.info("Phase 1: 模型采集 (noise_std=%.4f)", noise)
-            trajectories = rollout_worker.collect_with_model(
-                model, config.steps_per_rollout, noise, eff_map=eff_map,
+            logger.info(
+                "Phase 1: 模型采集 (%d 轮, noise_std=%.4f)",
+                config.rollouts_per_iteration, noise,
             )
+            trajectories = []
+            for r in range(config.rollouts_per_iteration):
+                batch = rollout_worker.collect_with_model(
+                    model, config.steps_per_rollout, noise, eff_map=eff_map,
+                )
+                trajectories.extend(batch)
+                logger.info("  采集 %d/%d: %d 条轨迹", r + 1, config.rollouts_per_iteration, len(batch))
+            rollout_worker.close_game()
 
             # Phase 2a: 增量更新效率图
             logger.info("Phase 2a: 更新效率图")
@@ -283,7 +408,7 @@ def main() -> None:
                 len(trajectories), len(dataset.trajectories), len(dataset),
             )
 
-            # Phase 3: Fine-tune
+            # Phase 3: Fine-tune（游戏已关闭）
             logger.info("Phase 3: Fine-tune")
             metrics = trainer.train(model, dataset, config)
 

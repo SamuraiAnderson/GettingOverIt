@@ -52,26 +52,30 @@ class TrainConfig:
     # ── 训练 ──
     lr: float = 1e-4
     epochs: int = 10
-    batch_size: int = 64
+    batch_size: int = 256
     action_scale: float = 100.0
     max_grad_norm: float = 1.0
     weight_decay: float = 1e-4
     val_ratio: float = 0.1
     early_stop_patience: int = 3
+    num_workers: int = 4
 
     # ── 数据管理 ──
-    max_good_trajectories: int = 500
+    max_good_trajectories: int = 300
     warmup_rollouts: int = 50
-    keep_ratio: float = 0.2
+    keep_ratio: float = 0.5
+    rollouts_per_iteration: int = 3
 
     # ── 评分 ──
     efficiency_weight: float = 50.0
     waypoint_weight: float = 0.5
+    abs_height_weight: float = 0.1
 
     # ── 效率图 ──
     grid_resolution: float = 1.0
-    diffusion_iterations: int = 10
-    diffusion_alpha: float = 0.3
+    diffusion_iterations: int = 50
+    diffusion_alpha: float = 0.2
+    height_prior_weight: float = 0.05
 
     # ── 投放点随机化 ──
     drop_height: float = 2.0        # 表面上方投放高度

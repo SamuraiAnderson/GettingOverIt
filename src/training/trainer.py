@@ -50,6 +50,7 @@ class Trainer:
         模型在 GPU/CPU 上训练，optimizer state 跨迭代保持。
         """
         model = model.to(self.device)
+        logger.info("训练设备: %s", self.device)
 
         if len(dataset) == 0:
             logger.warning("数据集为空，跳过训练")
@@ -60,11 +61,25 @@ class Trainer:
         train_size = len(dataset) - val_size
         train_set, val_set = random_split(dataset, [train_size, val_size])
 
+        use_cuda = self.device.type == "cuda"
+        nw = config.num_workers
+
         train_loader = DataLoader(
-            train_set, batch_size=config.batch_size, shuffle=True, drop_last=False,
+            train_set,
+            batch_size=config.batch_size,
+            shuffle=True,
+            drop_last=False,
+            num_workers=nw,
+            pin_memory=use_cuda,
+            persistent_workers=nw > 0,
         )
         val_loader = DataLoader(
-            val_set, batch_size=config.batch_size, drop_last=False,
+            val_set,
+            batch_size=config.batch_size,
+            drop_last=False,
+            num_workers=nw,
+            pin_memory=use_cuda,
+            persistent_workers=nw > 0,
         )
 
         if self.optimizer is None:
