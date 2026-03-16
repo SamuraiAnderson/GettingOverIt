@@ -36,13 +36,15 @@ namespace GoiRuntime.ColliderCollection
 			var allPolys = Object.FindObjectsOfType<PolygonCollider2D>();
 			var envPolys = new List<PolygonCollider2D>();
 
-			int skippedDynamic = 0, skippedTrigger = 0;
+			int skippedDynamic = 0, skippedTrigger = 0, skippedDisabled = 0;
 			foreach (var poly in allPolys)
 			{
 				if (poly.GetComponentInParent<Rigidbody2D>() != null)
 				{ skippedDynamic++; continue; }
 				if (poly.isTrigger)
 				{ skippedTrigger++; continue; }
+				if (!poly.enabled)
+				{ skippedDisabled++; continue; }
 				envPolys.Add(poly);
 			}
 
@@ -53,13 +55,17 @@ namespace GoiRuntime.ColliderCollection
 			}
 
 			Debug.Log($"[ColliderExporter] 场景中 {allPolys.Length} 个 PolygonCollider2D → " +
-			          $"环境: {envPolys.Count}，跳过动态: {skippedDynamic}，跳过触发器: {skippedTrigger}");
+			          $"环境: {envPolys.Count}，跳过动态: {skippedDynamic}，" +
+			          $"跳过触发器: {skippedTrigger}，跳过禁用: {skippedDisabled}");
 
 			for (int d = 0; d < envPolys.Count; d++)
 			{
 				var p = envPolys[d];
+				var pos = p.transform.position;
+				var off = p.offset;
 				Debug.Log($"[ColliderExporter]   [{d}] {GetHierarchyPath(p.transform)}  " +
-				          $"(paths={p.pathCount}, enabled={p.enabled})");
+				          $"(paths={p.pathCount}, enabled={p.enabled}, " +
+				          $"pos=({pos.x:F2},{pos.y:F2}), offset=({off.x:F2},{off.y:F2}))");
 			}
 
 			var polys = envPolys;
@@ -168,13 +174,14 @@ namespace GoiRuntime.ColliderCollection
 		private static void WritePathsWorld(StringBuilder sb, PolygonCollider2D poly, string indent)
 		{
 			Transform t = poly.transform;
+			Vector2 offset = poly.offset;
 			for (int p = 0; p < poly.pathCount; p++)
 			{
 				Vector2[] path = poly.GetPath(p);
 				sb.Append(indent).Append('[');
 				for (int v = 0; v < path.Length; v++)
 				{
-					Vector3 world = t.TransformPoint(path[v]);
+					Vector3 world = t.TransformPoint(path[v] + offset);
 					sb.AppendFormat(Inv, "[{0:F4},{1:F4}]", world.x, world.y);
 					if (v < path.Length - 1) sb.Append(',');
 				}
@@ -189,13 +196,15 @@ namespace GoiRuntime.ColliderCollection
 		/// </summary>
 		private static void WritePathsLocal(StringBuilder sb, PolygonCollider2D poly, string indent)
 		{
+			Vector2 offset = poly.offset;
 			for (int p = 0; p < poly.pathCount; p++)
 			{
 				Vector2[] path = poly.GetPath(p);
 				sb.Append(indent).Append('[');
 				for (int v = 0; v < path.Length; v++)
 				{
-					sb.AppendFormat(Inv, "[{0:F4},{1:F4}]", path[v].x, path[v].y);
+					Vector2 pt = path[v] + offset;
+					sb.AppendFormat(Inv, "[{0:F4},{1:F4}]", pt.x, pt.y);
 					if (v < path.Length - 1) sb.Append(',');
 				}
 				sb.Append(']');
