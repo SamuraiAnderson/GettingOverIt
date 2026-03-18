@@ -3,7 +3,7 @@
 
 RolloutWorker:
 - 使用 GoiEnv 进行帧级交互
-- 支持随机动作采集和模型推理采集
+- 支持随机动作采集、BC 模型推理采集和 PPO 采集
 - 存储原始 29D 状态，推理时即时构建 17D dynamics + 4ch patch
 """
 
@@ -16,13 +16,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
+import torch
 
 from env import GoiEnv
 from start import GameLauncher, GameModeController
 
 if TYPE_CHECKING:
+    from .actor_critic import ActorCritic
     from .config import TrainConfig
     from .model import ActionPredictor
+    from .ppo_buffer import PPORolloutBuffer
     from .reward import ClimbingEfficiencyMap
 
 from .dataset import (
@@ -206,6 +209,49 @@ def _filter_water_trajectories(
     return kept
 
 
+def _build_history_window(
+    dyn_history: list[np.ndarray],
+    patch_history: list[np.ndarray],
+    act_history: list[np.ndarray],
+    ctx: int,
+    state_dim: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    从累积历史中构建固定长度的窗口（左填充零）。
+
+    返回 (dyn_window, pat_window, act_window)：
+    - dyn_window: (ctx, state_dim)
+    - pat_window: (ctx, 4, 32, 32)
+    - act_window: (ctx, 2)
+    """
+    hist_len = min(len(dyn_history), ctx)
+    dyn_window = np.array(dyn_history[-hist_len:])
+    pat_window = np.array(patch_history[-hist_len:])
+
+    if len(act_history) == 0:
+        act_window = np.zeros((hist_len, 2), dtype=np.float32)
+    else:
+        act_len = min(len(act_history), ctx)
+        act_window = np.array(act_history[-act_len:])
+        if len(act_window) < hist_len:
+            pad = np.zeros((hist_len - len(act_window), 2), dtype=np.float32)
+            act_window = np.concatenate([pad, act_window], axis=0)
+
+    if hist_len < ctx:
+        pad_len = ctx - hist_len
+        dyn_window = np.concatenate(
+            [np.zeros((pad_len, state_dim), dtype=np.float32), dyn_window]
+        )
+        pat_window = np.concatenate(
+            [np.zeros((pad_len, *pat_window.shape[1:]), dtype=np.float32), pat_window]
+        )
+        act_window = np.concatenate(
+            [np.zeros((pad_len, 2), dtype=np.float32), act_window]
+        )
+
+    return dyn_window, pat_window, act_window
+
+
 class RolloutWorker:
     """
     数据采集工作器。
@@ -319,19 +365,46 @@ class RolloutWorker:
 
         logger.info("游戏已关闭")
 
-    def _reset_and_deploy_random(self) -> np.ndarray:
-        """重置环境并将 agent 随机部署到表面上。"""
+    def _reset_and_deploy(self) -> np.ndarray:
+        """重置环境并根据 config.random_deploy 决定部署方式。"""
         num_agents = self.config.num_agents
         obs = self.env.reset()
+
+        self._last_deploy_positions: dict[int, float] = {}
+
+        if not self.config.random_deploy:
+            logger.debug("所有 agent 留在初始位置")
+            return obs
 
         if num_agents > 1:
             positions = self._sample_positions(num_agents - 1)
             if positions:
+                for i, (_, y) in enumerate(positions):
+                    self._last_deploy_positions[i + 1] = y
                 obs = _deploy_agents(
                     self.env, positions,
                     self.config.settle_steps, num_agents,
                 )
         return obs
+
+    def _get_stable_agents(self, obs: np.ndarray) -> set[int]:
+        """返回 settle 后仍然稳定的 agent 索引集合。"""
+        if not self.config.random_deploy:
+            return set(range(self.config.num_agents))
+
+        threshold = self.config.settle_drop_threshold
+        stable = {0}
+        for agent_idx, teleport_y in self._last_deploy_positions.items():
+            settled_y = float(obs[agent_idx, 1])
+            drop = teleport_y - settled_y
+            if drop <= threshold:
+                stable.add(agent_idx)
+            else:
+                logger.info(
+                    "Agent %d 不稳定: teleport_y=%.1f settled_y=%.1f drop=%.1f > %.1f, 跳过",
+                    agent_idx, teleport_y, settled_y, drop, threshold,
+                )
+        return stable
 
     def collect_random(self, n_steps: int) -> list[Trajectory]:
         """第 0 轮: 随机动作 + 随机投放位置采集轨迹。"""
@@ -339,7 +412,7 @@ class RolloutWorker:
         num_agents = self.config.num_agents
         scale = self.config.action_scale
 
-        obs = self._reset_and_deploy_random()
+        obs = self._reset_and_deploy()
 
         all_states = [[] for _ in range(num_agents)]
         all_actions = [[] for _ in range(num_agents)]
@@ -375,11 +448,10 @@ class RolloutWorker:
         scale = self.config.action_scale
         ctx = self.config.context_len
 
-        obs = self._reset_and_deploy_random()
+        obs = self._reset_and_deploy()
 
         all_states = [[] for _ in range(num_agents)]
         all_actions = [[] for _ in range(num_agents)]
-        # 用于模型推理的历史缓冲
         dyn_history = [[] for _ in range(num_agents)]
         act_history = [[] for _ in range(num_agents)]
         patch_history = [[] for _ in range(num_agents)]
@@ -388,44 +460,21 @@ class RolloutWorker:
             all_states[i].append(obs[i].copy())
 
         for step in range(n_steps):
-            # 即时构建当前 patches
             patches = _build_patches_batch(
                 obs, eff_map, self.config,
                 self._min_gx, self._min_gy, self._terrain_mask,
             )
-            dynamics = obs[:, DYNAMICS_INDICES]  # (num_agents, 17)
+            dynamics = obs[:, DYNAMICS_INDICES]
 
             actions = np.zeros((num_agents, 2), dtype=np.float32)
             for i in range(num_agents):
                 dyn_history[i].append(dynamics[i].copy())
                 patch_history[i].append(patches[i].copy())
 
-                # 构建历史窗口
-                hist_len = min(len(dyn_history[i]), ctx)
-                dyn_window = np.array(dyn_history[i][-hist_len:])       # (hist_len, 17)
-                pat_window = np.array(patch_history[i][-hist_len:])     # (hist_len, 4, 32, 32)
-
-                if len(act_history[i]) == 0:
-                    act_window = np.zeros((hist_len, 2), dtype=np.float32)
-                else:
-                    act_len = min(len(act_history[i]), ctx)
-                    act_window = np.array(act_history[i][-act_len:])
-                    if len(act_window) < hist_len:
-                        pad = np.zeros((hist_len - len(act_window), 2), dtype=np.float32)
-                        act_window = np.concatenate([pad, act_window], axis=0)
-
-                # 如果历史不足 ctx，左填充零
-                if hist_len < ctx:
-                    pad_len = ctx - hist_len
-                    dyn_window = np.concatenate(
-                        [np.zeros((pad_len, self.config.state_dim), dtype=np.float32), dyn_window]
-                    )
-                    pat_window = np.concatenate(
-                        [np.zeros((pad_len, *pat_window.shape[1:]), dtype=np.float32), pat_window]
-                    )
-                    act_window = np.concatenate(
-                        [np.zeros((pad_len, 2), dtype=np.float32), act_window]
-                    )
+                dyn_window, pat_window, act_window = _build_history_window(
+                    dyn_history[i], patch_history[i], act_history[i],
+                    ctx, self.config.state_dim,
+                )
 
                 pred = model.predict(dyn_window, pat_window, act_window)
                 noise = np.random.normal(0, noise_std * scale, size=2).astype(np.float32)
@@ -444,6 +493,162 @@ class RolloutWorker:
                 actions=np.array(all_actions[i]),
             ))
         return _filter_water_trajectories(trajectories, self.config.water_y_threshold)
+
+    def collect_ppo(
+        self,
+        model: ActorCritic,
+        n_steps: int,
+        eff_map: ClimbingEfficiencyMap | None = None,
+    ) -> tuple[PPORolloutBuffer, list[Trajectory]]:
+        """
+        PPO 采集：每步记录 (action, log_prob, value, reward)。
+
+        每个 agent 使用独立 buffer，采集结束后 per-agent 计算 GAE
+        （各自的 bootstrap value），再合并为单一 buffer 用于训练。
+        同时收集 per-agent 原始状态/动作，返回 Trajectory 列表供效率图更新。
+        """
+        from .ppo_buffer import PPORolloutBuffer as _Buffer
+        from .reward import step_reward
+
+        assert self.env is not None, "请先调用 setup() 或 launch_game()"
+        num_agents = self.config.num_agents
+        ctx = self.config.context_len
+        device = next(model.parameters()).device
+
+        obs = self._reset_and_deploy()
+
+        stable_agents = self._get_stable_agents(obs)
+        n_skipped = num_agents - len(stable_agents)
+        if n_skipped > 0:
+            logger.info(
+                "稳定性过滤: %d/%d agents 稳定, %d 跳过",
+                len(stable_agents), num_agents, n_skipped,
+            )
+
+        agent_buffers: dict[int, _Buffer] = {i: _Buffer() for i in stable_agents}
+
+        raw_states: dict[int, list[np.ndarray]] = {
+            i: [obs[i].copy()] for i in stable_agents
+        }
+        raw_actions: dict[int, list[np.ndarray]] = {
+            i: [] for i in stable_agents
+        }
+
+        dyn_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        act_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        patch_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        prev_obs = obs.copy()
+        running_max_y = {i: float(obs[i, 1]) for i in stable_agents}
+
+        for step in range(n_steps):
+            patches = _build_patches_batch(
+                obs, eff_map, self.config,
+                self._min_gx, self._min_gy, self._terrain_mask,
+            )
+            dynamics = obs[:, DYNAMICS_INDICES]
+
+            actions_batch = np.zeros((num_agents, 2), dtype=np.float32)
+            step_data: dict[int, tuple] = {}
+
+            for i in stable_agents:
+                dyn_history[i].append(dynamics[i].copy())
+                patch_history[i].append(patches[i].copy())
+
+                dyn_window, pat_window, act_window = _build_history_window(
+                    dyn_history[i], patch_history[i], act_history[i],
+                    ctx, self.config.state_dim,
+                )
+
+                dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
+                pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)
+                act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
+
+                with torch.no_grad():
+                    av = model.get_action_and_value(dyn_t, pat_t, act_t)
+
+                action_np = av.action.cpu().numpy().squeeze(0)
+
+                if not (np.isfinite(action_np).all()
+                        and np.isfinite(av.log_prob.item())
+                        and np.isfinite(av.value.item())):
+                    logger.warning(
+                        "NaN/Inf model output at step=%d agent=%d, "
+                        "falling back to zero action",
+                        step, i,
+                    )
+                    action_np = np.zeros(2, dtype=np.float32)
+                    step_data[i] = (dyn_window.copy(), pat_window.copy(), act_window.copy(), 0.0, 0.0)
+                    actions_batch[i] = action_np
+                    continue
+
+                actions_batch[i] = action_np
+                step_data[i] = (
+                    dyn_window.copy(), pat_window.copy(), act_window.copy(),
+                    av.log_prob.item(), av.value.item(),
+                )
+
+            new_obs, dones = self.env.step(actions_batch)
+
+            for i in stable_agents:
+                if i not in step_data:
+                    continue
+                dw, pw, aw, lp, val = step_data[i]
+                reward, running_max_y[i] = step_reward(
+                    prev_obs[i], new_obs[i], eff_map, self.config,
+                    running_max_y=running_max_y[i],
+                )
+                agent_buffers[i].add(
+                    dynamics_window=dw,
+                    patch_window=pw,
+                    act_history_window=aw,
+                    action=actions_batch[i].copy(),
+                    log_prob=lp,
+                    value=val,
+                    reward=reward,
+                    done=bool(dones[i]) or new_obs[i, 1] < self.config.water_y_threshold,
+                )
+                act_history[i].append(actions_batch[i].copy())
+                raw_states[i].append(new_obs[i].copy())
+                raw_actions[i].append(actions_batch[i].copy())
+
+            prev_obs = new_obs.copy()
+            obs = new_obs
+
+        # per-agent bootstrap value + GAE
+        patches = _build_patches_batch(
+            obs, eff_map, self.config,
+            self._min_gx, self._min_gy, self._terrain_mask,
+        )
+        dynamics = obs[:, DYNAMICS_INDICES]
+        for i in stable_agents:
+            dyn_history[i].append(dynamics[i].copy())
+            patch_history[i].append(patches[i].copy())
+            dyn_window, pat_window, act_window = _build_history_window(
+                dyn_history[i], patch_history[i], act_history[i],
+                ctx, self.config.state_dim,
+            )
+            dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
+            pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)
+            act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
+            with torch.no_grad():
+                _, v = model.forward(dyn_t, pat_t, act_t)
+            agent_buffers[i].compute_gae(
+                last_value=v.item(),
+                gamma=self.config.gamma,
+                gae_lambda=self.config.gae_lambda,
+            )
+
+        buffer = _Buffer.merge(list(agent_buffers.values()))
+
+        trajectories = []
+        for i in stable_agents:
+            if len(raw_actions[i]) > 0:
+                trajectories.append(Trajectory(
+                    raw_states=np.array(raw_states[i]),
+                    actions=np.array(raw_actions[i]),
+                ))
+
+        return buffer, trajectories
 
     def teardown(self) -> None:
         """关闭连接并终止游戏进程。"""
