@@ -14,6 +14,7 @@ ClimbingEfficiencyMap: 地形感知的效率图
 from __future__ import annotations
 
 import copy
+import math
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -68,6 +69,118 @@ def score_trajectory(
         waypoint_reward = eff_end - eff_start
 
     return bs + config.waypoint_weight * waypoint_reward
+
+
+class RewardNormalizer:
+    """Welford 在线算法跟踪 height / efficiency 分量的 running σ。
+
+    warmup 阶段记录各分量统计量，达到 calibration_steps 后冻结 σ，
+    之后 step_reward 切换到归一化模式 (α * h/σ_h + (1-α) * e/σ_e)。
+    冻结后 reward scale 不再变化，防止 Critic 目标震荡。
+    """
+
+    def __init__(self, calibration_steps: int = 50_000):
+        self._calibration_steps = calibration_steps
+        self._n = 0
+        self._mean_h = 0.0
+        self._M2_h = 0.0
+        self._mean_e = 0.0
+        self._M2_e = 0.0
+        self._frozen = False
+        self.sigma_h = 1.0
+        self.sigma_e = 1.0
+
+    @property
+    def is_active(self) -> bool:
+        return self._frozen
+
+    def observe(self, height_reward: float, eff_delta: float) -> None:
+        if self._frozen:
+            return
+        self._n += 1
+        d = height_reward - self._mean_h
+        self._mean_h += d / self._n
+        self._M2_h += d * (height_reward - self._mean_h)
+
+        d = eff_delta - self._mean_e
+        self._mean_e += d / self._n
+        self._M2_e += d * (eff_delta - self._mean_e)
+
+        if self._n >= self._calibration_steps:
+            self._freeze()
+
+    def _freeze(self) -> None:
+        if self._n < 2:
+            return
+        self.sigma_h = max(math.sqrt(self._M2_h / (self._n - 1)), 1e-8)
+        self.sigma_e = max(math.sqrt(self._M2_e / (self._n - 1)), 1e-8)
+        self._frozen = True
+
+
+def step_reward(
+    obs_prev: np.ndarray,
+    obs_curr: np.ndarray,
+    efficiency_map: ClimbingEfficiencyMap | None,
+    config: TrainConfig,
+    running_max_y: float | None = None,
+    normalizer: RewardNormalizer | None = None,
+) -> tuple[float, float]:
+    """
+    PPO 逐步奖励（创新高模式）。
+
+    当提供 running_max_y 时，只在超过历史最高点时给正奖励，
+    回落时仅给极轻微惩罚（或零），避免跳起后落地抵消正信号。
+
+    当 normalizer 激活后，切换到归一化模式:
+      reward = α * (height / σ_h) + (1-α) * (eff_delta / σ_e)
+
+    返回 (reward, updated_max_y)。
+    """
+    curr_y = float(obs_curr[1])
+
+    # ── height component ──
+    if running_max_y is not None:
+        if curr_y > running_max_y:
+            height_reward = curr_y - running_max_y
+            new_max_y = curr_y
+        else:
+            drop = running_max_y - curr_y
+            height_reward = -config.neg_reward_scale * math.log1p(drop) if drop > 0 else 0.0
+            new_max_y = running_max_y
+    else:
+        dy = float(obs_curr[1] - obs_prev[1])
+        if dy >= 0:
+            height_reward = dy
+        else:
+            height_reward = -config.neg_reward_scale * math.log1p(abs(dy))
+        new_max_y = curr_y
+
+    # ── efficiency component ──
+    eff_delta = 0.0
+    if efficiency_map is not None:
+        eff_delta = (
+            efficiency_map.query(float(obs_curr[0]), float(obs_curr[1]))
+            - efficiency_map.query(float(obs_prev[0]), float(obs_prev[1]))
+        )
+
+    # ── combine ──
+    if normalizer is not None:
+        normalizer.observe(height_reward, eff_delta)
+        if normalizer.is_active:
+            alpha = config.reward_alpha
+            reward = (
+                alpha * height_reward / normalizer.sigma_h
+                + (1 - alpha) * eff_delta / normalizer.sigma_e
+            )
+        else:
+            reward = height_reward + config.waypoint_weight * eff_delta
+    else:
+        reward = height_reward + config.waypoint_weight * eff_delta
+
+    if curr_y < config.water_y_threshold:
+        reward = -10.0
+
+    return reward, new_max_y
 
 
 # ---------------------------------------------------------------------------
@@ -245,13 +358,20 @@ class ClimbingEfficiencyMap:
 
     # -- 地形感知扩散 --
 
+    _DIFFUSION_CONV_EPS = 1e-4
+
     def _diffuse(self, arr: np.ndarray) -> np.ndarray:
-        """迭代扩散: 4 邻域平均，只通过可通行格子传播。"""
+        """迭代扩散: 4 邻域平均，只通过可通行格子传播。
+
+        使用收敛检测 (max|Δ| < ε) 自动停止，
+        diffusion_iters 作为 max_iterations 安全兜底。
+        """
         mask = self.traversable.astype(np.float64)
         arr = np.pad(arr, 1, mode="constant", constant_values=0)
         mask = np.pad(mask, 1, mode="constant", constant_values=0)
 
-        for _ in range(self.diffusion_iters):
+        for i in range(self.diffusion_iters):
+            old_arr = arr.copy()
             n_sum = np.zeros_like(arr)
             n_cnt = np.zeros_like(arr)
             for shift, axis in [(-1, 0), (1, 0), (-1, 1), (1, 1)]:
@@ -265,6 +385,9 @@ class ClimbingEfficiencyMap:
                 (1 - self.diffusion_alpha) * arr + self.diffusion_alpha * n_avg,
                 0.0,
             )
+            delta = float(np.abs(arr - old_arr).max())
+            if delta < self._DIFFUSION_CONV_EPS:
+                break
 
         return arr[1:-1, 1:-1]
 

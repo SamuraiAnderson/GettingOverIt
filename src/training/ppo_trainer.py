@@ -3,6 +3,10 @@ PPO Trainer — Proximal Policy Optimization 训练器。
 
 实现 clipped surrogate objective + value loss + entropy bonus，
 支持多 epoch minibatch 更新和可选的 KL 散度早停。
+
+包含运行时自适应:
+- target_kl: 带硬边界 [0.01, 0.05] 的比例式自适应
+- max_grad_norm: 前 N 步收集梯度范数 p95 后冻结
 """
 
 from __future__ import annotations
@@ -10,6 +14,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
@@ -23,6 +28,58 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class _KLAdapter:
+    """target_kl 自适应: 比例式调节 + 硬边界 clamp。"""
+
+    KL_MIN = 0.01
+    KL_MAX = 0.05
+    ADAPT_RATE = 0.1
+
+    def __init__(self, initial_kl: float | None):
+        if initial_kl is None:
+            self.target: float | None = None
+            return
+        self.target = float(np.clip(initial_kl, self.KL_MIN, self.KL_MAX))
+
+    def adapt(self, actual_kl: float) -> None:
+        if self.target is None:
+            return
+        ratio = actual_kl / max(self.target, 1e-8)
+        if ratio > 1.5:
+            self.target *= (1 - self.ADAPT_RATE)
+        elif ratio < 0.5:
+            self.target *= (1 + self.ADAPT_RATE)
+        self.target = float(np.clip(self.target, self.KL_MIN, self.KL_MAX))
+
+
+class _GradNormAdapter:
+    """max_grad_norm 自适应: warmup 阶段收集 p95 后冻结，带硬上限防止恢复训练时梯度爆炸。"""
+
+    def __init__(self, default_norm: float, cap: float, warmup_updates: int = 500):
+        self._default = default_norm
+        self._cap = cap
+        self._warmup = warmup_updates
+        self._norms: list[float] = []
+        self._frozen_norm: float | None = None
+
+    def record(self, grad_norm: float) -> None:
+        if self._frozen_norm is not None:
+            return
+        self._norms.append(grad_norm)
+        if len(self._norms) >= self._warmup:
+            p95 = float(np.percentile(self._norms, 95))
+            adaptive = max(p95 * 1.5, 0.1)
+            self._frozen_norm = min(adaptive, self._cap)
+            logger.info(
+                "GradNormAdapter frozen: p95=%.4f, adaptive=%.4f, cap=%.4f → max_grad_norm=%.4f",
+                p95, adaptive, self._cap, self._frozen_norm,
+            )
+
+    @property
+    def max_grad_norm(self) -> float:
+        return self._frozen_norm if self._frozen_norm is not None else self._default
+
+
 class PPOTrainer:
     """PPO 训练器，对一轮 rollout buffer 做多 epoch minibatch 更新。"""
 
@@ -32,6 +89,8 @@ class PPOTrainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._global_step = 0
         self._pending_optim_state: dict | None = None
+        self._kl_adapter = _KLAdapter(config.target_kl)
+        self._grad_norm_adapter = _GradNormAdapter(config.max_grad_norm, config.max_grad_norm_cap)
 
     def set_pending_optimizer_state(self, state_dict: dict) -> None:
         """暂存 optimizer state_dict，在首次 update 创建 optimizer 后应用。"""
@@ -99,8 +158,13 @@ class PPOTrainer:
                 )
                 policy_loss = -torch.min(surr1, surr2).mean()
 
-                # ── 价值损失 ──
-                value_loss = F.mse_loss(new_value, batch.returns)
+                # ── 价值损失 (clipped) ──
+                value_pred_clipped = batch.old_values + (
+                    new_value - batch.old_values
+                ).clamp(-cfg.clip_epsilon, cfg.clip_epsilon)
+                vl_unclipped = (new_value - batch.returns).pow(2)
+                vl_clipped = (value_pred_clipped - batch.returns).pow(2)
+                value_loss = 0.5 * torch.max(vl_unclipped, vl_clipped).mean()
 
                 # ── 熵奖励 ──
                 entropy_mean = entropy.mean()
@@ -123,7 +187,9 @@ class PPOTrainer:
 
                 self.optimizer.zero_grad()
                 loss.backward()
-                clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
+                effective_grad_norm = self._grad_norm_adapter.max_grad_norm
+                total_norm = clip_grad_norm_(model.parameters(), effective_grad_norm)
+                self._grad_norm_adapter.record(total_norm.item())
                 self.optimizer.step()
 
                 if any(
@@ -153,24 +219,32 @@ class PPOTrainer:
                 n_updates += 1
                 self._global_step += 1
 
-            # KL 早停
-            if cfg.target_kl is not None and n_updates > 0:
+            # KL 早停 (使用自适应 target)
+            effective_kl = self._kl_adapter.target
+            if effective_kl is not None and n_updates > 0:
                 avg_kl = total_approx_kl / n_updates
-                if avg_kl > cfg.target_kl:
+                if avg_kl > effective_kl:
                     logger.info(
                         "KL 早停: epoch %d/%d, avg_kl=%.4f > target_kl=%.4f",
-                        epoch + 1, cfg.ppo_epochs, avg_kl, cfg.target_kl,
+                        epoch + 1, cfg.ppo_epochs, avg_kl, effective_kl,
                     )
                     early_stopped = True
 
         n = max(n_updates, 1)
+        final_avg_kl = total_approx_kl / n
+
+        # 迭代结束后自适应 target_kl
+        self._kl_adapter.adapt(final_avg_kl)
+
         metrics = {
             "policy_loss": total_policy_loss / n,
             "value_loss": total_value_loss / n,
             "entropy": total_entropy / n,
-            "approx_kl": total_approx_kl / n,
+            "approx_kl": final_avg_kl,
             "clip_fraction": total_clip_frac / n,
             "total_loss": total_loss_sum / n,
             "n_updates": float(n_updates),
+            "target_kl": float(self._kl_adapter.target or 0),
+            "max_grad_norm": self._grad_norm_adapter.max_grad_norm,
         }
         return metrics

@@ -54,7 +54,8 @@ class TrainConfig:
     epochs: int = 10
     batch_size: int = 256
     action_scale: float = 100.0
-    max_grad_norm: float = 1.0
+    max_grad_norm: float = 0.5
+    max_grad_norm_cap: float = 5.0   # GradNormAdapter 冻结值的硬上限 (default * cap_ratio)
     weight_decay: float = 1e-4
     val_ratio: float = 0.1
     early_stop_patience: int = 3
@@ -77,10 +78,12 @@ class TrainConfig:
     diffusion_alpha: float = 0.2
     height_prior_weight: float = 0.05
 
-    # ── 投放点随机化 ──
+    # ── 投放模式 ──
+    random_deploy: bool = False     # True=随机投放到表面, False=所有 agent 留在初始位置
     drop_height: float = 2.0        # 表面上方投放高度
     surface_padding: float = 0.3    # Player 包围盒高度之上的间隙
     y_max_cutoff: float = 380.0     # 屏蔽高于此值的表面
+    settle_drop_threshold: float = 5.0  # settle 后跌幅 > 此值的 agent 视为不稳定并跳过
 
     # ── 安全 ──
     water_y_threshold: float = -10.0  # y 低于此值视为落水，轨迹废弃
@@ -88,6 +91,21 @@ class TrainConfig:
     # ── 探索 ──
     explore_noise_std: float = 0.1
     noise_decay: float = 0.95
+
+    # ── PPO ──
+    gamma: float = 0.99
+    gae_lambda: float = 0.95
+    clip_epsilon: float = 0.2
+    ppo_epochs: int = 4
+    vf_coef: float = 0.25
+    ent_coef: float = 0.001
+    target_kl: float | None = 0.03
+    ppo_batch_size: int = 64
+    normalize_advantages: bool = True
+
+    # ── 非对称奖励缩放 ──
+    neg_reward_scale: float = 0.1     # log 压缩系数: -scale * log(1 + |dy|)
+    reward_alpha: float = 0.5        # step_reward 中 height vs waypoint 的无量纲比例 (α→height, 1-α→waypoint)
 
     # ── 训练控制 ──
     max_iterations: int = 100

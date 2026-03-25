@@ -28,7 +28,7 @@ if str(_REPO_ROOT / "src") not in sys.path:
 from training.actor_critic import ActorCritic
 from training.config import TrainConfig
 from training.ppo_trainer import PPOTrainer
-from training.reward import ClimbingEfficiencyMap
+from training.reward import ClimbingEfficiencyMap, RewardNormalizer
 from training.rollout import RolloutWorker
 
 sys.path.insert(0, str(_REPO_ROOT / "src" / "tests" / "control_interaction"))
@@ -265,6 +265,14 @@ def main() -> None:
     else:
         logger.info("初始位置模式: 跳过表面线段加载")
 
+    # ── 奖励归一化器 ──
+    calibration_steps = config.steps_per_rollout * config.num_agents * 10
+    reward_normalizer = RewardNormalizer(calibration_steps=calibration_steps)
+    logger.info(
+        "RewardNormalizer: %d calibration steps (≈%d rollouts)",
+        calibration_steps, 10,
+    )
+
     # ── 主循环 ──
     try:
         for iteration in range(start_iteration, config.max_iterations):
@@ -287,9 +295,16 @@ def main() -> None:
                         config.steps_per_rollout, config.num_agents)
             buffer, trajectories = rollout_worker.collect_ppo(
                 model, config.steps_per_rollout, eff_map=eff_map,
+                normalizer=reward_normalizer,
             )
             logger.info("  采集完成: buffer size=%d, trajectories=%d",
                         buffer.size, len(trajectories))
+            if reward_normalizer.is_active:
+                logger.info(
+                    "  RewardNormalizer active: σ_h=%.4f, σ_e=%.4f, α=%.2f",
+                    reward_normalizer.sigma_h, reward_normalizer.sigma_e,
+                    config.reward_alpha,
+                )
 
             if not args.no_launch:
                 rollout_worker.close_game()

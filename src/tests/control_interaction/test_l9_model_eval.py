@@ -3,10 +3,12 @@
 
 加载训练好的模型权重和效率图，用单个 player 从游戏默认起点开始，
 模型纯推理（无噪声）驱动 N 步，记录完整轨迹并保存 JSON。
+自动识别 BC（ActionPredictor）和 PPO（ActorCritic）checkpoint。
 
 用法:
   python src/tests/control_interaction/test_l9_model_eval.py
   python src/tests/control_interaction/test_l9_model_eval.py --checkpoint checkpoints/model_iter_0005.pt
+  python src/tests/control_interaction/test_l9_model_eval.py --checkpoint checkpoints/ppo_iter_0050.pt
   python src/tests/control_interaction/test_l9_model_eval.py --steps 2000
 """
 
@@ -35,7 +37,9 @@ from training.dataset import (
     render_gaussian,
 )
 from training.model import ActionPredictor
+from training.actor_critic import ActorCritic
 from training.reward import ClimbingEfficiencyMap
+from training.rollout import _build_history_window
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +102,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="L9: 模型评估 — 单 agent 无噪声推理")
     parser.add_argument(
         "--checkpoint", type=str, default="checkpoints/model_iter_0010.pt",
-        help="模型权重路径",
+        help="模型权重路径（自动识别 BC / PPO checkpoint）",
     )
     parser.add_argument("--steps", type=int, default=1000, help="推理步数")
     parser.add_argument(
@@ -120,18 +124,31 @@ def main() -> None:
     config = TrainConfig()
     config.num_agents = 1
 
-    # ── 加载模型 ──
+    # ── 加载模型（自动识别 BC / PPO checkpoint）──
     ckpt_path = Path(args.checkpoint)
     if not ckpt_path.exists():
         logger.error("Checkpoint 不存在: %s", ckpt_path)
         sys.exit(1)
 
-    model = ActionPredictor(config)
-    model.load_state_dict(torch.load(ckpt_path, weights_only=True))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    is_ppo = False
+
+    ckpt_data = torch.load(ckpt_path, weights_only=False)
+    if isinstance(ckpt_data, dict) and "model" in ckpt_data:
+        # PPO checkpoint: {"model": state_dict, "optimizer": ..., "iteration": ...}
+        model = ActorCritic(config)
+        model.load_state_dict(ckpt_data["model"])
+        is_ppo = True
+        logger.info("PPO 模型已加载: %s (device=%s)", ckpt_path, device)
+    else:
+        # BC checkpoint: 直接是 state_dict
+        state_dict = ckpt_data if isinstance(ckpt_data, dict) else torch.load(ckpt_path, weights_only=True)
+        model = ActionPredictor(config)
+        model.load_state_dict(state_dict)
+        logger.info("BC 模型已加载: %s (device=%s)", ckpt_path, device)
+
     model = model.to(device)
     model.eval()
-    logger.info("模型已加载: %s (device=%s)", ckpt_path, device)
 
     # ── 加载地形 mask ──
     mask_cache = Path(config.checkpoint_dir) / "cache" / "traversable_mask.npz"
@@ -213,32 +230,15 @@ def main() -> None:
             dyn_history.append(dynamics.copy())
             patch_history.append(patch.copy())
 
-            hist_len = min(len(dyn_history), ctx)
-            dyn_window = np.array(dyn_history[-hist_len:])
-            pat_window = np.array(patch_history[-hist_len:])
+            dyn_window, pat_window, act_window = _build_history_window(
+                dyn_history, patch_history, act_history,
+                ctx, config.state_dim,
+            )
 
-            if len(act_history) == 0:
-                act_window = np.zeros((hist_len, 2), dtype=np.float32)
+            if is_ppo:
+                pred = model.predict_deterministic(dyn_window, pat_window, act_window)
             else:
-                act_len = min(len(act_history), ctx)
-                act_window = np.array(act_history[-act_len:])
-                if len(act_window) < hist_len:
-                    pad = np.zeros((hist_len - len(act_window), 2), dtype=np.float32)
-                    act_window = np.concatenate([pad, act_window], axis=0)
-
-            if hist_len < ctx:
-                pad_len = ctx - hist_len
-                dyn_window = np.concatenate(
-                    [np.zeros((pad_len, config.state_dim), dtype=np.float32), dyn_window]
-                )
-                pat_window = np.concatenate(
-                    [np.zeros((pad_len, *pat_window.shape[1:]), dtype=np.float32), pat_window]
-                )
-                act_window = np.concatenate(
-                    [np.zeros((pad_len, 2), dtype=np.float32), act_window]
-                )
-
-            pred = model.predict(dyn_window, pat_window, act_window)
+                pred = model.predict(dyn_window, pat_window, act_window)
             action = np.clip(pred, -scale, scale).astype(np.float32)
 
             actions_batch = action.reshape(1, 2)
@@ -252,12 +252,16 @@ def main() -> None:
             if cur_y > max_y:
                 max_y = cur_y
 
-            if (step + 1) % 100 == 0:
-                logger.info(
-                    "  step %d/%d: pos=(%.1f, %.1f)  max_y=%.1f",
-                    step + 1, n_steps,
-                    float(obs[0, 0]), cur_y, max_y,
-                )
+            logger.info(
+                "  step %4d/%d | pos=(%.2f, %.2f) | pred=(%.4f, %.4f) | "
+                "action=(%.4f, %.4f) | dyn=[%s] | max_y=%.2f",
+                step + 1, n_steps,
+                float(obs[0, 0]), cur_y,
+                float(pred[0]), float(pred[1]),
+                float(action[0]), float(action[1]),
+                ", ".join(f"{d:.3f}" for d in dynamics[:6]),
+                max_y,
+            )
 
     except KeyboardInterrupt:
         logger.info("用户中断，已完成 %d 步", len(all_actions))

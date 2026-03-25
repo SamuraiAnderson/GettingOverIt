@@ -499,6 +499,7 @@ class RolloutWorker:
         model: ActorCritic,
         n_steps: int,
         eff_map: ClimbingEfficiencyMap | None = None,
+        normalizer: RewardNormalizer | None = None,
     ) -> tuple[PPORolloutBuffer, list[Trajectory]]:
         """
         PPO 采集：每步记录 (action, log_prob, value, reward)。
@@ -508,7 +509,7 @@ class RolloutWorker:
         同时收集 per-agent 原始状态/动作，返回 Trajectory 列表供效率图更新。
         """
         from .ppo_buffer import PPORolloutBuffer as _Buffer
-        from .reward import step_reward
+        from .reward import RewardNormalizer, step_reward
 
         assert self.env is not None, "请先调用 setup() 或 launch_game()"
         num_agents = self.config.num_agents
@@ -596,6 +597,7 @@ class RolloutWorker:
                 reward, running_max_y[i] = step_reward(
                     prev_obs[i], new_obs[i], eff_map, self.config,
                     running_max_y=running_max_y[i],
+                    normalizer=normalizer,
                 )
                 agent_buffers[i].add(
                     dynamics_window=dw,
