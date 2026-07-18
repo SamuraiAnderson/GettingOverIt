@@ -159,7 +159,7 @@ GameLauncher 启动游戏 → GoiEnv.connect(9000)
 BC 与 PPO 的高度信号**故意分化，且已锁定对应关系，勿误合并**：
 
 - **BC 轨迹评分** `base_score`/`score_trajectory`：对**完整轨迹算一个标量**用于 top-K% 筛选，
-  = `climb_score`（相对攀爬核心 = `summit + efficiency_weight·climb_speed`）
+  = `climb_score`（相对攀爬核心，量纲自洽 = `summit + efficiency_weight·(summit/peak_step·speed_ref_steps)`，两项均为米，`efficiency_weight` 为无量纲权重）
   + `abs_height_bonus`（绝对高度**轨迹级**排序加成）+ `waypoint_weight·waypoint`。
 - **PPO 逐步奖励** `step_reward`：见 7.1，是上述 `summit` 的**逐步望远镜分解**（沿轨迹累加正的创新高奖励 → `y_max - y_start = summit`）。BC 因能直接取 max 用标量即可；PPO 逐步优化需可加的差分形式做信用分配。
 

@@ -1,7 +1,7 @@
 """
 轨迹数据集 — 极简存储 + 即时 patch 构建 + peak 截断 + 滑动窗口管理。
 
-轨迹只存原始 29D 状态 + 动作（~61KB/条）。
+轨迹只存原始 33D 状态 + 动作（~70KB/条）。
 地形图静态共享，效率图使用最新版，patch 在 __getitem__ 中即时构建。
 """
 
@@ -21,6 +21,9 @@ if TYPE_CHECKING:
 # 原始状态 33 维 = 基础 29 + fakeCursor 4（cursorX/Y=29/30, cursorVelX/Y=31/32，均为绝对量）
 # 速度/角速度分量 (15): player vel(2,3) + ang_vel(4) + hub vel(7,8)
 # + slider vel(12,13) + handle vel(17,18) + pole vel(21,22) + tip vel(25,26) + cursor vel(31,32)
+# 注：原始状态只显式给出 player 角速度(4)，锤子无独立角速度字段。handle/pole/tip 是同一
+# 刚体（锤子）上的三点，其线速度差隐式编码了锤子角速度 ω（v=v_cm+ω×r）。这份"多点冗余"
+# 正是补齐锤子转动可观测性的手段，**并非可随意精简的重复项**，勿为省维而删。
 VELOCITY_INDICES = [2, 3, 4, 7, 8, 12, 13, 17, 18, 21, 22, 25, 26, 31, 32]
 # 角度 (3): hubAngle(9), sliderAngle(14), hammerAngle(27)
 # C# 侧单位为「度」(eulerAngles.z / Atan2*Rad2Deg)，编码前需转弧度再取 sin/cos

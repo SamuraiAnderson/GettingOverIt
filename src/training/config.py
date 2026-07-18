@@ -69,7 +69,11 @@ class TrainConfig:
     rollouts_per_iteration: int = 3
 
     # ── 评分 ──
-    efficiency_weight: float = 50.0
+    # climb_score 量纲自洽：summit[米] + efficiency_weight * (summit/peak_step * speed_ref_steps)[米]。
+    # efficiency_weight 为无量纲相对权重(O(1))；speed_ref_steps 是把「米/步」换算回「米」的参考步数。
+    # 默认 1.0 * 50 = 50，与历史 efficiency_weight=50 的数值行为完全一致，仅令量纲/语义清晰。
+    efficiency_weight: float = 1.0
+    speed_ref_steps: int = 50
     waypoint_weight: float = 0.5
     # 绝对高度加成（轨迹级/排序）：base_score 每条轨迹加一次，用于 BC 跨轨迹筛选。
     # 与效率图的 height_prior_weight（网格级/空间价值）分工，勿混用，见 reward.climb_score。

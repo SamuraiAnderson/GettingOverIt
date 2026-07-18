@@ -4,7 +4,7 @@
 RolloutWorker:
 - 使用 GoiEnv 进行帧级交互
 - 支持随机动作采集、BC 模型推理采集和 PPO 采集
-- 存储原始 29D 状态，推理时即时构建动力学特征 + 4ch patch + valid_mask
+- 存储原始 33D 状态，推理时即时构建动力学特征 + 4ch patch + valid_mask
 """
 
 from __future__ import annotations

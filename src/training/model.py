@@ -97,7 +97,7 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
     Transformer 动作预测网络。
 
     输入: (dynamics, patches, actions) → 预测 a_{t+1}
-    - dynamics: (B, T, 17)
+    - dynamics: (B, T, state_dim=33)
     - patches: (B, T, 4, 32, 32)
     - actions: (B, T, 2)
 

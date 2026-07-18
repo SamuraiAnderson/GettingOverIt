@@ -25,7 +25,12 @@ if TYPE_CHECKING:
 
 
 def climb_score(summit: float, peak_step: int, config: TrainConfig) -> float:
-    """相对攀爬核心分：爬得高（summit）+ 爬得快（climb_speed = summit / peak_step）。
+    """相对攀爬核心分：爬得高（summit）+ 爬得快。
+
+    量纲自洽（两项均为「米」）：
+      summit[米] + efficiency_weight * (summit / peak_step * speed_ref_steps)[米]
+    其中 climb_speed = summit / peak_step 为「米/步」，乘以参考步数 speed_ref_steps 换回
+    「米」，efficiency_weight 遂为无量纲相对权重。等价于 summit * (1 + eff_w * ref / peak_step)。
 
     这是 base_score（整条轨迹算一次）与 ClimbingEfficiencyMap.update（逐后缀算一次）
     共享的唯一评分核心，只描述「相对出发点爬了多少、多快」。
@@ -37,8 +42,9 @@ def climb_score(summit: float, peak_step: int, config: TrainConfig) -> float:
       - `height_prior_weight`：**每个网格**在效率图初始化时按 world_y 注入 floor，
         用于效率图的空间价值（越高的可通行格子基线越高）。
     """
-    climb_speed = summit / peak_step
-    return summit + config.efficiency_weight * climb_speed
+    climb_speed = summit / peak_step                       # [米/步]
+    speed_term = climb_speed * config.speed_ref_steps      # [米]（参考步数换算回米）
+    return summit + config.efficiency_weight * speed_term
 
 
 def base_score(states: np.ndarray, config: TrainConfig) -> float:
@@ -84,8 +90,10 @@ def score_trajectory(
     """
     完整评分 = base_score + waypoint_weight * waypoint_reward。
 
-    states: (T+1, 29) — 原始 29 维状态。
-    waypoint_reward 利用望远镜求和简化为 E(终点) - E(起点)，O(1)。
+    states: (T+1, 33) — 原始 33 维状态。
+    waypoint_reward = E(最高点) - E(起点)，O(1)。终点取**轨迹最高点**（peak）而非
+    轨迹末端，与数据集在 peak 截断、base_score 按 y.max() 排序的口径一致，避免"爬到高点
+    后跌落"使 waypoint 被末端低位拉低。
     落水轨迹直接返回 -inf，确保在任何筛选中被淘汰。
     """
     if is_water_trajectory(states, config):
@@ -95,9 +103,10 @@ def score_trajectory(
 
     waypoint_reward = 0.0
     if efficiency_map is not None:
-        eff_end = efficiency_map.query(states[-1, 0], states[-1, 1])
+        peak_t = int(states[:, 1].argmax())
+        eff_peak = efficiency_map.query(states[peak_t, 0], states[peak_t, 1])
         eff_start = efficiency_map.query(states[0, 0], states[0, 1])
-        waypoint_reward = eff_end - eff_start
+        waypoint_reward = eff_peak - eff_start
 
     return bs + config.waypoint_weight * waypoint_reward
 
@@ -105,9 +114,10 @@ def score_trajectory(
 class RewardNormalizer:
     """Welford 在线算法跟踪 height / efficiency 分量的 running σ。
 
-    warmup 阶段记录各分量统计量，达到 calibration_steps 后冻结 σ，
-    之后 step_reward 切换到归一化模式 (α * h/σ_h + (1-α) * e/σ_e)。
-    冻结后 reward scale 不再变化，防止 Critic 目标震荡。
+    σ 从第一步起就随 Welford 连续更新，达到 calibration_steps 后冻结、不再变化
+    （防止 Critic 目标长期震荡）。step_reward **全程**使用同一归一化公式
+    (α * h/σ_h + (1-α) * e/σ_e)，冻结只是把缓慢演化的 σ 定住，因此奖励尺度在
+    冻结时刻**连续**，不会出现"warmup 用原始量纲、冻结后突然换成 σ 归一化"的跳变。
     """
 
     def __init__(self, calibration_steps: int = 50_000):
@@ -123,6 +133,7 @@ class RewardNormalizer:
 
     @property
     def is_active(self) -> bool:
+        """σ 是否已冻结（仅供日志判断，不再用于切换奖励公式）。"""
         return self._frozen
 
     def observe(self, height_reward: float, eff_delta: float) -> None:
@@ -137,15 +148,13 @@ class RewardNormalizer:
         self._mean_e += d / self._n
         self._M2_e += d * (eff_delta - self._mean_e)
 
-        if self._n >= self._calibration_steps:
-            self._freeze()
+        # σ 连续更新（样本≥2 才有无偏方差），保证冻结前后奖励尺度平滑衔接
+        if self._n >= 2:
+            self.sigma_h = max(math.sqrt(self._M2_h / (self._n - 1)), 1e-8)
+            self.sigma_e = max(math.sqrt(self._M2_e / (self._n - 1)), 1e-8)
 
-    def _freeze(self) -> None:
-        if self._n < 2:
-            return
-        self.sigma_h = max(math.sqrt(self._M2_h / (self._n - 1)), 1e-8)
-        self.sigma_e = max(math.sqrt(self._M2_e / (self._n - 1)), 1e-8)
-        self._frozen = True
+        if self._n >= self._calibration_steps:
+            self._frozen = True
 
 
 def step_reward(
@@ -170,8 +179,9 @@ def step_reward(
       绝对高度通道：BC 用 abs_height_bonus，PPO 经效率图 height_prior 间接注入。
       三通道方向一致，故 BC→PPO 迁移不会互相推翻。
 
-    当 normalizer 激活后，切换到归一化模式:
+    当提供 normalizer 时，**全程**使用归一化模式（σ 连续演化，冻结时刻尺度不跳变）:
       reward = α * (height / σ_h) + (1-α) * (eff_delta / σ_e)
+    未提供 normalizer 时退化为原始量纲加权 (height + waypoint_weight * eff_delta)。
 
     返回 (reward, updated_max_y)。running_max_y 为必传参数（逐步创新高的历史最高点）。
     """
@@ -195,16 +205,14 @@ def step_reward(
         )
 
     # ── combine ──
+    # 全程用同一归一化公式：σ 从第一步起连续演化、冻结时定住，奖励尺度无跳变。
     if normalizer is not None:
         normalizer.observe(height_reward, eff_delta)
-        if normalizer.is_active:
-            alpha = config.reward_alpha
-            reward = (
-                alpha * height_reward / normalizer.sigma_h
-                + (1 - alpha) * eff_delta / normalizer.sigma_e
-            )
-        else:
-            reward = height_reward + config.waypoint_weight * eff_delta
+        alpha = config.reward_alpha
+        reward = (
+            alpha * height_reward / normalizer.sigma_h
+            + (1 - alpha) * eff_delta / normalizer.sigma_e
+        )
     else:
         reward = height_reward + config.waypoint_weight * eff_delta
 
@@ -341,7 +349,7 @@ class ClimbingEfficiencyMap:
         h, w = self.traversable.shape
 
         for traj in new_trajectories:
-            states = traj.raw_states  # (T+1, 29)
+            states = traj.raw_states  # (T+1, 33)
             T = len(states)
 
             y = states[:, 1]
@@ -374,9 +382,13 @@ class ClimbingEfficiencyMap:
 
                 wp = 0.0
                 if prev_eff_map is not None:
-                    eff_end = prev_eff_map.query(states[-1, 0], states[-1, 1])
+                    # 终点取「t 之后的最高点」(suffix peak)，与本处 summit/peak_step 的
+                    # 后缀语义一致，也与 score_trajectory(t=0→全局 peak) 口径统一；
+                    # 复用已算的 suffix_argmax，仍 O(1)。
+                    peak_idx = t + int(suffix_argmax[t])
+                    eff_peak = prev_eff_map.query(states[peak_idx, 0], states[peak_idx, 1])
                     eff_start = prev_eff_map.query(states[t, 0], states[t, 1])
-                    wp = eff_end - eff_start
+                    wp = eff_peak - eff_start
 
                 fs = bs + config.waypoint_weight * wp
                 if fs > self._max_arr[gy, gx]:
