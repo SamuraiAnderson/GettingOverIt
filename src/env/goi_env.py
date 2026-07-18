@@ -54,6 +54,13 @@ class GoiEnv:
         port:       TCP 端口（默认 9000，与 RuntimeConfig.tcpPort 一致）
         num_agents: agent 数量（与 C# StepController 配置一致）
         timeout:    连接超时（秒）
+        startup_settle_s:
+            连接成功后的固定预热等待（秒）。游戏在 Mian 场景加载后需要
+            数秒完成初始化（Rewired/关节电机等），期间注入的鼠标动作虽被
+            GetAxis 正确读取，却不会转化为锤子力矩——实测约 5s 后才生效，
+            且一旦生效便跨 reset 持久。此等待与物理步进无关（Script 模式下
+            靠 Unity 渲染帧推进初始化），故必须用墙钟时间覆盖。默认 8s 留裕量。
+            连接到已长时间运行的游戏时可传 0 跳过。
     """
 
     def __init__(
@@ -62,11 +69,13 @@ class GoiEnv:
         port: int = 9000,
         num_agents: int = 1,
         timeout: float = 60.0,
+        startup_settle_s: float = 8.0,
     ):
         self.host       = host
         self.port       = port
         self.num_agents = num_agents
         self.timeout    = timeout
+        self.startup_settle_s = startup_settle_s
 
         self._sock: Optional[socket.socket] = None
         self._connected = False
@@ -93,6 +102,11 @@ class GoiEnv:
                 self._sock = s
                 self._connected = True
                 logger.info("[GoiEnv] 已连接到 %s:%d", self.host, self.port)
+                if self.startup_settle_s > 0:
+                    # 等待游戏端初始化完成，否则前数秒的注入动作不会生效（见构造参数说明）
+                    logger.info("[GoiEnv] 等待游戏初始化 %.1fs（注入生效前置条件）...",
+                                self.startup_settle_s)
+                    time.sleep(self.startup_settle_s)
                 return
             except (ConnectionRefusedError, OSError) as e:
                 s.close()
