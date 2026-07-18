@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 
-from .model import SpatialEncoder
+from .model import SpatialEncoder, _DynamicsNormMixin, build_key_padding_mask
 
 if TYPE_CHECKING:
     from .config import TrainConfig
@@ -32,7 +32,7 @@ class ActionValue(NamedTuple):
     value: torch.Tensor
 
 
-class ActorCritic(nn.Module):
+class ActorCritic(_DynamicsNormMixin, nn.Module):
     """
     共享 backbone 的 Actor-Critic 网络。
 
@@ -40,6 +40,7 @@ class ActorCritic(nn.Module):
     - dynamics: (B, T, state_dim)
     - patches:  (B, T, 4, 32, 32)
     - actions:  (B, T, 2)
+    - valid_mask: (B, T) 可选，1=有效 0=左填充
 
     Actor 输出经 tanh 压缩到 [-action_scale, action_scale]。
     log_prob 会做 tanh squashing 修正。
@@ -49,6 +50,9 @@ class ActorCritic(nn.Module):
         super().__init__()
         d = config.d_model
         self.config = config
+
+        # 观测归一化 buffer（随 state_dict 保存/加载；从 BC 迁移时一并复制）
+        self._register_dynamics_norm(config.state_dim)
 
         # ── 共享 backbone（与 ActionPredictor 结构一致）──
         self.spatial_encoder = SpatialEncoder(config.patch_channels, d)
@@ -150,11 +154,13 @@ class ActorCritic(nn.Module):
         dynamics: torch.Tensor,
         patches: torch.Tensor,
         actions: torch.Tensor,
+        valid_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """共享特征提取，返回最后一个 token 的 embedding (B, d)。"""
         B, T, _ = dynamics.shape
         d = self.config.d_model
 
+        dynamics = self._normalize_dynamics(dynamics)
         dyn_feat = self.dynamics_proj(dynamics)
 
         patches_flat = patches.reshape(B * T, *patches.shape[2:])
@@ -174,7 +180,8 @@ class ActorCritic(nn.Module):
         seq = seq + self.pos_embed(positions).unsqueeze(0)
 
         mask = self._causal_mask(2 * T, dynamics.device)
-        out = self.transformer(seq, mask=mask)
+        key_padding_mask = build_key_padding_mask(valid_mask)
+        out = self.transformer(seq, mask=mask, src_key_padding_mask=key_padding_mask)
 
         return out[:, -1, :]
 
@@ -199,6 +206,7 @@ class ActorCritic(nn.Module):
         dynamics: torch.Tensor,
         patches: torch.Tensor,
         actions: torch.Tensor,
+        valid_mask: torch.Tensor | None = None,
     ) -> tuple[Normal, torch.Tensor]:
         """
         返回 (distribution_on_raw_space, value)。
@@ -206,7 +214,7 @@ class ActorCritic(nn.Module):
         注意：返回的 Normal 分布是 squash 之前的。
         调用方需通过 get_action_and_value / evaluate_actions 获取修正后的量。
         """
-        feat = self._backbone(dynamics, patches, actions)
+        feat = self._backbone(dynamics, patches, actions, valid_mask)
         mean = self.actor_mean(feat)
         _LOG_STD_MIN, _LOG_STD_MAX = -2.0, 0.5
         std = self.actor_log_std.clamp(_LOG_STD_MIN, _LOG_STD_MAX).exp().expand_as(mean)
@@ -219,11 +227,12 @@ class ActorCritic(nn.Module):
         dynamics: torch.Tensor,
         patches: torch.Tensor,
         actions: torch.Tensor,
+        valid_mask: torch.Tensor | None = None,
     ) -> ActionValue:
         """
         采集用：从策略中采样动作，返回 (squashed_action, log_prob, value)。
         """
-        dist, value = self.forward(dynamics, patches, actions)
+        dist, value = self.forward(dynamics, patches, actions, valid_mask)
         raw_action = dist.rsample()
         log_prob_raw = dist.log_prob(raw_action).sum(dim=-1)
         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
@@ -236,6 +245,7 @@ class ActorCritic(nn.Module):
         patches: torch.Tensor,
         act_history: torch.Tensor,
         taken_actions: torch.Tensor,
+        valid_mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         训练用：对已执行的动作重新计算 log_prob、entropy、value。
@@ -243,7 +253,7 @@ class ActorCritic(nn.Module):
         taken_actions: (B, 2) — squashed 空间中的动作
         returns: (log_prob, entropy, value)
         """
-        dist, value = self.forward(dynamics, patches, act_history)
+        dist, value = self.forward(dynamics, patches, act_history, valid_mask)
 
         # 反 squash: squashed → raw
         clamped = taken_actions.clamp(
@@ -263,6 +273,7 @@ class ActorCritic(nn.Module):
         dynamics: np.ndarray,
         patches: np.ndarray,
         action_history: np.ndarray,
+        valid_mask: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         确定性推理（评估用）：直接用 mean，不采样。
@@ -270,6 +281,7 @@ class ActorCritic(nn.Module):
         dynamics: (T, state_dim) 或 (1, T, state_dim)
         patches: (T, 4, 32, 32) 或 (1, T, 4, 32, 32)
         action_history: (T, 2) 或 (1, T, 2)
+        valid_mask: (T,) 或 (1, T) 可选，1=有效 0=左填充
         returns: (2,)
         """
         self.eval()
@@ -286,7 +298,12 @@ class ActorCritic(nn.Module):
         pat_t = torch.from_numpy(patches.astype(np.float32)).to(device)
         act_t = torch.from_numpy(action_history.astype(np.float32)).to(device)
 
-        feat = self._backbone(dyn_t, pat_t, act_t)
+        vm_t = None
+        if valid_mask is not None:
+            vm = valid_mask[np.newaxis] if valid_mask.ndim == 1 else valid_mask
+            vm_t = torch.from_numpy(vm.astype(np.float32)).to(device)
+
+        feat = self._backbone(dyn_t, pat_t, act_t, vm_t)
         mean = self.actor_mean(feat)
         action = self._squash_action(mean)
         return action.cpu().numpy().squeeze(0)

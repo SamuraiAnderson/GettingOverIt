@@ -145,6 +145,7 @@ class PPOTrainer:
                     batch.patches,
                     batch.act_history,
                     batch.actions,
+                    valid_mask=batch.valid_mask,
                 )
 
                 # ── 策略损失 (clipped surrogate) ──

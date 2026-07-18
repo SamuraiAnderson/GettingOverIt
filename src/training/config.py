@@ -37,8 +37,8 @@ class TrainConfig:
     steps_per_rollout: int = 500
 
     # ── 模型 ──
-    env_state_dim: int = 29
-    state_dim: int = 16          # 29D 去掉 12D 位置坐标 + timestamp
+    # build_dynamics 输出维度: 13 速度/角速度 + 3 角度×2(sin/cos) + 5 部件相对坐标×2 = 29
+    state_dim: int = 29
     action_dim: int = 2
     d_model: int = 128
     nhead: int = 4
@@ -79,7 +79,7 @@ class TrainConfig:
     height_prior_weight: float = 0.05
 
     # ── 投放模式 ──
-    random_deploy: bool = False     # True=随机投放到表面, False=所有 agent 留在初始位置
+    random_deploy: bool = True     # True=随机投放到表面, False=所有 agent 留在初始位置
     drop_height: float = 2.0        # 表面上方投放高度
     surface_padding: float = 0.3    # Player 包围盒高度之上的间隙
     y_max_cutoff: float = 380.0     # 屏蔽高于此值的表面

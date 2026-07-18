@@ -16,7 +16,6 @@ import time
 import json
 import random
 import subprocess
-import psutil
 from pathlib import Path
 
 # 添加父目录到路径以导入共享模块

@@ -27,7 +27,7 @@ if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
 from training.config import TrainConfig
-from training.dataset import TrajectoryDataset
+from training.dataset import TrajectoryDataset, compute_dynamics_stats
 from training.model import ActionPredictor
 from training.reward import ClimbingEfficiencyMap, base_score, score_trajectory
 from training.rollout import RolloutWorker
@@ -62,6 +62,18 @@ def save_checkpoint(
     path = out_dir / f"model_iter_{iteration:04d}.pt"
     torch.save(model.state_dict(), path)
     logger.info("Checkpoint saved: %s", path)
+
+
+def calibrate_normalizer(model, trajectories: list) -> None:
+    """用轨迹集合标定观测归一化器（仅首次，之后冻结）。"""
+    if model.dynamics_stats_ready:
+        return
+    mean, std = compute_dynamics_stats(trajectories)
+    model.set_dynamics_stats(mean, std)
+    logger.info(
+        "观测归一化标定完成: dim=%d, mean|·|~%.4f, std~%.4f",
+        len(mean), float(np.abs(mean).mean()), float(std.mean()),
+    )
 
 
 def log_metrics(iteration: int, metrics: dict[str, float]) -> None:
@@ -317,6 +329,7 @@ def main() -> None:
                 logger.info("模型权重已恢复: %s", ckpt_path)
             else:
                 logger.info("未找到 model_iter_0000.pt，使用新模型进行首次训练")
+                calibrate_normalizer(model, dataset.trajectories)
                 logger.info("=== Phase 0: 首次训练 (数据集大小=%d) ===", len(dataset))
                 metrics = trainer.train(model, dataset, config)
                 log_metrics(0, metrics)
@@ -361,6 +374,7 @@ def main() -> None:
 
             # 首次训练（游戏已关闭）
             dataset.set_trajectories(good_trajs)
+            calibrate_normalizer(model, dataset.trajectories)
             logger.info("=== Phase 0: 首次训练 (数据集大小=%d) ===", len(dataset))
             metrics = trainer.train(model, dataset, config)
             log_metrics(0, metrics)

@@ -17,14 +17,67 @@ from torch.utils.data import Dataset
 if TYPE_CHECKING:
     from .config import TrainConfig
 
-# 17D 动力学索引: vel_x/y, ang_vel, hub_vx/vy/angle, slider_vx/vy/angle,
-# handle_vx/vy, pole_vx/vy, tip_vx/vy, hammer_angle
-DYNAMICS_INDICES = [2, 3, 4, 7, 8, 9, 12, 13, 14, 17, 18, 21, 22, 25, 26, 27]
+# ── 动力学特征布局（平移等变，不含绝对坐标）──
+# 速度/角速度分量 (13): player vel(2,3) + ang_vel(4) + hub vel(7,8)
+# + slider vel(12,13) + handle vel(17,18) + pole vel(21,22) + tip vel(25,26)
+VELOCITY_INDICES = [2, 3, 4, 7, 8, 12, 13, 17, 18, 21, 22, 25, 26]
+# 角度 (3): hubAngle(9), sliderAngle(14), hammerAngle(27)
+# C# 侧单位为「度」(eulerAngles.z / Atan2*Rad2Deg)，编码前需转弧度再取 sin/cos
+ANGLE_INDICES = [9, 14, 27]
+# 部件相对 player(0,1) 的位置 (5): hub, slider, handle, pole, tip
+REL_POS_INDICES = [(5, 6), (10, 11), (15, 16), (19, 20), (23, 24)]
+# 动力学特征总维度: 13 速度 + 3 角度×2(sin/cos) + 5 部件×2(相对坐标) = 29
+DYNAMICS_DIM = len(VELOCITY_INDICES) + len(ANGLE_INDICES) * 2 + len(REL_POS_INDICES) * 2
 
 # 身体部件位置索引: player(0,1), hub(5,6), slider(10,11)
 BODY_POS_INDICES = [(0, 1), (5, 6), (10, 11)]
 # 锤子部件位置索引: handle(15,16), pole(19,20), tip(23,24)
 HAMMER_POS_INDICES = [(15, 16), (19, 20), (23, 24)]
+
+
+def build_dynamics(raw: np.ndarray) -> np.ndarray:
+    """从原始 29D 状态构建平移等变的动力学特征向量。
+
+    末轴组成:
+      - 13 维速度/角速度（原始值）
+      - 3 个角度 → (sin, cos)，共 6 维（角度先由度转弧度，消除环绕不连续）
+      - 5 个部件相对 player 的坐标 (part - player)，共 10 维（保留相对几何精度）
+
+    支持任意前置维度，末轴须为 29。返回末轴 = DYNAMICS_DIM。
+    """
+    raw = np.asarray(raw, dtype=np.float32)
+    vel = raw[..., VELOCITY_INDICES]
+    ang = np.deg2rad(raw[..., ANGLE_INDICES])
+    ang_feat = np.concatenate([np.sin(ang), np.cos(ang)], axis=-1)
+
+    px = raw[..., 0:1]
+    py = raw[..., 1:2]
+    rel_parts = []
+    for xi, yi in REL_POS_INDICES:
+        rel_parts.append(raw[..., xi:xi + 1] - px)
+        rel_parts.append(raw[..., yi:yi + 1] - py)
+    rel = np.concatenate(rel_parts, axis=-1)
+
+    return np.concatenate([vel, ang_feat, rel], axis=-1).astype(np.float32)
+
+
+def compute_dynamics_stats(trajectories: list) -> tuple[np.ndarray, np.ndarray]:
+    """从轨迹集合统计动力学特征的 per-dim mean/std，用于观测归一化标定。
+
+    返回 (mean, std)，均为 (DYNAMICS_DIM,)。方差过小的维度 std 置 1.0 防止除零放大。
+    空输入时退化为 (0, 1)（等价恒等归一化）。
+    """
+    feats = [build_dynamics(traj.raw_states) for traj in trajectories]
+    if not feats:
+        return (
+            np.zeros(DYNAMICS_DIM, dtype=np.float32),
+            np.ones(DYNAMICS_DIM, dtype=np.float32),
+        )
+    stacked = np.concatenate(feats, axis=0)  # (ΣT, DYNAMICS_DIM)
+    mean = stacked.mean(axis=0).astype(np.float32)
+    std = stacked.std(axis=0).astype(np.float32)
+    std = np.where(std < 1e-6, 1.0, std).astype(np.float32)
+    return mean, std
 
 
 @dataclass
@@ -162,51 +215,62 @@ class TrajectoryDataset(Dataset):
 
     def _rebuild_index(self) -> None:
         """
-        重建 (traj_idx, window_start) 索引。
+        重建 (traj_idx, tau) 索引。tau 为「待预测动作」的时间步。
 
-        每个窗口需要:
-        - states[start : start+ctx]  → ctx 个观测 (dynamics + patch)
-        - actions[start : start+ctx] → ctx 个历史动作 (模型输入)
-        - actions[start+ctx]         → 目标动作 (监督信号)
+        对齐语义与在线推理完全一致（见 __getitem__）：预测 action_tau 时模型可见
+        观测 obs_0..obs_tau（含当前 obs_tau）与历史动作 act_0..act_{tau-1}。
+        早期步 (tau < ctx-1) 通过左填充 + key_padding_mask 处理，与推理起步阶段一致。
 
-        peak 截断: 只在 [0, peak_t) 范围内取 actions，排除跌落段。
+        peak 截断: tau ∈ [0, min(peak_t, T-1)]，排除越过最高点后的跌落段。
         """
-        ctx = self.config.context_len
         self._index = []
         for ti, traj in enumerate(self.trajectories):
             peak_t = int(traj.raw_states[:, 1].argmax())
             max_target = min(peak_t, len(traj.actions) - 1)
-            for start in range(max(0, max_target - ctx + 1)):
-                self._index.append((ti, start))
+            for tau in range(max_target + 1):
+                self._index.append((ti, tau))
 
     def __len__(self) -> int:
         return len(self._index)
 
     def __getitem__(self, idx: int):
-        ti, start = self._index[idx]
+        ti, tau = self._index[idx]
         traj = self.trajectories[ti]
         ctx = self.config.context_len
+        raw = traj.raw_states       # (T+1, 29)
+        acts = traj.actions          # (T, 2)
 
-        # states[start : start+ctx] → observations
-        obs_states = traj.raw_states[start : start + ctx]  # (ctx, 29)
-        # actions[start : start+ctx] → input actions
-        input_actions = traj.actions[start : start + ctx]  # (ctx, 2)
-        # actions[start+ctx] → target
-        target_action = traj.actions[start + ctx]           # (2,)
+        # 观测窗口: obs_{tau-ctx+1 .. tau}（含当前步 tau），左侧越界处零填充
+        obs_idx = np.arange(tau - ctx + 1, tau + 1)
+        obs_valid = obs_idx >= 0
+        obs_win = raw[np.clip(obs_idx, 0, len(raw) - 1)]  # (ctx, 29)
 
-        dynamics = obs_states[:, DYNAMICS_INDICES].astype(np.float32)  # (ctx, 17)
+        dynamics = build_dynamics(obs_win)  # (ctx, DYNAMICS_DIM)
+        dynamics[~obs_valid] = 0.0
 
         ch = self.config.patch_channels
         ps = self.config.patch_size
         patches = np.zeros((ctx, ch, ps, ps), dtype=np.float32)
-        for t in range(ctx):
-            patches[t] = self._build_patch(obs_states[t])
+        for k in range(ctx):
+            if obs_valid[k]:
+                patches[k] = self._build_patch(obs_win[k])
+
+        # 动作历史窗口: act_{tau-ctx .. tau-1}（当前步之前），左侧越界处零填充
+        act_idx = np.arange(tau - ctx, tau)
+        act_valid = act_idx >= 0
+        input_actions = acts[np.clip(act_idx, 0, len(acts) - 1)].astype(np.float32)
+        input_actions[~act_valid] = 0.0
+
+        # 有效性由观测驱动（与推理 _build_history_window 一致）
+        valid_mask = obs_valid.astype(np.float32)
+        target_action = acts[tau].astype(np.float32)
 
         return (
             torch.from_numpy(dynamics),
             torch.from_numpy(patches),
-            torch.from_numpy(input_actions.astype(np.float32)),
-            torch.from_numpy(target_action.astype(np.float32)),
+            torch.from_numpy(input_actions),
+            torch.from_numpy(valid_mask),
+            torch.from_numpy(target_action),
         )
 
     def _build_patch(self, step_state: np.ndarray) -> np.ndarray:

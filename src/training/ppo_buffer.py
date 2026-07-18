@@ -24,6 +24,7 @@ class PPOBatch:
     dynamics: torch.Tensor       # (B, T, state_dim)
     patches: torch.Tensor        # (B, T, 4, 32, 32)
     act_history: torch.Tensor    # (B, T, 2)
+    valid_mask: torch.Tensor     # (B, T)
     actions: torch.Tensor        # (B, 2)
     old_log_probs: torch.Tensor  # (B,)
     advantages: torch.Tensor     # (B,)
@@ -44,6 +45,7 @@ class PPORolloutBuffer:
         self._dynamics: list[np.ndarray] = []
         self._patches: list[np.ndarray] = []
         self._act_histories: list[np.ndarray] = []
+        self._valid_masks: list[np.ndarray] = []
         self._actions: list[np.ndarray] = []
         self._log_probs: list[float] = []
         self._values: list[float] = []
@@ -62,6 +64,7 @@ class PPORolloutBuffer:
         dynamics_window: np.ndarray,
         patch_window: np.ndarray,
         act_history_window: np.ndarray,
+        valid_mask_window: np.ndarray,
         action: np.ndarray,
         log_prob: float,
         value: float,
@@ -90,6 +93,7 @@ class PPORolloutBuffer:
         self._dynamics.append(dynamics_window)
         self._patches.append(patch_window)
         self._act_histories.append(act_history_window)
+        self._valid_masks.append(valid_mask_window)
         self._actions.append(action)
         self._log_probs.append(log_prob)
         self._values.append(value)
@@ -139,6 +143,7 @@ class PPORolloutBuffer:
         dynamics_arr = np.array(self._dynamics)
         patches_arr = np.array(self._patches)
         act_hist_arr = np.array(self._act_histories)
+        valid_mask_arr = np.array(self._valid_masks)
         actions_arr = np.array(self._actions)
         log_probs_arr = np.array(self._log_probs, dtype=np.float32)
         values_arr = np.array(self._values, dtype=np.float32)
@@ -153,6 +158,7 @@ class PPORolloutBuffer:
                 dynamics=torch.from_numpy(dynamics_arr[idx]).to(self.device),
                 patches=torch.from_numpy(patches_arr[idx]).to(self.device),
                 act_history=torch.from_numpy(act_hist_arr[idx]).to(self.device),
+                valid_mask=torch.from_numpy(valid_mask_arr[idx]).to(self.device),
                 actions=torch.from_numpy(actions_arr[idx]).to(self.device),
                 old_log_probs=torch.from_numpy(log_probs_arr[idx]).to(self.device),
                 advantages=torch.from_numpy(adv[idx]).to(self.device),
@@ -173,6 +179,7 @@ class PPORolloutBuffer:
             merged._dynamics.extend(b._dynamics)
             merged._patches.extend(b._patches)
             merged._act_histories.extend(b._act_histories)
+            merged._valid_masks.extend(b._valid_masks)
             merged._actions.extend(b._actions)
             merged._log_probs.extend(b._log_probs)
             merged._values.extend(b._values)
@@ -187,6 +194,7 @@ class PPORolloutBuffer:
         self._dynamics.clear()
         self._patches.clear()
         self._act_histories.clear()
+        self._valid_masks.clear()
         self._actions.clear()
         self._log_probs.clear()
         self._values.clear()

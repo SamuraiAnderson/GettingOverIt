@@ -5,10 +5,16 @@
 numDuplicates，启动游戏，将每个 agent 传送到对应投放点，
 并启用自由相机（滚轮缩放 + 中键拖动）方便观察。
 
+部署后会输出竖直落差统计：drop = teleport_y - settled_y（与训练侧
+RolloutWorker._get_stable_agents 及 TrainConfig.settle_drop_threshold 一致），
+用于判断 PPO 随机投放时的稳定性阈值是否合理。默认阈值来自 TrainConfig，
+可用 --settle-drop-threshold 覆盖做敏感性分析。
+
 用法：
   python src/tests/control_interaction/test_l8_airdrop_deploy.py
   python src/tests/control_interaction/test_l8_airdrop_deploy.py --no-camera-free
   python src/tests/control_interaction/test_l8_airdrop_deploy.py --settle-steps 100
+  python src/tests/control_interaction/test_l8_airdrop_deploy.py --settle-drop-threshold 8.0
 """
 
 import argparse
@@ -23,6 +29,8 @@ import numpy as np
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
+
+from training.config import TrainConfig
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +145,95 @@ def report_landing(drop_points: list[list[float]], obs: np.ndarray) -> None:
                 np.mean(drifts), np.max(drifts), np.min(drifts))
 
 
+def report_settle_drop_vs_threshold(
+    drop_points: list[list[float]],
+    obs: np.ndarray,
+    threshold: float,
+) -> None:
+    """
+    竖直落差与训练阈值对照（与 training.rollout._get_stable_agents 一致）。
+
+    teleport_y：传送目标 y；settled_y：obs[agent, 1]（player 根 y）。
+    drop = teleport_y - settled_y；stable 当且仅当 drop <= threshold。
+    """
+    logger.info("-" * 60)
+    logger.info(
+        "Settle 竖直落差 (对照 TrainConfig.settle_drop_threshold=%.2f)",
+        threshold,
+    )
+    logger.info(
+        "%-8s  %10s  %10s  %10s  %s",
+        "Agent", "teleport_y", "settled_y", "drop", "stable",
+    )
+    logger.info("-" * 60)
+
+    drops: list[float] = []
+    n_negative = 0
+    for i, (_tx, teleport_y) in enumerate(drop_points):
+        agent_idx = i + 1
+        settled_y = float(obs[agent_idx, 1])
+        drop = float(teleport_y) - settled_y
+        drops.append(drop)
+        if drop < 0:
+            n_negative += 1
+        stable = drop <= threshold
+        logger.info(
+            "Agent %-3d  %10.2f  %10.2f  %10.3f  %s",
+            agent_idx,
+            float(teleport_y),
+            settled_y,
+            drop,
+            "yes" if stable else "NO",
+        )
+
+    arr = np.array(drops, dtype=np.float64)
+    n = len(drops)
+    n_stable = int(np.sum(arr <= threshold))
+    n_unstable = n - n_stable
+    unstable_ratio = (n_unstable / n) if n else 0.0
+
+    logger.info("-" * 60)
+    logger.info(
+        "稳定: %d / %d (%.1f%%)  不稳定: %d  drop<0 样本数: %d",
+        n_stable,
+        n,
+        100.0 * n_stable / n if n else 0.0,
+        n_unstable,
+        n_negative,
+    )
+    if n:
+        logger.info(
+            "drop 统计: mean=%.3f  std=%.3f  min=%.3f  max=%.3f  "
+            "median=%.3f  p95=%.3f",
+            float(arr.mean()),
+            float(arr.std()),
+            float(arr.min()),
+            float(arr.max()),
+            float(np.median(arr)),
+            float(np.percentile(arr, 95)),
+        )
+    logger.info("-" * 60)
+
+    if n == 0:
+        pass
+    elif unstable_ratio > 0.15:
+        logger.info(
+            "结论: 不稳定比例 %.1f%% 偏高 — 可尝试增大 TrainConfig.settle_drop_threshold、"
+            "增加 --settle-steps，或检查 L7 的 drop_height / 可着陆表面。",
+            100.0 * unstable_ratio,
+        )
+    elif n_unstable == 0:
+        logger.info(
+            "结论: 当前阈值 %.2f 下全部稳定；若训练仍大量过滤 agent，可适当收紧阈值。",
+            threshold,
+        )
+    else:
+        logger.info(
+            "结论: 当前阈值下多数稳定（不稳定 %.1f%%）。",
+            100.0 * unstable_ratio,
+        )
+
+
 def run_sine_motion(env, num_agents: int, duration: float, amplitude: float,
                     freq: float = 0.5, dt: float = 0.02) -> None:
     """
@@ -175,6 +272,15 @@ def main():
     parser.add_argument("--timeout", type=float, default=None)
     parser.add_argument("--warmup-steps", type=int, default=None, help="热身步数")
     parser.add_argument("--settle-steps", type=int, default=None, help="传送后物理稳定步数")
+    parser.add_argument(
+        "--settle-drop-threshold",
+        type=float,
+        default=None,
+        help=(
+            "判定稳定的竖直落差上限 drop=teleport_y-settled_y（默认与 "
+            "TrainConfig.settle_drop_threshold 一致）"
+        ),
+    )
     parser.add_argument("--no-camera-free", action="store_true", help="不启用自由相机")
     parser.add_argument("--no-launch", action="store_true",
                         help="不启动游戏（假设游戏已运行）")
@@ -200,6 +306,11 @@ def main():
     settle_steps = args.settle_steps if args.settle_steps is not None else l8.get("settle_steps", 200)
     motion_duration = args.motion_duration if args.motion_duration is not None else l8.get("motion_duration", 10.0)
     motion_amplitude = args.motion_amplitude if args.motion_amplitude is not None else l8.get("motion_amplitude", 50.0)
+    settle_drop_threshold = (
+        args.settle_drop_threshold
+        if args.settle_drop_threshold is not None
+        else TrainConfig().settle_drop_threshold
+    )
 
     game_root = _get_game_root(args.game_root)
     logger.info("游戏根目录: %s", game_root)
@@ -248,6 +359,7 @@ def main():
 
         # 7. 落点检查
         report_landing(drop_points, obs)
+        report_settle_drop_vs_threshold(drop_points, obs, settle_drop_threshold)
 
         # 8. 开启碰撞体描边可视化 + 正弦波运动
         if not args.no_motion:

@@ -31,8 +31,8 @@ if str(_REPO_ROOT / "src") not in sys.path:
 from training.config import TrainConfig
 from training.dataset import (
     BODY_POS_INDICES,
-    DYNAMICS_INDICES,
     HAMMER_POS_INDICES,
+    build_dynamics,
     crop_centered,
     render_gaussian,
 )
@@ -225,20 +225,24 @@ def main() -> None:
             cur_obs = obs[0]
 
             patch = _build_patch(cur_obs, config, terrain_mask, eff_arr, min_gx, min_gy)
-            dynamics = cur_obs[DYNAMICS_INDICES].astype(np.float32)
+            dynamics = build_dynamics(cur_obs)
 
             dyn_history.append(dynamics.copy())
             patch_history.append(patch.copy())
 
-            dyn_window, pat_window, act_window = _build_history_window(
+            dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                 dyn_history, patch_history, act_history,
                 ctx, config.state_dim,
             )
 
             if is_ppo:
-                pred = model.predict_deterministic(dyn_window, pat_window, act_window)
+                pred = model.predict_deterministic(
+                    dyn_window, pat_window, act_window, valid_mask=valid_mask
+                )
             else:
-                pred = model.predict(dyn_window, pat_window, act_window)
+                pred = model.predict(
+                    dyn_window, pat_window, act_window, valid_mask=valid_mask
+                )
             action = np.clip(pred, -scale, scale).astype(np.float32)
 
             actions_batch = action.reshape(1, 2)

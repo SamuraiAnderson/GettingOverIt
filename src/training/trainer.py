@@ -99,13 +99,14 @@ class Trainer:
             model.train()
             train_loss_sum = 0.0
             train_batches = 0
-            for dynamics, patches, actions, target in train_loader:
+            for dynamics, patches, actions, valid_mask, target in train_loader:
                 dynamics = dynamics.to(self.device)
                 patches = patches.to(self.device)
                 actions = actions.to(self.device)
+                valid_mask = valid_mask.to(self.device)
                 target = target.to(self.device)
 
-                pred = model(dynamics, patches, actions)
+                pred = model(dynamics, patches, actions, valid_mask=valid_mask)
                 loss = F.mse_loss(pred, target)
 
                 self.optimizer.zero_grad()
@@ -121,13 +122,14 @@ class Trainer:
             val_loss_sum = 0.0
             val_batches = 0
             with torch.no_grad():
-                for dynamics, patches, actions, target in val_loader:
+                for dynamics, patches, actions, valid_mask, target in val_loader:
                     dynamics = dynamics.to(self.device)
                     patches = patches.to(self.device)
                     actions = actions.to(self.device)
+                    valid_mask = valid_mask.to(self.device)
                     target = target.to(self.device)
 
-                    pred = model(dynamics, patches, actions)
+                    pred = model(dynamics, patches, actions, valid_mask=valid_mask)
                     val_loss_sum += F.mse_loss(pred, target).item()
                     val_batches += 1
 

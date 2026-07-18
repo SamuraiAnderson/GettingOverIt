@@ -9,6 +9,7 @@ Usage:
   python src/tests/control_interaction/visualize_cached_drops.py
   python src/tests/control_interaction/visualize_cached_drops.py --drop-height 3.0
   python src/tests/control_interaction/visualize_cached_drops.py --no-show
+  python src/tests/control_interaction/visualize_cached_drops.py --physics-sample-n 20 --physics-filter
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
 from training.config import TrainConfig
+from training.deploy_sampling import compute_drop_points, precompute_segment_arcs
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_l7_surface_airdrop import (
@@ -33,19 +35,6 @@ from test_l7_surface_airdrop import (
     extract_polygons,
     load_colliders,
 )
-
-
-def _precompute_segment_arcs(
-    segments: list[np.ndarray],
-) -> tuple[np.ndarray, list[np.ndarray]]:
-    arc_lengths = []
-    cum_lengths = []
-    for seg in segments:
-        d = np.diff(seg, axis=0)
-        cum = np.concatenate([[0.0], np.cumsum(np.hypot(d[:, 0], d[:, 1]))])
-        arc_lengths.append(cum[-1])
-        cum_lengths.append(cum)
-    return np.array(arc_lengths), cum_lengths
 
 
 def load_env_data() -> dict:
@@ -113,8 +102,20 @@ def _set_zoom(ax, cx: float, cy: float, half_w: float = 20.0, half_h: float = 15
 # ── Panel renderers ─────────────────────────────────────────────
 
 
-def _panel_overview(ax, env_data, segments, all_drop_pts, drop_height,
-                    total_arc, min_clearance, plt_mod, cmap):
+def _panel_overview(
+    ax,
+    env_data,
+    segments,
+    all_drop_pts,
+    drop_height,
+    total_arc,
+    min_clearance,
+    plt_mod,
+    cmap,
+    physics_sample_pts: np.ndarray | None = None,
+    physics_stable_mask: np.ndarray | None = None,
+    physics_probed_mask: np.ndarray | None = None,
+):
     """ax[0,0] — Full overview with color-coded segments and drop points."""
     _draw_terrain_base(ax, env_data, segments, plt_mod=plt_mod, seg_lw=0.5)
 
@@ -132,6 +133,60 @@ def _panel_overview(ax, env_data, segments, all_drop_pts, drop_height,
         c="red", s=3, marker=".", alpha=0.4, zorder=5,
         label=f"Drop points ({len(all_drop_pts)}, h={drop_height:.1f})",
     )
+
+    if physics_sample_pts is not None and len(physics_sample_pts) > 0:
+        n_sp = len(physics_sample_pts)
+        if (
+            physics_stable_mask is not None
+            and len(physics_stable_mask) == n_sp
+            and physics_probed_mask is not None
+            and len(physics_probed_mask) == n_sp
+        ):
+            unprobed = ~physics_probed_mask
+            if np.any(unprobed):
+                up = physics_sample_pts[unprobed]
+                ax.scatter(
+                    up[:, 0], up[:, 1], c="silver", s=22, marker=".",
+                    alpha=0.9, zorder=6,
+                    label=f"not probed ({int(np.sum(unprobed))})",
+                )
+            probed = physics_probed_mask
+            st = physics_sample_pts[probed & physics_stable_mask]
+            ust = physics_sample_pts[probed & ~physics_stable_mask]
+            if len(st) > 0:
+                ax.scatter(
+                    st[:, 0], st[:, 1], c="limegreen", s=36, marker="o",
+                    edgecolors="darkgreen", linewidths=0.4, zorder=6,
+                    label=f"physics stable ({len(st)})",
+                )
+            if len(ust) > 0:
+                ax.scatter(
+                    ust[:, 0], ust[:, 1], c="red", s=36, marker="x",
+                    linewidths=1.2, zorder=6,
+                    label=f"physics unstable ({len(ust)})",
+                )
+        elif physics_stable_mask is not None and len(physics_stable_mask) == n_sp:
+            st = physics_sample_pts[physics_stable_mask]
+            ust = physics_sample_pts[~physics_stable_mask]
+            if len(st) > 0:
+                ax.scatter(
+                    st[:, 0], st[:, 1], c="limegreen", s=36, marker="o",
+                    edgecolors="darkgreen", linewidths=0.4, zorder=6,
+                    label=f"physics stable ({len(st)})",
+                )
+            if len(ust) > 0:
+                ax.scatter(
+                    ust[:, 0], ust[:, 1], c="red", s=36, marker="x",
+                    linewidths=1.2, zorder=6,
+                    label=f"physics unstable ({len(ust)})",
+                )
+        else:
+            ax.scatter(
+                physics_sample_pts[:, 0], physics_sample_pts[:, 1],
+                c="magenta", s=28, marker="D", alpha=0.85, zorder=6,
+                label=f"sample drops (n={len(physics_sample_pts)})",
+            )
+
     ax.legend(loc="upper left", fontsize=7)
     ax.set_title(
         f"Overview — {len(segments)} segments, "
@@ -430,6 +485,57 @@ def main():
                         help="Output image path")
     parser.add_argument("--no-show", action="store_true",
                         help="Do not open interactive window")
+    parser.add_argument(
+        "--physics-sample-n",
+        type=int,
+        default=0,
+        help="Overlay n representative drops from compute_drop_points (0=off)",
+    )
+    parser.add_argument(
+        "--physics-filter",
+        action="store_true",
+        help="Requires --physics-sample-n>0; game probes each sample (stable=green, unstable=red)",
+    )
+    parser.add_argument(
+        "--physics-no-launch",
+        action="store_true",
+        help="With --physics-filter: do not launch game (connect to running instance)",
+    )
+    parser.add_argument(
+        "--settle-drop-threshold",
+        type=float,
+        default=None,
+        help="Physics probe threshold (default TrainConfig.settle_drop_threshold)",
+    )
+    parser.add_argument(
+        "--physics-settle-steps",
+        type=int,
+        default=None,
+        help="Settle steps per probe (default TrainConfig.settle_steps)",
+    )
+    parser.add_argument(
+        "--physics-warmup-steps",
+        type=int,
+        default=None,
+        help="Warmup before snapshot (default TrainConfig.warmup_steps)",
+    )
+    parser.add_argument(
+        "--physics-filter-max-probes",
+        type=int,
+        default=None,
+        help="Cap probes (default: all physics-sample-n points)",
+    )
+    parser.add_argument(
+        "--physics-sequential-probes",
+        action="store_true",
+        help="Use per-point 2-agent probes; default L8 batch deploy",
+    )
+    parser.add_argument(
+        "--physics-l8-batch-size",
+        type=int,
+        default=64,
+        help="L8 batch size 1–64 (default 64)",
+    )
     args = parser.parse_args()
 
     config = TrainConfig()
@@ -465,7 +571,7 @@ def main():
         print(f"Computed {len(segments)} landable segments "
               f"(min_clearance={min_clearance:.2f}, cached)")
 
-    arc_lengths, cum_lengths = _precompute_segment_arcs(segments)
+    arc_lengths, cum_lengths = precompute_segment_arcs(segments)
     total_arc = float(arc_lengths.sum())
     print(f"Total arc length: {total_arc:.1f}")
 
@@ -473,6 +579,65 @@ def main():
     all_drop_pts = all_surface_pts.copy()
     all_drop_pts[:, 1] += drop_height
     print(f"Total drop points: {len(all_drop_pts)} (drop_height={drop_height:.1f})")
+
+    physics_sample_pts: np.ndarray | None = None
+    physics_stable_mask: np.ndarray | None = None
+    physics_probed_mask: np.ndarray | None = None
+    if args.physics_filter and args.physics_sample_n <= 0:
+        print("Error: --physics-filter requires --physics-sample-n > 0", file=sys.stderr)
+        sys.exit(1)
+    if args.physics_sample_n > 0:
+        physics_sample_pts = compute_drop_points(
+            segments, args.physics_sample_n, drop_height, height_decay=0.0,
+        )
+        print(f"Physics sample drops: {len(physics_sample_pts)}")
+        if args.physics_filter:
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from drop_point_physics import probe_drop_points_stability
+
+            tc = TrainConfig()
+            thr = (
+                args.settle_drop_threshold
+                if args.settle_drop_threshold is not None
+                else tc.settle_drop_threshold
+            )
+            p_settle = (
+                args.physics_settle_steps
+                if args.physics_settle_steps is not None
+                else tc.settle_steps
+            )
+            p_warm = (
+                args.physics_warmup_steps
+                if args.physics_warmup_steps is not None
+                else tc.warmup_steps
+            )
+            game_root = Path(config.game_root)
+            n_sp = len(physics_sample_pts)
+            m = (
+                n_sp
+                if args.physics_filter_max_probes is None
+                else min(n_sp, args.physics_filter_max_probes)
+            )
+            l8_bs = max(1, min(int(args.physics_l8_batch_size), 64))
+            mask_m, _drops, _meta = probe_drop_points_stability(
+                physics_sample_pts[:m],
+                settle_drop_threshold=thr,
+                settle_steps=p_settle,
+                warmup_steps=p_warm,
+                port=config.port,
+                game_root=game_root,
+                timeout=120.0,
+                no_launch=args.physics_no_launch,
+                max_probes=None,
+                use_l8_batch_deploy=not args.physics_sequential_probes,
+                l8_batch_size=l8_bs,
+            )
+            physics_probed_mask = np.zeros(n_sp, dtype=bool)
+            physics_probed_mask[:m] = True
+            physics_stable_mask = np.zeros(n_sp, dtype=bool)
+            physics_stable_mask[:m] = mask_m
+            n_stable = int(np.sum(mask_m))
+            print(f"Physics probe: {n_stable}/{m} stable (sampled {n_sp}, probed {m})")
 
     env_data = load_env_data()
 
@@ -486,6 +651,9 @@ def main():
     _panel_overview(
         axes[0, 0], env_data, segments, all_drop_pts,
         drop_height, total_arc, min_clearance, plt, cmap,
+        physics_sample_pts=physics_sample_pts,
+        physics_stable_mask=physics_stable_mask,
+        physics_probed_mask=physics_probed_mask,
     )
     _panel_cutoff_lines(axes[0, 1], env_data, segments, config, plt)
     _panel_drop_clearance(

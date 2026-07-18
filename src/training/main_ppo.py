@@ -27,6 +27,7 @@ if str(_REPO_ROOT / "src") not in sys.path:
 
 from training.actor_critic import ActorCritic
 from training.config import TrainConfig
+from training.dataset import compute_dynamics_stats
 from training.ppo_trainer import PPOTrainer
 from training.reward import ClimbingEfficiencyMap, RewardNormalizer
 from training.rollout import RolloutWorker
@@ -272,6 +273,32 @@ def main() -> None:
         "RewardNormalizer: %d calibration steps (≈%d rollouts)",
         calibration_steps, 10,
     )
+
+    # ── 观测归一化标定 ──
+    # resume / resume-bc 已随 checkpoint 携带归一化统计；全新模型需先跑一轮标定 rollout。
+    if not model.dynamics_stats_ready:
+        logger.info("观测归一化: 全新模型，执行标定 rollout (%d 步)", config.steps_per_rollout)
+        _calib_launched = False
+        if not args.no_launch:
+            rollout_worker.launch_game()
+            _calib_launched = True
+        elif rollout_worker.env is None:
+            from env import GoiEnv
+            rollout_worker.env = GoiEnv(port=config.port, num_agents=config.num_agents)
+            rollout_worker.env.connect()
+            rollout_worker.env.reset()
+
+        calib_trajs = rollout_worker.collect_random(config.steps_per_rollout)
+        mean, std = compute_dynamics_stats(calib_trajs)
+        model.set_dynamics_stats(mean, std)
+        logger.info(
+            "观测归一化标定完成: dim=%d, mean|·|~%.4f, std~%.4f",
+            len(mean), float(np.abs(mean).mean()), float(std.mean()),
+        )
+        if _calib_launched:
+            rollout_worker.close_game()
+    else:
+        logger.info("观测归一化: 沿用 checkpoint 携带的统计量")
 
     # ── 主循环 ──
     try:

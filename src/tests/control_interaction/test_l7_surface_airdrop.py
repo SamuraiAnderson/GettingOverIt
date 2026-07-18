@@ -10,6 +10,12 @@
   python src/tests/control_interaction/test_l7_surface_airdrop.py --n-drops 20 --drop-height 3.0
   python src/tests/control_interaction/test_l7_surface_airdrop.py --no-launch  # 仅使用 cache 文件
   python src/tests/control_interaction/test_l7_surface_airdrop.py --padding 0.5
+  python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-filter  # 游戏内过滤不稳定点
+  python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-filter --physics-no-launch
+  python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-filter-all  # 全量候选探测；
+      # 稳定点写入 drop_points_all_stable.json，drop_points.json 仅保留 L8 子集（≤64 等）
+  python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-sequential-probes  # 逐点 2-agent（旧逻辑）
+  python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-l8-batch-size 16  # 批量每批最多 16 点
 """
 
 import argparse
@@ -25,7 +31,18 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
+from training.config import TrainConfig
+from training.deploy_sampling import (
+    build_all_deploy_candidates,
+    compute_drop_points,
+    sample_deploy_candidates_stratified,
+)
+
 logger = logging.getLogger(__name__)
+
+# L8 / Unity：复制体数量上限（与 PlayerDuplicateManager.MAX_DUPLICATES 一致）
+UNITY_L8_MAX_DROP_POINTS = 64
+DROP_POINTS_ALL_STABLE_FILENAME = "drop_points_all_stable.json"
 
 _CONFIG_PATH = Path(__file__).parent / "test_config.json"
 _PROJECT_CONFIG = _REPO_ROOT / "src" / "config" / "project.json"
@@ -275,90 +292,6 @@ def compute_landable_surfaces(
     return segments
 
 
-def _allocate_drops(weights: list[float], n_drops: int) -> list[int]:
-    """最大余数法：按权重比例公平分配投放点数。"""
-    total = sum(weights)
-    if total < 1e-6:
-        return [0] * len(weights)
-    exact = [n_drops * w / total for w in weights]
-    floors = [int(f) for f in exact]
-    remainders = [(exact[i] - floors[i], i) for i in range(len(exact))]
-    deficit = n_drops - sum(floors)
-    remainders.sort(reverse=True)
-    for _, idx in remainders[:deficit]:
-        floors[idx] += 1
-    return floors
-
-
-def compute_drop_points(
-    segments: list[np.ndarray],
-    n_drops: int,
-    drop_height: float,
-    height_decay: float = 0.0,
-) -> np.ndarray:
-    """
-    在所有表面线段上分配 n_drops 个投放点（最大余数法）。
-
-    权重 = arc_length × (1 - height_decay × normalized_height)
-      height_decay=0  → 纯弧长（默认）
-      height_decay=0.5 → 中等偏向低处
-      height_decay=0.9 → 强烈偏向低处
-
-    返回 shape (n_drops, 2) 的坐标数组 [x, y]（y 已加上 drop_height）。
-    """
-    if not segments:
-        logger.error("无有效表面线段")
-        return np.zeros((0, 2))
-
-    seg_lengths = []
-    seg_avg_y = []
-    for seg in segments:
-        d = np.diff(seg, axis=0)
-        seg_lengths.append(float(np.sum(np.hypot(d[:, 0], d[:, 1]))))
-        seg_avg_y.append(float(seg[:, 1].mean()))
-    total_length = sum(seg_lengths)
-
-    y_min = min(seg_avg_y)
-    y_max = max(seg_avg_y)
-    y_range = y_max - y_min if y_max > y_min else 1.0
-
-    weights = []
-    for slen, avg_y in zip(seg_lengths, seg_avg_y):
-        norm_h = (avg_y - y_min) / y_range
-        w = slen * (1.0 - height_decay * norm_h)
-        weights.append(max(w, 0.0))
-
-    logger.info("共 %d 条表面线段，总弧长 %.1f, height_decay=%.2f",
-                len(segments), total_length, height_decay)
-    for i, (seg, slen, w) in enumerate(zip(segments, seg_lengths, weights)):
-        logger.info("  seg[%d]: %d pts, len=%.1f, w=%.2f, x=[%.1f..%.1f], y=[%.1f..%.1f]",
-                     i, len(seg), slen, w,
-                     seg[:, 0].min(), seg[:, 0].max(),
-                     seg[:, 1].min(), seg[:, 1].max())
-
-    if sum(weights) < 1e-6:
-        return np.zeros((0, 2))
-
-    allocation = _allocate_drops(weights, n_drops)
-
-    all_drops = []
-    for i, (seg, n) in enumerate(zip(segments, allocation)):
-        if n <= 0:
-            continue
-
-        d = np.diff(seg, axis=0)
-        cum = np.concatenate([[0.0], np.cumsum(np.hypot(d[:, 0], d[:, 1]))])
-        targets = np.linspace(cum[0], cum[-1], n + 2)[1:-1]
-        dx = np.interp(targets, cum, seg[:, 0])
-        dy = np.interp(targets, cum, seg[:, 1])
-        all_drops.append(np.column_stack([dx, dy + drop_height]))
-        logger.info("  seg[%d] 分配 %d 个投放点", i, n)
-
-    if not all_drops:
-        return np.zeros((0, 2))
-    return np.vstack(all_drops)
-
-
 # ── 可视化 ──────────────────────────────────────────────────────
 
 def plot_map(
@@ -465,6 +398,83 @@ def main():
     parser.add_argument("--no-launch", action="store_true", help="不启动游戏，仅使用 cache 文件")
     parser.add_argument("--save-path", type=str, default=None, help="图片保存路径")
     parser.add_argument("--no-plot", action="store_true", help="不显示图片")
+    parser.add_argument(
+        "--physics-filter",
+        action="store_true",
+        help="启动游戏，按 settle_drop_threshold 过滤不稳定空投点（需 TCP；与 PPO _get_stable_agents 一致）",
+    )
+    parser.add_argument(
+        "--physics-filter-oversample",
+        type=int,
+        default=3,
+        help="物理过滤时候选池大小 = n_drops × 该系数（默认 3）",
+    )
+    parser.add_argument(
+        "--physics-filter-max-candidates",
+        type=int,
+        default=None,
+        help="最多尝试多少个候选（默认不限制，直至候选池用尽）",
+    )
+    parser.add_argument(
+        "--physics-warmup-steps",
+        type=int,
+        default=None,
+        help="物理过滤前 warmup 步数（默认 TrainConfig.warmup_steps）",
+    )
+    parser.add_argument(
+        "--physics-settle-steps",
+        type=int,
+        default=None,
+        help="每次传送后 settle 步数（默认 TrainConfig.settle_steps）",
+    )
+    parser.add_argument(
+        "--settle-drop-threshold",
+        type=float,
+        default=None,
+        help="竖直落差上限 teleport_y−settled_y（默认 TrainConfig.settle_drop_threshold）",
+    )
+    parser.add_argument(
+        "--physics-no-launch",
+        action="store_true",
+        help="物理过滤时不启动游戏（请自行先开游戏并处于 GameRuntime 模式）",
+    )
+    parser.add_argument(
+        "--physics-filter-all",
+        action="store_true",
+        help=(
+            "全量 deploy 候选（顶点或弧长分层采样）物理探测；稳定点写入 "
+            f"{DROP_POINTS_ALL_STABLE_FILENAME}，drop_points.json 仅 L8 子集"
+        ),
+    )
+    parser.add_argument(
+        "--physics-max-candidates",
+        type=int,
+        default=None,
+        help="--physics-filter-all 时候选池上限（默认 800；顶点数更少则用全顶点）",
+    )
+    parser.add_argument(
+        "--l8-max-drops",
+        type=int,
+        default=64,
+        help=f"写入 drop_points.json 的条数上限（默认 64，且不超过 {UNITY_L8_MAX_DROP_POINTS}）",
+    )
+    parser.add_argument(
+        "--physics-rng-seed",
+        type=int,
+        default=42,
+        help="候选采样随机种子（预留；当前弧长采样为确定性）",
+    )
+    parser.add_argument(
+        "--physics-sequential-probes",
+        action="store_true",
+        help="物理过滤用逐点 2-agent 探测；默认用 L8 批量同时传送+统一 settle",
+    )
+    parser.add_argument(
+        "--physics-l8-batch-size",
+        type=int,
+        default=64,
+        help="L8 批量探测时每批最多点数（1–64，默认 64）",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -525,13 +535,148 @@ def main():
     total_pts = sum(len(s) for s in segments)
     logger.info("可着陆表面: %d 条线段, %d 个点", len(segments), total_pts)
 
-    drop_points = compute_drop_points(segments, n_drops, drop_height, height_decay)
+    train_cfg = TrainConfig()
+    settle_thr = (
+        args.settle_drop_threshold
+        if args.settle_drop_threshold is not None
+        else train_cfg.settle_drop_threshold
+    )
+    phys_warmup = (
+        args.physics_warmup_steps
+        if args.physics_warmup_steps is not None
+        else train_cfg.warmup_steps
+    )
+    phys_settle = (
+        args.physics_settle_steps
+        if args.physics_settle_steps is not None
+        else train_cfg.settle_steps
+    )
+    use_l8_batch = not args.physics_sequential_probes
+    l8_bs = max(1, min(int(args.physics_l8_batch_size), UNITY_L8_MAX_DROP_POINTS))
+
+    physics_meta: dict | None = None
+    n_candidates_generated = 0
+    physics_filter_mode: str | None = None
+    stable_all_count = 0
+    l8_export_count = 0
+    stable_all_filename: str | None = None
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+    if args.physics_filter_all:
+        if args.physics_filter:
+            logger.warning("同时指定 --physics-filter 与 --physics-filter-all，仅执行 all 模式")
+        from drop_point_physics import filter_all_drop_points_stable
+
+        physics_filter_mode = "all"
+        max_k = args.physics_max_candidates if args.physics_max_candidates is not None else 800
+        rng = np.random.default_rng(args.physics_rng_seed)
+        candidates = sample_deploy_candidates_stratified(
+            segments, drop_height, max_k, rng, height_decay=0.0,
+        )
+        n_candidates_generated = len(candidates)
+        logger.info(
+            "physics_filter_all: 候选池 %d 点 (上限=%d)，阈值=%.2f settle=%d warmup=%d",
+            n_candidates_generated, max_k,
+            settle_thr, phys_settle, phys_warmup,
+        )
+        stable_all, physics_meta = filter_all_drop_points_stable(
+            candidates,
+            max_probes=None,
+            settle_drop_threshold=settle_thr,
+            settle_steps=phys_settle,
+            warmup_steps=phys_warmup,
+            port=port,
+            game_root=game_root,
+            timeout=timeout,
+            no_launch=args.physics_no_launch,
+            use_l8_batch_deploy=use_l8_batch,
+            l8_batch_size=l8_bs,
+        )
+        stable_all_count = len(stable_all)
+        stable_all_filename = DROP_POINTS_ALL_STABLE_FILENAME
+        stable_path = colliders_dir / stable_all_filename
+        stable_payload = {
+            "params": {
+                "drop_height": drop_height,
+                "settle_drop_threshold": settle_thr,
+                "physics_warmup_steps": phys_warmup,
+                "physics_settle_steps": phys_settle,
+                "physics_max_candidates": max_k,
+                "physics_rng_seed": args.physics_rng_seed,
+                "physics_use_l8_batch_deploy": use_l8_batch,
+                "physics_l8_batch_size": l8_bs,
+                "vertex_pool_count": int(sum(len(s) for s in segments)),
+                "candidates_prepared": n_candidates_generated,
+                "physics_filter_mode": "all",
+            },
+            "drop_points": [[float(x), float(y)] for x, y in stable_all],
+        }
+        if physics_meta is not None:
+            stable_payload["physics_filter_run"] = physics_meta
+        stable_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(stable_path, "w", encoding="utf-8") as f:
+            json.dump(stable_payload, f, indent=2, ensure_ascii=False)
+        logger.info("全量稳定点: %s (%d 个)", stable_path, stable_all_count)
+
+        unity_cap = min(max(1, args.l8_max_drops), UNITY_L8_MAX_DROP_POINTS)
+        l8_export_count = int(min(n_drops, unity_cap, stable_all_count))
+        drop_points = stable_all[:l8_export_count]
+        if stable_all_count == 0:
+            logger.warning("physics_filter_all: 无稳定点，drop_points.json 将为空")
+        elif l8_export_count < stable_all_count:
+            logger.info(
+                "L8 子集: 写入 drop_points.json 前 %d 个稳定点 "
+                "(n_drops=%d, l8_max_drops=%d, Unity≤%d)，其余见 %s",
+                l8_export_count, n_drops, args.l8_max_drops,
+                UNITY_L8_MAX_DROP_POINTS, stable_all_filename,
+            )
+
+    elif args.physics_filter:
+        from drop_point_physics import filter_drop_points_stable
+
+        physics_filter_mode = "quick"
+        oversample = max(1, args.physics_filter_oversample)
+        n_candidates_generated = max(n_drops * oversample, n_drops)
+        candidates = compute_drop_points(
+            segments, n_candidates_generated, drop_height, height_decay,
+        )
+        logger.info(
+            "物理过滤(quick): 候选 %d 个 (n_drops=%d × oversample=%d)，阈值=%.2f settle=%d warmup=%d",
+            len(candidates), n_drops, oversample,
+            settle_thr, phys_settle, phys_warmup,
+        )
+        max_tries = args.physics_filter_max_candidates
+        drop_points, physics_meta = filter_drop_points_stable(
+            candidates,
+            target_count=n_drops,
+            max_tries=max_tries,
+            settle_drop_threshold=settle_thr,
+            settle_steps=phys_settle,
+            warmup_steps=phys_warmup,
+            port=port,
+            game_root=game_root,
+            timeout=timeout,
+            no_launch=args.physics_no_launch,
+            use_l8_batch_deploy=use_l8_batch,
+            l8_batch_size=l8_bs,
+        )
+        if len(drop_points) < n_drops:
+            logger.warning(
+                "物理过滤后仅得到 %d/%d 个稳定点 — 已写入稳定子集；可增大 oversample、"
+                "settle_drop_threshold 或 --physics-filter-max-candidates",
+                len(drop_points), n_drops,
+            )
+    else:
+        drop_points = compute_drop_points(segments, n_drops, drop_height, height_decay)
+
     logger.info("投放点 (%d 个):", len(drop_points))
     for i, (dx, dy) in enumerate(drop_points):
         logger.info("  #%02d  (%.2f, %.2f)", i, dx, dy)
 
     # 保存投放点结果到 cache
     drop_cache_path = colliders_dir / "drop_points.json"
+    phys_on = bool(args.physics_filter or args.physics_filter_all)
     drop_cache = {
         "params": {
             "n_drops": n_drops,
@@ -540,11 +685,41 @@ def main():
             "height_decay": height_decay,
             "y_max_cutoff": y_max_cutoff,
             "min_clearance": min_clearance,
+            "physics_filtered": phys_on,
+            "physics_filter_mode": physics_filter_mode,
+            "settle_drop_threshold": settle_thr,
+            "physics_warmup_steps": phys_warmup if phys_on else None,
+            "physics_settle_steps": phys_settle if phys_on else None,
+            "physics_filter_oversample": (
+                max(1, args.physics_filter_oversample)
+                if args.physics_filter and not args.physics_filter_all
+                else None
+            ),
+            "n_candidates_generated": n_candidates_generated if phys_on else None,
+            "physics_filter_max_candidates": (
+                args.physics_filter_max_candidates
+                if args.physics_filter and not args.physics_filter_all
+                else None
+            ),
+            "stable_all_path": stable_all_filename if args.physics_filter_all else None,
+            "stable_all_count": stable_all_count if args.physics_filter_all else None,
+            "l8_export_count": l8_export_count if args.physics_filter_all else None,
+            "l8_max_drops": args.l8_max_drops if args.physics_filter_all else None,
+            "physics_max_candidates": (
+                (args.physics_max_candidates if args.physics_max_candidates is not None else 800)
+                if args.physics_filter_all
+                else None
+            ),
+            "physics_rng_seed": args.physics_rng_seed if args.physics_filter_all else None,
+            "physics_use_l8_batch_deploy": use_l8_batch if phys_on else None,
+            "physics_l8_batch_size": l8_bs if phys_on else None,
         },
         "n_segments": len(segments),
         "n_surface_pts": total_pts,
         "drop_points": [[float(x), float(y)] for x, y in drop_points],
     }
+    if physics_meta is not None:
+        drop_cache["physics_filter_run"] = physics_meta
     drop_cache_path.parent.mkdir(parents=True, exist_ok=True)
     with open(drop_cache_path, "w", encoding="utf-8") as f:
         json.dump(drop_cache, f, indent=2, ensure_ascii=False)

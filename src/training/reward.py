@@ -187,11 +187,6 @@ def step_reward(
 # 攀爬效率图
 # ---------------------------------------------------------------------------
 
-def _point_in_polygon(x: float, y: float, polygon: np.ndarray) -> bool:
-    """射线法判断点是否在多边形内。"""
-    return MplPath(polygon).contains_point((x, y))
-
-
 class ClimbingEfficiencyMap:
     """
     地形感知效率图 — 价值传播 + 路径扩散。

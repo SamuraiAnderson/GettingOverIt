@@ -87,8 +87,8 @@ def compute_param_diffs(checkpoints: list[tuple[int, dict]]) -> dict:
     """计算相邻 checkpoint 之间参数差异。"""
     diffs = {"iterations": [], "total_delta": [], "actor_delta": [], "critic_delta": [], "backbone_delta": []}
     for i in range(1, len(checkpoints)):
-        it_prev, ckpt_prev = checkpoints[i - 1]
-        it_curr, ckpt_curr = checkpoints[i]
+        _, ckpt_prev = checkpoints[i - 1]
+        _, ckpt_curr = checkpoints[i]
         diffs["iterations"].append(checkpoints[i][0])
 
         total_d = 0.0

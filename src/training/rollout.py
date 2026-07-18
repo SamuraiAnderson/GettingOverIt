@@ -4,7 +4,7 @@
 RolloutWorker:
 - 使用 GoiEnv 进行帧级交互
 - 支持随机动作采集、BC 模型推理采集和 PPO 采集
-- 存储原始 29D 状态，推理时即时构建 17D dynamics + 4ch patch
+- 存储原始 29D 状态，推理时即时构建动力学特征 + 4ch patch + valid_mask
 """
 
 from __future__ import annotations
@@ -30,11 +30,16 @@ if TYPE_CHECKING:
 
 from .dataset import (
     BODY_POS_INDICES,
-    DYNAMICS_INDICES,
     HAMMER_POS_INDICES,
     Trajectory,
+    build_dynamics,
     crop_centered,
     render_gaussian,
+)
+from .deploy_sampling import (
+    precompute_segment_arcs,
+    sample_from_fixed_pool,
+    sample_from_segments,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,52 +54,6 @@ def _load_drop_points(game_root: Path) -> list[list[float]]:
     with open(dp_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data.get("drop_points", [])
-
-
-def _precompute_segment_arcs(
-    segments: list[np.ndarray],
-) -> tuple[np.ndarray, list[np.ndarray]]:
-    """预计算各线段弧长和累积弧长，用于加权随机采样。"""
-    arc_lengths = []
-    cum_lengths = []
-    for seg in segments:
-        d = np.diff(seg, axis=0)
-        cum = np.concatenate([[0.0], np.cumsum(np.hypot(d[:, 0], d[:, 1]))])
-        arc_lengths.append(cum[-1])
-        cum_lengths.append(cum)
-    return np.array(arc_lengths), cum_lengths
-
-
-def sample_from_segments(
-    segments: list[np.ndarray],
-    arc_lengths: np.ndarray,
-    cum_lengths: list[np.ndarray],
-    n: int,
-    drop_height: float,
-    rng: np.random.Generator,
-) -> list[list[float]]:
-    """
-    从表面线段上随机采样 n 个投放点。
-
-    按弧长加权选择线段，在线段上均匀采样位置，y 加上 drop_height。
-    每次调用产生完全随机的位置，覆盖所有可着陆表面。
-    """
-    total = arc_lengths.sum()
-    if total < 1e-6 or len(segments) == 0:
-        return []
-
-    weights = arc_lengths / total
-    seg_indices = rng.choice(len(segments), size=n, p=weights)
-
-    points = []
-    for si in seg_indices:
-        seg = segments[si]
-        cum = cum_lengths[si]
-        t = rng.uniform(0.0, cum[-1])
-        x = float(np.interp(t, cum, seg[:, 0]))
-        y = float(np.interp(t, cum, seg[:, 1]))
-        points.append([x, y + drop_height])
-    return points
 
 
 def _write_num_duplicates(game_root: Path, n: int) -> None:
@@ -215,14 +174,15 @@ def _build_history_window(
     act_history: list[np.ndarray],
     ctx: int,
     state_dim: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     从累积历史中构建固定长度的窗口（左填充零）。
 
-    返回 (dyn_window, pat_window, act_window)：
+    返回 (dyn_window, pat_window, act_window, valid_mask)：
     - dyn_window: (ctx, state_dim)
     - pat_window: (ctx, 4, 32, 32)
     - act_window: (ctx, 2)
+    - valid_mask: (ctx,) —— 1=有效观测，0=左填充位（供 key_padding_mask 使用）
     """
     hist_len = min(len(dyn_history), ctx)
     dyn_window = np.array(dyn_history[-hist_len:])
@@ -237,6 +197,9 @@ def _build_history_window(
             pad = np.zeros((hist_len - len(act_window), 2), dtype=np.float32)
             act_window = np.concatenate([pad, act_window], axis=0)
 
+    valid_mask = np.zeros(ctx, dtype=np.float32)
+    valid_mask[ctx - hist_len:] = 1.0
+
     if hist_len < ctx:
         pad_len = ctx - hist_len
         dyn_window = np.concatenate(
@@ -249,7 +212,7 @@ def _build_history_window(
             [np.zeros((pad_len, 2), dtype=np.float32), act_window]
         )
 
-    return dyn_window, pat_window, act_window
+    return dyn_window, pat_window, act_window, valid_mask
 
 
 class RolloutWorker:
@@ -297,7 +260,7 @@ class RolloutWorker:
                   每个元素 shape (N, 2) 为一条连续表面线段。
         """
         self._segments = segments
-        self._arc_lengths, self._cum_lengths = _precompute_segment_arcs(segments)
+        self._arc_lengths, self._cum_lengths = precompute_segment_arcs(segments)
         total_len = float(self._arc_lengths.sum())
         logger.info(
             "已加载 %d 条表面线段 (总弧长=%.1f), 启用随机投放",
@@ -312,11 +275,7 @@ class RolloutWorker:
                 n, self._drop_height, self._rng,
             )
         if self._fixed_drop_points:
-            indices = self._rng.choice(
-                len(self._fixed_drop_points), size=min(n, len(self._fixed_drop_points)),
-                replace=False,
-            )
-            return [self._fixed_drop_points[i] for i in indices]
+            return sample_from_fixed_pool(self._fixed_drop_points, n, self._rng)
         return []
 
     def setup(self) -> None:
@@ -464,19 +423,21 @@ class RolloutWorker:
                 obs, eff_map, self.config,
                 self._min_gx, self._min_gy, self._terrain_mask,
             )
-            dynamics = obs[:, DYNAMICS_INDICES]
+            dynamics = build_dynamics(obs)
 
             actions = np.zeros((num_agents, 2), dtype=np.float32)
             for i in range(num_agents):
                 dyn_history[i].append(dynamics[i].copy())
                 patch_history[i].append(patches[i].copy())
 
-                dyn_window, pat_window, act_window = _build_history_window(
+                dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                     dyn_history[i], patch_history[i], act_history[i],
                     ctx, self.config.state_dim,
                 )
 
-                pred = model.predict(dyn_window, pat_window, act_window)
+                pred = model.predict(
+                    dyn_window, pat_window, act_window, valid_mask=valid_mask
+                )
                 noise = np.random.normal(0, noise_std * scale, size=2).astype(np.float32)
                 actions[i] = np.clip(pred + noise, -scale, scale)
 
@@ -546,7 +507,7 @@ class RolloutWorker:
                 obs, eff_map, self.config,
                 self._min_gx, self._min_gy, self._terrain_mask,
             )
-            dynamics = obs[:, DYNAMICS_INDICES]
+            dynamics = build_dynamics(obs)
 
             actions_batch = np.zeros((num_agents, 2), dtype=np.float32)
             step_data: dict[int, tuple] = {}
@@ -555,7 +516,7 @@ class RolloutWorker:
                 dyn_history[i].append(dynamics[i].copy())
                 patch_history[i].append(patches[i].copy())
 
-                dyn_window, pat_window, act_window = _build_history_window(
+                dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                     dyn_history[i], patch_history[i], act_history[i],
                     ctx, self.config.state_dim,
                 )
@@ -563,9 +524,10 @@ class RolloutWorker:
                 dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
                 pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)
                 act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
+                vm_t = torch.from_numpy(valid_mask[np.newaxis].astype(np.float32)).to(device)
 
                 with torch.no_grad():
-                    av = model.get_action_and_value(dyn_t, pat_t, act_t)
+                    av = model.get_action_and_value(dyn_t, pat_t, act_t, valid_mask=vm_t)
 
                 action_np = av.action.cpu().numpy().squeeze(0)
 
@@ -578,14 +540,17 @@ class RolloutWorker:
                         step, i,
                     )
                     action_np = np.zeros(2, dtype=np.float32)
-                    step_data[i] = (dyn_window.copy(), pat_window.copy(), act_window.copy(), 0.0, 0.0)
+                    step_data[i] = (
+                        dyn_window.copy(), pat_window.copy(), act_window.copy(),
+                        valid_mask.copy(), 0.0, 0.0,
+                    )
                     actions_batch[i] = action_np
                     continue
 
                 actions_batch[i] = action_np
                 step_data[i] = (
                     dyn_window.copy(), pat_window.copy(), act_window.copy(),
-                    av.log_prob.item(), av.value.item(),
+                    valid_mask.copy(), av.log_prob.item(), av.value.item(),
                 )
 
             new_obs, dones = self.env.step(actions_batch)
@@ -593,7 +558,7 @@ class RolloutWorker:
             for i in stable_agents:
                 if i not in step_data:
                     continue
-                dw, pw, aw, lp, val = step_data[i]
+                dw, pw, aw, vm, lp, val = step_data[i]
                 reward, running_max_y[i] = step_reward(
                     prev_obs[i], new_obs[i], eff_map, self.config,
                     running_max_y=running_max_y[i],
@@ -603,6 +568,7 @@ class RolloutWorker:
                     dynamics_window=dw,
                     patch_window=pw,
                     act_history_window=aw,
+                    valid_mask_window=vm,
                     action=actions_batch[i].copy(),
                     log_prob=lp,
                     value=val,
@@ -621,19 +587,20 @@ class RolloutWorker:
             obs, eff_map, self.config,
             self._min_gx, self._min_gy, self._terrain_mask,
         )
-        dynamics = obs[:, DYNAMICS_INDICES]
+        dynamics = build_dynamics(obs)
         for i in stable_agents:
             dyn_history[i].append(dynamics[i].copy())
             patch_history[i].append(patches[i].copy())
-            dyn_window, pat_window, act_window = _build_history_window(
+            dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                 dyn_history[i], patch_history[i], act_history[i],
                 ctx, self.config.state_dim,
             )
             dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
             pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)
             act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
+            vm_t = torch.from_numpy(valid_mask[np.newaxis].astype(np.float32)).to(device)
             with torch.no_grad():
-                _, v = model.forward(dyn_t, pat_t, act_t)
+                _, v = model.forward(dyn_t, pat_t, act_t, valid_mask=vm_t)
             agent_buffers[i].compute_gae(
                 last_value=v.item(),
                 gamma=self.config.gamma,

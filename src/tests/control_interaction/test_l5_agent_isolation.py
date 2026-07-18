@@ -227,14 +227,14 @@ def scenario_z(env: GoiEnv, n_steps: int) -> dict:
     action_zero = np.array([[  0.0, 0.0], [0.0, 0.0]], dtype=np.float32)
 
     # 基线：两个 Agent 均零动作
-    obs0_base = env.reset()
+    env.reset()
     vel_base_1 = []
     for _ in range(n_steps):
         obs, _ = env.step(action_zero)
         vel_base_1.append(obs[1, 2:4].copy())   # vel_x, vel_y of agent 1
 
     # 测试：Agent 0 向右，Agent 1 零动作
-    obs0_test = env.reset()
+    env.reset()
     vel_test_1 = []
     for _ in range(n_steps):
         obs, _ = env.step(action_test)
