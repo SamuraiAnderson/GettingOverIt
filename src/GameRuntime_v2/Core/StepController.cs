@@ -21,6 +21,13 @@ namespace GoiRuntime.Core
 	/// </summary>
 	public class StepController
 	{
+		/// <summary>PlayerState.ToFloatArray() 的基础维度（不含 fakeCursor）。</summary>
+		public const int BASE_STATE_DIM = 29;
+		/// <summary>追加的 fakeCursor 维度：绝对坐标 x,y + 速度 vx,vy。</summary>
+		public const int CURSOR_DIM = 4;
+		/// <summary>每个 agent 的完整状态维度（基础 + fakeCursor）。</summary>
+		public const int STATE_DIM = BASE_STATE_DIM + CURSOR_DIM;  // 33
+
 		private readonly int numAgents;
 		private readonly int stepFrames;
 		private readonly int stateDim;
@@ -334,13 +341,31 @@ namespace GoiRuntime.Core
 			{
 				float[] s = (stateServices[i] != null && stateServices[i].IsReady)
 					? stateServices[i].GetStateArray()
-					: new float[stateDim];
-				if (s == null || s.Length < stateDim)
+					: new float[BASE_STATE_DIM];
+				if (s == null || s.Length < BASE_STATE_DIM)
 				{
-					Debug.LogError($"[StepController] agent {i} GetStateArray 返回 {(s == null ? "null" : s.Length.ToString())} 元素，期望 {stateDim}，用零补全");
-					s = new float[stateDim];
+					Debug.LogError($"[StepController] agent {i} GetStateArray 返回 {(s == null ? "null" : s.Length.ToString())} 元素，期望 {BASE_STATE_DIM}，用零补全");
+					s = new float[BASE_STATE_DIM];
 				}
-				System.Array.Copy(s, 0, result, i * stateDim, stateDim);
+
+				int baseOffset = i * stateDim;
+				System.Array.Copy(s, 0, result, baseOffset, BASE_STATE_DIM);
+
+				// 追加 fakeCursor：绝对坐标 + 速度（Python 侧转为相对 player 坐标以保持平移等变）。
+				// 回退：fakeCursorRB 尚未创建时用 player 坐标（相对=0）+ 零速度，避免出现巨大的相对位移。
+				float cx = s[0], cy = s[1], cvx = 0f, cvy = 0f;
+				Rigidbody2D fcRB = (i < inputServices.Count) ? inputServices[i]?.GetFakeCursorRB() : null;
+				if (fcRB != null)
+				{
+					cx = fcRB.position.x;
+					cy = fcRB.position.y;
+					cvx = fcRB.velocity.x;
+					cvy = fcRB.velocity.y;
+				}
+				result[baseOffset + BASE_STATE_DIM + 0] = cx;
+				result[baseOffset + BASE_STATE_DIM + 1] = cy;
+				result[baseOffset + BASE_STATE_DIM + 2] = cvx;
+				result[baseOffset + BASE_STATE_DIM + 3] = cvy;
 			}
 			return result;
 		}

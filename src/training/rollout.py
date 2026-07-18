@@ -29,12 +29,10 @@ if TYPE_CHECKING:
     from .reward import ClimbingEfficiencyMap
 
 from .dataset import (
-    BODY_POS_INDICES,
-    HAMMER_POS_INDICES,
     Trajectory,
     build_dynamics,
-    crop_centered,
-    render_gaussian,
+    build_patch,
+    left_pad_sequence,
 )
 from .deploy_sampling import (
     precompute_segment_arcs,
@@ -105,7 +103,7 @@ def _build_patches_batch(
     min_gy: int,
     terrain_mask: np.ndarray | None,
 ) -> np.ndarray:
-    """批量构建 patches，用于推理时即时生成。"""
+    """批量构建 patches，逐样本委托 dataset.build_patch，保证与离线数据集完全一致。"""
     n = obs.shape[0]
     ps = config.patch_size
     ch = config.patch_channels
@@ -114,57 +112,25 @@ def _build_patches_batch(
     eff_arr = eff_map.get_arr() if eff_map is not None else None
 
     for i in range(n):
-        px, py = float(obs[i, 0]), float(obs[i, 1])
-
-        if terrain_mask is not None:
-            patches[i, 0] = crop_centered(
-                terrain_mask.astype(np.float32),
-                px, py, min_gx, min_gy,
-                size=ps, patch_res=config.patch_resolution,
-                arr_res=config.grid_resolution,
-            )
-
-        if eff_arr is not None:
-            patches[i, 1] = crop_centered(
-                eff_arr.astype(np.float32),
-                px, py, min_gx, min_gy,
-                size=ps, patch_res=config.patch_resolution,
-                arr_res=config.grid_resolution,
-            )
-
-        for bx_idx, by_idx in BODY_POS_INDICES:
-            render_gaussian(
-                patches[i, 2],
-                float(obs[i, bx_idx]), float(obs[i, by_idx]),
-                px, py, patch_res=config.patch_resolution,
-            )
-
-        for hx_idx, hy_idx in HAMMER_POS_INDICES:
-            render_gaussian(
-                patches[i, 3],
-                float(obs[i, hx_idx]), float(obs[i, hy_idx]),
-                px, py, patch_res=config.patch_resolution,
-            )
+        patches[i] = build_patch(
+            obs[i], terrain_mask, eff_arr, config, min_gx, min_gy,
+        )
 
     return patches
 
 
 def _filter_water_trajectories(
     trajectories: list[Trajectory],
-    water_y: float,
+    config: TrainConfig,
 ) -> list[Trajectory]:
-    """过滤落水轨迹：y.min() < water_y 的轨迹被丢弃。"""
-    kept = []
-    dropped = 0
-    for traj in trajectories:
-        y_min = float(traj.raw_states[:, 1].min())
-        if y_min < water_y:
-            dropped += 1
-        else:
-            kept.append(traj)
+    """过滤落水轨迹：复用 reward.is_water_trajectory 的统一阈值判定，丢弃触水轨迹。"""
+    from .reward import is_water_trajectory
+
+    kept = [t for t in trajectories if not is_water_trajectory(t.raw_states, config)]
+    dropped = len(trajectories) - len(kept)
     if dropped > 0:
         logger.info("丢弃 %d 条落水轨迹 (y < %.1f), 保留 %d 条",
-                     dropped, water_y, len(kept))
+                     dropped, config.water_y_threshold, len(kept))
     return kept
 
 
@@ -173,7 +139,6 @@ def _build_history_window(
     patch_history: list[np.ndarray],
     act_history: list[np.ndarray],
     ctx: int,
-    state_dim: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     从累积历史中构建固定长度的窗口（左填充零）。
@@ -183,34 +148,19 @@ def _build_history_window(
     - pat_window: (ctx, 4, 32, 32)
     - act_window: (ctx, 2)
     - valid_mask: (ctx,) —— 1=有效观测，0=左填充位（供 key_padding_mask 使用）
+
+    调用时约定 dyn_history/patch_history 含当前步、act_history 只到上一步，
+    因此三者各自右对齐后经 left_pad_sequence 左填充；valid_mask 由观测（dyn）驱动。
+    填充/掩码逻辑与离线 __getitem__ 共用 left_pad_sequence，保证逐窗口一致。
     """
-    hist_len = min(len(dyn_history), ctx)
-    dyn_window = np.array(dyn_history[-hist_len:])
-    pat_window = np.array(patch_history[-hist_len:])
+    dyn_window, valid_mask = left_pad_sequence(np.asarray(dyn_history[-ctx:]), ctx)
+    pat_window, _ = left_pad_sequence(np.asarray(patch_history[-ctx:]), ctx)
 
     if len(act_history) == 0:
-        act_window = np.zeros((hist_len, 2), dtype=np.float32)
+        act_real = np.zeros((0, 2), dtype=np.float32)
     else:
-        act_len = min(len(act_history), ctx)
-        act_window = np.array(act_history[-act_len:])
-        if len(act_window) < hist_len:
-            pad = np.zeros((hist_len - len(act_window), 2), dtype=np.float32)
-            act_window = np.concatenate([pad, act_window], axis=0)
-
-    valid_mask = np.zeros(ctx, dtype=np.float32)
-    valid_mask[ctx - hist_len:] = 1.0
-
-    if hist_len < ctx:
-        pad_len = ctx - hist_len
-        dyn_window = np.concatenate(
-            [np.zeros((pad_len, state_dim), dtype=np.float32), dyn_window]
-        )
-        pat_window = np.concatenate(
-            [np.zeros((pad_len, *pat_window.shape[1:]), dtype=np.float32), pat_window]
-        )
-        act_window = np.concatenate(
-            [np.zeros((pad_len, 2), dtype=np.float32), act_window]
-        )
+        act_real = np.asarray(act_history[-ctx:], dtype=np.float32)
+    act_window, _ = left_pad_sequence(act_real, ctx)
 
     return dyn_window, pat_window, act_window, valid_mask
 
@@ -392,7 +342,7 @@ class RolloutWorker:
                 raw_states=np.array(all_states[i]),
                 actions=np.array(all_actions[i]),
             ))
-        return _filter_water_trajectories(trajectories, self.config.water_y_threshold)
+        return _filter_water_trajectories(trajectories, self.config)
 
     def collect_with_model(
         self,
@@ -432,7 +382,7 @@ class RolloutWorker:
 
                 dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                     dyn_history[i], patch_history[i], act_history[i],
-                    ctx, self.config.state_dim,
+                    ctx,
                 )
 
                 pred = model.predict(
@@ -453,7 +403,7 @@ class RolloutWorker:
                 raw_states=np.array(all_states[i]),
                 actions=np.array(all_actions[i]),
             ))
-        return _filter_water_trajectories(trajectories, self.config.water_y_threshold)
+        return _filter_water_trajectories(trajectories, self.config)
 
     def collect_ppo(
         self,
@@ -470,7 +420,7 @@ class RolloutWorker:
         同时收集 per-agent 原始状态/动作，返回 Trajectory 列表供效率图更新。
         """
         from .ppo_buffer import PPORolloutBuffer as _Buffer
-        from .reward import RewardNormalizer, step_reward
+        from .reward import RewardNormalizer, is_water, step_reward
 
         assert self.env is not None, "请先调用 setup() 或 launch_game()"
         num_agents = self.config.num_agents
@@ -518,7 +468,7 @@ class RolloutWorker:
 
                 dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                     dyn_history[i], patch_history[i], act_history[i],
-                    ctx, self.config.state_dim,
+                    ctx,
                 )
 
                 dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
@@ -573,7 +523,7 @@ class RolloutWorker:
                     log_prob=lp,
                     value=val,
                     reward=reward,
-                    done=bool(dones[i]) or new_obs[i, 1] < self.config.water_y_threshold,
+                    done=bool(dones[i]) or is_water(new_obs[i, 1], self.config),
                 )
                 act_history[i].append(actions_batch[i].copy())
                 raw_states[i].append(new_obs[i].copy())
@@ -593,7 +543,7 @@ class RolloutWorker:
             patch_history[i].append(patches[i].copy())
             dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                 dyn_history[i], patch_history[i], act_history[i],
-                ctx, self.config.state_dim,
+                ctx,
             )
             dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
             pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)

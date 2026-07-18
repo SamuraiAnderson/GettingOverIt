@@ -53,9 +53,10 @@ namespace GoiRuntime.Core.Configuration
 		#region 数据配置
 
 		/// <summary>
-		/// 状态维度（每个复制体的浮点数数量）
+		/// 状态维度（每个复制体的浮点数数量）。
+		/// 注意：RL 路径以 StepController.STATE_DIM(=33，含 fakeCursor) 为权威，此值仅作文档/兜底。
 		/// </summary>
-		public int stateDimension = 29;
+		public int stateDimension = 33;
 
 		/// <summary>
 		/// 动作维度（每个复制体的动作数量）

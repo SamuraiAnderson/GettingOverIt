@@ -386,7 +386,9 @@ namespace GoiRuntime.Core
 		DisableWaterReset();
 
 		// --- StepController ---
-			stepController = new StepController(numAgents, config.stepFrames, config.stateDimension, config.actionDimension);
+		// 状态维度以 StepController.STATE_DIM 为唯一权威（含 fakeCursor 的 33 维），
+		// 不依赖持久化的 config.stateDimension，避免旧配置文件残留 29 造成协议不一致。
+			stepController = new StepController(numAgents, config.stepFrames, StepController.STATE_DIM, config.actionDimension);
 			if (!stepController.Initialize(playerStateService, playerInputService, duplicateManager))
 			{
 				Logger.LogError("StepController 初始化失败，中止");
@@ -395,7 +397,7 @@ namespace GoiRuntime.Core
 			Logger.LogInfo($"StepController 初始化成功（{numAgents} agent，每 step {config.stepFrames} 物理帧）");
 
 			// --- TCP 步进服务器 ---
-			tcpStepServer = new TcpStepServer(config.stateDimension);
+			tcpStepServer = new TcpStepServer(StepController.STATE_DIM);
 			tcpStepServer.StartListening(config.tcpPort);
 			Logger.LogInfo($"TcpStepServer 已启动，监听端口 {config.tcpPort}");
 
@@ -545,7 +547,7 @@ namespace GoiRuntime.Core
 					{
 						tcpStepServer.SendResponse(new StepResponse
 						{
-							States = new float[stepController.NumAgents * 29],
+							States = new float[stepController.NumAgents * StepController.STATE_DIM],
 							Dones  = new bool[stepController.NumAgents],
 						});
 					}

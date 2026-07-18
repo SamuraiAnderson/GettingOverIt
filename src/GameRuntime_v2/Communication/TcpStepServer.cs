@@ -36,9 +36,9 @@ namespace GoiRuntime.Communication
 		private volatile bool _running;
 		private volatile bool _connected;
 
-		public TcpStepServer(int stateDim = 29)
+		public TcpStepServer(int stateDim = 33)
 		{
-			_stateDim = stateDim > 0 ? stateDim : 29;
+			_stateDim = stateDim > 0 ? stateDim : 33;
 		}
 
 	// 主线程 ↔ 后台线程共享的命令槽

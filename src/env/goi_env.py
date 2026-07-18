@@ -13,7 +13,10 @@ Getting Over It 强化学习环境接口
   Python → C#  CAMERA_FREE:      [cmd:1B='F'][enabled:1B]  启用/禁用自由相机
   Python → C#  CLOSE:            [cmd:1B='X']
 
-  C# → Python  STATE: [n:1B] 然后对每个 agent: [state_i: 29×4B][done_i: 1B]
+  C# → Python  STATE: [n:1B] 然后对每个 agent: [state_i: 33×4B][done_i: 1B]
+
+状态维度 33 = 基础 29 维（PlayerState.ToFloatArray）+ fakeCursor 4 维
+（cursorX, cursorY, cursorVelX, cursorVelY，均为绝对量，索引 29-32）。
 """
 import socket
 import struct
@@ -25,7 +28,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-STATE_DIM  = 29
+STATE_DIM  = 33
 ACTION_DIM = 2
 
 CMD_RESET       = b'R'

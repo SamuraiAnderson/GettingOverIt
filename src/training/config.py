@@ -37,8 +37,9 @@ class TrainConfig:
     steps_per_rollout: int = 500
 
     # ── 模型 ──
-    # build_dynamics 输出维度: 13 速度/角速度 + 3 角度×2(sin/cos) + 5 部件相对坐标×2 = 29
-    state_dim: int = 29
+    # 原始状态 33 维 = 基础 29 + fakeCursor 4（cursorX/Y, cursorVelX/Y，索引 29-32）
+    # build_dynamics 输出维度: 15 速度/角速度(含 cursor 速度) + 3 角度×2(sin/cos) + 6 部件相对坐标×2(含 cursor) = 33
+    state_dim: int = 33
     action_dim: int = 2
     d_model: int = 128
     nhead: int = 4
@@ -70,12 +71,16 @@ class TrainConfig:
     # ── 评分 ──
     efficiency_weight: float = 50.0
     waypoint_weight: float = 0.5
+    # 绝对高度加成（轨迹级/排序）：base_score 每条轨迹加一次，用于 BC 跨轨迹筛选。
+    # 与效率图的 height_prior_weight（网格级/空间价值）分工，勿混用，见 reward.climb_score。
     abs_height_weight: float = 0.1
 
     # ── 效率图 ──
     grid_resolution: float = 1.0
     diffusion_iterations: int = 50
     diffusion_alpha: float = 0.2
+    # 绝对高度先验（网格级/空间价值）：给每个可通行格子按 world_y 注入 floor。
+    # 与 base_score 的 abs_height_weight（轨迹级/排序）分工，勿混用，见 reward.climb_score。
     height_prior_weight: float = 0.05
 
     # ── 投放模式 ──

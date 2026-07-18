@@ -24,25 +24,56 @@ if TYPE_CHECKING:
     from .config import TrainConfig
 
 
+def climb_score(summit: float, peak_step: int, config: TrainConfig) -> float:
+    """相对攀爬核心分：爬得高（summit）+ 爬得快（climb_speed = summit / peak_step）。
+
+    这是 base_score（整条轨迹算一次）与 ClimbingEfficiencyMap.update（逐后缀算一次）
+    共享的唯一评分核心，只描述「相对出发点爬了多少、多快」。
+
+    ⚠️ 本函数刻意 **不含任何绝对高度项**。绝对高度偏好由两套独立机制分工注入，
+    二者互补、服务不同环节，切勿合并进本函数（否则效率图会对绝对高度双重计数）：
+      - `abs_height_bonus`（config.abs_height_weight）：**每条轨迹**加一次，
+        仅用于 base_score 的 BC 跨轨迹排序（登顶越高的轨迹越优先入库）。
+      - `height_prior_weight`：**每个网格**在效率图初始化时按 world_y 注入 floor，
+        用于效率图的空间价值（越高的可通行格子基线越高）。
+    """
+    climb_speed = summit / peak_step
+    return summit + config.efficiency_weight * climb_speed
+
+
 def base_score(states: np.ndarray, config: TrainConfig) -> float:
     """
-    基础评分 — 爬得高 + 爬得快。
+    基础评分 — 相对攀爬核心 + 绝对高度排序加成。
 
-    states: (T+1, 29)，一段轨迹（完整或片段）。
+    states: (T+1, 33)，一段轨迹（完整或片段）。
     不依赖任何外部状态，可独立计算。
     """
     y = states[:, 1]
     start_y = y[0]
+    # summit = 全轨迹净爬升。对应 PPO step_reward 高度分量的望远镜和（勿误判为不一致）：
+    # BC 对完整轨迹直接取 max 得标量 summit 用于排序；PPO 需其逐步差分形式做信用分配。
     summit = float(y.max() - start_y)
     peak_step = int(y.argmax()) + 1
-    climb_speed = summit / peak_step
+
+    # 相对攀爬核心（与效率图 update 共享同一公式）
+    score = climb_score(summit, peak_step, config)
+    # 绝对高度排序加成：仅 BC 轨迹排序用；效率图侧的绝对高度改由 height_prior 承担，勿混用
     abs_height_bonus = float(y.max()) * config.abs_height_weight
-    return summit + config.efficiency_weight * climb_speed + abs_height_bonus
+    return score + abs_height_bonus
+
+
+def is_water(y: float, config: TrainConfig) -> bool:
+    """单点落水判定：y 低于 water_y_threshold 即视为落水。
+
+    落水阈值的唯一判定入口（step 级）。step done / 落水扣分 / 轨迹级过滤
+    （is_water_trajectory）均由此派生，避免各处 `y < threshold` 分散漂移。
+    """
+    return float(y) < config.water_y_threshold
 
 
 def is_water_trajectory(states: np.ndarray, config: TrainConfig) -> bool:
-    """检测轨迹是否落入水中。"""
-    return float(states[:, 1].min()) < config.water_y_threshold
+    """轨迹级落水判定：轨迹最低点触水即整条判为落水（复用 is_water）。"""
+    return is_water(float(states[:, 1].min()), config)
 
 
 def score_trajectory(
@@ -122,38 +153,38 @@ def step_reward(
     obs_curr: np.ndarray,
     efficiency_map: ClimbingEfficiencyMap | None,
     config: TrainConfig,
-    running_max_y: float | None = None,
+    running_max_y: float,
     normalizer: RewardNormalizer | None = None,
 ) -> tuple[float, float]:
     """
     PPO 逐步奖励（创新高模式）。
 
-    当提供 running_max_y 时，只在超过历史最高点时给正奖励，
-    回落时仅给极轻微惩罚（或零），避免跳起后落地抵消正信号。
+    只在超过历史最高点 running_max_y 时给正奖励，回落时仅给极轻微惩罚（或零），
+    避免跳起后落地抵消正信号。
+
+    与 BC 的对应关系（勿误以为两者是遗漏/不一致，见 base_score / climb_score）：
+      本函数的高度分量是 BC `summit` 的**逐步望远镜分解**——沿一条轨迹累加所有正的
+      创新高奖励恰好收敛到 `y_max - y_start = summit`。BC 因为能对完整轨迹直接取
+      max，用标量 summit 排序即可；PPO 逐步优化则需要这种可加的差分形式来做信用分配。
+      效率通道：BC 用 climb_speed（全局），PPO 用 eff_delta（逐步差分）；
+      绝对高度通道：BC 用 abs_height_bonus，PPO 经效率图 height_prior 间接注入。
+      三通道方向一致，故 BC→PPO 迁移不会互相推翻。
 
     当 normalizer 激活后，切换到归一化模式:
       reward = α * (height / σ_h) + (1-α) * (eff_delta / σ_e)
 
-    返回 (reward, updated_max_y)。
+    返回 (reward, updated_max_y)。running_max_y 为必传参数（逐步创新高的历史最高点）。
     """
     curr_y = float(obs_curr[1])
 
-    # ── height component ──
-    if running_max_y is not None:
-        if curr_y > running_max_y:
-            height_reward = curr_y - running_max_y
-            new_max_y = curr_y
-        else:
-            drop = running_max_y - curr_y
-            height_reward = -config.neg_reward_scale * math.log1p(drop) if drop > 0 else 0.0
-            new_max_y = running_max_y
-    else:
-        dy = float(obs_curr[1] - obs_prev[1])
-        if dy >= 0:
-            height_reward = dy
-        else:
-            height_reward = -config.neg_reward_scale * math.log1p(abs(dy))
+    # ── height component（创新高）──
+    if curr_y > running_max_y:
+        height_reward = curr_y - running_max_y
         new_max_y = curr_y
+    else:
+        drop = running_max_y - curr_y
+        height_reward = -config.neg_reward_scale * math.log1p(drop) if drop > 0 else 0.0
+        new_max_y = running_max_y
 
     # ── efficiency component ──
     eff_delta = 0.0
@@ -177,7 +208,7 @@ def step_reward(
     else:
         reward = height_reward + config.waypoint_weight * eff_delta
 
-    if curr_y < config.water_y_threshold:
+    if is_water(curr_y, config):
         reward = -10.0
 
     return reward, new_max_y
@@ -222,6 +253,9 @@ class ClimbingEfficiencyMap:
         h, w = self.traversable.shape
         self._max_arr = np.full((h, w), -np.inf, dtype=np.float64)
 
+        # 绝对高度偏好（网格级/空间价值）：给每个可通行格子按 world_y 注入基线 floor。
+        # 这是效率图专属的绝对高度机制，与 base_score 的 abs_height_bonus（轨迹级/排序）分工，
+        # 因此 update() 里的攀爬核心 climb_score 不再叠加绝对高度，避免双重计数。
         if height_prior_weight > 0:
             for gy_idx in range(h):
                 world_y = (self._min_gy + gy_idx + 0.5) * self.resolution
@@ -333,9 +367,10 @@ class ClimbingEfficiencyMap:
                     continue
 
                 summit = suffix_max[t] - y[t]
-                peak_step = suffix_argmax[t] + 1
-                climb_speed = summit / peak_step
-                bs = summit + config.efficiency_weight * climb_speed
+                peak_step = int(suffix_argmax[t]) + 1
+                # 相对攀爬核心（与 base_score 共享）；绝对高度不在此叠加，
+                # 效率图的绝对高度偏好由 height_prior_weight（网格 floor）承担，避免双重计数
+                bs = climb_score(summit, peak_step, config)
 
                 wp = 0.0
                 if prev_eff_map is not None:
