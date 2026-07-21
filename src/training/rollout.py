@@ -35,23 +35,40 @@ from .dataset import (
     left_pad_sequence,
 )
 from .deploy_sampling import (
+    default_candidate_points_path,
+    default_exclusion_zones_path,
+    extract_body_local,
+    extract_tip_local,
+    filter_points_by_exclusion,
+    load_candidate_points,
+    load_exclusion_zones,
+    make_tip_recon_config,
+    point_in_exclusion,
     precompute_segment_arcs,
     sample_from_fixed_pool,
     sample_from_segments,
+    tip_in_obstacle,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _load_drop_points(game_root: Path) -> list[list[float]]:
-    """从 L7 缓存的 drop_points.json 中加载投放点坐标（固定点回退用）。"""
-    import json
-    dp_path = game_root / "GoiData" / "Colliders" / "drop_points.json"
-    if not dp_path.exists():
-        return []
-    with open(dp_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return data.get("drop_points", [])
+    """加载候选点集（L7 → train 的唯一文件：项目 checkpoints/drop_points_all_stable.json）。
+
+    game_root 保留为兼容旧签名；候选文件现固定在项目 checkpoints/，与游戏目录解耦。
+    """
+    _ = game_root
+    path = default_candidate_points_path()
+    pts = load_candidate_points(path)
+    if pts:
+        logger.info("候选点集: 从 %s 加载 %d 个点", path, len(pts))
+    else:
+        logger.warning(
+            "候选点集为空或缺失: %s（请先运行 test_l7_surface_airdrop.py --physics-filter-all 生成）",
+            path,
+        )
+    return pts
 
 
 def _write_num_duplicates(game_root: Path, n: int) -> None:
@@ -102,6 +119,9 @@ def _build_patches_batch(
     min_gx: int,
     min_gy: int,
     terrain_mask: np.ndarray | None,
+    solid_polygons: list[np.ndarray] | None = None,
+    tip_local: np.ndarray | None = None,
+    body_local: list[np.ndarray] | None = None,
 ) -> np.ndarray:
     """批量构建 patches，逐样本委托 dataset.build_patch，保证与离线数据集完全一致。"""
     n = obs.shape[0]
@@ -114,6 +134,7 @@ def _build_patches_batch(
     for i in range(n):
         patches[i] = build_patch(
             obs[i], terrain_mask, eff_arr, config, min_gx, min_gy,
+            solid_polygons=solid_polygons, tip_local=tip_local, body_local=body_local,
         )
 
     return patches
@@ -191,6 +212,18 @@ class RolloutWorker:
         # 固定投放点（回退用）
         self._fixed_drop_points: list[list[float]] = []
 
+        # 人工涂抹排除区（圆形），落点落入即剔除；None=不过滤
+        # 在 __init__ 即加载：main_ppo 直接走 launch_game() 不经 setup()，须保证任何入口都生效
+        self._exclusion_zones: np.ndarray | None = None
+        self._load_exclusion_zones()
+
+        # 运行时锤头卡障碍过滤（与 L7 离线筛选同一判据）
+        self._solid_polygons: list[np.ndarray] | None = None
+        self._tip_cfg = None
+        # dualscale patch 接触分支几何
+        self._tip_local: np.ndarray | None = None
+        self._body_local: list[np.ndarray] | None = None
+
     def set_terrain_info(
         self,
         terrain_mask: np.ndarray,
@@ -217,22 +250,113 @@ class RolloutWorker:
             len(segments), total_len,
         )
 
-    def _sample_positions(self, n: int) -> list[list[float]]:
-        """采样 n 个随机投放位置。如果没有表面线段则回退到固定点。"""
-        if len(self._segments) > 0:
-            return sample_from_segments(
-                self._segments, self._arc_lengths, self._cum_lengths,
-                n, self._drop_height, self._rng,
+    def set_deploy_obstacle_geometry(
+        self,
+        polygons: list[np.ndarray],
+        player_data: dict | None,
+    ) -> None:
+        """
+        登记 env 几何：既供运行时投放的锤头卡障碍过滤，也供 dualscale patch 的接触分支。
+
+        polygons: env 实心多边形（extract_polygons 输出，与 L7 一致）。
+        player_data: player_contour.json 内容；提供 tip / body∪pot 局部轮廓。
+
+        patch 接触分支（_solid_polygons / _tip_local / _body_local）无条件登记；
+        运行时锤头卡障碍过滤（_tip_cfg）受 config.deploy_tip_obstacle_check 开关控制。
+        """
+        # patch dualscale 接触分支几何（与 deploy 过滤开关无关）
+        self._solid_polygons = polygons
+        self._tip_local = extract_tip_local(player_data)
+        self._body_local = extract_body_local(player_data)
+
+        if not self.config.deploy_tip_obstacle_check:
+            self._tip_cfg = None
+            logger.info("运行时锤头卡障碍过滤: 已关闭 (deploy_tip_obstacle_check=False)")
+            return
+
+        if self._tip_local is not None:
+            self._tip_cfg = make_tip_recon_config(
+                self._tip_local,
+                self.config.tip_angle_source,
+                self.config.tip_angle_offset,
+                self.config.tip_scale,
             )
+            logger.info(
+                "运行时锤头判据: 多边形全顶点 source=%s offset=%.0f scale=%.2f (%d 顶点)",
+                self.config.tip_angle_source, self.config.tip_angle_offset,
+                self.config.tip_scale, len(self._tip_local),
+            )
+        else:
+            self._tip_cfg = None
+            logger.info("运行时锤头判据: tip 中心单点 (player_contour 缺 tip 轮廓)")
+
+    def set_candidate_points(self, points: list[list[float]]) -> None:
+        """设置候选投放点集（L7 唯一候选文件 + train 侧高度过滤后的结果）。
+
+        候选集作为投放的唯一来源（pool-only）：清空表面线段，并按人工涂抹排除区过滤。
+        """
+        self._segments = []
+        self._arc_lengths = np.array([])
+        self._cum_lengths = []
+        pts = [[float(x), float(y)] for x, y in points] if points else []
+        if self._exclusion_zones is not None and pts:
+            before = len(pts)
+            pts = filter_points_by_exclusion(pts, self._exclusion_zones)
+            if before != len(pts):
+                logger.info("候选点集经排除区过滤: %d → %d", before, len(pts))
+        self._fixed_drop_points = pts
+        logger.info("候选投放点集已就绪: %d 个（pool-only 投放）", len(pts))
+
+    def _sample_positions(self, n: int) -> list[list[float]]:
+        """采样 n 个投放位置：优先候选点集（pool-only），无候选集时回退表面线段。
+
+        启用人工涂抹排除区时，落入排除圆的采样点被剔除并重采补足（有限次尝试）。
+        """
         if self._fixed_drop_points:
             return sample_from_fixed_pool(self._fixed_drop_points, n, self._rng)
+        if len(self._segments) > 0:
+            if self._exclusion_zones is None:
+                return sample_from_segments(
+                    self._segments, self._arc_lengths, self._cum_lengths,
+                    n, self._drop_height, self._rng,
+                )
+            collected: list[list[float]] = []
+            for _ in range(8):
+                if len(collected) >= n:
+                    break
+                need = n - len(collected)
+                batch = sample_from_segments(
+                    self._segments, self._arc_lengths, self._cum_lengths,
+                    max(need * 2, need), self._drop_height, self._rng,
+                )
+                collected.extend(filter_points_by_exclusion(batch, self._exclusion_zones))
+            return collected[:n]
         return []
 
     def setup(self) -> None:
         """首次初始化：加载投放点 + 启动游戏。"""
         game_root = Path(self.config.game_root)
         self._fixed_drop_points = _load_drop_points(game_root)
+        if self._exclusion_zones is not None and self._fixed_drop_points:
+            before = len(self._fixed_drop_points)
+            self._fixed_drop_points = filter_points_by_exclusion(
+                self._fixed_drop_points, self._exclusion_zones
+            )
+            if before != len(self._fixed_drop_points):
+                logger.info("固定回退池经排除区过滤: %d → %d",
+                            before, len(self._fixed_drop_points))
         self.launch_game()
+
+    def _load_exclusion_zones(self) -> None:
+        """加载人工涂抹排除区（项目 checkpoints/，受 config.deploy_exclusion_check 开关控制）。"""
+        if not self.config.deploy_exclusion_check:
+            self._exclusion_zones = None
+            return
+        path = default_exclusion_zones_path()
+        self._exclusion_zones = load_exclusion_zones(path)
+        if self._exclusion_zones is not None:
+            logger.info("运行时人工排除区: 从 %s 载入 %d 个圆",
+                        path, len(self._exclusion_zones))
 
     def launch_game(self) -> None:
         """启动游戏进程、TCP 连接、warmup、拍快照、开启自由相机。可多次调用。"""
@@ -306,13 +430,31 @@ class RolloutWorker:
         for agent_idx, teleport_y in self._last_deploy_positions.items():
             settled_y = float(obs[agent_idx, 1])
             drop = teleport_y - settled_y
-            if drop <= threshold:
-                stable.add(agent_idx)
-            else:
+            if drop > threshold:
                 logger.info(
                     "Agent %d 不稳定: teleport_y=%.1f settled_y=%.1f drop=%.1f > %.1f, 跳过",
                     agent_idx, teleport_y, settled_y, drop, threshold,
                 )
+                continue
+            if self._solid_polygons is not None and tip_in_obstacle(
+                obs[agent_idx], self._solid_polygons, self._tip_cfg,
+            ):
+                logger.info(
+                    "Agent %d 锤头卡进障碍物 (tip=%.1f,%.1f), 跳过",
+                    agent_idx, float(obs[agent_idx, 23]), float(obs[agent_idx, 24]),
+                )
+                continue
+            # settle 后落入人工排除区（按实际身体位置判定），兜底剔除
+            if self._exclusion_zones is not None and point_in_exclusion(
+                float(obs[agent_idx, 0]), float(obs[agent_idx, 1]) + self._drop_height,
+                self._exclusion_zones,
+            ):
+                logger.info(
+                    "Agent %d 落在人工排除区 (pos=%.1f,%.1f), 跳过",
+                    agent_idx, float(obs[agent_idx, 0]), float(obs[agent_idx, 1]),
+                )
+                continue
+            stable.add(agent_idx)
         return stable
 
     def collect_random(self, n_steps: int) -> list[Trajectory]:
@@ -372,6 +514,8 @@ class RolloutWorker:
             patches = _build_patches_batch(
                 obs, eff_map, self.config,
                 self._min_gx, self._min_gy, self._terrain_mask,
+                solid_polygons=self._solid_polygons,
+                tip_local=self._tip_local, body_local=self._body_local,
             )
             dynamics = build_dynamics(obs)
 
@@ -420,12 +564,16 @@ class RolloutWorker:
         同时收集 per-agent 原始状态/动作，返回 Trajectory 列表供效率图更新。
         """
         from .ppo_buffer import PPORolloutBuffer as _Buffer
-        from .reward import RewardNormalizer, is_water, step_reward
+        from .reward import NewHighConfirmer, RewardNormalizer, is_water, step_reward
 
         assert self.env is not None, "请先调用 setup() 或 launch_game()"
         num_agents = self.config.num_agents
         ctx = self.config.context_len
         device = next(model.parameters()).device
+
+        # PPO 采集必须关 dropout：否则 old_log_prob 用随机 dropout mask 计算，与更新时重算的
+        # new_log_prob 对不上 → 重要性采样比 ratio 系统性偏离 1 → approx_kl 虚高、策略被污染。
+        model.eval()
 
         obs = self._reset_and_deploy()
 
@@ -451,11 +599,20 @@ class RolloutWorker:
         patch_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
         prev_obs = obs.copy()
         running_max_y = {i: float(obs[i, 1]) for i in stable_agents}
+        # 每 agent 一个确认式创新高器：新高守住 dwell 步才结算，滤除甩飞尖峰
+        confirmers = {
+            i: NewHighConfirmer(
+                float(obs[i, 1]), self.config.dwell_steps, self.config.dwell_drop_tol
+            )
+            for i in stable_agents
+        }
 
         for step in range(n_steps):
             patches = _build_patches_batch(
                 obs, eff_map, self.config,
                 self._min_gx, self._min_gy, self._terrain_mask,
+                solid_polygons=self._solid_polygons,
+                tip_local=self._tip_local, body_local=self._body_local,
             )
             dynamics = build_dynamics(obs)
 
@@ -513,6 +670,7 @@ class RolloutWorker:
                     prev_obs[i], new_obs[i], eff_map, self.config,
                     running_max_y=running_max_y[i],
                     normalizer=normalizer,
+                    confirmer=confirmers[i],
                 )
                 agent_buffers[i].add(
                     dynamics_window=dw,
@@ -536,6 +694,8 @@ class RolloutWorker:
         patches = _build_patches_batch(
             obs, eff_map, self.config,
             self._min_gx, self._min_gy, self._terrain_mask,
+            solid_polygons=self._solid_polygons,
+            tip_local=self._tip_local, body_local=self._body_local,
         )
         dynamics = build_dynamics(obs)
         for i in stable_agents:

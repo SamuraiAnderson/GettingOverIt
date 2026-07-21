@@ -35,6 +35,10 @@ from training.config import TrainConfig
 from training.deploy_sampling import (
     build_all_deploy_candidates,
     compute_drop_points,
+    default_candidate_points_path,
+    default_exclusion_zones_path,
+    filter_points_by_exclusion,
+    load_exclusion_zones,
     sample_deploy_candidates_stratified,
 )
 
@@ -323,7 +327,7 @@ def plot_map(
         ax.add_collection(pc)
 
     # --- 可着陆表面（每条线段用不同颜色） ---
-    cmap = plt.cm.get_cmap("tab10")
+    cmap = plt.get_cmap("tab10")
     for i, seg in enumerate(segments):
         color = cmap(i % 10)
         label = "landable surface" if i == 0 else None
@@ -350,6 +354,7 @@ def plot_map(
                 label = None
 
     # --- 投放点 ---
+    drop_points = np.asarray(drop_points, dtype=np.float64).reshape(-1, 2)
     if len(drop_points) > 0:
         ax.scatter(drop_points[:, 0], drop_points[:, 1], color="blue", s=40,
                    zorder=5, label=f"drop points (h={drop_height:.1f})")
@@ -442,8 +447,9 @@ def main():
         "--physics-filter-all",
         action="store_true",
         help=(
-            "全量 deploy 候选（顶点或弧长分层采样）物理探测；稳定点写入 "
-            f"{DROP_POINTS_ALL_STABLE_FILENAME}，drop_points.json 仅 L8 子集"
+            "全量 deploy 候选（顶点或弧长分层采样）物理探测；稳定点写入项目 "
+            f"checkpoints/{DROP_POINTS_ALL_STABLE_FILENAME}（train 唯一候选文件），"
+            "drop_points.json 仅 L8 子集（游戏目录）"
         ),
     )
     parser.add_argument(
@@ -474,6 +480,38 @@ def main():
         type=int,
         default=64,
         help="L8 批量探测时每批最多点数（1–64，默认 64）",
+    )
+    parser.add_argument(
+        "--no-tip-obstacle-check",
+        action="store_true",
+        help="关闭「settle 后锤头卡进障碍物则判无效落点」的几何检查（默认开启）",
+    )
+    parser.add_argument(
+        "--tip-angle-source", choices=["pole", "hub"], default="pole",
+        help="锤头多边形重建的锤杆朝向基准（默认 pole=pole→tip）",
+    )
+    parser.add_argument(
+        "--tip-angle-offset", type=float, default=-90.0,
+        help="锤头多边形重建旋转偏移（度，默认 -90，经采样校验）",
+    )
+    parser.add_argument(
+        "--tip-scale", type=float, default=1.0,
+        help="锤头多边形重建缩放（默认 1.0）",
+    )
+    parser.add_argument(
+        "--tip-center-only", action="store_true",
+        help="锤头检查退回旧的「tip 中心单点在实体内」判据（默认用多边形全顶点）",
+    )
+    parser.add_argument(
+        "--exclusion-zones", type=str, default=None,
+        help=(
+            "人工涂抹排除区 json 路径（deploy_exclusion_editor.py 生成）；"
+            f"默认自动读取项目 {default_exclusion_zones_path()}"
+        ),
+    )
+    parser.add_argument(
+        "--no-exclusion", action="store_true",
+        help="忽略人工涂抹排除区（即使文件存在也不过滤）",
     )
     args = parser.parse_args()
 
@@ -553,6 +591,31 @@ def main():
     )
     use_l8_batch = not args.physics_sequential_probes
     l8_bs = max(1, min(int(args.physics_l8_batch_size), UNITY_L8_MAX_DROP_POINTS))
+    # settle 后锤头卡进障碍物 → 无效落点；传入实心多边形做几何判定（默认开启）
+    tip_polygons = None if args.no_tip_obstacle_check else polygons
+
+    # 人工涂抹排除区：落点若落入圆内则剔除（在物理探测前先筛掉，省探测开销）
+    exclusion_zones = None
+    if not args.no_exclusion:
+        excl_path = Path(args.exclusion_zones) if args.exclusion_zones \
+            else default_exclusion_zones_path()
+        exclusion_zones = load_exclusion_zones(excl_path)
+        if exclusion_zones is not None:
+            logger.info("人工排除区: 从 %s 载入 %d 个圆", excl_path, len(exclusion_zones))
+        elif args.exclusion_zones:
+            logger.warning("指定的排除区文件无有效数据: %s", excl_path)
+
+    def _apply_exclusion(pts, tag: str):
+        """按排除区过滤候选/落点数组，返回 (N,2) 数组并记录剔除数。"""
+        if exclusion_zones is None:
+            return np.asarray(pts, dtype=np.float64).reshape(-1, 2)
+        before = len(pts)
+        kept = filter_points_by_exclusion(pts, exclusion_zones)
+        arr = np.asarray(kept, dtype=np.float64).reshape(-1, 2)
+        if before != len(arr):
+            logger.info("人工排除区(%s): %d → %d（剔除 %d）",
+                        tag, before, len(arr), before - len(arr))
+        return arr
 
     physics_meta: dict | None = None
     n_candidates_generated = 0
@@ -562,6 +625,24 @@ def main():
     stable_all_filename: str | None = None
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+    # 锤头几何判据：默认用多边形全顶点（pole/-90/scale=1，经采样校验），
+    # 缺 tip 轮廓或 --tip-center-only 时退回中心单点。
+    tip_cfg = None
+    if tip_polygons is not None and not args.tip_center_only:
+        tip_paths = player_data.get("parts", {}).get("tip", {}).get("paths")
+        if tip_paths:
+            from drop_point_physics import make_tip_recon_config
+            tip_cfg = make_tip_recon_config(
+                tip_paths[0], args.tip_angle_source, args.tip_angle_offset, args.tip_scale,
+            )
+            logger.info("锤头判据: 多边形全顶点 source=%s offset=%.0f scale=%.2f (%d 顶点)",
+                        args.tip_angle_source, args.tip_angle_offset, args.tip_scale,
+                        len(tip_paths[0]))
+        else:
+            logger.warning("player_contour 缺少 tip 轮廓，退回中心单点判据")
+    elif tip_polygons is not None:
+        logger.info("锤头判据: tip 中心单点（--tip-center-only）")
 
     if args.physics_filter_all:
         if args.physics_filter:
@@ -574,6 +655,7 @@ def main():
         candidates = sample_deploy_candidates_stratified(
             segments, drop_height, max_k, rng, height_decay=0.0,
         )
+        candidates = _apply_exclusion(candidates, "physics_filter_all 候选")
         n_candidates_generated = len(candidates)
         logger.info(
             "physics_filter_all: 候选池 %d 点 (上限=%d)，阈值=%.2f settle=%d warmup=%d",
@@ -592,10 +674,13 @@ def main():
             no_launch=args.physics_no_launch,
             use_l8_batch_deploy=use_l8_batch,
             l8_batch_size=l8_bs,
+            solid_polygons=tip_polygons,
+            tip_cfg=tip_cfg,
         )
         stable_all_count = len(stable_all)
-        stable_all_filename = DROP_POINTS_ALL_STABLE_FILENAME
-        stable_path = colliders_dir / stable_all_filename
+        # 全量稳定候选集 = 向 train 传递候选点的唯一文件，写到项目 checkpoints/（随仓库版本化）
+        stable_path = default_candidate_points_path()
+        stable_all_filename = str(stable_path)
         stable_payload = {
             "params": {
                 "drop_height": drop_height,
@@ -619,16 +704,28 @@ def main():
             json.dump(stable_payload, f, indent=2, ensure_ascii=False)
         logger.info("全量稳定点: %s (%d 个)", stable_path, stable_all_count)
 
+        # filter-all 模式下 L8 子集数量由 l8_max_drops 决定（n_drops 仅用于几何/quick 模式）
         unity_cap = min(max(1, args.l8_max_drops), UNITY_L8_MAX_DROP_POINTS)
-        l8_export_count = int(min(n_drops, unity_cap, stable_all_count))
-        drop_points = stable_all[:l8_export_count]
+        l8_export_count = int(min(unity_cap, stable_all_count))
+        if l8_export_count >= stable_all_count:
+            drop_points = stable_all
+        else:
+            # 跨 stable_all（按段顺序）均匀抽取，避免头部聚簇、保证空间覆盖
+            if l8_export_count > 1:
+                sel_idx = [
+                    int(round(i * (stable_all_count - 1) / (l8_export_count - 1)))
+                    for i in range(l8_export_count)
+                ]
+            else:
+                sel_idx = [0]
+            drop_points = [stable_all[j] for j in sel_idx]
         if stable_all_count == 0:
             logger.warning("physics_filter_all: 无稳定点，drop_points.json 将为空")
         elif l8_export_count < stable_all_count:
             logger.info(
-                "L8 子集: 写入 drop_points.json 前 %d 个稳定点 "
-                "(n_drops=%d, l8_max_drops=%d, Unity≤%d)，其余见 %s",
-                l8_export_count, n_drops, args.l8_max_drops,
+                "L8 子集: 从 %d 个稳定点跨段均匀抽取 %d 个写入 drop_points.json "
+                "(l8_max_drops=%d, Unity≤%d)，全量见 %s",
+                stable_all_count, l8_export_count, args.l8_max_drops,
                 UNITY_L8_MAX_DROP_POINTS, stable_all_filename,
             )
 
@@ -641,6 +738,7 @@ def main():
         candidates = compute_drop_points(
             segments, n_candidates_generated, drop_height, height_decay,
         )
+        candidates = _apply_exclusion(candidates, "physics_filter 候选")
         logger.info(
             "物理过滤(quick): 候选 %d 个 (n_drops=%d × oversample=%d)，阈值=%.2f settle=%d warmup=%d",
             len(candidates), n_drops, oversample,
@@ -660,6 +758,8 @@ def main():
             no_launch=args.physics_no_launch,
             use_l8_batch_deploy=use_l8_batch,
             l8_batch_size=l8_bs,
+            solid_polygons=tip_polygons,
+            tip_cfg=tip_cfg,
         )
         if len(drop_points) < n_drops:
             logger.warning(
@@ -669,6 +769,7 @@ def main():
             )
     else:
         drop_points = compute_drop_points(segments, n_drops, drop_height, height_decay)
+        drop_points = _apply_exclusion(drop_points, "几何投放点")
 
     logger.info("投放点 (%d 个):", len(drop_points))
     for i, (dx, dy) in enumerate(drop_points):
@@ -713,6 +814,16 @@ def main():
             "physics_rng_seed": args.physics_rng_seed if args.physics_filter_all else None,
             "physics_use_l8_batch_deploy": use_l8_batch if phys_on else None,
             "physics_l8_batch_size": l8_bs if phys_on else None,
+            "tip_obstacle_check": (not args.no_tip_obstacle_check) if phys_on else None,
+            # 判据已统一为锤头中心点（tip_cfg 不再参与判定）
+            "tip_check_mode": (
+                "tip_center_point"
+                if (phys_on and not args.no_tip_obstacle_check) else None
+            ),
+            "exclusion_applied": exclusion_zones is not None,
+            "exclusion_zones_count": (
+                int(len(exclusion_zones)) if exclusion_zones is not None else 0
+            ),
         },
         "n_segments": len(segments),
         "n_surface_pts": total_pts,

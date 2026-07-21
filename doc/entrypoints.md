@@ -283,7 +283,56 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 
 ---
 
-## 七、Python 客户端 API（`GoiEnv`）
+## 七、落点筛选（离线预处理，L7）
+
+「落点筛选」是一段**独立于训练主循环的离线预处理**：先在可着陆表面上生成候选投放点，再通过**游戏内物理探测**保留能稳定停住的点，缓存供训练时的 `TELEPORT` 空投部署复用。它不在训练热路径上，但决定空投落点的质量。
+
+**命令行入口**：`src/tests/control_interaction/test_l7_surface_airdrop.py`（argparse CLI，`main()`）。
+
+流程分两步：
+
+### 7.1 几何采样候选点（纯数学，无游戏依赖）
+
+`src/training/deploy_sampling.py`：
+
+- `build_all_deploy_candidates()`：取所有可着陆线段的折线顶点，y 加 `drop_height` 后去重，作为候选。
+- `sample_deploy_candidates_stratified()` / `compute_drop_points()`：顶点过多时按**弧长权重**（`height_decay` 可偏向低处）在弧上采样定量候选点（最大余数法分配到各线段）。
+
+### 7.2 物理稳定性筛选（需连游戏）
+
+`src/tests/control_interaction/drop_point_physics.py`，一个候选被保留须**同时满足两个判据**：
+
+1. **竖直稳定**：`teleport(x, y)` → 若干步零动作 settle → `drop = teleport_y - settled_y`，要求 `drop <= settle_drop_threshold`。
+2. **锤头未卡进障碍物**：settle 后取锤头（tip）中心 `obs[.,23:25]`，若其落在任一实心碰撞多边形内则判为**无效落点**并计入 `rejected_tip_in_obstacle`（`deploy_sampling.tip_in_obstacle`）。`solid_polygons=None` 或 L7 `--no-tip-obstacle-check` 关闭整个检查。默认开启中心点判据。`tip_cfg`（轮廓重建配置）保留仅为向后兼容，不再参与判定。
+
+其它要点：
+
+- 默认 **L8 批量探测**：一次 `reset` 后多复制体（≤64）同时传送再统一 settle，与 `RolloutWorker._deploy_agents` 部署方式一致、更快；可设 `use_l8_batch_deploy=False` 退回逐点 2-agent 模式。
+- 三个 API：`filter_all_drop_points_stable`（收集全部稳定点）/ `filter_drop_points_stable`（凑满 `target_count` 即停）/ `probe_drop_points_stability`（只标记不筛）。均接受 `solid_polygons` 参数。
+
+### 7.2.1 人工涂抹排除区（可选，交互）
+
+除自动的稳定/锤头判据外，可用**圆形笔刷**在地图上手动涂抹掉不想投放的区域（如落水口、陷阱、已知死路）。
+
+- **编辑器**：`src/tests/control_interaction/deploy_exclusion_editor.py`（matplotlib 交互）。加载 L7 地图（环境多边形 + 可着陆表面 + 已筛稳定落点）后：左键拖动涂抹、右键拖动擦除、**中键拖动平移**、**滚轮以光标为中心缩放**、`[`/`]` 调笔刷半径、`e` 切换涂/擦、`f` 复位视图、`u` 撤销一笔、`c` 清空、`s` 保存、`r` 重载、`q` 退出。落点按「保留/排除」实时着色。
+- **产物（随仓库版本化）**：`checkpoints/deploy_exclusion_zones.json`（项目内，非游戏目录；`deploy_sampling.default_exclusion_zones_path()`），格式 `{"zones": [[cx, cy, r], ...], "brush_radius", "drop_height"}`，坐标系与投放点一致（世界 x/y，y 含 `drop_height`）。
+- **判据**：落点落入任一圆内（`dist ≤ r`）即剔除（`deploy_sampling.point_in_exclusion` / `filter_points_by_exclusion`）。
+- **生效范围**：
+  - **离线 L7**：物理探测**前**先过滤候选（省探测开销）；`--exclusion-zones <path>` 指定文件，`--no-exclusion` 关闭，默认自动读取上述项目路径。
+  - **运行时 rollout**：`RolloutWorker.setup()` 加载排除区，`_sample_positions` 剔除落入圆的随机采样点并重采补足，固定回退池加载时一并过滤；由 `config.deploy_exclusion_check`（默认 True）开关控制。
+
+### 7.3 产物与训练衔接（候选点唯一文件 → train）
+
+L7 `--physics-filter-all` 产出**全量稳定候选集**，作为向训练传递候选点的**唯一文件**，写入本项目 `checkpoints/drop_points_all_stable.json`（随仓库版本化，`deploy_sampling.default_candidate_points_path()`）。
+
+- `checkpoints/drop_points_all_stable.json`：**唯一候选文件**（train 读取源）。
+- `<game_root>/GoiData/Colliders/drop_points.json`：L8 子集（≤64），仅供独立部署测试 `test_l8_airdrop_deploy.py` 手动使用，与 train 无关。
+
+训练侧投放为 **pool-only**：`main_ppo` / `main_train` 读取上述唯一候选文件 → 在 train 侧做**高度过滤**（保留 `y ≤ y_max_cutoff + drop_height`，`filter_points_by_height`）→ `RolloutWorker.set_candidate_points()`（同时按人工涂抹排除区过滤、清空表面线段）。此后 `_sample_positions` 每轮从候选池无放回抽样投放（`sample_from_fixed_pool`），`_deploy_agents()` 用 `TELEPORT` 部署。**不再在训练侧重算表面线段随机采样**（`set_surface_segments` / `compute_landable_surfaces` 已从 train 路径移除）；表面线段采样仅作为无候选池时的历史回退保留在 `_sample_positions` 内。
+
+---
+
+## 八、Python 客户端 API（`GoiEnv`）
 
 `GoiEnv` 是交互的唯一客户端封装（`src/env/goi_env.py`）：
 
@@ -330,7 +379,7 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 
 ---
 
-## 八、关键约束与易错点
+## 九、关键约束与易错点
 
 - **端口不可硬编码**：统一从 `project.json` 的 `tcp_port` 读取；C# 侧从 `runtime_config.json` 的 `tcpPort` 读取，二者需一致（默认 9000）。
 - **状态维度权威为 `StepController.STATE_DIM=33`**：不依赖持久化的 `config.stateDimension`，避免旧配置残留 29 造成协议错位。改维度会破坏 checkpoint / 轨迹缓存兼容性。
@@ -341,7 +390,7 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 
 ---
 
-## 九、相关文件索引
+## 十、相关文件索引
 
 | 层 | 文件 | 职责 |
 |----|------|------|
@@ -349,6 +398,10 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 | Python 入口 | `src/training/main_train.py` / `main_ppo.py` | BC / PPO 训练入口 |
 | Python 客户端 | `src/env/goi_env.py` | `GoiEnv` TCP 客户端 |
 | Python 生命周期 | `src/training/rollout.py` | `RolloutWorker` 管理游戏交互全流程 |
+| Python 落点筛选 | `src/tests/control_interaction/test_l7_surface_airdrop.py` | L7 落点筛选 CLI 入口（采样 + 物理筛选 + 缓存） |
+| Python 落点排除 | `src/tests/control_interaction/deploy_exclusion_editor.py` | 人工涂抹排除区编辑器（圆形笔刷 → `deploy_exclusion_zones.json`） |
+| Python 落点几何 | `src/training/deploy_sampling.py` | 表面候选点几何采样（纯数学） |
+| Python 落点物理 | `src/tests/control_interaction/drop_point_physics.py` | 游戏内 settle 稳定性物理筛选 |
 | Python 启动 | `src/start/game_launcher.py` / `game_mode_controller.py` | 启动进程 / 写模式信号 |
 | C# 入口 | `src/GameRuntime_v2/Core/GameRuntimeManager.cs` | 插件入口、模式初始化、训练主循环 |
 | C# 通信 | `src/GameRuntime_v2/Communication/TcpStepServer.cs` | TCP 双线程步进服务端 |

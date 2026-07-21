@@ -12,7 +12,15 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
+from matplotlib.path import Path as MplPath
 from torch.utils.data import Dataset
+
+from .reward import progress_metric
+from .deploy_sampling import (
+    player_hub_angle_deg,
+    reconstruct_polygon_world,
+    rod_angle_deg,
+)
 
 if TYPE_CHECKING:
     from .config import TrainConfig
@@ -31,8 +39,15 @@ ANGLE_INDICES = [9, 14, 27]
 # 部件相对 player(0,1) 的位置 (6): hub, slider, handle, pole, tip, cursor
 # cursor(29,30) 相对坐标 = 弹簧力臂，恢复对锤子受力的马尔可夫可观测性
 REL_POS_INDICES = [(5, 6), (10, 11), (15, 16), (19, 20), (23, 24), (29, 30)]
-# 动力学特征总维度: 15 速度 + 3 角度×2(sin/cos) + 6 部件×2(相对坐标) = 33
-DYNAMICS_DIM = len(VELOCITY_INDICES) + len(ANGLE_INDICES) * 2 + len(REL_POS_INDICES) * 2
+# 绝对高度 player_y(1)：唯一**刻意保留的非平移等变项**。水平方向(x)无绝对偏好，
+# 故 dynamics 对 x 平移等变；但重力方向、落水阈值(water_y_threshold)、"爬得越高越好"
+# 的任务目标都以世界 y 为绝对参照系，缺失绝对高度会让策略无法感知海拔/离水距离。
+# 经观测归一化后，绝对 y 与"离水距离 (y - threshold)"等价（同为常数平移），故直接取原始 y。
+ABS_HEIGHT_INDEX = 1
+# 动力学特征总维度: 15 速度 + 3 角度×2(sin/cos) + 6 部件×2(相对坐标) + 1 绝对高度 = 34
+DYNAMICS_DIM = (
+    len(VELOCITY_INDICES) + len(ANGLE_INDICES) * 2 + len(REL_POS_INDICES) * 2 + 1
+)
 
 # 身体部件位置索引: player(0,1), hub(5,6), slider(10,11)
 BODY_POS_INDICES = [(0, 1), (5, 6), (10, 11)]
@@ -47,8 +62,9 @@ def build_dynamics(raw: np.ndarray) -> np.ndarray:
       - 15 维速度/角速度（原始值，含 cursor 速度）
       - 3 个角度 → (sin, cos)，共 6 维（角度先由度转弧度，消除环绕不连续）
       - 6 个部件相对 player 的坐标 (part - player)，共 12 维（含 cursor，保留相对几何精度）
+      - 1 维绝对高度 player_y（唯一非平移等变项，供感知海拔/离水距离，见 ABS_HEIGHT_INDEX）
 
-    支持任意前置维度，末轴须为 33。返回末轴 = DYNAMICS_DIM。
+    支持任意前置维度，末轴须为 33（原始 state_dim）。返回末轴 = DYNAMICS_DIM(34)。
     """
     raw = np.asarray(raw, dtype=np.float32)
     vel = raw[..., VELOCITY_INDICES]
@@ -63,7 +79,9 @@ def build_dynamics(raw: np.ndarray) -> np.ndarray:
         rel_parts.append(raw[..., yi:yi + 1] - py)
     rel = np.concatenate(rel_parts, axis=-1)
 
-    return np.concatenate([vel, ang_feat, rel], axis=-1).astype(np.float32)
+    abs_y = raw[..., ABS_HEIGHT_INDEX:ABS_HEIGHT_INDEX + 1]
+
+    return np.concatenate([vel, ang_feat, rel, abs_y], axis=-1).astype(np.float32)
 
 
 def compute_dynamics_stats(trajectories: list) -> tuple[np.ndarray, np.ndarray]:
@@ -109,8 +127,7 @@ def crop_centered(
     全局数组分辨率 arr_res=1.0m，patch 分辨率 patch_res=0.5m。
     先裁剪 arr_size×arr_size 区域，再最近邻上采样到 size×size。
     """
-    arr_size = int(size * patch_res / arr_res)
-    scale = size // arr_size
+    arr_size = max(1, int(round(size * patch_res / arr_res)))
 
     gx_center = x / arr_res - min_gx
     gy_center = y / arr_res - min_gy
@@ -131,9 +148,79 @@ def crop_centered(
         crop[sy_lo - gy_start : sy_hi - gy_start,
              sx_lo - gx_start : sx_hi - gx_start] = arr[sy_lo:sy_hi, sx_lo:sx_hi]
 
-    if scale > 1:
-        crop = np.repeat(np.repeat(crop, scale, axis=0), scale, axis=1)
-    return crop
+    return _resample_square(crop, size)
+
+
+def _resample_square(a: np.ndarray, out_size: int) -> np.ndarray:
+    """把 (n, n) 方阵重采样到 (out_size, out_size)。
+
+    放大：整除时 np.repeat，否则最近邻；缩小：整除时块平均，否则最近邻。
+    支持 patch_res>arr_res（wide 大窗口降采样）与 patch_res<arr_res（上采样）。
+    """
+    n = a.shape[0]
+    if n == out_size:
+        return a
+    if out_size > n:
+        if out_size % n == 0:
+            s = out_size // n
+            return np.repeat(np.repeat(a, s, axis=0), s, axis=1)
+        idx = (np.arange(out_size) * n // out_size)
+        return a[np.ix_(idx, idx)]
+    if n % out_size == 0:
+        s = n // out_size
+        return a.reshape(out_size, s, out_size, s).mean(axis=(1, 3)).astype(np.float32)
+    idx = (np.arange(out_size) * n // out_size)
+    return a[np.ix_(idx, idx)]
+
+
+def _grid_point_world(
+    cx: float, cy: float, size: int, patch_res: float,
+) -> np.ndarray:
+    """以 (cx, cy) 为中心的 size×size 网格的各格中心世界坐标点 (size*size, 2)。
+
+    行索引随世界 y 增大而增大（与 crop_centered / render_gaussian 一致），列随 x 增大。
+    """
+    half = size / 2.0
+    offs = (np.arange(size, dtype=np.float64) - half + 0.5) * patch_res
+    xs = cx + offs
+    ys = cy + offs
+    gx, gy = np.meshgrid(xs, ys)  # (size, size) row=y, col=x
+    return np.column_stack([gx.ravel(), gy.ravel()])
+
+
+def rasterize_solid_local(
+    cx: float, cy: float, size: int, patch_res: float,
+    polygons: list[np.ndarray],
+) -> np.ndarray:
+    """以 (cx, cy) 为中心、patch_res 精度栅格化实心地形 mask (size, size)。
+
+    对每格中心点做「在任一实心多边形内」判定；多边形按窗口 bbox 预筛以省算力。
+    """
+    pts = _grid_point_world(cx, cy, size, patch_res)
+    mask = np.zeros(pts.shape[0], dtype=bool)
+    half = size / 2.0 * patch_res
+    wminx, wmaxx = cx - half, cx + half
+    wminy, wmaxy = cy - half, cy + half
+    for poly in polygons:
+        p = np.asarray(poly, dtype=np.float64)
+        if len(p) < 3:
+            continue
+        if (p[:, 0].max() < wminx or p[:, 0].min() > wmaxx
+                or p[:, 1].max() < wminy or p[:, 1].min() > wmaxy):
+            continue
+        mask |= MplPath(p).contains_points(pts)
+    return mask.reshape(size, size).astype(np.float32)
+
+
+def rasterize_polygon_fill(
+    world_poly: np.ndarray, cx: float, cy: float, size: int, patch_res: float,
+) -> np.ndarray:
+    """把世界坐标多边形填充进以 (cx, cy) 为中心的 size×size 网格 → (size, size) 0/1。"""
+    p = np.asarray(world_poly, dtype=np.float64)
+    if len(p) < 3:
+        return np.zeros((size, size), dtype=np.float32)
+    pts = _grid_point_world(cx, cy, size, patch_res)
+    return MplPath(p).contains_points(pts).reshape(size, size).astype(np.float32)
 
 
 def render_gaussian(
@@ -166,15 +253,77 @@ def build_patch(
     config: TrainConfig,
     min_gx: int,
     min_gy: int,
+    solid_polygons: list[np.ndarray] | None = None,
+    tip_local: np.ndarray | None = None,
+    body_local: list[np.ndarray] | None = None,
 ) -> np.ndarray:
-    """构建单样本 4ch patch（以 player 为中心）。
+    """构建单样本 patch（以 player 为中心）。
 
-    通道: ch0 地形可通行 mask, ch1 攀爬效率图, ch2 身体部件 blob, ch3 锤子部件 blob。
+    - legacy 模式（config.patch_mode=="legacy"）：4ch = 地形 mask / 效率图 / 身体 blob / 锤子 blob。
+    - dualscale 模式：见 doc/training.md。
+      wide `[0]` 攀爬效率图（player 中心，大范围低精度）；
+      contact `[1:4]`（player 中心，中高精度，co-registered）=
+        高精度地形实心 mask、锅/body 轮廓、锤头轮廓。
 
     离线数据集（__getitem__）与在线采集/推理（rollout._build_patches_batch）
     共享此唯一实现，保证两侧 patch 逐通道完全一致，避免训练/推理分叉。
-    `efficiency_arr` 为效率图数组（在线侧由 eff_map.get_arr() 取得），可为 None。
     """
+    if config.patch_mode == "legacy":
+        return _build_patch_legacy(
+            state, terrain_mask, efficiency_arr, config, min_gx, min_gy,
+        )
+
+    px, py = float(state[0]), float(state[1])
+    size = config.patch_size
+    patch = np.zeros((config.patch_channels, size, size), dtype=np.float32)
+    contact_res = config.contact_patch_resolution
+
+    # [0] wide 攀爬效率图（player 中心，大范围低精度降采样）
+    if efficiency_arr is not None:
+        patch[0] = crop_centered(
+            efficiency_arr.astype(np.float32),
+            px, py, min_gx, min_gy,
+            size=size, patch_res=config.wide_patch_resolution,
+            arr_res=config.grid_resolution,
+        )
+
+    # [1] contact 高精度地形实心 mask（player 中心，局部栅格化）
+    if solid_polygons is not None and len(solid_polygons) > 0:
+        patch[1] = rasterize_solid_local(px, py, size, contact_res, solid_polygons)
+
+    # [2] contact 锅/body 碰撞轮廓（player 中心 + player→hub 朝向重建）
+    if body_local:
+        theta_b = player_hub_angle_deg(state) + config.body_angle_offset
+        for poly in body_local:
+            world = reconstruct_polygon_world(
+                (px, py), theta_b, poly, config.body_scale,
+            )
+            np.maximum(
+                patch[2],
+                rasterize_polygon_fill(world, px, py, size, contact_res),
+                out=patch[2],
+            )
+
+    # [3] contact 锤头碰撞轮廓（tip 世界中心 + pole→tip 朝向重建，填进 player 中心网格）
+    if tip_local is not None and len(tip_local) > 0:
+        theta_t = rod_angle_deg(state, config.tip_angle_source) + config.tip_angle_offset
+        world = reconstruct_polygon_world(
+            (float(state[23]), float(state[24])), theta_t, tip_local, config.tip_scale,
+        )
+        patch[3] = rasterize_polygon_fill(world, px, py, size, contact_res)
+
+    return patch
+
+
+def _build_patch_legacy(
+    state: np.ndarray,
+    terrain_mask: np.ndarray | None,
+    efficiency_arr: np.ndarray | None,
+    config: TrainConfig,
+    min_gx: int,
+    min_gy: int,
+) -> np.ndarray:
+    """原单尺度 4ch patch：ch0 地形 mask, ch1 效率图, ch2 身体 blob, ch3 锤子 blob。"""
     px, py = float(state[0]), float(state[1])
     size = config.patch_size
     patch = np.zeros((config.patch_channels, size, size), dtype=np.float32)
@@ -256,12 +405,19 @@ class TrajectoryDataset(Dataset):
         efficiency_arr: np.ndarray | None,
         min_gx: int = 0,
         min_gy: int = 0,
+        solid_polygons: list[np.ndarray] | None = None,
+        tip_local: np.ndarray | None = None,
+        body_local: list[np.ndarray] | None = None,
     ):
         self.config = config
         self.terrain_mask = terrain_mask
         self.efficiency_arr = efficiency_arr
         self._min_gx = min_gx
         self._min_gy = min_gy
+        # dualscale 接触分支几何（legacy 模式忽略）
+        self.solid_polygons = solid_polygons
+        self.tip_local = tip_local
+        self.body_local = body_local
         self.trajectories: list[Trajectory] = []
         self._index: list[tuple[int, int]] = []  # (traj_idx, window_start)
 
@@ -308,12 +464,16 @@ class TrajectoryDataset(Dataset):
         观测 obs_0..obs_tau（含当前 obs_tau）与历史动作 act_0..act_{tau-1}。
         早期步 (tau < ctx-1) 通过左填充 + key_padding_mask 处理，与推理起步阶段一致。
 
-        peak 截断: tau ∈ [0, min(peak_t, T-1)]，排除越过最高点后的跌落段。
+        secured peak 截断: tau ∈ [0, min(peak_idx, T-1)]，peak_idx 为 progress_metric 的
+        secured 峰（dwell 驻留过滤甩飞尖峰后的守住峰），排除越过峰后的跌落段与瞬时尖峰段，
+        与 base_score / score_trajectory / 效率图 update 的口径统一。
         """
         self._index = []
         for ti, traj in enumerate(self.trajectories):
-            peak_t = int(traj.raw_states[:, 1].argmax())
-            max_target = min(peak_t, len(traj.actions) - 1)
+            _progress, peak_idx, _dy, _reach = progress_metric(
+                traj.raw_states, self.config
+            )
+            max_target = min(peak_idx, len(traj.actions) - 1)
             for tau in range(max_target + 1):
                 self._index.append((ti, tau))
 
@@ -354,7 +514,7 @@ class TrajectoryDataset(Dataset):
         )
 
     def _build_patch(self, step_state: np.ndarray) -> np.ndarray:
-        """即时构建 4ch patch（委托模块级 build_patch，保证离线/在线一致）。"""
+        """即时构建 patch（委托模块级 build_patch，保证离线/在线一致）。"""
         return build_patch(
             step_state,
             self.terrain_mask,
@@ -362,4 +522,7 @@ class TrajectoryDataset(Dataset):
             self.config,
             self._min_gx,
             self._min_gy,
+            solid_polygons=self.solid_polygons,
+            tip_local=self.tip_local,
+            body_local=self.body_local,
         )

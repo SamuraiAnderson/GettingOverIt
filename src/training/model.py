@@ -2,8 +2,8 @@
 ActionPredictor — 多模态 Transformer 动作预测网络。
 
 双模态输入:
-- 动力学分支: Linear(state_dim, d_model) 编码平移等变动力学特征
-  （速度/角速度 + 角度 sin/cos + 部件相对坐标），并做观测归一化
+- 动力学分支: Linear(DYNAMICS_DIM, d_model) 编码动力学特征
+  （速度/角速度 + 角度 sin/cos + 部件相对坐标 + 绝对高度），并做观测归一化
 - 空间感知分支: CNN(4ch, 32x32) → 128D 局部 patch
 融合后送入 Transformer Encoder，交错拼接 [obs, act] 序列，预测 a_{t+1}。
 左填充位通过 key_padding_mask 在注意力中被忽略。
@@ -17,12 +17,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from .dataset import DYNAMICS_DIM
+
 if TYPE_CHECKING:
     from .config import TrainConfig
 
 
 class SpatialEncoder(nn.Module):
-    """CNN 编码 4 通道 32x32 局部 patch → d_model 维特征。"""
+    """CNN 编码 in_channels 通道 32x32 局部 patch → out_dim 维特征（单分支）。"""
 
     def __init__(self, in_channels: int = 4, d_model: int = 128):
         super().__init__()
@@ -42,8 +44,38 @@ class SpatialEncoder(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """x: (N, 4, 32, 32) → (N, d_model)"""
+        """x: (N, C, 32, 32) → (N, d_model)"""
         return self.net(x)
+
+
+class DualScaleSpatialEncoder(nn.Module):
+    """按 config.patch_mode 编码 patch → d_model 维特征。
+
+    - legacy: 单 CNN 编码全部 patch_channels（与旧模型一致）。
+    - dualscale: 通道切分为 wide(`[:wide_channels]`) 与 contact(`[wide_channels:]`)，
+      两路独立 CNN → 各 d_model//2 → concat → Linear(d_model)。两分支不同物理尺度，
+      故必须分开卷积（同一 conv 混不同尺度无意义）。
+    """
+
+    def __init__(self, config: TrainConfig, d_model: int = 128):
+        super().__init__()
+        self.mode = config.patch_mode
+        if self.mode == "legacy":
+            self.encoder = SpatialEncoder(config.patch_channels, d_model)
+        else:
+            self.wide_channels = config.wide_channels
+            half = d_model // 2
+            self.wide = SpatialEncoder(config.wide_channels, half)
+            self.contact = SpatialEncoder(config.contact_channels, d_model - half)
+            self.proj = nn.Linear(half + (d_model - half), d_model)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x: (N, C, 32, 32) → (N, d_model)"""
+        if self.mode == "legacy":
+            return self.encoder(x)
+        w = self.wide(x[:, : self.wide_channels])
+        c = self.contact(x[:, self.wide_channels :])
+        return self.proj(torch.cat([w, c], dim=1))
 
 
 def build_key_padding_mask(valid_mask: torch.Tensor | None) -> torch.Tensor | None:
@@ -51,13 +83,43 @@ def build_key_padding_mask(valid_mask: torch.Tensor | None) -> torch.Tensor | No
 
     交错序列 [obs_t, act_t] 中同一时间步的两个 token 共享有效性，
     因此在时间维上做 repeat_interleave(2) 展开到 2T。
-    返回浮点加性掩码（填充位 -inf，与 causal attn_mask 类型一致，避免类型混用告警）；
-    最后一个时间步恒为有效，保证不会出现整行 -inf 导致的 NaN。
+    返回浮点加性掩码（填充位 -inf，与 causal attn_mask 类型一致，避免类型混用告警）。
     """
     if valid_mask is None:
         return None
     pad = (valid_mask < 0.5).repeat_interleave(2, dim=1)  # (B, 2T) True=填充
     return torch.zeros_like(pad, dtype=torch.float32).masked_fill(pad, float("-inf"))
+
+
+def build_attn_mask(
+    seq_len: int,
+    valid_mask: torch.Tensor | None,
+    nhead: int,
+    device: torch.device,
+) -> torch.Tensor:
+    """构造 causal + key_padding 的合并加性注意力掩码。
+
+    关键：左填充窗口里，早期填充位的 query 在 causal（只能看 ≤ 自身）叠加 key_padding
+    （自身及更早均为填充）后会得到**整行 -inf**，softmax 产生 NaN，并经融合注意力核
+    污染到末位有效 token（PyTorch 已知陷阱）。这些填充位的输出本就被丢弃，故对每个 query
+    强制放开对角线（允许注意自身），消除整行 -inf；有效 query 的注意力不受影响。
+
+    返回：
+      - valid_mask 为 None：causal (seq_len, seq_len)。
+      - 否则：合并掩码 (B*nhead, seq_len, seq_len)，供 nn.TransformerEncoder 的 mask 使用
+        （此时不再单独传 src_key_padding_mask）。
+    """
+    causal = torch.triu(
+        torch.full((seq_len, seq_len), float("-inf"), device=device), diagonal=1
+    )
+    if valid_mask is None:
+        return causal
+
+    kpm = build_key_padding_mask(valid_mask).to(device)          # (B, seq_len) 加性
+    combined = causal.unsqueeze(0) + kpm.unsqueeze(1)            # (B, seq_len, seq_len)
+    eye = torch.eye(seq_len, dtype=torch.bool, device=device).unsqueeze(0)
+    combined = combined.masked_fill(eye, 0.0)                    # 放开自注意力，防整行 -inf
+    return combined.repeat_interleave(nhead, dim=0)             # (B*nhead, seq_len, seq_len)
 
 
 class _DynamicsNormMixin:
@@ -89,7 +151,11 @@ class _DynamicsNormMixin:
         return bool(self.dyn_stats_ready.item())
 
     def _normalize_dynamics(self, dynamics: torch.Tensor) -> torch.Tensor:
-        return (dynamics - self.dyn_mean) / self.dyn_std
+        normed = (dynamics - self.dyn_mean) / self.dyn_std
+        clip = getattr(getattr(self, "config", None), "dynamics_clip", 0.0)
+        if clip and clip > 0:
+            normed = normed.clamp(-clip, clip)
+        return normed
 
 
 class ActionPredictor(_DynamicsNormMixin, nn.Module):
@@ -97,7 +163,7 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
     Transformer 动作预测网络。
 
     输入: (dynamics, patches, actions) → 预测 a_{t+1}
-    - dynamics: (B, T, state_dim=33)
+    - dynamics: (B, T, DYNAMICS_DIM=34)
     - patches: (B, T, 4, 32, 32)
     - actions: (B, T, 2)
 
@@ -111,11 +177,12 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
         self.config = config
 
         # 观测归一化 buffer（随 state_dict 保存/加载）
-        self._register_dynamics_norm(config.state_dim)
+        # 维度用 DYNAMICS_DIM（build_dynamics 输出=34），而非 config.state_dim（原始 33 维）
+        self._register_dynamics_norm(DYNAMICS_DIM)
 
         # 双模态编码
-        self.spatial_encoder = SpatialEncoder(config.patch_channels, d)
-        self.dynamics_proj = nn.Linear(config.state_dim, d)
+        self.spatial_encoder = DualScaleSpatialEncoder(config, d)
+        self.dynamics_proj = nn.Linear(DYNAMICS_DIM, d)
 
         # 融合: concat(128 + 128) → 128
         self.fusion = nn.Linear(d * 2, d)
@@ -196,12 +263,11 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
         positions = torch.arange(2 * T, device=dynamics.device)
         seq = seq + self.pos_embed(positions).unsqueeze(0)
 
-        # Transformer + causal mask + padding mask
-        mask = self._causal_mask(2 * T, dynamics.device)
-        key_padding_mask = build_key_padding_mask(valid_mask)
-        out = self.transformer(
-            seq, mask=mask, src_key_padding_mask=key_padding_mask
-        )  # (B, 2T, d)
+        # Transformer + 合并注意力掩码（causal + padding，对角线安全，防整行 -inf → NaN）
+        attn_mask = build_attn_mask(
+            2 * T, valid_mask, self.config.nhead, dynamics.device
+        )
+        out = self.transformer(seq, mask=attn_mask)  # (B, 2T, d)
 
         # 取最后一个 token → action head
         last_token = out[:, -1, :]  # (B, d)

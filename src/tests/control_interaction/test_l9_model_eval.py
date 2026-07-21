@@ -30,16 +30,17 @@ if str(_REPO_ROOT / "src") not in sys.path:
 
 from training.config import TrainConfig
 from training.dataset import (
-    BODY_POS_INDICES,
-    HAMMER_POS_INDICES,
     build_dynamics,
-    crop_centered,
-    render_gaussian,
+    build_patch,
 )
+from training.deploy_sampling import extract_body_local, extract_tip_local
 from training.model import ActionPredictor
 from training.actor_critic import ActorCritic
 from training.reward import ClimbingEfficiencyMap
 from training.rollout import _build_history_window
+
+sys.path.insert(0, str(_REPO_ROOT / "src" / "tests" / "control_interaction"))
+from test_l7_surface_airdrop import extract_polygons, load_colliders
 
 logger = logging.getLogger(__name__)
 
@@ -52,52 +53,6 @@ def _get_game_root() -> Path:
     return Path(cfg["game"]["executable_path"]).parent
 
 
-def _build_patch(
-    obs_1d: np.ndarray,
-    config: TrainConfig,
-    terrain_mask: np.ndarray | None,
-    eff_arr: np.ndarray | None,
-    min_gx: int,
-    min_gy: int,
-) -> np.ndarray:
-    """为单个观测构建 4ch 32x32 patch。"""
-    ps = config.patch_size
-    patch = np.zeros((config.patch_channels, ps, ps), dtype=np.float32)
-    px, py = float(obs_1d[0]), float(obs_1d[1])
-
-    if terrain_mask is not None:
-        patch[0] = crop_centered(
-            terrain_mask.astype(np.float32),
-            px, py, min_gx, min_gy,
-            size=ps, patch_res=config.patch_resolution,
-            arr_res=config.grid_resolution,
-        )
-
-    if eff_arr is not None:
-        patch[1] = crop_centered(
-            eff_arr.astype(np.float32),
-            px, py, min_gx, min_gy,
-            size=ps, patch_res=config.patch_resolution,
-            arr_res=config.grid_resolution,
-        )
-
-    for bx_idx, by_idx in BODY_POS_INDICES:
-        render_gaussian(
-            patch[2],
-            float(obs_1d[bx_idx]), float(obs_1d[by_idx]),
-            px, py, patch_res=config.patch_resolution,
-        )
-
-    for hx_idx, hy_idx in HAMMER_POS_INDICES:
-        render_gaussian(
-            patch[3],
-            float(obs_1d[hx_idx]), float(obs_1d[hy_idx]),
-            px, py, patch_res=config.patch_resolution,
-        )
-
-    return patch
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="L9: 模型评估 — 单 agent 无噪声推理")
     parser.add_argument(
@@ -105,6 +60,10 @@ def parse_args() -> argparse.Namespace:
         help="模型权重路径（自动识别 BC / PPO checkpoint）",
     )
     parser.add_argument("--steps", type=int, default=1000, help="推理步数")
+    parser.add_argument(
+        "--repeat", type=int, default=1,
+        help="同一 checkpoint 复跑次数（>1 时报 secured 高度分布，抵消游戏方差）",
+    )
     parser.add_argument(
         "--output", type=str, default="logs/eval_trajectory.json",
         help="输出轨迹 JSON 路径",
@@ -150,29 +109,53 @@ def main() -> None:
     model = model.to(device)
     model.eval()
 
-    # ── 加载地形 mask ──
-    mask_cache = Path(config.checkpoint_dir) / "cache" / "traversable_mask.npz"
-    terrain_mask = None
-    min_gx, min_gy = 0, 0
-    if mask_cache.exists():
-        data = np.load(mask_cache)
-        terrain_mask = data["mask"].astype(bool)
-        min_gx, min_gy = int(data["min_gx"]), int(data["min_gy"])
-        logger.info("地形 mask 已加载: shape=%s", terrain_mask.shape)
-    else:
-        logger.warning("未找到地形缓存 %s，patch 通道 0 将为空", mask_cache)
+    # ── 构建 dualscale patch 所需几何（与训练一致：build_patch 共享实现）──
+    game_root = _get_game_root()
+    env_data, player_data = load_colliders(game_root)
+    polygons = extract_polygons(env_data)
+    tip_local = extract_tip_local(player_data)
+    body_local = extract_body_local(player_data)
 
-    # ── 加载效率图 ──
+    cache_dir = Path(config.checkpoint_dir) / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    mask_cache = str(cache_dir / "traversable_mask.npz")
+    eff_map = ClimbingEfficiencyMap(
+        polygons,
+        grid_resolution=config.grid_resolution,
+        diffusion_iterations=config.diffusion_iterations,
+        diffusion_alpha=config.diffusion_alpha,
+        cache_path=mask_cache,
+        height_prior_weight=config.height_prior_weight,
+    )
+    # 用 warmup_state.pkl 缓存的轨迹回放价值，复现训练时 wide 通道看到的效率图
     warmup_path = Path(config.checkpoint_dir) / "warmup_state.pkl"
-    eff_arr = None
     if warmup_path.exists():
-        with open(warmup_path, "rb") as f:
-            warmup_state = pickle.load(f)
-        eff_arr = warmup_state.get("eff_arr")
-        if eff_arr is not None:
-            logger.info("效率图已加载: shape=%s", eff_arr.shape)
-    else:
-        logger.warning("未找到 warmup_state.pkl，patch 通道 1 将为空")
+        try:
+            from training.dataset import Trajectory
+            with open(warmup_path, "rb") as f:
+                ws = pickle.load(f)
+            trajs = [
+                Trajectory(
+                    raw_states=d["raw_states"], actions=d["actions"],
+                    score=d.get("score", 0.0), iteration=d.get("iteration", 0),
+                )
+                for d in ws.get("trajectories", [])
+            ]
+            if trajs:
+                eff_map.update(trajs, config, prev_eff_map=None)
+                logger.info("效率图已按 %d 条缓存轨迹回放", len(trajs))
+        except Exception as e:
+            logger.warning("效率图轨迹回放失败（wide 通道退化为零）: %s", e)
+
+    terrain_mask = eff_map.traversable
+    eff_arr = eff_map.get_arr()
+    min_gx, min_gy = eff_map._min_gx, eff_map._min_gy
+    logger.info(
+        "地形/效率图就绪: mask=%s, eff_max=%.3f, patch_mode=%s",
+        terrain_mask.shape,
+        float(np.nanmax(eff_arr)) if eff_arr is not None else 0.0,
+        config.patch_mode,
+    )
 
     # ── 启动游戏 ──
     from start.game_launcher import GameLauncher
@@ -200,41 +183,37 @@ def main() -> None:
     env.toggle_collider_visual(False)
     logger.info("Warmup 完成，开始推理")
 
-    # ── 推理循环 ──
+    # ── 推理循环（可复跑 N 次以抵消游戏方差）──
+    from training.reward import progress_metric
+
     ctx = config.context_len
     scale = config.action_scale
     n_steps = args.steps
+    repeat = max(1, args.repeat)
 
-    obs = env.reset()
+    def run_episode(verbose: bool):
+        """跑一回合：env.reset() → n_steps 确定性推理，返回 (states_arr, actions_arr)。"""
+        obs = env.reset()
+        all_states = [obs[0].copy()]
+        all_actions: list[np.ndarray] = []
+        dyn_history: list[np.ndarray] = []
+        act_history: list[np.ndarray] = []
+        patch_history: list[np.ndarray] = []
+        max_y = float(obs[0, 1])
 
-    all_states = [obs[0].copy()]
-    all_actions = []
-    dyn_history = []
-    act_history = []
-    patch_history = []
-
-    max_y = float(obs[0, 1])
-    start_y = float(obs[0, 1])
-
-    logger.info("=" * 60)
-    logger.info("开始推理: %d 步, 起始 y=%.2f", n_steps, start_y)
-    logger.info("=" * 60)
-
-    try:
         for step in range(n_steps):
             cur_obs = obs[0]
-
-            patch = _build_patch(cur_obs, config, terrain_mask, eff_arr, min_gx, min_gy)
+            patch = build_patch(
+                cur_obs, terrain_mask, eff_arr, config, min_gx, min_gy,
+                solid_polygons=polygons, tip_local=tip_local, body_local=body_local,
+            )
             dynamics = build_dynamics(cur_obs)
-
             dyn_history.append(dynamics.copy())
             patch_history.append(patch.copy())
 
             dyn_window, pat_window, act_window, valid_mask = _build_history_window(
-                dyn_history, patch_history, act_history,
-                ctx, config.state_dim,
+                dyn_history, patch_history, act_history, ctx,
             )
-
             if is_ppo:
                 pred = model.predict_deterministic(
                     dyn_window, pat_window, act_window, valid_mask=valid_mask
@@ -244,9 +223,7 @@ def main() -> None:
                     dyn_window, pat_window, act_window, valid_mask=valid_mask
                 )
             action = np.clip(pred, -scale, scale).astype(np.float32)
-
-            actions_batch = action.reshape(1, 2)
-            obs, _ = env.step(actions_batch)
+            obs, _ = env.step(action.reshape(1, 2))
 
             all_states.append(obs[0].copy())
             all_actions.append(action.copy())
@@ -256,20 +233,44 @@ def main() -> None:
             if cur_y > max_y:
                 max_y = cur_y
 
+            if verbose:
+                logger.info(
+                    "  step %4d/%d | pos=(%.2f, %.2f) | action=(%.4f, %.4f) | max_y=%.2f",
+                    step + 1, n_steps, float(obs[0, 0]), cur_y,
+                    float(action[0]), float(action[1]), max_y,
+                )
+
+        return np.array(all_states), (
+            np.array(all_actions) if all_actions else np.zeros((0, 2))
+        )
+
+    logger.info("=" * 60)
+    logger.info("开始评估: checkpoint=%s, %d 步 × %d 回合", ckpt_path, n_steps, repeat)
+    logger.info("=" * 60)
+
+    records: list[dict] = []
+    last_states = last_actions = None
+    try:
+        for ep in range(repeat):
+            states_arr, actions_arr = run_episode(verbose=(repeat == 1))
+            last_states, last_actions = states_arr, actions_arr
+
+            start_y = float(states_arr[0][1])
+            final_y = float(states_arr[-1][1])
+            max_y = float(states_arr[:, 1].max())
+            # secured 口径（与训练/数据集排序一致）：dwell 确认后的净爬升 + 门控右向 reach
+            _progress, _peak_idx, secured_dy, reach = progress_metric(states_arr, config)
+
+            records.append({
+                "start_y": start_y, "final_y": final_y, "max_y": max_y,
+                "secured_dy": float(secured_dy), "reach": float(reach),
+            })
             logger.info(
-                "  step %4d/%d | pos=(%.2f, %.2f) | pred=(%.4f, %.4f) | "
-                "action=(%.4f, %.4f) | dyn=[%s] | max_y=%.2f",
-                step + 1, n_steps,
-                float(obs[0, 0]), cur_y,
-                float(pred[0]), float(pred[1]),
-                float(action[0]), float(action[1]),
-                ", ".join(f"{d:.3f}" for d in dynamics[:6]),
-                max_y,
+                "回合 %d/%d: secured_dy=%.2f  reach=%.2f  peak_Δ=%.2f  final_Δ=%.2f",
+                ep + 1, repeat, secured_dy, reach, max_y - start_y, final_y - start_y,
             )
-
     except KeyboardInterrupt:
-        logger.info("用户中断，已完成 %d 步", len(all_actions))
-
+        logger.info("用户中断，已完成 %d 回合", len(records))
     finally:
         env.close()
         if process is not None:
@@ -279,35 +280,46 @@ def main() -> None:
             except Exception:
                 pass
 
-    # ── 保存轨迹 ──
-    final_y = float(all_states[-1][1])
-    states_arr = np.array(all_states)
-    actions_arr = np.array(all_actions) if all_actions else np.zeros((0, 2))
+    # ── 保存最后一回合轨迹 ──
+    if last_states is not None:
+        result = {
+            "checkpoint": str(ckpt_path),
+            "steps": int(last_actions.shape[0]),
+            "repeat": repeat,
+            "records": records,
+            "states": last_states.tolist(),
+            "actions": last_actions.tolist(),
+        }
+        out_path = Path(args.output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, ensure_ascii=False)
+        logger.info("轨迹已保存: %s (%.1f MB)", out_path, out_path.stat().st_size / 1e6)
 
-    result = {
-        "checkpoint": str(ckpt_path),
-        "steps": len(all_actions),
-        "start_y": round(start_y, 3),
-        "max_y": round(max_y, 3),
-        "final_y": round(final_y, 3),
-        "states": states_arr.tolist(),
-        "actions": actions_arr.tolist(),
-    }
+    # ── 打印报告（secured 为主指标）──
+    def _stats(key: str) -> str:
+        vals = np.array([r[key] for r in records], dtype=np.float64)
+        return (
+            f"mean={vals.mean():.2f}  std={vals.std():.2f}  "
+            f"min={vals.min():.2f}  median={np.median(vals):.2f}  max={vals.max():.2f}"
+        )
 
-    out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False)
-    logger.info("轨迹已保存: %s (%.1f MB)", out_path, out_path.stat().st_size / 1e6)
-
-    # ── 打印报告 ──
     logger.info("=" * 60)
-    logger.info("评估报告")
-    logger.info("  Checkpoint: %s", ckpt_path)
-    logger.info("  步数: %d", len(all_actions))
-    logger.info("  起始 y: %.2f", start_y)
-    logger.info("  最高 y: %.2f  (Δ=%.2f)", max_y, max_y - start_y)
-    logger.info("  最终 y: %.2f  (Δ=%.2f)", final_y, final_y - start_y)
+    logger.info("评估报告  Checkpoint: %s", ckpt_path)
+    logger.info("  回合数: %d  (每回合 %d 步)", len(records), n_steps)
+    if records:
+        logger.info("  secured_dy (主指标): %s", _stats("secured_dy"))
+        logger.info("  reach     (右向)   : %s", _stats("reach"))
+        peak_deltas = np.array([r["max_y"] - r["start_y"] for r in records])
+        final_deltas = np.array([r["final_y"] - r["start_y"] for r in records])
+        logger.info(
+            "  raw peak_Δ (诊断)  : mean=%.2f  std=%.2f  min=%.2f  max=%.2f",
+            peak_deltas.mean(), peak_deltas.std(), peak_deltas.min(), peak_deltas.max(),
+        )
+        logger.info(
+            "  raw final_Δ(诊断)  : mean=%.2f  std=%.2f  min=%.2f  max=%.2f",
+            final_deltas.mean(), final_deltas.std(), final_deltas.min(), final_deltas.max(),
+        )
     logger.info("=" * 60)
 
 

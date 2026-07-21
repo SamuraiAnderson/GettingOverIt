@@ -385,27 +385,42 @@ namespace GoiRuntime.Core
 		// 训练模式下必须禁用，否则任何 agent 落水都会破坏整个物理控制
 		DisableWaterReset();
 
+		// 激活 RL 模式（必须在 StepController.Initialize 拍快照/姿态归一化之前）：
+		//   1. 阻止 PlayerControl.Update() 继续用真实鼠标驱动 cursor（否则初始姿态被污染）
+		//   2. 激活 Rewired 拦截，使姿态归一化的注入 mouseInput 生效
+		GoiRuntime.PlayerControl.PlayerControlUpdatePatch.RlModeActive = true;
+		GoiRuntime.PlayerControl.RewiredMouseOverride.Active = true;
+		Logger.LogInfo("RL 模式已激活（Rewired 拦截 mouseX/mouseY，注入值将替换真实鼠标）");
+
 		// --- StepController ---
 		// 状态维度以 StepController.STATE_DIM 为唯一权威（含 fakeCursor 的 33 维），
 		// 不依赖持久化的 config.stateDimension，避免旧配置文件残留 29 造成协议不一致。
 			stepController = new StepController(numAgents, config.stepFrames, StepController.STATE_DIM, config.actionDimension);
-			if (!stepController.Initialize(playerStateService, playerInputService, duplicateManager))
+			if (!stepController.Initialize(
+				playerStateService, playerInputService, duplicateManager,
+				config.normalizeInitialPose, config.initPoseSettleFrames,
+				config.initCursorUpScale, config.initCursorOffsetX, config.initPoseGain))
 			{
 				Logger.LogError("StepController 初始化失败，中止");
 				return;
 			}
 			Logger.LogInfo($"StepController 初始化成功（{numAgents} agent，每 step {config.stepFrames} 物理帧）");
 
+			// --- 视觉修复：启动角色手臂骨骼动画(PoseControl IK) ---
+			// RL 模式跳过游戏原生载入，从不调 StartAnimator，手臂会停在绑定姿(视觉扭曲)。
+			// 只改手/肘 mesh，不影响物理与 33D 状态。仅对原始 Player(agent 0，唯一可见)启动。
+			if (config.startAnimatorInRlMode)
+			{
+				if (playerInputService.StartPoseAnimator())
+					Logger.LogInfo("已启动 PoseControl 手臂动画（视觉修复）");
+				else
+					Logger.LogWarning("StartAnimator 调用失败，手臂视觉未修复（不影响训练）");
+			}
+
 			// --- TCP 步进服务器 ---
 			tcpStepServer = new TcpStepServer(StepController.STATE_DIM);
 			tcpStepServer.StartListening(config.tcpPort);
 			Logger.LogInfo($"TcpStepServer 已启动，监听端口 {config.tcpPort}");
-
-		// 激活 RL 模式：阻止 PlayerControl.Update() 读取真实鼠标
-		GoiRuntime.PlayerControl.PlayerControlUpdatePatch.RlModeActive = true;
-		// action 名称已确认为 "mouseX"/"mouseY"，直接激活拦截
-		GoiRuntime.PlayerControl.RewiredMouseOverride.Active = true;
-		Logger.LogInfo("RL 模式已激活（Rewired 拦截 mouseX/mouseY，注入值将替换真实鼠标）");
 
 		// --- 碰撞箱可视化（默认开启，黑底白环境 + 彩色 Player）---
 		var mainCam = Camera.main;

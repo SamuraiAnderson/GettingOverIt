@@ -13,7 +13,9 @@ namespace GoiRuntime.PlayerControl
 	/// </summary>
 	public static class RewiredMouseOverride
 	{
-		public const int MAX_AGENTS = 8;
+		// 与 PlayerDuplicateManager.MAX_DUPLICATES 对齐（agent 0 为原始 Player + 最多 63 复制体）。
+		// 注意：此值必须 >= 训练时的 num_agents，否则 SetForAgent 会丢弃、GetAxis 拦截会数组越界。
+		public const int MAX_AGENTS = 64;
 
 		public static readonly float[] InjectedX = new float[MAX_AGENTS];
 		public static readonly float[] InjectedY = new float[MAX_AGENTS];

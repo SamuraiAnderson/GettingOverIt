@@ -86,6 +86,7 @@ class PPOTrainer:
     def __init__(self, config: TrainConfig):
         self.config = config
         self.optimizer: AdamW | None = None
+        self.critic_optimizer: AdamW | None = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._global_step = 0
         self._pending_optim_state: dict | None = None
@@ -95,6 +96,70 @@ class PPOTrainer:
     def set_pending_optimizer_state(self, state_dict: dict) -> None:
         """暂存 optimizer state_dict，在首次 update 创建 optimizer 后应用。"""
         self._pending_optim_state = state_dict
+
+    def update_critic_only(
+        self,
+        model: ActorCritic,
+        buffer: PPORolloutBuffer,
+    ) -> dict[str, float]:
+        """
+        Critic 预热：冻结 backbone + actor，只拟合 critic_head。
+
+        目的：BC 迁移后 critic_head 是随机初始化，若直接做 PPO，优势值来自随机价值函数会把
+        策略推爆。先用独立优化器（仅含 critic_head 参数，避免 AdamW 权重衰减污染冻结的 BC 权重）
+        在冻结的 BC 特征上拟合价值，使优势值有意义后再开策略更新。
+        """
+        model = model.to(self.device)
+        model.eval()  # 关 dropout：保证与采集/PPO 更新的 log_prob 口径一致（见 update 注释）
+        buffer.device = self.device
+
+        if self.critic_optimizer is None:
+            self.critic_optimizer = AdamW(
+                model.critic_head.parameters(),
+                lr=self.config.lr,
+                weight_decay=self.config.weight_decay,
+            )
+
+        cfg = self.config
+        total_value_loss = 0.0
+        n_updates = 0
+        for _epoch in range(cfg.value_warmup_epochs):
+            for batch in buffer.get_batches(
+                cfg.ppo_batch_size, normalize_advantages=False,
+            ):
+                _, _, new_value = model.evaluate_actions(
+                    batch.dynamics,
+                    batch.patches,
+                    batch.act_history,
+                    batch.actions,
+                    valid_mask=batch.valid_mask,
+                )
+                value_loss = 0.5 * (new_value - batch.returns).pow(2).mean()
+                if not torch.isfinite(value_loss):
+                    model.zero_grad(set_to_none=True)
+                    continue
+                model.zero_grad(set_to_none=True)  # 清空全部梯度（backbone 梯度不使用）
+                value_loss.backward()
+                clip_grad_norm_(
+                    model.critic_head.parameters(), self.config.max_grad_norm_cap
+                )
+                self.critic_optimizer.step()
+                total_value_loss += value_loss.item()
+                n_updates += 1
+
+        n = max(n_updates, 1)
+        return {
+            "policy_loss": 0.0,
+            "value_loss": total_value_loss / n,
+            "entropy": 0.0,
+            "approx_kl": 0.0,
+            "clip_fraction": 0.0,
+            "total_loss": total_value_loss / n,
+            "n_updates": float(n_updates),
+            "target_kl": float(self._kl_adapter.target or 0),
+            "max_grad_norm": self._grad_norm_adapter.max_grad_norm,
+            "value_only": 1.0,
+        }
 
     def update(
         self,
@@ -108,7 +173,9 @@ class PPOTrainer:
           policy_loss, value_loss, entropy, approx_kl, clip_fraction, total_loss
         """
         model = model.to(self.device)
-        model.train()
+        # 关 dropout（eval 不影响梯度）：PPO 的 ratio 依赖 old/new log_prob 在相同权重下一致，
+        # dropout 的随机 mask 会破坏这一点，使 ratio≠1、approx_kl 虚高、策略被噪声推爆。
+        model.eval()
         buffer.device = self.device
 
         if self.optimizer is None:
@@ -220,16 +287,17 @@ class PPOTrainer:
                 n_updates += 1
                 self._global_step += 1
 
-            # KL 早停 (使用自适应 target)
-            effective_kl = self._kl_adapter.target
-            if effective_kl is not None and n_updates > 0:
-                avg_kl = total_approx_kl / n_updates
-                if avg_kl > effective_kl:
+                # KL 早停：逐 minibatch 检查，超阈值立即停止（防止整个 epoch 无保护更新把 KL 冲爆）
+                effective_kl = self._kl_adapter.target
+                if effective_kl is not None and approx_kl > cfg.ppo_kl_stop_factor * effective_kl:
                     logger.info(
-                        "KL 早停: epoch %d/%d, avg_kl=%.4f > target_kl=%.4f",
-                        epoch + 1, cfg.ppo_epochs, avg_kl, effective_kl,
+                        "KL 早停(minibatch): epoch %d/%d, update %d, "
+                        "approx_kl=%.4f > %.2f×target_kl=%.4f",
+                        epoch + 1, cfg.ppo_epochs, n_updates,
+                        approx_kl, cfg.ppo_kl_stop_factor, effective_kl,
                     )
                     early_stopped = True
+                    break
 
         n = max(n_updates, 1)
         final_avg_kl = total_approx_kl / n
@@ -249,3 +317,82 @@ class PPOTrainer:
             "max_grad_norm": self._grad_norm_adapter.max_grad_norm,
         }
         return metrics
+
+    def sil_update(
+        self, model: ActorCritic, dataset, loss_coef: float | None = None
+    ) -> dict[str, float]:
+        """
+        Self-Imitation：对精英轨迹池做 BC 监督，把 actor 均值锚向历史最优动作。
+
+        损失用 MSE-on-mean（squash 后的均值 vs 精英动作），只作用于 actor_mean/backbone，
+        不碰 actor_log_std → 不压制探索。在 update() 之后调用，复用同一 optimizer。
+        dataset 为 TrajectoryDataset，__getitem__ 产出
+        (dynamics, patches, input_actions, valid_mask, target_action)。
+        """
+        from torch.utils.data import DataLoader
+
+        cfg = self.config
+        coef = cfg.sil_loss_coef if loss_coef is None else loss_coef
+        if len(dataset) == 0:
+            return {}
+
+        model = model.to(self.device)
+        model.eval()  # 关 dropout：与 PPO 采集/更新口径一致
+
+        if self.optimizer is None:
+            # SIL 正常在 update() 之后调用（optimizer 已建）；兜底以防单独调用。
+            self.optimizer = AdamW(
+                model.parameters(),
+                lr=cfg.lr,
+                weight_decay=cfg.weight_decay,
+            )
+
+        loader = DataLoader(
+            dataset,
+            batch_size=cfg.sil_batch_size,
+            shuffle=True,
+            drop_last=False,
+            num_workers=cfg.sil_num_workers,
+        )
+
+        max_batches = cfg.sil_max_batches if cfg.sil_max_batches > 0 else None
+        total_loss = 0.0
+        n_updates = 0
+        stop = False
+        for _epoch in range(cfg.sil_epochs):
+            if stop:
+                break
+            for dyn, pat, act_hist, vm, target in loader:
+                if max_batches is not None and n_updates >= max_batches:
+                    stop = True
+                    break
+                dyn = dyn.to(self.device)
+                pat = pat.to(self.device)
+                act_hist = act_hist.to(self.device)
+                vm = vm.to(self.device)
+                target = target.to(self.device)
+
+                dist, _ = model.forward(dyn, pat, act_hist, valid_mask=vm)
+                mean_sq = torch.tanh(dist.mean) * model._action_scale
+                loss = coef * F.mse_loss(mean_sq, target)
+
+                if not torch.isfinite(loss):
+                    self.optimizer.zero_grad(set_to_none=True)
+                    continue
+
+                self.optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                clip_grad_norm_(
+                    model.parameters(), self._grad_norm_adapter.max_grad_norm
+                )
+                self.optimizer.step()
+
+                total_loss += loss.item()
+                n_updates += 1
+
+        return {
+            "sil_loss": total_loss / max(n_updates, 1),
+            "sil_trajs": float(len(dataset.trajectories)),
+            "sil_windows": float(len(dataset)),
+            "sil_updates": float(n_updates),
+        }

@@ -70,7 +70,12 @@ namespace GoiRuntime.Core
 		public bool Initialize(
 			PlayerStateService originStateService,
 			PlayerInputService originInputService,
-			PlayerDuplicateManager duplicateManager)
+			PlayerDuplicateManager duplicateManager,
+			bool normalizePose = false,
+			int settleFrames = 120,
+			float upScale = 1.0f,
+			float offsetX = 0f,
+			float gain = 15f)
 		{
 			inputServices.Clear();
 			stateServices.Clear();
@@ -110,6 +115,12 @@ namespace GoiRuntime.Core
 			Physics2D.simulationMode = SimulationMode2D.Script;
 			Debug.Log($"[StepController] Physics2D.simulationMode = Script（持久）");
 			Debug.Log($"[StepController] fixedDeltaTime = {Time.fixedDeltaTime:F4}s，每 step 推进 {stepFrames} 帧");
+
+			// --- 初始姿态归一化（须在拍快照前）---
+			// 修复初始锤子扭曲：RL 激活前真实鼠标已把 cursor 拖到随机位置，
+			// 这里用闭环把 cursor 驱到 hub 上方的确定位置，得到一致且非扭曲的起始姿态。
+			if (normalizePose)
+				NormalizeInitialPose(settleFrames, upScale, offsetX, gain);
 
 			// --- 保存各 agent 初始快照 ---
 			CaptureAllSnapshots();
@@ -369,6 +380,156 @@ namespace GoiRuntime.Core
 			}
 			return result;
 		}
+
+	// ── 初始姿态归一化 ──────────────────────────────────────────
+
+	// ── 游戏原生静止姿态（反编译 Saviour.ResetPlayerButNotDialogue 提取）──────
+	// 各刚体相对 Player 根(body)的位置偏移。顺序 = GetComponentsInChildren<Rigidbody2D>：
+	//   0 body / 1 Hub / 2 Slider / 3 Handle / 4 PoleMiddle / 5 Tip。
+	// 原始绝对坐标（游戏 -r 复位硬编码）：
+	//   body(-44.2926,-2.4218) hub(-44.2926,-1.8218) slider(-44.2926,-1.8218)
+	//   handle(-44.3906,-1.7535) pole(-43.4309,-2.4262) tip(-42.5466,-3.0462)
+	private static readonly Vector2[] NATIVE_REL_POS = new Vector2[]
+	{
+		new Vector2( 0.000000f,  0.000000f),  // body
+		new Vector2( 0.000000f,  0.600000f),  // Hub
+		new Vector2( 0.000000f,  0.600000f),  // Slider
+		new Vector2(-0.098025f,  0.668360f),  // Handle
+		new Vector2( 0.861649f, -0.004411f),  // PoleMiddle
+		new Vector2( 1.745987f, -0.624371f),  // Tip
+	};
+	// 各刚体角度（度），同样取自 -r 复位硬编码（rbAngles 静态数组）。
+	private static readonly float[] NATIVE_ANGLE =
+		{ -0.089379f, 0f, -34.89184f, 145.1082f, 144.9679f, 144.9679f };
+
+	/// <summary>
+	/// 把每个 agent 的锤子归一化到游戏原生的自然静止姿态。
+	///
+	/// 直接照搬游戏 `Saviour.ResetPlayerButNotDialogue`（按 -r 复位）硬编码的整套刚体姿态：
+	/// 逐刚体写入相对 body 的固定位置 + 固定角度 + 零速度，再把 fakeCursor 吸附到锤头
+	/// （复刻 `Saviour.Load` 结尾的 `cursor.position = hammer.position`，零牵引力），
+	/// 最后零输入静置若干帧让关节收敛到精确平衡。
+	///
+	/// 相比旧实现（仅吸附光标到当前锤头再靠重力回位）：本法确定性地重建整条锤臂，
+	/// 无论 RL 激活前光标被真实鼠标拖到哪里、锤臂是否交叉扭曲，都能得到唯一正确姿态。
+	/// 须在物理已切 Script 模式、且 RewiredMouseOverride.Active=true 之后调用。
+	/// （参数 upScale/offsetX/gain 已废弃，保留仅为兼容调用方。）
+	/// </summary>
+	private void NormalizeInitialPose(int settleFrames, float upScale, float offsetX, float gain)
+	{
+		// 1. 逐 agent 硬写原生姿态
+		for (int i = 0; i < numAgents; i++)
+		{
+			var isvc = inputServices[i];
+			var ssvc = stateServices[i];
+			if (ssvc == null || !ssvc.IsReady) continue;
+
+			GameObject go = ssvc.GetPlayerObject();
+			if (go == null) continue;
+			var rootRb = go.GetComponent<Rigidbody2D>();
+			if (rootRb == null) continue;
+			Vector2 body = rootRb.position;
+
+			foreach (var rb in go.GetComponentsInChildren<Rigidbody2D>(true))
+			{
+				int idx = MapRigidbodyToNativeIndex(rb, go.transform);
+				if (idx < 0) continue;
+				rb.position        = body + NATIVE_REL_POS[idx];
+				rb.rotation        = NATIVE_ANGLE[idx];
+				rb.velocity        = Vector2.zero;
+				rb.angularVelocity = 0f;
+			}
+
+			// fakeCursor 吸附到锤头(Tip 目标位)：光标=锤子 → 零牵引
+			Rigidbody2D fcRB = isvc?.GetFakeCursorRB();
+			if (fcRB != null)
+			{
+				fcRB.position        = body + NATIVE_REL_POS[5];
+				fcRB.velocity        = Vector2.zero;
+				fcRB.angularVelocity = 0f;
+			}
+		}
+
+		// 2. 零输入静置：让关节从精确姿态收敛到物理平衡（每帧把光标跟到当前锤头，避免牵引）
+		int frames = settleFrames > 0 ? settleFrames : 1;
+		for (int f = 0; f < frames; f++)
+		{
+			for (int i = 0; i < numAgents; i++)
+			{
+				var isvc = inputServices[i];
+				var ssvc = stateServices[i];
+				if (isvc == null || !isvc.IsReady) continue;
+
+				Rigidbody2D fcRB = isvc.GetFakeCursorRB();
+				if (fcRB != null && ssvc != null && ssvc.IsReady)
+				{
+					float[] s = ssvc.GetStateArray();
+					if (s != null && s.Length >= BASE_STATE_DIM)
+					{
+						fcRB.position        = new Vector2(s[23], s[24]);
+						fcRB.velocity        = Vector2.zero;
+						fcRB.angularVelocity = 0f;
+					}
+				}
+				isvc.SetMouseInput(Vector2.zero);
+				isvc.InvokeFixedUpdate();
+			}
+			Physics2D.Simulate(Time.fixedDeltaTime);
+		}
+
+		// 3. 收尾：清零注入残留 + 光标再次吸附锤头
+		GoiRuntime.PlayerControl.RewiredMouseOverride.Reset();
+		for (int i = 0; i < numAgents; i++)
+		{
+			var isvc = inputServices[i];
+			var ssvc = stateServices[i];
+			if (isvc == null || !isvc.IsReady) continue;
+			Rigidbody2D fcRB = isvc.GetFakeCursorRB();
+			if (fcRB != null && ssvc != null && ssvc.IsReady)
+			{
+				float[] s = ssvc.GetStateArray();
+				if (s != null && s.Length >= BASE_STATE_DIM)
+				{
+					fcRB.position = new Vector2(s[23], s[24]);
+					fcRB.velocity = Vector2.zero;
+				}
+			}
+			isvc.SetMouseInput(Vector2.zero);
+		}
+
+		// 4. 诊断：打印各 agent 锤臂相对 body 的关键偏移，核对是否与原生一致
+		for (int i = 0; i < numAgents; i++)
+		{
+			var ssvc = stateServices[i];
+			if (ssvc == null || !ssvc.IsReady) continue;
+			float[] s = ssvc.GetStateArray();
+			if (s == null || s.Length < BASE_STATE_DIM) continue;
+			Vector2 bodyPos = new Vector2(s[0], s[1]);
+			Debug.Log($"[StepController] agent{i} 原生姿态重建后 hub-body=({s[5]-s[0]:F2},{s[6]-s[1]:F2}) " +
+				$"tip-body=({s[23]-s[0]:F2},{s[24]-s[1]:F2})（期望 hub≈(0.00,0.60) tip≈(1.75,-0.62)）");
+		}
+
+		Debug.Log($"[StepController] 初始姿态归一化(重建原生摆位)完成 (settle={frames})");
+	}
+
+	/// <summary>
+	/// 把一个 Rigidbody2D 映射到 NATIVE_REL_POS / NATIVE_ANGLE 的索引。
+	/// body 用「transform==根」判定（复制体根名可能带后缀），其余按部件名匹配。
+	/// 返回 -1 表示非锤臂刚体（跳过）。
+	/// </summary>
+	private static int MapRigidbodyToNativeIndex(Rigidbody2D rb, Transform root)
+	{
+		if (rb.transform == root) return 0;
+		switch (rb.name)
+		{
+			case "Hub":        return 1;
+			case "Slider":     return 2;
+			case "Handle":     return 3;
+			case "PoleMiddle": return 4;
+			case "Tip":        return 5;
+			default:           return -1;
+		}
+	}
 
 	// ── 快照管理 ──────────────────────────────────────────────
 

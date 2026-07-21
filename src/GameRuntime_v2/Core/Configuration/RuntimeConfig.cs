@@ -103,6 +103,39 @@ namespace GoiRuntime.Core.Configuration
 
 		#endregion
 
+		#region 初始姿态归一化
+
+		/// <summary>
+		/// 是否在拍初始快照前把锤子归一化到确定的自然姿态。
+		/// 修复：RL 模式激活前 PlayerControl.Update() 会用「启动瞬间真实鼠标位置」驱动 cursor，
+		/// 导致初始锤子姿态随机扭曲（双手交叉）。开启后直接照搬游戏 -r 复位硬编码的整套刚体姿态
+		/// （反编译 Saviour.ResetPlayerButNotDialogue 提取），逐刚体写入位置+角度，姿态唯一确定。
+		/// </summary>
+		public bool normalizeInitialPose = true;
+
+		/// <summary>硬写原生姿态后零输入静置的物理帧数（让关节收敛到精确平衡）。</summary>
+		public int initPoseSettleFrames = 120;
+
+		/// <summary>
+		/// RL 模式初始化后是否调用 PlayerControl.StartAnimator() 启动角色手臂骨骼动画。
+		/// 默认关闭：实测在 RL 模式下 PoseControl.LateUpdate 的 IK 依赖游戏原生载入流程配置的
+		/// 引用(lookTarget/dudeMeshHub/spline 等)，我们跳过了该流程 → LateUpdate 抛 NullReference，
+		/// 手臂仍停在绑定姿且刷错误日志。要真正修复需 Harmony 补丁给 IK 加空引用保护；因纯视觉、
+		/// 不影响物理/33D 状态/训练，暂不值得。保留开关便于将来实现 IK 补丁后一键启用。
+		/// </summary>
+		public bool startAnimatorInRlMode = false;
+
+		/// <summary>cursor 目标高度 = hub 上方 hammerLen * upScale（1.0 ≈ 锤子竖直向上）。</summary>
+		public float initCursorUpScale = 1.0f;
+
+		/// <summary>cursor 目标相对 hub 的水平偏移（0 = 正上方）。</summary>
+		public float initCursorOffsetX = 0f;
+
+		/// <summary>闭环比例增益：注入动作 = clamp(gain * (target - cursor), ±maxInput)。</summary>
+		public float initPoseGain = 15f;
+
+		#endregion
+
 		#region 路径配置
 
 		/// <summary>

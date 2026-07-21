@@ -320,6 +320,33 @@ namespace GoiRuntime.PlayerControl
 		}
 		
 		/// <summary>
+		/// 通过反射调用 PlayerControl.StartAnimator()，启动角色手臂骨骼动画(PoseControl IK)。
+		/// RL 模式跳过了游戏原生载入流程，从不调用 StartAnimator，导致手臂停在绑定姿(视觉扭曲)。
+		/// 该方法只影响手/肘的 mesh(LateUpdate IK)，不触碰任何 Rigidbody2D、不影响物理与 33D 状态。
+		/// </summary>
+		public bool StartPoseAnimator()
+		{
+			if (!isInitialized || playerControlComponent == null) return false;
+			try
+			{
+				MethodInfo m = playerControlComponent.GetType().GetMethod("StartAnimator",
+					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				if (m == null)
+				{
+					Debug.LogWarning("[PlayerInputService] 未找到 PlayerControl.StartAnimator 方法");
+					return false;
+				}
+				m.Invoke(playerControlComponent, null);
+				return true;
+			}
+			catch (Exception e)
+			{
+				Debug.LogWarning($"[PlayerInputService] StartAnimator 调用失败: {e.Message}");
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// 通过反射获取 PlayerControl 内部的 fakeCursorRB (Rigidbody2D)。
 		/// 用于 StepController 的快照/重置。
 		/// </summary>

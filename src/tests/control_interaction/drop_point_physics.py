@@ -15,10 +15,29 @@ from typing import Any
 
 import numpy as np
 
+from training.deploy_sampling import (
+    TipReconConfig,
+    make_tip_recon_config,
+    tip_in_obstacle as _tip_in_obstacle,
+)
+
 logger = logging.getLogger(__name__)
 
 # 与 PlayerDuplicateManager.MAX_DUPLICATES 一致：最多 64 个复制体 + agent 0
 UNITY_MAX_DUPLICATES = 64
+
+# 锤头判定逻辑（TipReconConfig / make_tip_recon_config / _tip_in_obstacle）已下沉到
+# 生产模块 training.deploy_sampling，供离线筛选（本文件）与运行时投放（rollout）共用；
+# 此处再导出，保持 L7 入口 `from drop_point_physics import make_tip_recon_config` 不变。
+__all__ = ["TipReconConfig", "make_tip_recon_config"]
+
+
+def _tip_check_mode(solid_polygons, tip_cfg) -> str:
+    """记录到 meta 的锤头检查模式说明。"""
+    if solid_polygons is None or len(solid_polygons) == 0:
+        return "off"
+    # 判据已统一为「锤头中心点」；tip_cfg 保留仅为兼容，不再影响判定。
+    return "tip_center_point"
 
 
 def try_drop_stable(
@@ -29,10 +48,14 @@ def try_drop_stable(
     agent_index: int = 1,
     settle_steps: int,
     threshold: float,
-) -> tuple[bool, float]:
+    solid_polygons=None,
+    tip_cfg=None,
+) -> tuple[bool, float, bool]:
     """
     调用前须已 reset() 到基准快照。
     teleport → settle_steps 步零动作 → 计算 drop 与 threshold 比较。
+
+    返回 (ok, drop, tip_in_obstacle)。ok 要求竖直落差 <= threshold 且锤头未卡进障碍物。
     """
     teleport_y = float(y)
     env.teleport(x, y, agent_index=agent_index)
@@ -43,7 +66,8 @@ def try_drop_stable(
         obs, _ = env.step(zero)
     settled_y = float(obs[agent_index, 1])
     drop = teleport_y - settled_y
-    return drop <= threshold, drop
+    tip_bad = _tip_in_obstacle(obs[agent_index], solid_polygons, tip_cfg)
+    return (drop <= threshold and not tip_bad), drop, tip_bad
 
 
 def _warmup_and_snapshot(env, num_agents: int, warmup_steps: int) -> None:
@@ -89,16 +113,21 @@ def _chunk_drops_and_stable(
     chunk: np.ndarray,
     obs: np.ndarray,
     threshold: float,
-) -> tuple[list[bool], list[float]]:
+    solid_polygons=None,
+    tip_cfg=None,
+) -> tuple[list[bool], list[float], list[bool]]:
     out_ok: list[bool] = []
     out_drop: list[float] = []
+    out_tip_bad: list[bool] = []
     for i in range(len(chunk)):
         ty = float(chunk[i, 1])
         sy = float(obs[i + 1, 1])
         dr = ty - sy
-        out_ok.append(dr <= threshold)
+        tip_bad = _tip_in_obstacle(obs[i + 1], solid_polygons, tip_cfg)
+        out_ok.append(dr <= threshold and not tip_bad)
         out_drop.append(dr)
-    return out_ok, out_drop
+        out_tip_bad.append(tip_bad)
+    return out_ok, out_drop, out_tip_bad
 
 
 def filter_drop_points_stable(
@@ -115,12 +144,16 @@ def filter_drop_points_stable(
     no_launch: bool = False,
     use_l8_batch_deploy: bool = True,
     l8_batch_size: int = UNITY_MAX_DUPLICATES,
+    solid_polygons=None,
+    tip_cfg=None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """
     顺序考察 candidates，保留稳定点直到凑满 target_count 或达到 max_tries。
 
     use_l8_batch_deploy=True（默认）：每批最多 l8_batch_size 个点，一次 reset 后多 agent
     同时传送再统一 settle，与 L8 / _deploy_agents 一致。
+
+    solid_polygons 非空时，settle 后锤头卡进障碍物的候选也判为不稳定并计入 rejected。
     """
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
@@ -148,6 +181,8 @@ def filter_drop_points_stable(
         "warmup_steps": warmup_steps,
         "use_l8_batch_deploy": use_l8_batch_deploy,
         "l8_batch_size": eff_bs,
+        "tip_obstacle_check": solid_polygons is not None and len(solid_polygons) > 0,
+        "tip_check_mode": _tip_check_mode(solid_polygons, tip_cfg),
     }
 
     if not use_l8_batch_deploy:
@@ -168,17 +203,20 @@ def filter_drop_points_stable(
             )
             kept: list[list[float]] = []
             rejected = 0
+            rejected_tip = 0
             tried = 0
             for i in range(limit):
                 if len(kept) >= target_count:
                     break
                 x, y = float(candidates[i, 0]), float(candidates[i, 1])
                 env.reset()
-                ok, drop = try_drop_stable(
+                ok, drop, tip_bad = try_drop_stable(
                     env, x, y,
                     agent_index=1,
                     settle_steps=settle_steps,
                     threshold=settle_drop_threshold,
+                    solid_polygons=solid_polygons,
+                    tip_cfg=tip_cfg,
                 )
                 tried += 1
                 if ok:
@@ -186,13 +224,22 @@ def filter_drop_points_stable(
                     logger.info(
                         "[physics_filter] 候选 #%d 稳定 drop=%.3f", i, drop,
                     )
+                elif tip_bad:
+                    rejected += 1
+                    rejected_tip += 1
+                    logger.info(
+                        "[physics_filter] 候选 #%d 锤头卡入障碍物 drop=%.3f", i, drop,
+                    )
                 else:
                     rejected += 1
                     logger.info(
                         "[physics_filter] 候选 #%d 不稳定 drop=%.3f > %.3f",
                         i, drop, settle_drop_threshold,
                     )
-            meta.update({"tried": tried, "kept": len(kept), "rejected": rejected})
+            meta.update({
+                "tried": tried, "kept": len(kept), "rejected": rejected,
+                "rejected_tip_in_obstacle": rejected_tip,
+            })
             return np.array(kept, dtype=np.float64), meta
         finally:
             _teardown_env_and_process(env, proc)
@@ -218,6 +265,7 @@ def filter_drop_points_stable(
         )
         kept_b: list[list[float]] = []
         rejected = 0
+        rejected_tip = 0
         tried = 0
         i = 0
         while len(kept_b) < target_count and i < limit:
@@ -225,8 +273,8 @@ def filter_drop_points_stable(
             chunk = candidates[i : i + take]
             i += take
             obs = _deploy_chunk_settle(env, chunk, settle_steps)
-            oks, drops = _chunk_drops_and_stable(
-                chunk, obs, settle_drop_threshold,
+            oks, drops, tip_bads = _chunk_drops_and_stable(
+                chunk, obs, settle_drop_threshold, solid_polygons, tip_cfg,
             )
             # 本批已统一 settle，须逐点统计；已满 target 时仍计入 tried，不再收录稳定点
             for j in range(len(chunk)):
@@ -243,13 +291,23 @@ def filter_drop_points_stable(
                             "[physics_filter] 候选稳定但已满额 drop=%.3f (批内 #%d)",
                             drops[j], j,
                         )
+                elif tip_bads[j]:
+                    rejected += 1
+                    rejected_tip += 1
+                    logger.info(
+                        "[physics_filter] 候选锤头卡入障碍物 drop=%.3f (批内 #%d)",
+                        drops[j], j,
+                    )
                 else:
                     rejected += 1
                     logger.info(
                         "[physics_filter] 候选不稳定 drop=%.3f > %.3f (批内 #%d)",
                         drops[j], settle_drop_threshold, j,
                     )
-        meta.update({"tried": tried, "kept": len(kept_b), "rejected": rejected})
+        meta.update({
+            "tried": tried, "kept": len(kept_b), "rejected": rejected,
+            "rejected_tip_in_obstacle": rejected_tip,
+        })
         return np.array(kept_b, dtype=np.float64), meta
     finally:
         _teardown_env_and_process(env, proc)
@@ -268,9 +326,13 @@ def filter_all_drop_points_stable(
     no_launch: bool = False,
     use_l8_batch_deploy: bool = True,
     l8_batch_size: int = UNITY_MAX_DUPLICATES,
+    solid_polygons=None,
+    tip_cfg=None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """
     对候选探测，收集全部稳定点。max_probes: 最多探测前若干个；None 表示全部。
+
+    solid_polygons 非空时，settle 后锤头卡进障碍物的候选也判为不稳定并计入 rejected。
     """
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
@@ -298,6 +360,8 @@ def filter_all_drop_points_stable(
         "warmup_steps": warmup_steps,
         "use_l8_batch_deploy": use_l8_batch_deploy,
         "l8_batch_size": eff_bs,
+        "tip_obstacle_check": solid_polygons is not None and len(solid_polygons) > 0,
+        "tip_check_mode": _tip_check_mode(solid_polygons, tip_cfg),
     }
 
     if not use_l8_batch_deploy:
@@ -318,19 +382,28 @@ def filter_all_drop_points_stable(
             )
             kept: list[list[float]] = []
             rejected = 0
+            rejected_tip = 0
             for i in range(m):
                 x, y = float(candidates[i, 0]), float(candidates[i, 1])
                 env.reset()
-                ok, drop = try_drop_stable(
+                ok, drop, tip_bad = try_drop_stable(
                     env, x, y,
                     agent_index=1,
                     settle_steps=settle_steps,
                     threshold=settle_drop_threshold,
+                    solid_polygons=solid_polygons,
+                    tip_cfg=tip_cfg,
                 )
                 if ok:
                     kept.append([x, y])
                     logger.info(
                         "[physics_filter_all] #%d 稳定 drop=%.3f", i, drop,
+                    )
+                elif tip_bad:
+                    rejected += 1
+                    rejected_tip += 1
+                    logger.info(
+                        "[physics_filter_all] #%d 锤头卡入障碍物 drop=%.3f", i, drop,
                     )
                 else:
                     rejected += 1
@@ -338,7 +411,10 @@ def filter_all_drop_points_stable(
                         "[physics_filter_all] #%d 不稳定 drop=%.3f > %.3f",
                         i, drop, settle_drop_threshold,
                     )
-            meta.update({"tried": m, "kept": len(kept), "rejected": rejected})
+            meta.update({
+                "tried": m, "kept": len(kept), "rejected": rejected,
+                "rejected_tip_in_obstacle": rejected_tip,
+            })
             return np.array(kept, dtype=np.float64), meta
         finally:
             _teardown_env_and_process(env, proc)
@@ -363,6 +439,7 @@ def filter_all_drop_points_stable(
         )
         kept_b: list[list[float]] = []
         rejected = 0
+        rejected_tip = 0
         tried = 0
         i = 0
         while i < m:
@@ -370,8 +447,8 @@ def filter_all_drop_points_stable(
             chunk = candidates[i : i + take]
             i += take
             obs = _deploy_chunk_settle(env, chunk, settle_steps)
-            oks, drops = _chunk_drops_and_stable(
-                chunk, obs, settle_drop_threshold,
+            oks, drops, tip_bads = _chunk_drops_and_stable(
+                chunk, obs, settle_drop_threshold, solid_polygons, tip_cfg,
             )
             for j in range(len(chunk)):
                 tried += 1
@@ -381,13 +458,23 @@ def filter_all_drop_points_stable(
                     logger.info(
                         "[physics_filter_all] 稳定 drop=%.3f (批内 #%d)", drops[j], j,
                     )
+                elif tip_bads[j]:
+                    rejected += 1
+                    rejected_tip += 1
+                    logger.info(
+                        "[physics_filter_all] 锤头卡入障碍物 drop=%.3f (批内 #%d)",
+                        drops[j], j,
+                    )
                 else:
                     rejected += 1
                     logger.info(
                         "[physics_filter_all] 不稳定 drop=%.3f > %.3f (批内 #%d)",
                         drops[j], settle_drop_threshold, j,
                     )
-        meta.update({"tried": tried, "kept": len(kept_b), "rejected": rejected})
+        meta.update({
+            "tried": tried, "kept": len(kept_b), "rejected": rejected,
+            "rejected_tip_in_obstacle": rejected_tip,
+        })
         return np.array(kept_b, dtype=np.float64), meta
     finally:
         _teardown_env_and_process(env, proc)
@@ -406,9 +493,13 @@ def probe_drop_points_stability(
     max_probes: int | None = None,
     use_l8_batch_deploy: bool = True,
     l8_batch_size: int = UNITY_MAX_DUPLICATES,
+    solid_polygons=None,
+    tip_cfg=None,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     """
     对前 max_probes 个（或全部）候选探测，返回每条是否稳定及 drop 值（顺序与 candidates 一致）。
+
+    solid_polygons 非空时，settle 后锤头卡进障碍物的候选也标记为不稳定。
     """
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
@@ -435,6 +526,8 @@ def probe_drop_points_stability(
         "warmup_steps": warmup_steps,
         "use_l8_batch_deploy": use_l8_batch_deploy,
         "l8_batch_size": eff_bs,
+        "tip_obstacle_check": solid_polygons is not None and len(solid_polygons) > 0,
+        "tip_check_mode": _tip_check_mode(solid_polygons, tip_cfg),
     }
 
     if not use_l8_batch_deploy:
@@ -455,11 +548,13 @@ def probe_drop_points_stability(
             for i in range(m):
                 x, y = float(candidates[i, 0]), float(candidates[i, 1])
                 env.reset()
-                ok, drop = try_drop_stable(
+                ok, drop, _tip_bad = try_drop_stable(
                     env, x, y,
                     agent_index=1,
                     settle_steps=settle_steps,
                     threshold=settle_drop_threshold,
+                    solid_polygons=solid_polygons,
+                    tip_cfg=tip_cfg,
                 )
                 stable_mask.append(ok)
                 drops_list.append(drop)
@@ -500,8 +595,8 @@ def probe_drop_points_stability(
             take = min(eff_bs, m - offset)
             chunk = candidates[offset : offset + take]
             obs = _deploy_chunk_settle(env, chunk, settle_steps)
-            oks, drops = _chunk_drops_and_stable(
-                chunk, obs, settle_drop_threshold,
+            oks, drops, _tip_bads = _chunk_drops_and_stable(
+                chunk, obs, settle_drop_threshold, solid_polygons, tip_cfg,
             )
             for j in range(take):
                 stable_out[offset + j] = oks[j]

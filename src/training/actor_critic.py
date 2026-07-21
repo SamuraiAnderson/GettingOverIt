@@ -18,7 +18,8 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 
-from .model import SpatialEncoder, _DynamicsNormMixin, build_key_padding_mask
+from .dataset import DYNAMICS_DIM
+from .model import DualScaleSpatialEncoder, _DynamicsNormMixin, build_attn_mask
 
 if TYPE_CHECKING:
     from .config import TrainConfig
@@ -52,11 +53,12 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         self.config = config
 
         # 观测归一化 buffer（随 state_dict 保存/加载；从 BC 迁移时一并复制）
-        self._register_dynamics_norm(config.state_dim)
+        # 维度用 DYNAMICS_DIM（build_dynamics 输出=34），而非 config.state_dim（原始 33 维）
+        self._register_dynamics_norm(DYNAMICS_DIM)
 
         # ── 共享 backbone（与 ActionPredictor 结构一致）──
-        self.spatial_encoder = SpatialEncoder(config.patch_channels, d)
-        self.dynamics_proj = nn.Linear(config.state_dim, d)
+        self.spatial_encoder = DualScaleSpatialEncoder(config, d)
+        self.dynamics_proj = nn.Linear(DYNAMICS_DIM, d)
         self.fusion = nn.Linear(d * 2, d)
         self.action_proj = nn.Linear(config.action_dim, d)
         self.pos_embed = nn.Embedding(2 * config.context_len, d)
@@ -75,6 +77,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         # ── Actor head ──
         self.actor_mean = nn.Linear(d, config.action_dim)
         self.actor_log_std = nn.Parameter(torch.zeros(config.action_dim))
+
+        # 运行时探索 boost：非可学习标量，仅在 forward 里叠加到 log_std（采集+更新一致），
+        # 不入 state_dict/梯度。停滞探测器按轮设置（见 main_ppo Phase 2.6）。
+        self.exploration_boost: float = 0.0
 
         # ── Critic head ──
         self.critic_head = nn.Sequential(
@@ -126,11 +132,13 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
 
         self.load_state_dict(my_state)
 
-        _LOG_STD_FLOOR = -3.0  # std >= 0.05, 防止探索能力塌缩
+        # 迁移时初始化 actor_log_std：以 BC 输出尺度标定，但**封顶到 config.ppo_init_log_std**
+        # 并下限到 ppo_log_std_min，避免中性动作处探索噪声过大冲坏 BC 开局（见 config 注释）。
         with torch.no_grad():
             w = self.actor_mean.weight  # (action_dim, d_model)
             output_scale = w.norm(dim=1).mean()
-            calibrated = max(torch.log(output_scale).item(), _LOG_STD_FLOOR)
+            calibrated = min(torch.log(output_scale).item(), self.config.ppo_init_log_std)
+            calibrated = max(calibrated, self.config.ppo_log_std_min)
         self.actor_log_std.data.fill_(calibrated)
 
         logger.info(
@@ -138,7 +146,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
             "(output_scale=%.4f, actor_log_std=%.2f → std=%.4f, "
             "critic_head 保持初始化)",
             loaded, skipped, output_scale.item(),
-            calibrated, float(self.actor_log_std.exp().mean()),
+            calibrated, float(self.actor_log_std.detach().exp().mean()),
         )
 
     # ── backbone forward ──
@@ -179,9 +187,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         positions = torch.arange(2 * T, device=dynamics.device)
         seq = seq + self.pos_embed(positions).unsqueeze(0)
 
-        mask = self._causal_mask(2 * T, dynamics.device)
-        key_padding_mask = build_key_padding_mask(valid_mask)
-        out = self.transformer(seq, mask=mask, src_key_padding_mask=key_padding_mask)
+        attn_mask = build_attn_mask(
+            2 * T, valid_mask, self.config.nhead, dynamics.device
+        )
+        out = self.transformer(seq, mask=attn_mask)
 
         return out[:, -1, :]
 
@@ -216,8 +225,14 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         """
         feat = self._backbone(dynamics, patches, actions, valid_mask)
         mean = self.actor_mean(feat)
-        _LOG_STD_MIN, _LOG_STD_MAX = -2.0, 0.5
-        std = self.actor_log_std.clamp(_LOG_STD_MIN, _LOG_STD_MAX).exp().expand_as(mean)
+        _LOG_STD_MIN = self.config.ppo_log_std_min
+        _LOG_STD_MAX = self.config.ppo_log_std_max
+        std = (
+            (self.actor_log_std + self.exploration_boost)
+            .clamp(_LOG_STD_MIN, _LOG_STD_MAX)
+            .exp()
+            .expand_as(mean)
+        )
         dist = Normal(mean, std)
         value = self.critic_head(feat).squeeze(-1)
         return dist, value

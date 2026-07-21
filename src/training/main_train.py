@@ -28,6 +28,13 @@ if str(_REPO_ROOT / "src") not in sys.path:
 
 from training.config import TrainConfig
 from training.dataset import TrajectoryDataset, compute_dynamics_stats
+from training.deploy_sampling import (
+    default_candidate_points_path,
+    extract_body_local,
+    extract_tip_local,
+    filter_points_by_height,
+    load_candidate_points,
+)
 from training.model import ActionPredictor
 from training.reward import ClimbingEfficiencyMap, base_score, score_trajectory
 from training.rollout import RolloutWorker
@@ -35,8 +42,6 @@ from training.trainer import Trainer
 
 sys.path.insert(0, str(_REPO_ROOT / "src" / "tests" / "control_interaction"))
 from test_l7_surface_airdrop import (
-    compute_landable_surfaces,
-    compute_player_height,
     extract_polygons,
     load_colliders,
 )
@@ -227,6 +232,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoint-dir", type=str, default=None)
     parser.add_argument("--log-dir", type=str, default=None)
     parser.add_argument(
+        "--epochs", type=int, default=None,
+        help="每轮监督训练的 epoch 数（覆盖 config.epochs）",
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=None,
+        help="监督训练 batch 大小（覆盖 config.batch_size）",
+    )
+    parser.add_argument("--lr", type=float, default=None, help="学习率（覆盖 config.lr）")
+    parser.add_argument(
+        "--dropout", type=float, default=None,
+        help="模型 dropout（覆盖 config.dropout；纯过拟合实验设 0）",
+    )
+    parser.add_argument(
+        "--weight-decay", type=float, default=None,
+        help="AdamW weight_decay（覆盖 config.weight_decay；纯过拟合实验设 0）",
+    )
+    parser.add_argument(
+        "--early-stop-patience", type=int, default=None,
+        help="early stopping 容忍 epoch 数（覆盖 config.early_stop_patience）",
+    )
+    parser.add_argument(
+        "--val-ratio", type=float, default=None,
+        help="验证集比例（覆盖 config.val_ratio）",
+    )
+    parser.add_argument(
         "--resume", action="store_true",
         help="跳过冷启动，从上次保存的 warmup_state.pkl 恢复",
     )
@@ -250,6 +280,20 @@ def main() -> None:
         config.checkpoint_dir = args.checkpoint_dir
     if args.log_dir is not None:
         config.log_dir = args.log_dir
+    if args.epochs is not None:
+        config.epochs = args.epochs
+    if args.batch_size is not None:
+        config.batch_size = args.batch_size
+    if args.lr is not None:
+        config.lr = args.lr
+    if args.dropout is not None:
+        config.dropout = args.dropout
+    if args.weight_decay is not None:
+        config.weight_decay = args.weight_decay
+    if args.early_stop_patience is not None:
+        config.early_stop_patience = args.early_stop_patience
+    if args.val_ratio is not None:
+        config.val_ratio = args.val_ratio
 
     logger.info("Config: %s", config)
 
@@ -262,30 +306,8 @@ def main() -> None:
     env_data, player_data = load_colliders(game_root)
     polygons = extract_polygons(env_data)
 
-    # 计算可着陆表面（缓存到磁盘，首次 ~11s，后续 <1s）
     cache_dir = Path(config.checkpoint_dir) / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
-    segments_cache = cache_dir / "landable_segments.npz"
-
-    if segments_cache.exists():
-        seg_data = np.load(segments_cache, allow_pickle=True)
-        segments = list(seg_data["segments"])
-        min_clearance = float(seg_data["min_clearance"])
-        logger.info("可着陆表面 (缓存): %d 条线段 (min_clearance=%.2f)", len(segments), min_clearance)
-    else:
-        player_height = compute_player_height(player_data)
-        min_clearance = player_height + config.surface_padding
-        segments = compute_landable_surfaces(
-            polygons, min_clearance,
-            resolution=0.1,
-            y_max_cutoff=config.y_max_cutoff,
-        )
-        np.savez_compressed(
-            segments_cache,
-            segments=np.array(segments, dtype=object),
-            min_clearance=np.array(min_clearance),
-        )
-        logger.info("可着陆表面: %d 条线段 (min_clearance=%.2f, 已缓存)", len(segments), min_clearance)
 
     # 构建效率图（traversable mask 缓存到磁盘，首次 ~87s，后续 <1s）
     mask_cache = str(cache_dir / "traversable_mask.npz")
@@ -303,10 +325,34 @@ def main() -> None:
     dataset = TrajectoryDataset(
         config, terrain_mask, eff_map.get_arr(),
         min_gx=eff_map._min_gx, min_gy=eff_map._min_gy,
+        solid_polygons=polygons,
+        tip_local=extract_tip_local(player_data),
+        body_local=extract_body_local(player_data),
     )
 
     rollout_worker.set_terrain_info(terrain_mask, eff_map._min_gx, eff_map._min_gy)
-    rollout_worker.set_surface_segments(segments)
+    if config.random_deploy:
+        # 候选点集为唯一投放来源（pool-only）：读 L7 唯一候选文件 → train 侧高度过滤
+        cand_path = default_candidate_points_path()
+        candidates = load_candidate_points(cand_path)
+        if not candidates:
+            logger.error(
+                "候选点集为空/缺失: %s；请先运行 "
+                "test_l7_surface_airdrop.py --physics-filter-all 生成",
+                cand_path,
+            )
+        n_before = len(candidates)
+        candidates = filter_points_by_height(
+            candidates, y_max=config.y_max_cutoff + config.drop_height,
+        )
+        logger.info(
+            "候选点集: %s 载入 %d 个 → 高度过滤(y_max_cutoff=%g) 保留 %d 个",
+            cand_path.name, n_before, config.y_max_cutoff, len(candidates),
+        )
+        rollout_worker.set_candidate_points(candidates)
+    else:
+        logger.info("初始位置模式: 跳过候选点集加载")
+    rollout_worker.set_deploy_obstacle_geometry(polygons, player_data)
 
     warmup_path = Path(config.checkpoint_dir) / _WARMUP_FILENAME
     resume = args.resume and warmup_path.exists()
