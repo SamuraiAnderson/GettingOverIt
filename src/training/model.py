@@ -11,6 +11,7 @@ ActionPredictor — 多模态 Transformer 动作预测网络。
 
 from __future__ import annotations
 
+import logging as _logging
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -158,12 +159,66 @@ class _DynamicsNormMixin:
         return normed
 
 
+def expand_state_dict_for_dynamics_dim(
+    ckpt_state: dict[str, torch.Tensor],
+    current_state: dict[str, torch.Tensor],
+) -> dict[str, torch.Tensor]:
+    """把老 checkpoint 的 state_dict 扩展到当前 `DYNAMICS_DIM`（如 34D→38D→39D 迁移）。
+
+    仅处理三个与 dynamics 维度绑定的键：
+      - `dynamics_proj.weight`: (d, old) → (d, new)，新增列用 0 填充（新特征"起手无效应"）
+      - `dyn_mean`: (old,) → (new,)，新元素 pad 0（等价"零均值假设，后续 warmup 再重标定"）
+      - `dyn_std`: (old,) → (new,)，新元素 pad 1（避免除零）
+
+    其他 shape 一致的 key 原样返回；其他 shape 不一致的 key 保留原值，
+    由 `load_state_dict(strict=False/True)` 自行报错，让不预期的迁移显式暴露。
+
+    典型使用：
+        raw = torch.load(path, weights_only=False)
+        raw['model'] = expand_state_dict_for_dynamics_dim(raw['model'], model.state_dict())
+        model.load_state_dict(raw['model'])
+    """
+    logger = _logging.getLogger(__name__)
+    out = dict(ckpt_state)
+    for key, cur in current_state.items():
+        if key not in out:
+            continue
+        old = out[key]
+        if old.shape == cur.shape:
+            continue
+
+        if key == "dynamics_proj.weight" and old.dim() == 2 and cur.dim() == 2:
+            if old.shape[0] == cur.shape[0] and cur.shape[1] > old.shape[1]:
+                pad = torch.zeros(
+                    cur.shape[0], cur.shape[1] - old.shape[1], dtype=old.dtype,
+                )
+                out[key] = torch.cat([old, pad], dim=1)
+                logger.info(
+                    "expand %s: %s → %s (新列初始化 0)",
+                    key, tuple(old.shape), tuple(cur.shape),
+                )
+                continue
+
+        if key in ("dyn_mean", "dyn_std") and old.dim() == 1 and cur.dim() == 1:
+            if cur.shape[0] > old.shape[0]:
+                extra = cur.shape[0] - old.shape[0]
+                pad_val = 0.0 if key == "dyn_mean" else 1.0
+                pad = torch.full((extra,), pad_val, dtype=old.dtype)
+                out[key] = torch.cat([old, pad], dim=0)
+                logger.info(
+                    "expand %s: %s → %s (pad=%.1f)",
+                    key, tuple(old.shape), tuple(cur.shape), pad_val,
+                )
+
+    return out
+
+
 class ActionPredictor(_DynamicsNormMixin, nn.Module):
     """
     Transformer 动作预测网络。
 
     输入: (dynamics, patches, actions) → 预测 a_{t+1}
-    - dynamics: (B, T, DYNAMICS_DIM=34)
+    - dynamics: (B, T, DYNAMICS_DIM=39)  # 34 base + 5 接触信号（见 contact_features）
     - patches: (B, T, 4, 32, 32)
     - actions: (B, T, 2)
 
@@ -177,7 +232,8 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
         self.config = config
 
         # 观测归一化 buffer（随 state_dict 保存/加载）
-        # 维度用 DYNAMICS_DIM（build_dynamics 输出=34），而非 config.state_dim（原始 33 维）
+        # 维度用 DYNAMICS_DIM（build_dynamics 输出=39 = 34 base + 5 contact），
+        # 而非 config.state_dim（原始 33 维）
         self._register_dynamics_norm(DYNAMICS_DIM)
 
         # 双模态编码

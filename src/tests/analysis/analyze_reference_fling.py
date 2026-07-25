@@ -5,7 +5,7 @@
   且 |v| 出现尖峰;身体 y 呈抛物弧。
 - 受控技法(勾枝/撬杆) = y 缓慢单调上升,|v| 全程低,ay 频繁变化(主动发力),无明显腾空弧。
 
-输出:logs/reference_fling_analysis.png + 控制台文本结论。不修改任何数据。
+输出:src/Data/analysis/reference_fling_analysis.png + 控制台文本结论。不修改任何数据。
 """
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ import numpy as np
 _REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(_REPO / "src"))
 sys.path.insert(0, str(_REPO / "src" / "tests" / "control_interaction"))
-PKL = _REPO / "logs" / "reference_trajectory.pkl"
-OUT = _REPO / "logs" / "reference_fling_analysis.png"
+PKL = _REPO / "src" / "Data" / "reference" / "reference_trajectory.pkl"
+OUT = _REPO / "src" / "Data" / "analysis" / "reference_fling_analysis.png"
 
 X, Y, VX, VY, TS = 0, 1, 2, 3, 28
 

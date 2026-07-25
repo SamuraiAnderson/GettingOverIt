@@ -48,6 +48,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .cursor/skills/decompile-dotnet/sc
 - Continue 载入 = `Saviour.LoadNewestSave` → `Saviour.Load(SaveState)`：临时切 `Physics2D.simulationMode=Script` → 逐刚体写回 position/rotation/velocity → 收尾 **`cursor.position = hammer.position`（光标吸附锤头，零牵引）** → 切回 `FixedUpdate` + 关节电机复位。
 - 掉水/按 r 复位 = `Saviour.ResetPlayerButNotDialogue`，内含**硬编码锅底原生姿态**（6 刚体坐标、`playerRot=Euler(0,0,359.91)`、`hingePos=-1109.84`、`sliderPos=-0.7707`）。
 - 自动化开局点的是 `Canvas/Column/NewGame`（新游戏，非 Continue）。
+- 锤子控制 = `PlayerControl.FixedUpdate`：**无弹簧关节**，fakeCursorRB 运动学驱动（MovePosition，硬钳制 |cursor−player|≤3.5m），锤子由 `HingeJoint2D hj`（角度伺服，P 增益 3、误差整形 `sign(e)·max(|e|/2,e²)`、转速 clamp ±800°/s、D 项 ×0 禁用）+ `SliderJoint2D sj`（径向伺服，`−ρ|ρ|·λ·κ⁴`、λ=16−max(0.001·τ_react,5)、clamp ±50）的限力电机驱动。完整数学表示见 `doc/hammer_physics.md`。
 
 ## 注意
 

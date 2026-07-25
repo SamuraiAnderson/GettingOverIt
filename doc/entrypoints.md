@@ -178,7 +178,9 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 ```
 
 其它 API：
-- `Reset()`：所有刚体 + fakeCursorRB 恢复初始快照，清零注入值，再零输入 `InvokeFixedUpdate` + `Simulate` 一帧稳定关节。
+- `Reset()`：所有刚体 + fakeCursorRB **+ PlayerControl 动作相关内部态**恢复初始快照，清零注入值，再零输入 `InvokeFixedUpdate` + `Simulate` 一帧稳定关节。
+  - **修复1（已实施）**：`Reset` 经 `PlayerInputService.SetInternalState` 恢复 `mouseVelocityAverage`/`oldMouse`/`mw`/`oldAngle`/`pauseInputTimer`/`mouseSnap`/`inputsToSkip`，消除跨 reset 增益残留。`CaptureAllSnapshots` 同时经 `BroadcastCanonicalSnapshot` 把 agent0 权威态广播到所有复制体（修复2）。
+  - **残留下限（见 `doc/planb_premise_verification.md`）**：Unity `Physics2D`（Box2D）求解器内部态（接触/关节 warm-start 冲量）不可经刚体快照恢复，形成 ~1e-4 非确定性地板。静止启动姿态下零动作跨 reset 可复现到近机器精度（P0b≈2e-7），摆动姿态下被放大到 ~0.1；激烈动作则由确定性混沌放大。故「游戏即**逐位**世界模型」不可达，方案 B 只能作近似短时域 MPC。
 - `TakeNewSnapshot()`：以当前物理状态重拍快照（warmup 后调用）。
 - `Teleport(agentIndex, target)`：以根刚体为基准整体平移所有子刚体 + fakeCursor，清零速度，稳定一帧。用于多 agent 空投部署。
 
@@ -270,6 +272,14 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 #### （6）训练侧再加工
 
 回传的 33D 是**绝对量**；`dataset.build_dynamics()` 才在 Python 侧把它转为**平移等变**特征（速度原样、角度 → sin/cos、部件坐标取相对 player 的差值）。这一步离线/在线共用同一实现，保证训练/推理一致（细节见 `doc/training.md`）。
+
+**注**：模型消费的 `DYNAMICS_DIM = 39`（34 base + 5 接触信号），后 5 维为 `tip_contact` /
+`tip_grip` / `body_contact` / `pot_contact` / `fall_distance_norm`，Python 端由
+`contact_features.py` 复刻游戏原生 `HammerCollisions` + `PlayerSounds` 接触判断
+（多边形几何 + 向下射线）；`body_contact` 与 `pot_contact` 按游戏 IL 里
+`rb.GetPoint(contact).y > 0.4` 分层各自输出（body 触地 → 撞头 pain，pot 触地 →
+稳定支点，语义相反）。wire 协议不变（仍 33D）。详见 P2.1 落地说明
+（`doc/optimization_roadmap.md`）。
 
 ---
 
@@ -396,6 +406,7 @@ L7 `--physics-filter-all` 产出**全量稳定候选集**，作为向训练传�
 |----|------|------|
 | Python 入口 | `src/main.py` | 数据采集主程序 |
 | Python 入口 | `src/training/main_train.py` / `main_ppo.py` | BC / PPO 训练入口 |
+| PPO 运行手册 | `doc/main_ppo_usage.md` | CLI、推荐配方、废弃清单 |
 | Python 客户端 | `src/env/goi_env.py` | `GoiEnv` TCP 客户端 |
 | Python 生命周期 | `src/training/rollout.py` | `RolloutWorker` 管理游戏交互全流程 |
 | Python 落点筛选 | `src/tests/control_interaction/test_l7_surface_airdrop.py` | L7 落点筛选 CLI 入口（采样 + 物理筛选 + 缓存） |
@@ -410,4 +421,4 @@ L7 `--physics-filter-all` 产出**全量稳定候选集**，作为向训练传�
 | C# 状态 | `src/GameRuntime_v2/PlayerControl/PlayerStateService.cs` | 29D 状态采集 |
 | C# 模式/配置 | `src/GameRuntime_v2/Core/ModeManager.cs` / `Configuration/RuntimeConfig.cs` | 模式判定与运行时配置 |
 
-> 完整数据流、模型结构、奖励/评分细节见 `doc/training.md`；目录职责与通信规范见 `.cursor/rules/project-standards.mdc`。
+> 完整数据流、模型结构、奖励/评分细节见 `doc/training.md`；PPO CLI / 配方见 `doc/main_ppo_usage.md`；目录职责与通信规范见 `.cursor/rules/project-standards.mdc`。

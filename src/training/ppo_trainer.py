@@ -190,6 +190,10 @@ class PPOTrainer:
                 self._pending_optim_state = None
 
         cfg = self.config
+        # OU 探索：ratio 数学自洽要求 new/old log_prob 用同一条件式（见 actor_critic.evaluate_actions），
+        # 即 raw|z_{t-1} ~ N(mean+std·φ·z_{t-1}, std²·(1-φ²))。ou_enabled=False → phi=0 退化 iid。
+        ou_phi = cfg.ou_phi if cfg.ou_enabled else 0.0
+
         total_policy_loss = 0.0
         total_value_loss = 0.0
         total_entropy = 0.0
@@ -213,6 +217,8 @@ class PPOTrainer:
                     batch.act_history,
                     batch.actions,
                     valid_mask=batch.valid_mask,
+                    noise_prev=batch.noise_prev,
+                    noise_phi=ou_phi,
                 )
 
                 # ── 策略损失 (clipped surrogate) ──

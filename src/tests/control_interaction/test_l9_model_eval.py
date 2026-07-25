@@ -65,8 +65,11 @@ def parse_args() -> argparse.Namespace:
         help="同一 checkpoint 复跑次数（>1 时报 secured 高度分布，抵消游戏方差）",
     )
     parser.add_argument(
-        "--output", type=str, default="logs/eval_trajectory.json",
-        help="输出轨迹 JSON 路径",
+        "--output", type=str, default="runs/_eval/eval_trajectory.json",
+        help=(
+            "输出轨迹 JSON 路径。默认落到评估归档目录；跑完用 "
+            "`python -m src.training.archive_evals` 刷新可入库的 summary.csv"
+        ),
     )
     parser.add_argument("--warmup-steps", type=int, default=100)
     parser.add_argument("--no-launch", action="store_true", help="不启动游戏（假设已运行）")

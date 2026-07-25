@@ -48,6 +48,23 @@ namespace GoiRuntime.Core
 		}
 		private readonly List<List<RigidbodySnapshot>> initialSnapshots = new List<List<RigidbodySnapshot>>();
 		private readonly List<RigidbodySnapshot> fakeCursorSnapshots = new List<RigidbodySnapshot>();
+		// 修复1：每个 agent 的 PlayerControl 动作相关内部累积态（reset 须一并恢复）
+		private readonly List<PlayerControlInternalState> internalSnapshots = new List<PlayerControlInternalState>();
+
+		/// <summary>
+		/// 修复2：拍快照时把 agent0 的权威状态广播到所有 agent（刚体值 + fakeCursor + 内部态），
+		/// 使 reset 后 N 复制体逐位一致（「游戏即并行世界模型」前提）。
+		/// 前提：所有 agent 共位（复制体以 Vector3.zero 偏移创建），仅在 warmup 后共位时拍快照。
+		/// 若将来需要复制体处于不同位置，将其置 false。
+		/// </summary>
+		public bool AlignAgentsToCanonical = true;
+
+	/// <summary>
+	/// reset 后零输入 settle 帧数（默认 1，与原实现一致）。
+	/// 注：多帧 settle 与关节 warm-start 冲刷经实测均无法消除敏感亚稳姿态下的 ~1e-4 非确定性地板
+	/// （Box2D 求解器内部态不可经刚体快照恢复），故保持单帧。详见 doc/planb_premise_verification.md。
+	/// </summary>
+	public int resetSettleFrames = 1;
 
 	private bool isInitialized;
 
@@ -251,25 +268,40 @@ namespace GoiRuntime.Core
 		snap.rb.velocity        = snap.velocity;
 		snap.rb.angularVelocity = snap.angularVelocity;
 	}
+	// 修复1：恢复各 agent 的 PlayerControl 动作相关内部累积态
+	// （mouseVelocityAverage 自适应增益 / oldMouse 平滑项等，否则非零动作跨 reset 不可复现）
+	for (int i = 0; i < numAgents && i < internalSnapshots.Count; i++)
+	{
+		if (inputServices[i] == null || !inputServices[i].IsReady) continue;
+		inputServices[i].SetInternalState(internalSnapshots[i]);
+	}
 	// 重置诊断计数器，使 Reset 后的前几步能被记录
 	_diagStepCount = 0;
 	// 清零注入值，避免上一 episode 的残余影响下一 episode
 	GoiRuntime.PlayerControl.RewiredMouseOverride.Reset();
 
-	// 关键修复：Reset 后的单步 Simulate 必须先调用 InvokeFixedUpdate，
+	// 关键修复：Reset 后的 Simulate 必须先调用 InvokeFixedUpdate，
 	// 以确保各 agent 的关节电机力在 Simulate 前被施加。
 	// 若跳过此步，关节约束求解器会因缺少电机对抗力而产生巨大修正冲量，
 	// 导致克隆体刚体被弹射到 (0,0) 附近，物理状态不可恢复。
-	for (int i = 0; i < numAgents; i++)
+	//
+	// 修复3：多帧零输入 settle。单帧不足以从**极端混沌态**恢复——上一 episode 的
+	// Box2D 接触流形 / warm-start 累积冲量残留在求解器内部（刚体快照无法捕获），
+	// 第一帧 Simulate 会用陈旧缓存产生一次速度冲击，其大小依赖上一态而各 agent/各 reset 不同。
+	// 零输入下动力学近似阻尼，多跑若干帧让接触瞬变按 e^(−n/τ) 衰减、缓存按恢复后的几何重建，
+	// 使 reset 后状态由（逐位一致的）快照几何决定而非上一态历史 → P1/P4 可复现。
+	int settle = resetSettleFrames > 0 ? resetSettleFrames : 1;
+	for (int f = 0; f < settle; f++)
 	{
-		if (inputServices[i] == null || !inputServices[i].IsReady) continue;
-		inputServices[i].SetMouseInput(Vector2.zero);  // 零输入，只激活电机阻尼/稳定力
-		inputServices[i].InvokeFixedUpdate();
+		for (int i = 0; i < numAgents; i++)
+		{
+			if (inputServices[i] == null || !inputServices[i].IsReady) continue;
+			inputServices[i].SetMouseInput(Vector2.zero);  // 零输入，只激活电机阻尼/稳定力
+			inputServices[i].InvokeFixedUpdate();
+		}
+		Physics2D.Simulate(Time.fixedDeltaTime);
 	}
-
-	// 推进一帧让物理状态稳定
-	Physics2D.Simulate(Time.fixedDeltaTime);
-	Debug.Log("[StepController] 所有 agent 已重置");
+	Debug.Log($"[StepController] 所有 agent 已重置（settle={settle} 帧）");
 		}
 
 		/// <summary>
@@ -546,6 +578,7 @@ namespace GoiRuntime.Core
 		{
 			initialSnapshots.Clear();
 			fakeCursorSnapshots.Clear();
+			internalSnapshots.Clear();
 			for (int agentIdx = 0; agentIdx < stateServices.Count; agentIdx++)
 			{
 				var stateSvc = stateServices[agentIdx];
@@ -594,8 +627,76 @@ namespace GoiRuntime.Core
 				{
 					fakeCursorSnapshots.Add(default);
 				}
+
+				// 修复1：采集 PlayerControl 动作相关内部累积态
+				PlayerControlInternalState internalState =
+					(agentIdx < inputServices.Count && inputServices[agentIdx] != null)
+						? inputServices[agentIdx].GetInternalState()
+						: default;
+				internalSnapshots.Add(internalState);
 			}
-			Debug.Log($"[StepController] 已保存 {initialSnapshots.Count} 个 agent 的初始快照（含 fakeCursor）");
+
+			// 修复2：把 agent0 的权威状态广播到所有 agent，使 reset 后逐位一致
+			BroadcastCanonicalSnapshot();
+
+			Debug.Log($"[StepController] 已保存 {initialSnapshots.Count} 个 agent 的初始快照（含 fakeCursor + 内部态）");
 		}
+
+	/// <summary>
+	/// 修复2：以 agent0 的快照为权威基准，覆盖所有其他 agent 的快照数值
+	/// （刚体 position/rotation/velocity/angularVelocity + fakeCursor + 内部态），
+	/// 但保留各 agent 自身的 Rigidbody2D 引用。这样 reset 后所有复制体从逐位相同的状态出发。
+	/// 前提：agent 间共位（复制体 Vector3.zero 偏移）。跨部件按 GetComponentsInChildren 顺序一一对应。
+	/// </summary>
+	private void BroadcastCanonicalSnapshot()
+	{
+		if (!AlignAgentsToCanonical) return;
+		if (initialSnapshots.Count <= 1) return;
+
+		var canon = initialSnapshots[0];
+		if (canon == null || canon.Count == 0)
+		{
+			Debug.LogWarning("[StepController] 修复2：agent0 快照为空，跳过广播");
+			return;
+		}
+
+		int aligned = 0;
+		for (int agentIdx = 1; agentIdx < initialSnapshots.Count; agentIdx++)
+		{
+			var list = initialSnapshots[agentIdx];
+			if (list == null || list.Count != canon.Count)
+			{
+				Debug.LogWarning($"[StepController] 修复2：agent{agentIdx} 刚体数({list?.Count})≠agent0({canon.Count})，跳过该 agent 广播");
+				continue;
+			}
+			for (int k = 0; k < list.Count; k++)
+			{
+				var dst = list[k];  // 保留 dst.rb（本 agent 的刚体引用）
+				dst.position        = canon[k].position;
+				dst.rotation        = canon[k].rotation;
+				dst.velocity        = canon[k].velocity;
+				dst.angularVelocity = canon[k].angularVelocity;
+				list[k] = dst;
+			}
+
+			// fakeCursor 广播（保留本 agent 的 fcRB 引用）
+			if (agentIdx < fakeCursorSnapshots.Count && fakeCursorSnapshots[0].rb != null && fakeCursorSnapshots[agentIdx].rb != null)
+			{
+				var fc = fakeCursorSnapshots[agentIdx];
+				fc.position        = fakeCursorSnapshots[0].position;
+				fc.rotation        = fakeCursorSnapshots[0].rotation;
+				fc.velocity        = fakeCursorSnapshots[0].velocity;
+				fc.angularVelocity = fakeCursorSnapshots[0].angularVelocity;
+				fakeCursorSnapshots[agentIdx] = fc;
+			}
+
+			// 内部态广播
+			if (agentIdx < internalSnapshots.Count && internalSnapshots[0].valid)
+				internalSnapshots[agentIdx] = internalSnapshots[0];
+
+			aligned++;
+		}
+		Debug.Log($"[StepController] 修复2：已将 agent0 权威快照广播到 {aligned} 个复制体（逐位对齐）");
+	}
 	}
 }

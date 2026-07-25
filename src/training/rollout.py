@@ -28,6 +28,13 @@ if TYPE_CHECKING:
     from .ppo_buffer import PPORolloutBuffer
     from .reward import ClimbingEfficiencyMap
 
+from .contact_features import (
+    CONTACT_DIM,
+    ContactConfig,
+    ContactPrevState,
+    compute_contact_row,
+    split_body_pot_local,
+)
 from .dataset import (
     Trajectory,
     build_dynamics,
@@ -220,9 +227,24 @@ class RolloutWorker:
         # 运行时锤头卡障碍过滤（与 L7 离线筛选同一判据）
         self._solid_polygons: list[np.ndarray] | None = None
         self._tip_cfg = None
-        # dualscale patch 接触分支几何
+        # dualscale patch 接触分支几何 & 接触信号
+        # （tip_contact/tip_grip/body_contact/pot_contact/fall_distance）
+        # 复刻游戏原生 HammerCollisions + PlayerSounds 判断，详见 contact_features.py。
+        # `_body_local` 保留 [body, pot] 合并 list 供 patch dualscale 接触通道使用；
+        # `_body_only_local` / `_pot_only_local` 是按名称拆分后的独立多边形，
+        # 用于 contact_features 分别输出 body_contact / pot_contact（对应游戏 IL 里
+        # `rb.GetPoint().y > 0.4` vs `≤ 0.4` 分层）。
         self._tip_local: np.ndarray | None = None
         self._body_local: list[np.ndarray] | None = None
+        self._body_only_local: np.ndarray | None = None
+        self._pot_only_local: np.ndarray | None = None
+        self._contact_cfg: ContactConfig = ContactConfig(
+            tip_angle_source=self.config.tip_angle_source,
+            tip_angle_offset_deg=self.config.tip_angle_offset,
+            tip_scale=self.config.tip_scale,
+            body_angle_offset_deg=self.config.body_angle_offset,
+            body_scale=self.config.body_scale,
+        )
 
     def set_terrain_info(
         self,
@@ -268,6 +290,8 @@ class RolloutWorker:
         self._solid_polygons = polygons
         self._tip_local = extract_tip_local(player_data)
         self._body_local = extract_body_local(player_data)
+        # 按名称拆分：body_contact / pot_contact 需分别对独立多边形做距离查询
+        self._body_only_local, self._pot_only_local = split_body_pot_local(player_data)
 
         if not self.config.deploy_tip_obstacle_check:
             self._tip_cfg = None
@@ -457,6 +481,38 @@ class RolloutWorker:
             stable.add(agent_idx)
         return stable
 
+    def _compute_contact_batch(
+        self,
+        obs: np.ndarray,
+        prev_states: dict[int, ContactPrevState],
+    ) -> tuple[np.ndarray, dict[int, ContactPrevState]]:
+        """批量算 (num_agents, CONTACT_DIM) 接触信号，并原地更新 prev_states。
+
+        - 缺 tip/body/env polygons → 返回零 → 训练侧退化为"无接触信息"（等价旧 34D）
+        - prev_states 里没有的 agent 用空 ContactPrevState() 作首帧
+        """
+        num_agents = obs.shape[0]
+        contact = np.zeros((num_agents, CONTACT_DIM), dtype=np.float32)
+        if (
+            self._tip_local is None
+            or not self._solid_polygons
+        ):
+            return contact, prev_states
+
+        for i in range(num_agents):
+            prev = prev_states.get(i, ContactPrevState())
+            row, new_prev = compute_contact_row(
+                obs[i], prev,
+                tip_local=self._tip_local,
+                body_local=self._body_only_local,
+                pot_local=self._pot_only_local,
+                env_polygons=self._solid_polygons,
+                cfg=self._contact_cfg,
+            )
+            contact[i] = row
+            prev_states[i] = new_prev
+        return contact, prev_states
+
     def collect_random(self, n_steps: int) -> list[Trajectory]:
         """第 0 轮: 随机动作 + 随机投放位置采集轨迹。"""
         assert self.env is not None, "请先调用 setup()"
@@ -467,22 +523,30 @@ class RolloutWorker:
 
         all_states = [[] for _ in range(num_agents)]
         all_actions = [[] for _ in range(num_agents)]
+        all_contacts = [[] for _ in range(num_agents)]
+        contact_prev: dict[int, ContactPrevState] = {}
 
+        # 首帧接触信号（首帧 grip 恒 0，符合 compute_contact_row 首帧语义）
+        c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
         for i in range(num_agents):
             all_states[i].append(obs[i].copy())
+            all_contacts[i].append(c0[i].copy())
 
         for _ in range(n_steps):
             actions = np.random.uniform(-scale, scale, (num_agents, 2)).astype(np.float32)
             obs, _ = self.env.step(actions)
+            c, contact_prev = self._compute_contact_batch(obs, contact_prev)
             for i in range(num_agents):
                 all_states[i].append(obs[i].copy())
                 all_actions[i].append(actions[i].copy())
+                all_contacts[i].append(c[i].copy())
 
         trajectories = []
         for i in range(num_agents):
             trajectories.append(Trajectory(
                 raw_states=np.array(all_states[i]),
                 actions=np.array(all_actions[i]),
+                contact=np.array(all_contacts[i], dtype=np.float32),
             ))
         return _filter_water_trajectories(trajectories, self.config)
 
@@ -503,12 +567,16 @@ class RolloutWorker:
 
         all_states = [[] for _ in range(num_agents)]
         all_actions = [[] for _ in range(num_agents)]
+        all_contacts = [[] for _ in range(num_agents)]
         dyn_history = [[] for _ in range(num_agents)]
         act_history = [[] for _ in range(num_agents)]
         patch_history = [[] for _ in range(num_agents)]
+        contact_prev: dict[int, ContactPrevState] = {}
 
+        c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
         for i in range(num_agents):
             all_states[i].append(obs[i].copy())
+            all_contacts[i].append(c0[i].copy())
 
         for step in range(n_steps):
             patches = _build_patches_batch(
@@ -517,7 +585,8 @@ class RolloutWorker:
                 solid_polygons=self._solid_polygons,
                 tip_local=self._tip_local, body_local=self._body_local,
             )
-            dynamics = build_dynamics(obs)
+            contact_now, contact_prev = self._compute_contact_batch(obs, contact_prev)
+            dynamics = build_dynamics(obs, contact_now)
 
             actions = np.zeros((num_agents, 2), dtype=np.float32)
             for i in range(num_agents):
@@ -536,9 +605,11 @@ class RolloutWorker:
                 actions[i] = np.clip(pred + noise, -scale, scale)
 
             obs, _ = self.env.step(actions)
+            c_next, contact_prev = self._compute_contact_batch(obs, contact_prev)
             for i in range(num_agents):
                 all_states[i].append(obs[i].copy())
                 all_actions[i].append(actions[i].copy())
+                all_contacts[i].append(c_next[i].copy())
                 act_history[i].append(actions[i].copy())
 
         trajectories = []
@@ -546,6 +617,7 @@ class RolloutWorker:
             trajectories.append(Trajectory(
                 raw_states=np.array(all_states[i]),
                 actions=np.array(all_actions[i]),
+                contact=np.array(all_contacts[i], dtype=np.float32),
             ))
         return _filter_water_trajectories(trajectories, self.config)
 
@@ -594,9 +666,27 @@ class RolloutWorker:
             i: [] for i in stable_agents
         }
 
+        # 接触信号跨帧状态与历史缓冲（与 raw_states 一样：首帧存进 all_contacts）
+        contact_prev: dict[int, ContactPrevState] = {}
+        c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
+        all_contacts: dict[int, list[np.ndarray]] = {
+            i: [c0[i].copy()] for i in stable_agents
+        }
+
         dyn_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
         act_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
         patch_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+
+        # OU（时序连贯探索噪声）per-agent AR(1) 状态。
+        # z_prev 初值 ~ N(0,1)：保证第 0 步条件采样的 z_0 仍 marginal N(0,1)
+        # （若起手 z_{-1}=0，则 σ_cond=std·√(1-φ²) 会系统性压低首步探索方差）。
+        # φ=0 或 ou_enabled=False → 条件退化 iid，z_t 即当步 η_t。
+        # 每步存 z_prev 到 buffer，PPO 更新用条件式 log_prob → ratio 数学自洽。
+        ou_phi = self.config.ou_phi if self.config.ou_enabled else 0.0
+        ou_state: dict[int, np.ndarray] = {
+            i: np.random.randn(self.config.action_dim).astype(np.float32)
+            for i in stable_agents
+        }
         prev_obs = obs.copy()
         running_max_y = {i: float(obs[i, 1]) for i in stable_agents}
         # 每 agent 一个确认式创新高器：新高守住 dwell 步才结算，滤除甩飞尖峰
@@ -614,7 +704,8 @@ class RolloutWorker:
                 solid_polygons=self._solid_polygons,
                 tip_local=self._tip_local, body_local=self._body_local,
             )
-            dynamics = build_dynamics(obs)
+            contact_now, contact_prev = self._compute_contact_batch(obs, contact_prev)
+            dynamics = build_dynamics(obs, contact_now)
 
             actions_batch = np.zeros((num_agents, 2), dtype=np.float32)
             step_data: dict[int, tuple] = {}
@@ -633,14 +724,22 @@ class RolloutWorker:
                 act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
                 vm_t = torch.from_numpy(valid_mask[np.newaxis].astype(np.float32)).to(device)
 
+                z_prev = ou_state[i]
+                z_prev_t = torch.from_numpy(z_prev[np.newaxis]).to(device)
+
                 with torch.no_grad():
-                    av = model.get_action_and_value(dyn_t, pat_t, act_t, valid_mask=vm_t)
+                    av = model.get_action_and_value(
+                        dyn_t, pat_t, act_t, valid_mask=vm_t,
+                        noise_prev=z_prev_t, noise_phi=ou_phi,
+                    )
 
                 action_np = av.action.cpu().numpy().squeeze(0)
+                z_t = av.noise.cpu().numpy().squeeze(0) if av.noise is not None else None
 
                 if not (np.isfinite(action_np).all()
                         and np.isfinite(av.log_prob.item())
-                        and np.isfinite(av.value.item())):
+                        and np.isfinite(av.value.item())
+                        and (z_t is None or np.isfinite(z_t).all())):
                     logger.warning(
                         "NaN/Inf model output at step=%d agent=%d, "
                         "falling back to zero action",
@@ -649,23 +748,30 @@ class RolloutWorker:
                     action_np = np.zeros(2, dtype=np.float32)
                     step_data[i] = (
                         dyn_window.copy(), pat_window.copy(), act_window.copy(),
-                        valid_mask.copy(), 0.0, 0.0,
+                        valid_mask.copy(), 0.0, 0.0, z_prev.copy(),
                     )
+                    # 零动作 fallback：不推进 OU 状态，避免异常噪声影响后续步
                     actions_batch[i] = action_np
                     continue
+
+                # 推进 OU 状态：z_t 已就绪，作为下一步的 z_prev
+                if z_t is not None:
+                    ou_state[i] = z_t.astype(np.float32)
 
                 actions_batch[i] = action_np
                 step_data[i] = (
                     dyn_window.copy(), pat_window.copy(), act_window.copy(),
                     valid_mask.copy(), av.log_prob.item(), av.value.item(),
+                    z_prev.copy(),
                 )
 
             new_obs, dones = self.env.step(actions_batch)
+            contact_next, contact_prev = self._compute_contact_batch(new_obs, contact_prev)
 
             for i in stable_agents:
                 if i not in step_data:
                     continue
-                dw, pw, aw, vm, lp, val = step_data[i]
+                dw, pw, aw, vm, lp, val, np_prev = step_data[i]
                 reward, running_max_y[i] = step_reward(
                     prev_obs[i], new_obs[i], eff_map, self.config,
                     running_max_y=running_max_y[i],
@@ -682,10 +788,12 @@ class RolloutWorker:
                     value=val,
                     reward=reward,
                     done=bool(dones[i]) or is_water(new_obs[i, 1], self.config),
+                    noise_prev=np_prev,
                 )
                 act_history[i].append(actions_batch[i].copy())
                 raw_states[i].append(new_obs[i].copy())
                 raw_actions[i].append(actions_batch[i].copy())
+                all_contacts[i].append(contact_next[i].copy())
 
             prev_obs = new_obs.copy()
             obs = new_obs
@@ -697,7 +805,9 @@ class RolloutWorker:
             solid_polygons=self._solid_polygons,
             tip_local=self._tip_local, body_local=self._body_local,
         )
-        dynamics = build_dynamics(obs)
+        # bootstrap 帧的 contact：接续 rollout 末尾 prev 状态，保证 grip 判定连续
+        contact_boot, contact_prev = self._compute_contact_batch(obs, contact_prev)
+        dynamics = build_dynamics(obs, contact_boot)
         for i in stable_agents:
             dyn_history[i].append(dynamics[i].copy())
             patch_history[i].append(patches[i].copy())
@@ -725,6 +835,7 @@ class RolloutWorker:
                 trajectories.append(Trajectory(
                     raw_states=np.array(raw_states[i]),
                     actions=np.array(raw_actions[i]),
+                    contact=np.array(all_contacts[i], dtype=np.float32),
                 ))
 
         return buffer, trajectories

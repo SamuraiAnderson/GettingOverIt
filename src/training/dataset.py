@@ -15,7 +15,8 @@ import torch
 from matplotlib.path import Path as MplPath
 from torch.utils.data import Dataset
 
-from .reward import progress_metric
+from .reward import is_water_trajectory, progress_metric
+from .contact_features import CONTACT_DIM
 from .deploy_sampling import (
     player_hub_angle_deg,
     reconstruct_polygon_world,
@@ -44,10 +45,24 @@ REL_POS_INDICES = [(5, 6), (10, 11), (15, 16), (19, 20), (23, 24), (29, 30)]
 # 的任务目标都以世界 y 为绝对参照系，缺失绝对高度会让策略无法感知海拔/离水距离。
 # 经观测归一化后，绝对 y 与"离水距离 (y - threshold)"等价（同为常数平移），故直接取原始 y。
 ABS_HEIGHT_INDEX = 1
-# 动力学特征总维度: 15 速度 + 3 角度×2(sin/cos) + 6 部件×2(相对坐标) + 1 绝对高度 = 34
-DYNAMICS_DIM = (
+# 基础动力学特征: 15 速度 + 3 角度×2(sin/cos) + 6 部件×2(相对坐标) + 1 绝对高度 = 34
+BASE_DYNAMICS_DIM = (
     len(VELOCITY_INDICES) + len(ANGLE_INDICES) * 2 + len(REL_POS_INDICES) * 2 + 1
 )
+# 接触信号: tip_contact / tip_grip / body_contact / pot_contact / fall_distance_norm
+# （Python 端复刻游戏原生 HammerCollisions + PlayerSounds 判断，见 contact_features.py
+# 头部注释）。策略层面填补原 33D 缺失的"锤头/躯干/锅是否接触地形、锤子是否钩住、
+# 离地多远"这些游戏物理引擎内部隐状态。body / pot 按游戏 IL 里 `rb.GetPoint().y > 0.4`
+# 分层各自输出（body 触地 → 撞头 pain；pot 触地 → 稳定支点，语义相反）。
+DYNAMICS_DIM = BASE_DYNAMICS_DIM + CONTACT_DIM  # 34 + 5 = 39
+
+# Player 部件轮廓（ch2 锅/body、ch3 锤头）栅格化的每格每轴子采样数。
+# 部件轮廓远小于一格（真实 tip bbox 0.148×0.448m vs 格 0.25m），二值「格心在多边形内」
+# 判据会整帧漏采 → 通道全零、部件对 CNN 不可见。改为面积覆盖率后空通道率归 0，
+# 且亚像素位置/朝向由灰度承载。4×4=16 子采样把覆盖率量化到 1/16，足够表征；
+# 因只在轮廓 bbox 内子采样（通常几格），开销与二值版同量级。
+# 地形通道 ch1 不需要（地形特征米级，远大于一格），仍走 rasterize_solid_local 的二值判据。
+PART_RASTER_SUBSAMPLES = 4
 
 # 身体部件位置索引: player(0,1), hub(5,6), slider(10,11)
 BODY_POS_INDICES = [(0, 1), (5, 6), (10, 11)]
@@ -55,7 +70,9 @@ BODY_POS_INDICES = [(0, 1), (5, 6), (10, 11)]
 HAMMER_POS_INDICES = [(15, 16), (19, 20), (23, 24)]
 
 
-def build_dynamics(raw: np.ndarray) -> np.ndarray:
+def build_dynamics(
+    raw: np.ndarray, contact: np.ndarray | None = None,
+) -> np.ndarray:
     """从原始 33D 状态构建平移等变的动力学特征向量。
 
     末轴组成:
@@ -63,8 +80,13 @@ def build_dynamics(raw: np.ndarray) -> np.ndarray:
       - 3 个角度 → (sin, cos)，共 6 维（角度先由度转弧度，消除环绕不连续）
       - 6 个部件相对 player 的坐标 (part - player)，共 12 维（含 cursor，保留相对几何精度）
       - 1 维绝对高度 player_y（唯一非平移等变项，供感知海拔/离水距离，见 ABS_HEIGHT_INDEX）
+      - **5 维接触信号**（`CONTACT_DIM`）：tip_contact / tip_grip / body_contact /
+        pot_contact / fall_distance_norm。由 contact_features.compute_contact_row 逐帧
+        计算（Python 端复刻游戏原生 HammerCollisions + PlayerSounds 判断）。
+        `contact=None` 时填 0（等价旧 34D 行为，用于兼容尚未提供接触序列的老
+        Trajectory / 单元测试）。
 
-    支持任意前置维度，末轴须为 33（原始 state_dim）。返回末轴 = DYNAMICS_DIM(34)。
+    支持任意前置维度，末轴须为 33（原始 state_dim）。返回末轴 = DYNAMICS_DIM(39)。
     """
     raw = np.asarray(raw, dtype=np.float32)
     vel = raw[..., VELOCITY_INDICES]
@@ -81,7 +103,19 @@ def build_dynamics(raw: np.ndarray) -> np.ndarray:
 
     abs_y = raw[..., ABS_HEIGHT_INDEX:ABS_HEIGHT_INDEX + 1]
 
-    return np.concatenate([vel, ang_feat, rel, abs_y], axis=-1).astype(np.float32)
+    base = np.concatenate([vel, ang_feat, rel, abs_y], axis=-1)
+
+    if contact is None:
+        contact_arr = np.zeros(base.shape[:-1] + (CONTACT_DIM,), dtype=np.float32)
+    else:
+        contact_arr = np.asarray(contact, dtype=np.float32)
+        if contact_arr.shape[:-1] != base.shape[:-1] or contact_arr.shape[-1] != CONTACT_DIM:
+            raise ValueError(
+                f"contact shape {contact_arr.shape} 与 raw shape {raw.shape[:-1]} 不匹配"
+                f"（末轴须为 CONTACT_DIM={CONTACT_DIM}）"
+            )
+
+    return np.concatenate([base, contact_arr], axis=-1).astype(np.float32)
 
 
 def compute_dynamics_stats(trajectories: list) -> tuple[np.ndarray, np.ndarray]:
@@ -89,8 +123,12 @@ def compute_dynamics_stats(trajectories: list) -> tuple[np.ndarray, np.ndarray]:
 
     返回 (mean, std)，均为 (DYNAMICS_DIM,)。方差过小的维度 std 置 1.0 防止除零放大。
     空输入时退化为 (0, 1)（等价恒等归一化）。
+
+    若 Trajectory 具有 contact 序列则一并统计接触维度的分布；缺 contact 的旧轨迹
+    落到 build_dynamics 的 0 填充分支，其接触维度 std=0 → 后续被下界钳到 1.0。
     """
-    feats = [build_dynamics(traj.raw_states) for traj in trajectories]
+    feats = [build_dynamics(traj.raw_states, getattr(traj, "contact", None))
+             for traj in trajectories]
     if not feats:
         return (
             np.zeros(DYNAMICS_DIM, dtype=np.float32),
@@ -109,6 +147,11 @@ class Trajectory:
     actions: np.ndarray              # (T, 2)
     score: float = 0.0
     iteration: int = 0
+    # (T+1, CONTACT_DIM=5) Python 端复刻的接触信号序列
+    # (tip_contact / tip_grip / body_contact / pot_contact / fall_distance_norm)。
+    # None 表示"未计算"（build_dynamics 会零填充，兼容旧 checkpoint 或临时构造的
+    # 轨迹）；生产链路（rollout/dataset）应始终填充。
+    contact: np.ndarray | None = None
 
 
 def crop_centered(
@@ -213,14 +256,70 @@ def rasterize_solid_local(
 
 
 def rasterize_polygon_fill(
-    world_poly: np.ndarray, cx: float, cy: float, size: int, patch_res: float,
+    world_poly: np.ndarray,
+    cx: float,
+    cy: float,
+    size: int,
+    patch_res: float,
+    subsamples: int = PART_RASTER_SUBSAMPLES,
 ) -> np.ndarray:
-    """把世界坐标多边形填充进以 (cx, cy) 为中心的 size×size 网格 → (size, size) 0/1。"""
+    """把世界坐标多边形按**面积覆盖率**填进以 (cx, cy) 为中心的 size×size 网格。
+
+    返回 (size, size) 的 [0,1] 连续值：每格取值 = 该格被多边形覆盖的面积比例
+    （以 `subsamples²` 个均匀子采样点估计）。`subsamples=1` 退化为旧的
+    「格中心点在多边形内」二值判据。
+
+    **为何必须抗锯齿**：Player 部件轮廓远小于一格。真实 tip 轮廓 bbox 仅
+    0.148 × 0.448 m，在 `contact_patch_resolution=0.2` m/px 下宽仅 0.74 px、
+    0.25 m/px 下 0.59 px —— 都不足 1 像素。二值判据下多边形可整体落在相邻格心
+    之间而一个格心都不含，导致**通道整帧全零、锤头对 CNN 完全不可见**：实测
+    (`src/tests/analysis/diagnose_tip_rasterization.py`) 0.2 m/px 空通道率 8.7%、
+    0.25 m/px 达 30%。面积覆盖率下只要有任何重叠就必有非零值，空通道率归 0，
+    且**亚像素位置与朝向由灰度强度承载**，同分辨率下信息量反而高于二值。
+
+    性能：子采样只在多边形 bbox 覆盖的格子上做（部件轮廓 bbox 通常仅几格），
+    故实际开销与二值版本同量级，不随 `size` 放大。
+    """
     p = np.asarray(world_poly, dtype=np.float64)
+    out = np.zeros((size, size), dtype=np.float32)
     if len(p) < 3:
-        return np.zeros((size, size), dtype=np.float32)
-    pts = _grid_point_world(cx, cy, size, patch_res)
-    return MplPath(p).contains_points(pts).reshape(size, size).astype(np.float32)
+        return out
+
+    half = size / 2.0
+    # 多边形 bbox → 格索引范围（含 1 格余量，覆盖边界跨格情况）
+    lo_x = int(np.floor((p[:, 0].min() - cx) / patch_res + half)) - 1
+    hi_x = int(np.ceil((p[:, 0].max() - cx) / patch_res + half)) + 1
+    lo_y = int(np.floor((p[:, 1].min() - cy) / patch_res + half)) - 1
+    hi_y = int(np.ceil((p[:, 1].max() - cy) / patch_res + half)) + 1
+    lo_x, hi_x = max(0, lo_x), min(size, hi_x)
+    lo_y, hi_y = max(0, lo_y), min(size, hi_y)
+    if lo_x >= hi_x or lo_y >= hi_y:
+        return out  # 多边形完全在窗口外
+
+    n = max(1, int(subsamples))
+    # 每格内的子采样偏移（格内均匀，避开格边）
+    sub = ((np.arange(n, dtype=np.float64) + 0.5) / n - 0.5) * patch_res
+
+    cols = np.arange(lo_x, hi_x, dtype=np.float64)
+    rows = np.arange(lo_y, hi_y, dtype=np.float64)
+    # 格中心世界坐标（与 _grid_point_world 同一约定：row↔y, col↔x）
+    cxs = cx + (cols - half + 0.5) * patch_res
+    cys = cy + (rows - half + 0.5) * patch_res
+
+    # 展平成「格索引为外层、子采样为内层」，与下面 reshape(nrow, n, ncol, n) 的
+    # 轴序严格对应（顺序写反会让子采样点错位到邻格，内部格覆盖率不再等于 1）
+    sx = (cxs[:, None] + sub[None, :]).ravel()   # (ncol*n,)
+    sy = (cys[:, None] + sub[None, :]).ravel()   # (nrow*n,)
+    gx, gy = np.meshgrid(sx, sy)                 # (nrow*n, ncol*n)
+    inside = MplPath(p).contains_points(
+        np.column_stack([gx.ravel(), gy.ravel()])
+    ).reshape(gy.shape)
+
+    # (nrow, n, ncol, n) = [格行, 格内子行, 格列, 格内子列] → 对子采样轴取均值得覆盖率
+    nrow, ncol = len(rows), len(cols)
+    cov = inside.reshape(nrow, n, ncol, n).mean(axis=(1, 3))
+    out[lo_y:hi_y, lo_x:hi_x] = cov.astype(np.float32)
+    return out
 
 
 def render_gaussian(
@@ -395,7 +494,10 @@ class TrajectoryDataset(Dataset):
     轨迹数据集。
 
     持有全局地形 mask 和效率图引用，在 __getitem__ 中即时构建 4ch patch。
-    双层过滤: add_trajectories 做 top-K% 筛选，trim_oldest 做 FIFO 滑动窗口。
+    准入策略两条：
+      - BC 路径：add_trajectories 做 top-K% 筛选 + trim_oldest FIFO 滑动窗口。
+      - PPO/SIL 路径（P1.2）：add_trajectories_map_elites 走 MAP-Elites 网格式行为多样性准入
+        （bd=secured peak (x,y)，每 cell 保留分数最高一条）。
     """
 
     def __init__(
@@ -448,6 +550,109 @@ class TrajectoryDataset(Dataset):
                 self.trajectories.append(traj)
         self._rebuild_index()
 
+    def _behavior_cell_id(
+        self, raw_states: np.ndarray, cell_size: float,
+    ) -> tuple[int, int] | None:
+        """行为描述子 bd = secured peak (x, y) → 网格 cell_id。
+
+        peak_idx 复用 progress_metric（dwell 过滤甩飞尖峰后的守住峰），保证描述子
+        不被瞬时冲高/落水回落污染。返回 (gx, gy)；异常输入返回 None。
+        """
+        try:
+            _p, peak_idx, _dy, _r = progress_metric(raw_states, self.config)
+        except Exception:
+            return None
+        if peak_idx < 0 or peak_idx >= len(raw_states):
+            return None
+        bd_x = float(raw_states[peak_idx, 0])
+        bd_y = float(raw_states[peak_idx, 1])
+        if not (np.isfinite(bd_x) and np.isfinite(bd_y)):
+            return None
+        return (
+            int(np.floor(bd_x / cell_size)),
+            int(np.floor(bd_y / cell_size)),
+        )
+
+    def add_trajectories_map_elites(
+        self,
+        trajs: list[Trajectory],
+        scores: list[float],
+        iteration: int = 0,
+        cell_size: float = 5.0,
+        cold_start_min: int = 5,
+    ) -> dict[str, int]:
+        """MAP-Elites 风格准入（P1.2）：每 cell 保留分数最高一条。
+
+        流程：
+          1. 硬质量地板：is_water_trajectory → 直接拒。
+          2. 行为描述子 bd = secured peak (x, y) → cell_id = (⌊bd/cell_size⌋)。
+          3. cell 空 或 新分数 > cell 内最优 → 替换。
+          4. 冷启动：|occupied cells| < cold_start_min 时，同 cell 落选轨迹仍可直接入池
+             （extras），避免早期全挤在同一 cell 时池塌缩到 1 条；cell 数达标后清空 extras。
+
+        与 top-K% 相对门槛的差别：绝对准入 + 强制行为覆盖，避免"整批都烂时仍强化最不烂的乱晃"
+        自我强化平台。入池后调用 `_rebuild_index()` 保持窗口索引与轨迹池一致。
+
+        Returns: {'n_admitted': 新入/替换总数, 'n_replaced': 替换数, 'n_cells': 现池占据 cell 数}。
+        """
+        # 用当前池种子：同 cell 只留最优进 cell_map，其余进 extras（供冷启动填池）
+        cell_map: dict[tuple[int, int], Trajectory] = {}
+        extras: list[Trajectory] = []
+        for t in self.trajectories:
+            cid = self._behavior_cell_id(t.raw_states, cell_size)
+            if cid is None:
+                continue
+            if cid not in cell_map:
+                cell_map[cid] = t
+            elif t.score > cell_map[cid].score:
+                extras.append(cell_map[cid])
+                cell_map[cid] = t
+            else:
+                extras.append(t)
+
+        admitted = 0
+        replaced = 0
+
+        for traj, sc in zip(trajs, scores):
+            if is_water_trajectory(traj.raw_states, self.config):
+                continue
+            cid = self._behavior_cell_id(traj.raw_states, cell_size)
+            if cid is None:
+                continue
+            traj.score = float(sc)
+            traj.iteration = iteration
+
+            if cid not in cell_map:
+                cell_map[cid] = traj
+                admitted += 1
+            elif traj.score > cell_map[cid].score:
+                demoted = cell_map[cid]
+                cell_map[cid] = traj
+                admitted += 1
+                replaced += 1
+                # 被替换者在冷启动期仍可留作 extras 填池
+                if len(cell_map) < cold_start_min:
+                    extras.append(demoted)
+            elif len(cell_map) < cold_start_min:
+                # 冷启动兜底：同 cell 分数不占优也直接入池，防止早期池只有 1 条
+                extras.append(traj)
+                admitted += 1
+
+        # cell 数已达标 → 丢弃 extras；否则截到 cold_start_min 总条数
+        if len(cell_map) >= cold_start_min:
+            extras = []
+        else:
+            need = max(0, cold_start_min - len(cell_map))
+            extras = extras[:need]
+
+        self.trajectories = list(cell_map.values()) + extras
+        self._rebuild_index()
+        return {
+            "n_admitted": admitted,
+            "n_replaced": replaced,
+            "n_cells": len(cell_map),
+        }
+
     def trim_oldest(self, max_n: int) -> None:
         """滑动窗口：按 iteration 淘汰最旧的轨迹直到不超过 max_n 条。"""
         if len(self.trajectories) <= max_n:
@@ -489,7 +694,11 @@ class TrajectoryDataset(Dataset):
 
         # 观测窗口: obs_{tau-ctx+1 .. tau}（含当前步 tau）的真实切片，再经 left_pad_sequence 左填充
         obs_real = raw[max(0, tau - ctx + 1): tau + 1]      # (k_obs, 33)
-        dyn_real = build_dynamics(obs_real)                 # (k_obs, DYNAMICS_DIM)
+        # 若 Trajectory 有 contact 序列则按同一窗口切片一起喂进 build_dynamics；无则退化 34D 零填充。
+        contact_real = None
+        if getattr(traj, "contact", None) is not None:
+            contact_real = traj.contact[max(0, tau - ctx + 1): tau + 1]  # (k_obs, CONTACT_DIM)
+        dyn_real = build_dynamics(obs_real, contact_real)   # (k_obs, DYNAMICS_DIM=39)
         dynamics, valid_mask = left_pad_sequence(dyn_real, ctx)
 
         pat_real = np.stack([self._build_patch(s) for s in obs_real])  # (k_obs, ch, ps, ps)

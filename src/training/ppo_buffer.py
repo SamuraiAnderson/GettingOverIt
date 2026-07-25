@@ -30,6 +30,9 @@ class PPOBatch:
     advantages: torch.Tensor     # (B,)
     returns: torch.Tensor        # (B,)
     old_values: torch.Tensor     # (B,)
+    # 采集时该步的 OU 前一步归一化噪声 z_{t-1}，供条件式 log_prob 复算（PPO ratio 自洽）；
+    # iid 模式恒为零向量，evaluate_actions 会在 noise_phi=0 时忽略。
+    noise_prev: torch.Tensor     # (B, 2)
 
 
 class PPORolloutBuffer:
@@ -51,6 +54,8 @@ class PPORolloutBuffer:
         self._values: list[float] = []
         self._rewards: list[float] = []
         self._dones: list[bool] = []
+        # 每步 OU 前一步归一化噪声 z_{t-1}，iid 模式下存零向量（无条件效应）
+        self._noise_prev: list[np.ndarray] = []
 
         self._advantages: np.ndarray | None = None
         self._returns: np.ndarray | None = None
@@ -70,8 +75,16 @@ class PPORolloutBuffer:
         value: float,
         reward: float,
         done: bool,
+        noise_prev: np.ndarray | None = None,
     ) -> None:
-        """添加一个 timestep 的数据（单 agent）。包含 NaN/Inf 的数据会被丢弃。"""
+        """添加一个 timestep 的数据（单 agent）。包含 NaN/Inf 的数据会被丢弃。
+
+        noise_prev: OU 采集时的 z_{t-1}；未提供时按 iid 模式补零向量（evaluate_actions 侧
+        用 noise_phi=0 时自然忽略，两种口径一致）。
+        """
+        if noise_prev is None:
+            noise_prev = np.zeros(action.shape, dtype=np.float32)
+
         if not (
             np.isfinite(dynamics_window).all()
             and np.isfinite(patch_window).all()
@@ -79,14 +92,16 @@ class PPORolloutBuffer:
             and np.isfinite(log_prob)
             and np.isfinite(value)
             and np.isfinite(reward)
+            and np.isfinite(noise_prev).all()
         ):
             logger.warning(
                 "Dropping timestep with NaN/Inf: "
-                "dyn=%s patch=%s action=%s lp=%.4g v=%.4g r=%.4g",
+                "dyn=%s patch=%s action=%s lp=%.4g v=%.4g r=%.4g noise=%s",
                 np.isfinite(dynamics_window).all(),
                 np.isfinite(patch_window).all(),
                 np.isfinite(action).all(),
                 log_prob, value, reward,
+                np.isfinite(noise_prev).all(),
             )
             return
 
@@ -99,6 +114,7 @@ class PPORolloutBuffer:
         self._values.append(value)
         self._rewards.append(reward)
         self._dones.append(done)
+        self._noise_prev.append(noise_prev.astype(np.float32))
 
     def compute_gae(
         self,
@@ -147,6 +163,7 @@ class PPORolloutBuffer:
         actions_arr = np.array(self._actions)
         log_probs_arr = np.array(self._log_probs, dtype=np.float32)
         values_arr = np.array(self._values, dtype=np.float32)
+        noise_prev_arr = np.array(self._noise_prev, dtype=np.float32)
 
         adv = self._advantages.copy()
         if normalize_advantages and len(adv) > 1:
@@ -164,6 +181,7 @@ class PPORolloutBuffer:
                 advantages=torch.from_numpy(adv[idx]).to(self.device),
                 returns=torch.from_numpy(self._returns[idx]).to(self.device),
                 old_values=torch.from_numpy(values_arr[idx]).to(self.device),
+                noise_prev=torch.from_numpy(noise_prev_arr[idx]).to(self.device),
             )
 
     @classmethod
@@ -185,6 +203,7 @@ class PPORolloutBuffer:
             merged._values.extend(b._values)
             merged._rewards.extend(b._rewards)
             merged._dones.extend(b._dones)
+            merged._noise_prev.extend(b._noise_prev)
         merged._advantages = np.concatenate([b._advantages for b in buffers])
         merged._returns = np.concatenate([b._returns for b in buffers])
         return merged
@@ -200,5 +219,6 @@ class PPORolloutBuffer:
         self._values.clear()
         self._rewards.clear()
         self._dones.clear()
+        self._noise_prev.clear()
         self._advantages = None
         self._returns = None

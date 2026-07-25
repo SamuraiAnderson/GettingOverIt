@@ -1,11 +1,15 @@
 """查看当前精英轨迹（SIL 池快照）。
 
-精英池训练时仅在内存中、未落盘，故用最终模型现采集一批 rollout，按训练同口径
-score_trajectory(=base_score) 排序取 top-K，即"当前策略产出的精英轨迹"。
-两遍采集：pass1 建 Φ（wide 通道非零、贴近训练观测），pass2 打分+可视化。
+用最终模型现采集一批 rollout，按训练同口径 score_trajectory(=base_score) 排序取
+top-K，即"当前策略产出的精英轨迹"。两遍采集：pass1 建 Φ（wide 通道非零、贴近训练
+观测），pass2 打分+可视化。
+
+注意这是**重建**而非读取：训练时的精英池是什么样，只能近似。用 `--run-dir` 跑的新
+实验会把真实精英池快照落到 `runs/<tag>/elites/`，直接读那个（`run_logging.load_elites`）
+比在这里重采样更准。本脚本适用于没有快照的历史 checkpoint。
 
 用法:
-  python -m src.tests.analysis.view_elite_trajectories --checkpoint checkpoints_treefix2/ppo_iter_0190.pt
+  python -m src.tests.analysis.view_elite_trajectories --checkpoint runs/treefix2/checkpoints/ppo_iter_0190.pt
 """
 from __future__ import annotations
 
@@ -45,12 +49,13 @@ TREE = dict(x0=-30.2, x1=-26.6, y0=-4.3, y1=4.8)
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--checkpoint", default="checkpoints_treefix2/ppo_iter_0190.pt")
-    ap.add_argument("--checkpoint-dir", default="checkpoints_treefix2")
+    ap.add_argument("--checkpoint",
+                    default="runs/treefix2/checkpoints/ppo_iter_0190.pt")
+    ap.add_argument("--checkpoint-dir", default="runs/treefix2/checkpoints")
     ap.add_argument("--num-agents", type=int, default=10)
     ap.add_argument("--steps", type=int, default=500)
     ap.add_argument("--topk", type=int, default=20)
-    ap.add_argument("--out", default="logs_treefix2/elite_trajectories.png")
+    ap.add_argument("--out", default="runs/treefix2/logs/elite_trajectories.png")
     args = ap.parse_args()
 
     cfg = TrainConfig()

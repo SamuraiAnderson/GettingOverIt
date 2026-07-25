@@ -17,9 +17,9 @@ Windows 专用：ctypes 读取全局光标。
   python src/tests/control_interaction/record_reference_trajectory.py --fps 20 --sensitivity 1.5 --smooth 0.5
   python src/tests/control_interaction/record_reference_trajectory.py --no-launch          # 游戏已在运行
 
-输出:
-  logs/reference_trajectory.json          可读轨迹(states/actions/报告)，便于检查
-  logs/reference_trajectory.pkl           BC 可直接加载(结构同 warmup_state.pkl)
+输出（落在 src/Data/reference/，随仓库入库：人工示范无法重新生成，不能放进 gitignore 的目录）:
+  src/Data/reference/reference_trajectory.json    可读轨迹(states/actions/报告)，便于检查
+  src/Data/reference/reference_trajectory.pkl     BC 可直接加载(结构同 warmup_state.pkl)
 """
 
 from __future__ import annotations
@@ -101,7 +101,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--countdown", type=int, default=3, help="开始录制前的倒计时秒数")
     parser.add_argument("--warmup-steps", type=int, default=100)
     parser.add_argument(
-        "--output", type=str, default="logs/reference_trajectory.json",
+        "--output", type=str, default="src/Data/reference/reference_trajectory.json",
         help="输出轨迹 JSON 路径（同名 .pkl 为 BC 可加载版本）",
     )
     parser.add_argument("--no-launch", action="store_true", help="不启动游戏（假设已运行）")

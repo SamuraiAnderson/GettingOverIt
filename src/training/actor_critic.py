@@ -31,6 +31,9 @@ class ActionValue(NamedTuple):
     action: torch.Tensor
     log_prob: torch.Tensor
     value: torch.Tensor
+    # 采样使用的 OU 归一化噪声 z_t（raw = mean + std·z_t）。iid 路径返回该步的 η_t（marginal
+    # 相同 N(0,1)），供 buffer 存 noise_prev 用于下一步条件式 log_prob（PPO ratio 自洽）。
+    noise: torch.Tensor | None = None
 
 
 class ActorCritic(_DynamicsNormMixin, nn.Module):
@@ -53,7 +56,8 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         self.config = config
 
         # 观测归一化 buffer（随 state_dict 保存/加载；从 BC 迁移时一并复制）
-        # 维度用 DYNAMICS_DIM（build_dynamics 输出=34），而非 config.state_dim（原始 33 维）
+        # 维度用 DYNAMICS_DIM（build_dynamics 输出=39 = 34 base + 5 contact），
+        # 而非 config.state_dim（原始 33 维）
         self._register_dynamics_norm(DYNAMICS_DIM)
 
         # ── 共享 backbone（与 ActionPredictor 结构一致）──
@@ -237,22 +241,61 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         value = self.critic_head(feat).squeeze(-1)
         return dist, value
 
+    @staticmethod
+    def _ou_conditional(
+        mean: torch.Tensor, std: torch.Tensor,
+        noise_prev: torch.Tensor | None, noise_phi: float,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """条件高斯参数 (μ_cond, σ_cond)：raw_t | z_{t-1} ~ N(mean+std·φ·z_{t-1}, std²·(1-φ²))。
+
+        noise_phi==0.0 或 noise_prev is None 时退化为 iid 高斯（μ_cond=mean, σ_cond=std）。
+        """
+        if noise_phi == 0.0 or noise_prev is None:
+            return mean, std
+        # 允许 noise_prev broadcast 到 mean 的 shape：采集 (1, action_dim)、评估 (B, action_dim)
+        z_prev = noise_prev.to(mean.dtype)
+        mu_cond = mean + std * noise_phi * z_prev
+        # sqrt(1 - φ²)：φ∈[0,1)，加 eps 防边界数值问题
+        scale = float((1.0 - noise_phi * noise_phi) ** 0.5)
+        sigma_cond = std * scale
+        return mu_cond, sigma_cond
+
     def get_action_and_value(
         self,
         dynamics: torch.Tensor,
         patches: torch.Tensor,
         actions: torch.Tensor,
         valid_mask: torch.Tensor | None = None,
+        noise_prev: torch.Tensor | None = None,
+        noise_phi: float = 0.0,
     ) -> ActionValue:
         """
-        采集用：从策略中采样动作，返回 (squashed_action, log_prob, value)。
+        采集用：从策略中采样动作，返回 (squashed_action, log_prob, value, noise=z_t)。
+
+        当 noise_phi>0 且 noise_prev 提供时：走 OU/AR(1) 条件采样，
+          z_t = φ·z_{t-1} + √(1-φ²)·η_t, η~N(0,1)
+          raw = mean + std·z_t
+          log_prob 按 raw|z_{t-1} 的条件高斯计算（PPO ratio 数学自洽）。
+        否则退化为 iid 高斯（原行为）。
+        返回 ActionValue.noise = z_t（供调用方作为下一步的 noise_prev）。
         """
         dist, value = self.forward(dynamics, patches, actions, valid_mask)
-        raw_action = dist.rsample()
-        log_prob_raw = dist.log_prob(raw_action).sum(dim=-1)
+        mean = dist.mean
+        std = dist.stddev
+
+        mu_cond, sigma_cond = self._ou_conditional(mean, std, noise_prev, noise_phi)
+        cond_dist = Normal(mu_cond, sigma_cond)
+
+        raw_action = cond_dist.rsample()
+        # 归一化噪声 z_t = (raw - mean) / std（iid 路径下 = η_t，仍是 N(0,1)），
+        # 交回调用方作为下一步 noise_prev；det 化以脱离计算图。
+        with torch.no_grad():
+            z_t = ((raw_action - mean) / std.clamp(min=1e-8)).detach()
+
+        log_prob_raw = cond_dist.log_prob(raw_action).sum(dim=-1)
         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
         action = self._squash_action(raw_action)
-        return ActionValue(action=action, log_prob=log_prob, value=value)
+        return ActionValue(action=action, log_prob=log_prob, value=value, noise=z_t)
 
     def evaluate_actions(
         self,
@@ -261,14 +304,24 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         act_history: torch.Tensor,
         taken_actions: torch.Tensor,
         valid_mask: torch.Tensor | None = None,
+        noise_prev: torch.Tensor | None = None,
+        noise_phi: float = 0.0,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         训练用：对已执行的动作重新计算 log_prob、entropy、value。
 
-        taken_actions: (B, 2) — squashed 空间中的动作
-        returns: (log_prob, entropy, value)
+        taken_actions: (B, action_dim) — squashed 空间中的动作
+        noise_prev: (B, action_dim) 采集时的 z_{t-1}；OU 模式必需，iid 模式忽略。
+        noise_phi: OU AR(1) 系数，0.0 → 退化 iid。
+        returns: (log_prob, entropy, value)。log_prob 与 entropy 按条件高斯口径，
+        与采集时一致 → 保证 ratio = exp(new_lp - old_lp) 无系统偏差。
         """
         dist, value = self.forward(dynamics, patches, act_history, valid_mask)
+        mean = dist.mean
+        std = dist.stddev
+
+        mu_cond, sigma_cond = self._ou_conditional(mean, std, noise_prev, noise_phi)
+        cond_dist = Normal(mu_cond, sigma_cond)
 
         # 反 squash: squashed → raw
         clamped = taken_actions.clamp(
@@ -276,9 +329,9 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         )
         raw_action = torch.atanh(clamped / self._action_scale)
 
-        log_prob_raw = dist.log_prob(raw_action).sum(dim=-1)
+        log_prob_raw = cond_dist.log_prob(raw_action).sum(dim=-1)
         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
-        entropy = dist.entropy().sum(dim=-1)
+        entropy = cond_dist.entropy().sum(dim=-1)
 
         return log_prob, entropy, value
 

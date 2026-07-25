@@ -1,0 +1,30 @@
+{
+  "tag": "treefix3",
+  "intent": "treefix2 配方重跑",
+  "status": "aborted",
+  "note": "跑到 iter5 即中止。",
+  "archived_at": "2026-07-25T19:08:43+08:00",
+  "archived_from": [
+    "checkpoints_treefix3",
+    "logs_treefix3"
+  ],
+  "console_sources": [
+    "logs_treefix3_run.txt"
+  ],
+  "checkpoints_kept": [],
+  "checkpoints_dropped": 1,
+  "keep_policy": "none (aborted)",
+  "metrics_summary": {
+    "iterations_recovered": 5,
+    "iteration_range": [
+      1,
+      5
+    ],
+    "mean_reward_final": 0.2309,
+    "mean_reward_max": 1.0535,
+    "value_loss_final": 13.576141,
+    "value_loss_max": 215.207545
+  },
+  "config_repr": "TrainConfig(game_root='C:\\\\Users\\\\Symbol\\\\software\\\\game_store\\\\steam\\\\steamapps\\\\common\\\\Getting Over It', num_agents=10, port=9000, warmup_steps=100, settle_steps=30, steps_per_rollout=500, state_dim=33, action_dim=2, dynamics_clip=10.0, d_model=128, nhead=4, num_layers=3, context_len=32, patch_size=32, patch_channels=4, patch_resolution=0.5, dropout=0.1, patch_mode='dualscale', wide_patch_resolution=2.0, contact_patch_resolution=0.2, wide_channels=1, contact_channels=3, body_angle_source='hub', body_angle_offset=-90.0, body_scale=1.0, lr=0.0001, epochs=10, batch_size=256, action_scale=100.0, max_grad_norm=0.5, max_grad_norm_cap=5.0, weight_decay=0.0001, val_ratio=0.1, early_stop_patience=3, num_workers=4, max_good_trajectories=300, warmup_rollouts=50, keep_ratio=0.5, rollouts_per_iteration=3, efficiency_weight=1.0, speed_ref_steps=50, waypoint_weight=0.5, bc_waypoint_weight=0.0, abs_height_weight=0.02, progress_wx=0.5, dwell_steps=15, dwell_drop_tol=1.0, grid_resolution=1.0, diffusion_iterations=80, diffusion_alpha=0.3, height_prior_weight=0.0, random_deploy=False, drop_height=2.0, surface_padding=0.3, y_max_cutoff=380.0, settle_drop_threshold=5.0, deploy_tip_obstacle_check=True, tip_angle_source='pole', tip_angle_offset=-90.0, tip_scale=1.0, deploy_exclusion_check=True, water_y_threshold=-10.0, water_penalty=-10.0, explore_noise_std=0.1, noise_decay=0.95, gamma=0.99, gae_lambda=0.95, pbrs_gamma=1.0, clip_epsilon=0.2, ppo_epochs=4, vf_coef=0.25, ent_coef=0.001, target_kl=0.03, ppo_batch_size=64, normalize_advantages=True, ppo_init_log_std=-1.6, ppo_log_std_min=-2.5, ppo_log_std_max=0.0, explore_boost_enabled=True, explore_stall_patience=8, explore_stall_eps=0.5, explore_boost_step=0.2, explore_boost_max=0.8, explore_sil_relax=0.5, value_warmup_iters=5, value_warmup_epochs=8, ppo_kl_stop_factor=1.5, sil_enabled=True, sil_start_iter=5, sil_traj_cap=20, sil_keep_ratio=0.3, sil_batch_size=64, sil_epochs=1, sil_loss_coef=0.5, sil_max_batches=40, sil_num_workers=4, neg_reward_scale=0.0, reward_alpha=0.5, max_iterations=190, save_interval=5, log_dir='logs_treefix3', checkpoint_dir='checkpoints_treefix3')",
+  "started_at": "2026-07-21T14:22:59.633Z"
+}

@@ -13,7 +13,7 @@ description: 描述本项目（Getting Over It 强化学习）的核心任务、
 
 - 《Getting Over It》是高难度物理攀爬游戏：角色坐在缸中，玩家用鼠标操纵锤子勾/撑/推地形把自己撑上山。操作极难、极不连续，一步失误可能滑落到起点。
 - 攀爬是**稀疏、长时程、易回退**的信用分配问题，这是奖励设计的根本难点。
-- 锤子由**不可见的 `fakeCursorRB`** 通过弹性约束牵引，其位置/速度是控制链的隐藏状态，属于观测的必要组成。原始状态为 **33D**（索引 29-32 为 cursor 坐标+速度）。
+- 锤子由**不可见的 `fakeCursorRB`** 牵引（实现为 hinge/slider 关节的限力速度伺服而非弹簧，见 `doc/hammer_physics.md`），其位置/速度是控制链的隐藏状态，属于观测的必要组成。原始状态为 **33D**（索引 29-32 为 cursor 坐标+速度）。
 
 ## 系统架构（不可动摇的约束）
 
@@ -21,6 +21,11 @@ description: 描述本项目（Getting Over It 强化学习）的核心任务、
 - 每个 RL step = 一次阻塞式请求-响应，实现**帧级同步**。
 - 端口从 `src/config/project.json` 的 `tcp_port` 读取（默认 9000），**禁止硬编码**。
 - 多 agent 并行：一次 STEP 同时推进 N 个复制体（agent 0 = 原始 Player，1..N-1 = Duplicate）以提高样本效率。
+
+## 运行环境（Python 训练侧）
+
+- Python 侧统一使用 **conda 环境 `getting-over-it-analysis`**，所有训练 / 测试 / 分析脚本均在该环境下运行。
+- 运行命令一律以 `conda run -n getting-over-it-analysis python ...` 或先 `conda activate getting-over-it-analysis` 为前提，勿使用系统默认 Python。
 
 ## 观测 / 动作 / 终止
 
@@ -47,4 +52,5 @@ description: 描述本项目（Getting Over It 强化学习）的核心任务、
 ## 深入参考
 
 - 完整数据流、模型结构、TCP 协议、评分/奖励细节见 `doc/training.md`。
+- 锤子物理模型（fakeCursor 运动学、hinge/slider 伺服律、力传递与出射速度包络的数学表示）见 `doc/hammer_physics.md`。
 - 目录职责与通信规范见 `.cursor/rules/project-standards.mdc`。

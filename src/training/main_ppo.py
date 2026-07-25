@@ -3,12 +3,14 @@ PPO 训练入口 — 策略梯度迭代循环。
 
 每轮: 启动游戏 → collect_ppo → 关闭游戏 → PPO update → 日志/checkpoint
 
-用法:
-  python -m src.training.main_ppo
-  python -m src.training.main_ppo --num-agents 5 --max-iterations 200
-  python -m src.training.main_ppo --steps-per-rollout 300
+完整 CLI / 推荐配方 / 废弃清单见 doc/main_ppo_usage.md。
+
+用法（当前最小任务 — 关 deploy、短 episode）:
+  python -m src.training.main_ppo --no-random-deploy --steps-per-rollout 400 --persist-game
+  python -m src.training.main_ppo --no-random-deploy --resume-bc checkpoints/model_iter_0010.pt
   python -m src.training.main_ppo --resume checkpoints/ppo_iter_0050.pt
-  # 仅在 125m 以下区域随机投放 + 每轮 500 步（低处课程与步长呼应）
+
+低处课程投放（基座过树后再用）:
   python -m src.training.main_ppo --random-deploy --y-max-cutoff 125 --steps-per-rollout 500
 """
 
@@ -30,6 +32,7 @@ if str(_REPO_ROOT / "src") not in sys.path:
 from training.actor_critic import ActorCritic
 from training.config import TrainConfig
 from training.dataset import TrajectoryDataset, compute_dynamics_stats
+from training.model import expand_state_dict_for_dynamics_dim
 from training.ppo_trainer import PPOTrainer
 from training.deploy_sampling import (
     default_candidate_points_path,
@@ -45,6 +48,7 @@ from training.reward import (
     score_trajectory,
 )
 from training.rollout import RolloutWorker
+from training.run_logging import RunRecorder, resolve_run_paths
 
 sys.path.insert(0, str(_REPO_ROOT / "src" / "tests" / "control_interaction"))
 from test_l7_surface_airdrop import (
@@ -176,8 +180,17 @@ def parse_args() -> argparse.Namespace:
             "与 --steps-per-rollout 配套限定低处训练区，如 --y-max-cutoff 125 --steps-per-rollout 500"
         ),
     )
-    parser.add_argument("--checkpoint-dir", type=str, default=None)
-    parser.add_argument("--log-dir", type=str, default=None)
+    parser.add_argument(
+        "--run-dir", type=str, default=None,
+        help=(
+            "实验归档目录（推荐）。给个裸名字即落到 runs/<名字>/，checkpoint、效率图、"
+            "控制台、指标、精英池全部收在这一个目录里；与 --checkpoint-dir/--log-dir 互斥"
+        ),
+    )
+    parser.add_argument("--checkpoint-dir", type=str, default=None,
+                        help="（旧式）checkpoint 输出目录；新实验请改用 --run-dir")
+    parser.add_argument("--log-dir", type=str, default=None,
+                        help="（旧式）效率图输出目录；新实验请改用 --run-dir")
     parser.add_argument("--lr", type=float, default=None)
     parser.add_argument("--ent-coef", type=float, default=None)
     parser.add_argument(
@@ -220,6 +233,9 @@ def main() -> None:
     _setup_logging()
     args = parse_args()
 
+    if args.run_dir and (args.checkpoint_dir or args.log_dir):
+        raise SystemExit("--run-dir 与 --checkpoint-dir/--log-dir 互斥，二选一")
+
     config = TrainConfig()
     if args.num_agents is not None:
         config.num_agents = args.num_agents
@@ -246,7 +262,23 @@ def main() -> None:
     if args.random_deploy is not None:
         config.random_deploy = args.random_deploy
 
+    # ── 运行归档 ──
+    # --run-dir 把产物收敛到 runs/<tag>/ 并开启元数据/指标/控制台/精英池落盘；
+    # 走旧式 --checkpoint-dir/--log-dir 时 recorder 为 None，行为与从前完全一致。
+    recorder: RunRecorder | None = None
+    if args.run_dir:
+        paths = resolve_run_paths(args.run_dir, repo_root=_REPO_ROOT)
+        config.checkpoint_dir = str(paths.checkpoints)
+        config.log_dir = str(paths.logs)
+        recorder = RunRecorder(paths, repo_root=_REPO_ROOT)
+        recorder.attach_console()
+        logger.info("实验归档目录: %s", paths.root)
+
     logger.info("PPO Config: %s", config)
+    if recorder is not None:
+        recorder.write_meta(config, argv=sys.argv, extra={
+            "resume": args.resume, "resume_bc": args.resume_bc,
+        })
 
     # ── 初始化 ──
     model = ActorCritic(config)
@@ -256,7 +288,10 @@ def main() -> None:
 
     if args.resume:
         ckpt = torch.load(args.resume, weights_only=False)
-        model.load_state_dict(ckpt["model"])
+        # 老 34D checkpoint → 38D 兼容：dynamics_proj 加 4 新列（初始化 0）+ dyn_mean/std 追加
+        # 4 个元素（0/1）。见 model.expand_state_dict_for_dynamics_dim 文档。
+        expanded = expand_state_dict_for_dynamics_dim(ckpt["model"], model.state_dict())
+        model.load_state_dict(expanded)
         start_iteration = ckpt.get("iteration", 0)
         if "optimizer" in ckpt:
             ppo_trainer.set_pending_optimizer_state(ckpt["optimizer"])
@@ -375,8 +410,10 @@ def main() -> None:
     _boost = 0.0
 
     # ── 主循环 ──
+    last_iteration = start_iteration
     try:
         for iteration in range(start_iteration, config.max_iterations):
+            last_iteration = iteration
             logger.info("=" * 60)
             logger.info("=== PPO 迭代 %d/%d ===", iteration + 1, config.max_iterations)
 
@@ -418,22 +455,47 @@ def main() -> None:
                 prev_eff_map = eff_map.copy()
                 eff_map.update(trajectories, config, prev_eff_map)
 
-            # Phase 1.6: 更新 Self-Imitation 精英池（每轮 top-K% 入池 → 按分数全局保留 top-N）
+            # Phase 1.6: 更新 Self-Imitation 精英池
+            # 默认走 MAP-Elites（P1.2）：bd=secured peak (x,y)，每 cell 保留分数最高一条；
+            # 是否达到 sil_traj_cap 由 cell 数决定，仍以分数 top-N 兜底裁剪防止过大。
+            # sil_map_elites_enabled=False 时回退到旧 top-K% 相对门槛路径。
             if sil_dataset is not None and trajectories:
                 sil_dataset.update_efficiency_arr(eff_map.get_arr())
                 sil_scores = [
                     score_trajectory(t.raw_states, eff_map, config)
                     for t in trajectories
                 ]
-                sil_dataset.add_trajectories(
-                    trajectories, sil_scores,
-                    keep_ratio=config.sil_keep_ratio, iteration=iteration,
-                )
-                # 按分数保留 top-N（非 FIFO，历史最优开局不被时间淘汰），set_trajectories 重建索引
-                top = sorted(
-                    sil_dataset.trajectories, key=lambda t: t.score, reverse=True,
-                )[: config.sil_traj_cap]
-                sil_dataset.set_trajectories(top)
+                if config.sil_map_elites_enabled:
+                    me_stats = sil_dataset.add_trajectories_map_elites(
+                        trajectories, sil_scores,
+                        iteration=iteration,
+                        cell_size=config.sil_cell_size,
+                        cold_start_min=config.sil_cold_start_min,
+                    )
+                    logger.info(
+                        "[SIL/MAP-Elites] cells=%d, admitted=%d, replaced=%d "
+                        "(cell_size=%.1fm)",
+                        me_stats["n_cells"], me_stats["n_admitted"],
+                        me_stats["n_replaced"], config.sil_cell_size,
+                    )
+                    if recorder is not None:
+                        recorder.stage_metrics(
+                            me_cells=me_stats["n_cells"],
+                            me_admitted=me_stats["n_admitted"],
+                            me_replaced=me_stats["n_replaced"],
+                        )
+                else:
+                    sil_dataset.add_trajectories(
+                        trajectories, sil_scores,
+                        keep_ratio=config.sil_keep_ratio, iteration=iteration,
+                    )
+                # 按分数保留 top-N 兜底（防 cell 数长期无界增长；MAP-Elites 下同 cell
+                # 至多 1 条 → 天然稀疏，通常远低于 cap，此裁剪几乎 no-op 但保底）
+                if len(sil_dataset.trajectories) > config.sil_traj_cap:
+                    top = sorted(
+                        sil_dataset.trajectories, key=lambda t: t.score, reverse=True,
+                    )[: config.sil_traj_cap]
+                    sil_dataset.set_trajectories(top)
 
             # Phase 2: PPO 更新（前 value_warmup_iters 轮只预热 critic，冻结策略防灾难性遗忘）
             value_only = iteration < config.value_warmup_iters
@@ -486,13 +548,20 @@ def main() -> None:
                         )
                         _stall = 0
                 model.exploration_boost = _boost
+                _std_now = float((model.actor_log_std + _boost).clamp(
+                    config.ppo_log_std_min, config.ppo_log_std_max
+                ).exp().mean())
                 logger.info(
                     "[explore] pool_best_sdy=%.2f stall=%d boost=%.2f (std≈%.3f)",
-                    _best_pool_sdy, _stall, _boost,
-                    float((model.actor_log_std + _boost).clamp(
-                        config.ppo_log_std_min, config.ppo_log_std_max
-                    ).exp().mean()),
+                    _best_pool_sdy, _stall, _boost, _std_now,
                 )
+                if recorder is not None:
+                    recorder.stage_metrics(
+                        explore_pool_best_sdy=_best_pool_sdy,
+                        explore_stall=_stall,
+                        explore_boost=_boost,
+                        explore_std=_std_now,
+                    )
 
             # Phase 3: 日志 & 保存
             reward_arr = np.array(buffer._rewards)
@@ -502,6 +571,8 @@ def main() -> None:
                 "buffer_size": float(buffer.size),
             }
             log_metrics(iteration + 1, metrics, extras)
+            if recorder is not None:
+                recorder.append_metrics(iteration + 1, metrics, extras)
 
             if (iteration + 1) % config.save_interval == 0:
                 save_checkpoint(
@@ -509,14 +580,32 @@ def main() -> None:
                     iteration + 1, config.checkpoint_dir,
                 )
                 save_efficiency_map(eff_map, env_data, iteration + 1, config.log_dir)
+                # 精英池只活在内存里，不随 checkpoint 走。不在这里快照，"策略当时到底
+                # 走出了什么行为"就只能靠事后重新拉游戏在环采样去猜。
+                if recorder is not None and sil_dataset is not None:
+                    recorder.save_elites(sil_dataset.trajectories, iteration + 1)
 
         # 最终保存
         save_checkpoint(
             model, ppo_trainer.optimizer,
             config.max_iterations, config.checkpoint_dir,
         )
+        if recorder is not None:
+            if sil_dataset is not None:
+                recorder.save_elites(sil_dataset.trajectories, config.max_iterations)
+            recorder.finalize("completed", last_iteration=config.max_iterations)
         logger.info("PPO 训练完成")
 
+    except BaseException as exc:
+        # 中断（Ctrl-C）和异常都要把 run_meta 落到终态，否则归档里留下一个永远
+        # "running" 的记录，事后分不清是跑完了还是崩了。
+        if recorder is not None:
+            recorder.finalize(
+                "interrupted" if isinstance(exc, KeyboardInterrupt) else "failed",
+                last_iteration=last_iteration,
+                error=f"{type(exc).__name__}: {exc}",
+            )
+        raise
     finally:
         rollout_worker.teardown()
 

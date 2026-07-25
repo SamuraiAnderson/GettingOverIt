@@ -34,6 +34,8 @@ C# → Python STATE：`[n:1B]` + 逐 agent `[state 33×4B][done 1B]`，**state/d
 
 动作 = 2D 鼠标相对位移 `(dx,dy)`，`ClampInput` 限幅 ±100。双路注入：① 反射写 `PlayerControl.mouseInput`；② `RewiredMouseOverride` + Harmony 拦截 `GetAxis("mouseX"/"mouseY")` 返回注入值。仅在手动 `InvokeFixedUpdate`（`CurrentAgentIndex>=0`）时返回真实值，Unity 自动 FixedUpdate 返回 0（无操作）。`PlayerControl.Update()` 被 patch 跳过，防真实鼠标覆盖。
 
+注入值到锤子的物理语义（`PlayerControl.FixedUpdate` 内，详见 `doc/hammer_physics.md`）：`(dx,dy)` 不是米，要过 sensitivity × mouseCurve × 0.5 EMA 平滑 × 自适应增益才变成 fakeCursor 位移；cursor 被硬钳制在 |cursor−player| ≤ 3.5m；**零动作非中性**（cursor 会回吸向锤头）；锤子由 hinge/slider 限力速度伺服追 cursor（无弹簧关节）。
+
 ## 输出状态的获取（33D）
 
 1. **29D**：`PlayerStateService.SampleCurrentState()` 反射读各部件 `Transform`/`Rigidbody2D` → `PlayerState.ToFloatArray()` 定序展开（0-4 player pos/vel/angVel，5-9 hub，10-14 slider，15-18 handle，19-22 pole，23-26 tip，27 hammerAngle 派生，28 timestamp）。**顺序即协议契约**。
@@ -55,4 +57,10 @@ C# → Python STATE：`[n:1B]` + 逐 agent `[state 33×4B][done 1B]`，**state/d
 
 ## 深入参考
 
-完整分析、字段索引表、代码引用见 `doc/entrypoints.md`；数据流/模型/奖励见 `doc/training.md`；目录职责见 `.cursor/rules/project-standards.mdc`。
+完整分析、字段索引表、代码引用见 `doc/entrypoints.md`；数据流/模型/奖励见 `doc/training.md`；锤子物理模型与力传递数学表示见 `doc/hammer_physics.md`；「游戏即并行世界模型」前提验证（确定性/隔离/reset 完整性/混沌）见 `doc/planb_premise_verification.md`；目录职责见 `.cursor/rules/project-standards.mdc`。
+
+## Reset 复现性：已修复项 + 固有下限
+
+`StepController.Reset()` 恢复刚体 + fakeCursor **+ PlayerControl 动作相关内部态**（修复1：`mouseVelocityAverage`/`oldMouse`/`mw`/`oldAngle`/`pauseInputTimer`/`mouseSnap`/`inputsToSkip`，经 `PlayerInputService.Set/GetInternalState` 反射）；`CaptureAllSnapshots` 经 `BroadcastCanonicalSnapshot` 把 agent0 权威态广播到所有复制体（修复2）。实测：静止启动姿态下零动作跨 reset/跨 agent 可复现到 1e-4~1e-7（两修复有效）。
+
+**固有下限**：Unity `Physics2D`（Box2D）求解器内部态（接触/关节 warm-start）不可经刚体快照恢复，构成 ~1e-4 非确定性地板；摆动启动姿态下被拍频放大到 ~0.1，激烈动作被确定性混沌放大。故「游戏即**逐位**世界模型」不可达（方案 B 只能作近似短时域 MPC），但**不影响常规 PPO/BC 训练**（不依赖跨 reset 逐位复现）。完整分析见 `doc/planb_premise_verification.md`，验证脚本 `src/tests/control_interaction/test_planb_premise.py`。

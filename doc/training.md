@@ -38,19 +38,31 @@
 
 三模态输入，上下文长度 `context_len=32`：
 
-- **dynamics** `(B, T, 34)` — 由 `dataset.build_dynamics()` 从原始 33D 状态构建的特征（水平方向平移等变），组成：
+- **dynamics** `(B, T, 39)` — 由 `dataset.build_dynamics()` 从原始 33D 状态构建的特征（水平方向平移等变），组成：
   - 15 维速度/角速度（player + 各部件线速度、player 角速度、**cursor 线速度**），原始值，见 `VELOCITY_INDICES`
   - 3 个角度（hubAngle/sliderAngle/hammerAngle）→ **(sin, cos)** 共 6 维；角度在 C# 侧为「度」，编码前 `deg2rad`，消除环绕不连续，见 `ANGLE_INDICES`
   - 6 个部件（hub/slider/handle/pole/tip/**cursor**）相对 player 的坐标 `(part - player)` 共 12 维，保留相对几何精度，见 `REL_POS_INDICES`
   - **1 维绝对高度 `player_y`**（`ABS_HEIGHT_INDEX`）：唯一刻意保留的非平移等变项。水平(x)无绝对偏好故对 x 等变；但重力、落水阈值、"爬得越高越好"均以世界 y 为绝对参照，缺失会让策略无法感知海拔/离水距离。归一化后绝对 y 与「离水距离 (y-threshold)」等价。
-  - 维度常量 `DYNAMICS_DIM = 34`，**与 `config.state_dim=33`（原始状态维度）解耦**：模型 `dynamics_proj`/归一化 buffer 用 `DYNAMICS_DIM`，`state_dim` 仅指 C# 回传的原始 33 维。
+  - 以上 34 维为 `BASE_DYNAMICS_DIM`。
+  - **5 维接触信号**（`contact_features.CONTACT_DIM`，roadmap P2.1）：`tip_contact` / `tip_grip` / `body_contact` / `pot_contact` / `fall_distance_norm`。Python 端以多边形几何复刻游戏原生 `HammerCollisions` + `PlayerSounds` 判断（阈值 `CONTACT_EPSILON=0.03m`、`GRIP_VEL_THRESHOLD=0.3`、向下射线 clip[0,20]/20 均对齐反编译 IL），**wire 协议不变（C# 仍只回传 33D）**。`body_contact` 与 `pot_contact` 按游戏 IL 里 `rb.GetPoint(contact).y > 0.4` 分层各自输出（body 触地=撞头 pain，pot 触地=稳定支点，语义相反，合并会互相抵消）。详见 `doc/optimization_roadmap.md` P2.1。
+  - 维度常量 `DYNAMICS_DIM = BASE_DYNAMICS_DIM + CONTACT_DIM = 39`，**与 `config.state_dim=33`（原始状态维度）解耦**：模型 `dynamics_proj`/归一化 buffer 用 `DYNAMICS_DIM`，`state_dim` 仅指 C# 回传的原始 33 维。
 - **patches** `(B, T, 4, 32, 32)` — 局部空间图，由 `config.patch_mode` 决定语义（离线 `dataset.build_patch` 与在线 `rollout._build_patches_batch` 共用同一实现）：
   - **`dualscale`（默认，双分支 · 强调碰撞几何）**：通道切分为 wide `[0]` + contact `[1:4]`，编码器 `DualScaleSpatialEncoder` 分两路 CNN 编码后 concat 融合。两分支均以 player 为中心，仅尺度不同：
     - `[0]` wide 攀爬效率图 — player 中心、**大范围低精度**（`wide_patch_resolution=2.0` m/px → 64 m 窗口，降采样）。效率图本就从 traversable 地形 mask 扩散而来，已隐含全局地形结构，故 wide 只放它做全局引导。
-    - `[1]` contact 高精度地形实心 mask — player 中心、**中高精度**（`contact_patch_resolution=0.2` m/px → 6.4 m 窗口），由 `rasterize_solid_local` 逐格点在多边形内判定。
-    - `[2]` contact 锅/body 碰撞轮廓 — `body∪pot` 局部轮廓按 `player→hub` 方向 + `body_angle_offset` 重建为世界多边形后填充（与地形同栅格 co-registered）。
-    - `[3]` contact 锤头碰撞轮廓 — tip 局部轮廓按 `pole→tip` 方向 + `tip_angle_offset` 重建后填充（同一 player 中心网格）。
+    - `[1]` contact 高精度地形实心 mask — player 中心、**中高精度**（`contact_patch_resolution=0.27` m/px → 8.64 m 窗口，半径 4.32 m），由 `rasterize_solid_local` 逐格点在多边形内判定（二值；地形特征米级，远大于一格，不需抗锯齿）。
+    - `[2]` contact 锅/body 碰撞轮廓 — `body∪pot` 局部轮廓按 `player→hub` 方向 + `body_angle_offset` 重建为世界多边形后，按**面积覆盖率**栅格化（与地形同栅格 co-registered）。
+    - `[3]` contact 锤头碰撞轮廓 — tip 局部轮廓按 `pole→tip` 方向 + `tip_angle_offset` 重建后同样按面积覆盖率栅格化（同一 player 中心网格）。
+    - **部件轮廓必须抗锯齿（`PART_RASTER_SUBSAMPLES=4`）**：Player 部件远小于一格——真实 tip 轮廓 bbox 仅 `0.148 × 0.448` m，在 0.2 m/px 下宽 0.74 px、0.27 m/px 下 0.55 px，**都不足 1 像素**。旧的「格心在多边形内」二值判据下，多边形可整体落在相邻格心之间而一个格心都不含 → **整帧通道全零、锤头对 CNN 完全不可见**：实测旧配置（0.2 m/px 二值）空通道率 **8.7%**，平均仅 1.28 个像素。改为面积覆盖率（每格取被多边形覆盖的面积比例，`subsamples²` 个子采样点估计）后空通道率归 **0%**，且**亚像素位置与朝向由灰度强度承载**，信息量高于同分辨率的二值。子采样只在轮廓 bbox（通常几格）内做，故图元开销仅 +16%（44.4 → 51.4 μs），`build_patch` 整体 0.445 ms/次不变量级。诊断/基准：`python -m src.tests.analysis.diagnose_tip_rasterization`、`bench_patch_raster`；正确性单测 `src/tests/training/test_raster_area_coverage.py`（覆盖率总和 ≈ 多边形面积、内部格=1、`subsamples=1` 严格退化为旧二值）。
     - 三个 contact 通道 co-registered，使 CNN 直接看到锅/锤头各自与地形、以及彼此的接触关系。身体姿态另由 dynamics 向量承载。
+    - **刻意不在 patch 里另加"接触边缘/接触点"通道**，理由是分辨率与职责分工：
+      - **分辨率失配 6.7×**：contact 栅格 `0.2` m/px，而游戏接触阈值 `CONTACT_EPSILON=0.03` m。一格比阈值粗 6.7 倍 → "贴着接触"与"悬空 0.15m"落在同一格，patch 上长得一样；且栅格化是「格中心点在多边形内」判定（`MplPath.contains_points`），两多边形相切时边界格标 0 还是 1 完全取决于亚格子舍入 → **在 patch 分辨率下标出来的接触是走样的噪声，不是 ground truth**。
+      - **CNN 已能从现有通道取到接触的空间信息**：ch1/ch2/ch3 co-registered，故"重叠区域"= 逐像素 AND = `relu(ch1+ch2-1)`，一个 1×1 卷积 + ReLU 就精确表达；接触法向同理（地形 mask 的局部梯度即法向，conv 第一层天生是梯度算子）。这与 P2.1 里"多边形距离查询是 O(V·E) 符号几何算法、CNN 学不动"是**完全不同量级**的难度，不需要替它算。
+      - **职责分工**：patch 管**空间布局**（哪里有什么形状，格子级精度够用）；dynamics 向量管**精确物理谓词**（亚格子接触判定、grip 状态机、离地距离）——后者正是 P2.1 的 5 维接触信号，用精确几何算、不受栅格分辨率限制。在 patch 里再标一遍，等于用低精度媒介重复表达已用高精度媒介表达好的东西。
+    - **窗口半径由锤子几何硬上界反推（已修复出窗，勿下调）**：contact 半径需 ≥ **3.78 m**，来自 `|hub−player| = 0.3546`（刚性偏移）+ slider 全伸 `|tip−hub| = 2.955`（关节硬限位）= tip 原点上界 **3.31 m**，取 `PlayerControl` IL 里硬编码的 `|cursor−player| ≤ 3.5f` 作设计上界（与求解器软性超调实测极值 ≈3.49 m 吻合），再加 tip 轮廓半径 **0.279 m**；另留 2 格地形上下文（锤头全伸时也要看得到它接触的那块地形）→ ≈**4.28 m**。旧配置 `32 × 0.2` = 半径 3.2 m 不足，约 **0.46%** 的帧里锤头贴窗边、接触的地形被裁掉，而这些恰是「锤子伸到最远够远处落点」的高价值帧。现配置 `32 × 0.27` = 半径 **4.32 m**，余量 +0.51 m。
+      - **注意**：`|tip−player|` 有几何硬上界，其分布在上界处**截断而非高斯**。早期用 `dyn_mean/dyn_std` 正态外推得出的「2.9% 的帧 tip 中心出窗」是严重高估（正态尾延伸到无穷）——15.2 万真实帧里 tip 中心从未出过 3.2 m 窗口，真正的问题只是贴边裁掉周围地形。故核验一律走几何判据，勿用统计外推。
+      - **为何改分辨率而非 `patch_size`**：保持 patch shape `(4,32,32)` 不变 → checkpoint 完全兼容（`SpatialEncoder` 里 `Linear(128*4*4, d)` 的 flatten 维度锁死 2048，改 size 需做空间对齐的权重迁移）、wide 分支不被迫从 64 m 变 80 m、每帧栅格化格点数不变。分辨率变粗的信息代价已被上面的面积覆盖率栅格化抵消。
+      - 核验：`python -m src.tests.analysis.check_tip_patch_coverage`（几何硬上界 + 360° 最坏姿态扫描）；回归单测 `src/tests/training/test_patch_tip_coverage.py`（走真实 `build_patch`，断言 360° 全伸姿态下 ch3 既非空也不贴窗边，并反向确认旧 0.2 m/px 确实会裁）。
+    - **ch2 仍是 `body∪pot` 合并**（与向量端 P2.1 把 `body_contact`/`pot_contact` 拆开**有意不对称**）：patch 是空间图，body 与 pot 本就空间分居上下，CNN 从形状上能区分上半团/下半团；而向量端若合并成单个标量 0/1 则是真正的信息丢失（两者语义相反会抵消）。故只拆向量端。
     - **TODO（轮廓朝向为粗标定）**：锤头 `tip_angle_offset=-90°`（`pole/-90/scale=1`，经 `verify_tip_reconstruction` 粗扫描）与 body `body_angle_offset=-90°`（`player→hub / -90 / scale=1`，经 `verify_body_reconstruction` 粗扫描确认躯干朝上、锅贴地）均已在 90° 粒度确认，但仍为近似；精确值待细粒度扫描或 C# 回传部件世界顶点真值。
   - **`legacy`（旧单尺度 4ch，A/B baseline）**：以 player 为中心 0.5 m/px 的 4 通道 — ch0 地形可通行 mask、ch1 攀爬效率图、ch2 身体部件（player/hub/slider）高斯 blob、ch3 锤子部件（handle/pole/tip）高斯 blob。
 - **actions** `(B, T, 2)` — 历史动作。
@@ -63,7 +75,7 @@ dynamics 观测归一化 (dyn_mean/dyn_std buffer)
 DualScaleSpatialEncoder:
   dualscale → wide CNN(1ch→d/2) + contact CNN(3ch→d/2) → concat → Linear(d)
   legacy    → 单 CNN(4ch→32→64→128 → Linear 2048→128)
-dynamics_proj(Linear 34→128)
+dynamics_proj(Linear 39→128)
   → concat → fusion(Linear 256→128) = obs_embed
 action_proj(Linear 2→128) = act_embed
   → 交错序列 [obs_0, act_0, obs_1, act_1, ...] 长度 2T=64
@@ -78,7 +90,7 @@ action_proj(Linear 2→128) = act_embed
 | `ActionPredictor` (BC) | `Linear(128→2) → tanh × 100` | 确定性回归 |
 | `ActorCritic` (PPO) | Actor 高斯 (mean, std) + tanh squash × 100；Critic MLP → V(s) | 随机策略 + log_prob 修正 |
 
-默认超参：`d_model=128`、`nhead=4`、`num_layers=3`、`action_scale=100.0`、`context_len=32`、`state_dim=33`（原始状态维度）、`DYNAMICS_DIM=34`（模型消费的动力学特征维）。
+默认超参：`d_model=128`、`nhead=4`、`num_layers=3`、`action_scale=100.0`、`context_len=32`、`state_dim=33`（原始状态维度）、`DYNAMICS_DIM=39`（模型消费的动力学特征维 = 34 base + 5 接触信号）。
 
 ### 2.1 观测预处理与归一化
 
@@ -88,7 +100,11 @@ action_proj(Linear 2→128) = act_embed
   - 标定后冻结，不随迭代变化，避免 Critic 目标漂移。
 - **padding mask**：历史窗口左填充零（起步阶段）。定长窗口的左填充与 `valid_mask` 生成由**唯一原语 `dataset.left_pad_sequence`** 完成，离线 `__getitem__` 与在线 `rollout._build_history_window` 共用它（各自把「右对齐的真实步序列」交给它填充），从结构上消除历史上的 off-by-one。随后 `build_key_padding_mask` 将 `valid_mask` 按交错序列展开为 `(B, 2T)` 加性掩码（填充位 `-inf`，与 causal mask 同为浮点类型），使 Transformer 忽略填充 token；最后一个时间步恒有效，不会出现整行 `-inf` 的 NaN。
 
-> 兼容性：原始状态由 29 维扩为 **33 维**（新增 fakeCursor 绝对坐标+速度，索引 29-32），`state_dim=33`。**动力学特征维 `DYNAMICS_DIM` 现为 34**（新增绝对高度 `player_y`），与 `state_dim` 解耦；`dynamics_proj` 输入维度与归一化 buffer 随之为 34，**旧的 `.pt` checkpoint 不再兼容，需重新训练与重标定**。原始 33 维状态本身不变，故只含 33 维原始状态的轨迹缓存仍可用（`build_dynamics` 会在读取时重新产出 34 维特征）；`environment.json`、效率图 npz 等环境级产物照常复用。
+> 兼容性：原始状态由 29 维扩为 **33 维**（新增 fakeCursor 绝对坐标+速度，索引 29-32），`state_dim=33`。**动力学特征维 `DYNAMICS_DIM` 现为 39**（34 base 含绝对高度 `player_y`，+ 5 维 P2.1 接触信号），与 `state_dim` 解耦；`dynamics_proj` 输入维度与归一化 buffer 随之为 39。
+>
+> **旧 checkpoint 走 partial-load 无缝迁移**：`model.expand_state_dict_for_dynamics_dim(ckpt_state, current_state)` 把 `dynamics_proj.weight` 前 34 列原值保留、后 5 列初始化 0，`dyn_mean`/`dyn_std` 前 34 保留、后 5 pad 0/1 → 新特征"起手无效应"，训练中逐步被学到。`main_ppo` 的 `--resume` 路径已自动调用；已用真实 iter=260 ckpt（`dynamics_proj.weight (128,34) → (128,39)`）端到端验证（`src/tests/training/test_p2_contact_integration.py`）。
+>
+> 原始 33 维状态本身不变，故只含 33 维原始状态的轨迹缓存仍可用（`build_dynamics` 会在读取时重新产出 39 维特征；缺 `contact` 序列的老轨迹尾 5 维零填充，等价旧 34D 行为）；`environment.json`、效率图 npz 等环境级产物照常复用。
 
 ## 三、Observation / Action
 
@@ -108,7 +124,7 @@ action_proj(Linear 2→128) = act_embed
 | 29-30 | cursorX, cursorY（fakeCursor 绝对坐标） |
 | 31-32 | cursorVelX, cursorVelY（fakeCursor 线速度） |
 
-> **为何加 cursor**：hammer 由不可见的 `fakeCursorRB` 通过弹性约束牵引，其位置/速度是控制链的隐藏状态。原始 29D 缺失 cursor 后观测非马尔可夫（同一部件状态下施加相同 action 可得不同响应）。补入 cursor 4 维后恢复马尔可夫性。teleport 时 cursor 随 player 平移、速度清零，保证 reset 一致性。
+> **为何加 cursor**：hammer 由不可见的 `fakeCursorRB` 牵引（实现为 hinge/slider 关节速度伺服而非弹簧，锤子物理模型与力传递的数学表示见 `doc/hammer_physics.md`），其位置/速度是控制链的隐藏状态。原始 29D 缺失 cursor 后观测非马尔可夫（同一部件状态下施加相同 action 可得不同响应）。补入 cursor 4 维后恢复马尔可夫性。teleport 时 cursor 随 player 平移、速度清零，保证 reset 一致性。
 
 - **Action**：2D 鼠标相对位移 `(dx, dy)`，范围 `[-100, 100]`，经 C# `PlayerInputService` 反射注入 `mouseInput`。
 - **Done**：C# 侧 `done` 标志，或 Python 侧落水判定。落水阈值判定收敛为单一入口 `reward.is_water(y, config)`（`y < water_y_threshold`，默认 -10.0）；step 级 done、`step_reward` 落水扣分、轨迹级过滤 `is_water_trajectory`（最低点触水）均由其派生。
@@ -132,8 +148,9 @@ GameLauncher 启动游戏 → GoiEnv.connect(9000)
 
 ## 五、数据缓冲差异
 
-- **PPO**：`PPORolloutBuffer`，on-policy。每 agent 独立 GAE 后 merge，每轮更新完即丢弃。
+- **PPO**：`PPORolloutBuffer`，on-policy。每 agent 独立 GAE 后 merge，每轮更新完即丢弃。步级额外存 `noise_prev = z_{t-1}`（OU AR(1) 前一步归一化噪声，(2,)），供 PPO 更新用条件式 log_prob 复算 → ratio 数学自洽；iid 模式（`ou_enabled=False`）下退化为零向量、无影响。
 - **BC**：`TrajectoryDataset` 只存原始 `(33D states, 2D actions)`（约 70KB/条），dynamics/patch 在 `__getitem__` 即时构建；双层过滤——`add_trajectories` 按 score top-K% 筛选入库 + `trim_oldest` FIFO 滑动窗口（最多 300 条）；`secured peak 截断`只取到 `progress_metric` 的 secured 峰 `τ ∈ [0, min(peak_idx, T-1)]`（dwell 驻留过滤甩飞尖峰后的守住峰），排除越峰跌落段与瞬时尖峰段。类似 filtered replay。
+- **SIL 精英池（PPO 侧）**：默认走 MAP-Elites 行为多样性准入（`add_trajectories_map_elites`，P1.2）——bd = secured peak (x,y) → 5m×5m 网格；每 cell 保留分数最高一条；`is_water_trajectory` 硬拒；冷启动 |pool| < `sil_cold_start_min` 阶段允许同 cell 覆盖。回退到旧 top-K% 相对门槛需设 `sil_map_elites_enabled=False`（BC 路径 `main_train` 无关，仍走原 `add_trajectories`）。
 
 ### 5.1 窗口对齐（训练/推理一致性）
 
@@ -155,7 +172,7 @@ GameLauncher 启动游戏 → GoiEnv.connect(9000)
 5. **训练侧 deploy（pool-only）**（`main_ppo`/`main_train` + `rollout.py`）：读唯一候选文件 → train 侧**高度过滤**（`y ≤ y_max_cutoff + drop_height`）→ `set_candidate_points()`（再按排除区过滤）；每轮 `_sample_positions` 从候选池无放回抽样，`_get_stable_agents` 里 settle 落差 / 锤头中心 / 排除区兜底再筛。agent 0 始终留初始位置。
 
 管线差异：
-- BC / PPO 均默认从候选池投放（`random_deploy`）；PPO 需 `--random-deploy` 开启。**不再在训练侧重算表面线段随机采样**——候选点全部来自 L7 唯一文件。
+- `TrainConfig.random_deploy` 默认 `True`（候选池投放）。**当前最小任务（roadmap P0.1）应显式传 `--no-random-deploy`**，详见 [`main_ppo_usage.md`](main_ppo_usage.md)。**不再在训练侧重算表面线段随机采样**——候选点全部来自 L7 唯一文件。
 - 高度上限 `y_max_cutoff` 现作为 **train 侧候选点集的高度过滤阈值**（不再用于 L7 表面裁剪的训练路径）。
 
 验证工具：`test_l8_airdrop_deploy.py` 批量 deploy + settle 落差统计；`visualize_cached_drops.py` 空投超参可视化。
@@ -200,6 +217,7 @@ BC 与 PPO 的进度信号**故意分化，且已锁定对应关系，勿误合�
   - 落水：`is_water(curr_y)` 命中则覆盖为 `config.water_penalty`（默认 -10.0，与坐标阈值 `water_y_threshold` 语义解耦，勿混用）。
 - **攀爬效率图** `ClimbingEfficiencyMap`：网格分辨率 1.0m，从碰撞多边形构建 traversable mask；跨迭代沿轨迹路径传播 secured-progress 的价值（`waypoint_weight` 为传播系数，后缀 O(T)），每轮内做地形感知邻域扩散（不穿墙，静态邻域结构预计算复用），构成 value-to-go 势场 `Φ`。两处消费：① 作为 patch wide 通道输入模型；② 对 PPO 以 **PBRS 势场塑形** `γΦ'−Φ` 生效（不改最优解）。BC 排序默认不消费效率图（`bc_waypoint_weight=0`）。`height_prior_weight` 默认 0.0：格值完全由 secured-progress 沿轨迹回传决定（死路因未来无处可去而贬值），远距连通靠轨迹价值回传 + random_deploy 分层课程。
   - **mask 走样核验**：`python -m src.tests.analysis.verify_mask_aliasing`（1m 中心采样漏判薄墙约 1.57%，路线拓扑保留；如需可加 3×3 子格采样，无须降到 0.5m）。
+  - **contact patch 覆盖核验**：`python -m src.tests.analysis.check_tip_patch_coverage`（锤子几何硬上界 vs 窗口半径 + 360° 最坏姿态扫描）；`diagnose_tip_rasterization`（部件轮廓栅格化命中率/空通道率）；`bench_patch_raster`（栅格化开销）。见第二节 contact 分支说明。
   - **progress_wx 标定**：`python -m src.tests.analysis.calibrate_progress_wx <过树轨迹.json>`（从 reach/secured_dy 反推，默认 0.5）。
 
 ## 八、TCP 通信协议（`GoiEnv` ↔ `TcpStepServer`）
@@ -219,15 +237,19 @@ BC 与 PPO 的进度信号**故意分化，且已锁定对应关系，勿误合�
 
 ## 九、运行入口速查
 
+PPO 的 CLI 说明、推荐配方与废弃清单见 **[`main_ppo_usage.md`](main_ppo_usage.md)**（勿再把 `--random-deploy` 当默认主线）。
+
 ```bash
 # BC 迭代训练
 python -m src.training.main_train
 
-# PPO 训练（可选随机 deploy）
-python -m src.training.main_ppo --random-deploy --num-agents 10
+# PPO：当前最小任务（关 deploy、短 episode；详见 main_ppo_usage.md）
+python -m src.training.main_ppo \
+  --no-random-deploy --steps-per-rollout 400 --persist-game \
+  --resume-bc checkpoints/model_iter_0010.pt
 
-# 从 BC 初始化 PPO
-python -m src.training.main_ppo --resume-bc checkpoints/model_iter_0010.pt
+# PPO：基座过树后的低处课程投放（非当前默认）
+python -m src.training.main_ppo --random-deploy --y-max-cutoff 125 --steps-per-rollout 500
 
 # L7 生成候选点唯一文件（写 checkpoints/drop_points_all_stable.json，train 读取源）
 python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-filter-all

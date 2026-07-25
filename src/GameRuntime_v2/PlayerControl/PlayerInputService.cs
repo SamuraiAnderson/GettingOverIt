@@ -7,6 +7,24 @@ using GoiRuntime.Core.Utilities;
 namespace GoiRuntime.PlayerControl
 {
 	/// <summary>
+	/// PlayerControl 的动作相关内部累积状态（reset 必须一并恢复，否则跨 episode 残留）。
+	/// 见 doc/planb_premise_verification.md：仅恢复刚体时，mouseVelocityAverage/oldMouse 跨 reset 残留，
+	/// 非零动作下经混沌放大导致同起点同动作不可复现（实测 P4≈191）。
+	/// 字段取自 PlayerControl IL（见 doc/hammer_physics.md）。
+	/// </summary>
+	public struct PlayerControlInternalState
+	{
+		public bool valid;
+		public float mouseVelocityAverage;  // 自适应增益 g（EMA 累积）
+		public Vector2 oldMouse;            // 上一帧 mouseInput（Lerp 平滑用）
+		public Vector2 mw;                  // 缓存的锤头/光标世界坐标
+		public float oldAngle;             // 上一帧角度误差（D 项系数 ×0，但一并恢复以求完整）
+		public float pauseInputTimer;      // 暂停输入计时
+		public bool mouseSnap;             // 下一帧强制光标吸附锤头标志
+		public int inputsToSkip;           // 跳过输入的帧数
+	}
+
+	/// <summary>
 	/// Player 输入控制服务
 	/// 通过反射注入 mouseInput 字段来控制 Player
 	/// </summary>
@@ -19,6 +37,16 @@ namespace GoiRuntime.PlayerControl
 	private FieldInfo mouseInputField;
 	private FieldInfo inputEnabledField;
 	private MethodInfo fixedUpdateMethod;
+
+	// PlayerControl 动作相关内部累积字段（修复1：快照/恢复须纳入，见 PlayerControlInternalState）
+	private FieldInfo fMouseVelAvg;
+	private FieldInfo fOldMouse;
+	private FieldInfo fMw;
+	private FieldInfo fOldAngle;
+	private FieldInfo fPauseInputTimer;
+	private FieldInfo fMouseSnap;
+	private FieldInfo fInputsToSkip;
+	private FieldInfo fFakeCursorRB;
 	
 	private bool isInitialized = false;
 
@@ -247,6 +275,20 @@ namespace GoiRuntime.PlayerControl
 		else
 			Debug.LogWarning("未找到 PlayerControl.FixedUpdate()（输入将无法施力）");
 
+		// 修复1：缓存 PlayerControl 动作相关内部字段（快照/恢复用）
+		const BindingFlags npi = BindingFlags.NonPublic | BindingFlags.Instance;
+		fMouseVelAvg = playerControlType.GetField("mouseVelocityAverage", npi);
+		fOldMouse = playerControlType.GetField("oldMouse", npi);
+		fMw = playerControlType.GetField("mw", npi);
+		fOldAngle = playerControlType.GetField("oldAngle", npi);
+		fPauseInputTimer = playerControlType.GetField("pauseInputTimer", npi);
+		fMouseSnap = playerControlType.GetField("mouseSnap", npi);
+		fInputsToSkip = playerControlType.GetField("inputsToSkip", npi);
+		fFakeCursorRB = playerControlType.GetField("fakeCursorRB", npi);
+		Debug.Log($"[PlayerInputService] 内部字段解析: mVelAvg={fMouseVelAvg != null}, oldMouse={fOldMouse != null}, " +
+			$"mw={fMw != null}, oldAngle={fOldAngle != null}, pauseTimer={fPauseInputTimer != null}, " +
+			$"mouseSnap={fMouseSnap != null}, inputsToSkip={fInputsToSkip != null}");
+
 		var harmony = new HarmonyLib.Harmony("com.symbol.goi.playercontrol.lifecycle");
 
 		// Patch Update()：RL 模式下跳过真实鼠标读取
@@ -355,11 +397,58 @@ namespace GoiRuntime.PlayerControl
 			if (!isInitialized || playerControlComponent == null) return null;
 			try
 			{
-				FieldInfo field = playerControlComponent.GetType().GetField("fakeCursorRB",
+				FieldInfo field = fFakeCursorRB ?? playerControlComponent.GetType().GetField("fakeCursorRB",
 					BindingFlags.NonPublic | BindingFlags.Instance);
 				return field?.GetValue(playerControlComponent) as Rigidbody2D;
 			}
 			catch { return null; }
+		}
+
+		/// <summary>
+		/// 修复1：读取 PlayerControl 动作相关内部累积状态（快照用）。
+		/// </summary>
+		public PlayerControlInternalState GetInternalState()
+		{
+			var s = new PlayerControlInternalState { valid = false };
+			if (!isInitialized || playerControlComponent == null) return s;
+			try
+			{
+				if (fMouseVelAvg != null) s.mouseVelocityAverage = (float)fMouseVelAvg.GetValue(playerControlComponent);
+				if (fOldMouse != null) s.oldMouse = (Vector2)fOldMouse.GetValue(playerControlComponent);
+				if (fMw != null) s.mw = (Vector2)fMw.GetValue(playerControlComponent);
+				if (fOldAngle != null) s.oldAngle = (float)fOldAngle.GetValue(playerControlComponent);
+				if (fPauseInputTimer != null) s.pauseInputTimer = (float)fPauseInputTimer.GetValue(playerControlComponent);
+				if (fMouseSnap != null) s.mouseSnap = (bool)fMouseSnap.GetValue(playerControlComponent);
+				if (fInputsToSkip != null) s.inputsToSkip = (int)fInputsToSkip.GetValue(playerControlComponent);
+				s.valid = true;
+			}
+			catch (Exception e)
+			{
+				Debug.LogWarning($"[PlayerInputService] GetInternalState 失败: {e.Message}");
+			}
+			return s;
+		}
+
+		/// <summary>
+		/// 修复1：写回 PlayerControl 动作相关内部累积状态（reset 恢复用）。
+		/// </summary>
+		public void SetInternalState(PlayerControlInternalState s)
+		{
+			if (!isInitialized || playerControlComponent == null || !s.valid) return;
+			try
+			{
+				if (fMouseVelAvg != null) fMouseVelAvg.SetValue(playerControlComponent, s.mouseVelocityAverage);
+				if (fOldMouse != null) fOldMouse.SetValue(playerControlComponent, s.oldMouse);
+				if (fMw != null) fMw.SetValue(playerControlComponent, s.mw);
+				if (fOldAngle != null) fOldAngle.SetValue(playerControlComponent, s.oldAngle);
+				if (fPauseInputTimer != null) fPauseInputTimer.SetValue(playerControlComponent, s.pauseInputTimer);
+				if (fMouseSnap != null) fMouseSnap.SetValue(playerControlComponent, s.mouseSnap);
+				if (fInputsToSkip != null) fInputsToSkip.SetValue(playerControlComponent, s.inputsToSkip);
+			}
+			catch (Exception e)
+			{
+				Debug.LogWarning($"[PlayerInputService] SetInternalState 失败: {e.Message}");
+			}
 		}
 		
 		#endregion

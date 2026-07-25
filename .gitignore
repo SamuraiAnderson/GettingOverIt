@@ -128,3 +128,16 @@ src/Data/GameResults
 checkpoints/*.pt
 checkpoints/*.pkl
 checkpoints/cache/
+
+# ── 实验归档 runs/<tag>/（见 runs/README.md）──
+# 重资产忽略、轻量索引入库：权重和图可以重跑或丢弃，但"做了什么实验、结果如何"
+# 必须永久留在版本库里。历史教训是 13 组实验的训练曲线因为整目录被忽略而全部丢失。
+runs/**/checkpoints/
+runs/**/logs/
+runs/**/elites/
+runs/**/console.log
+runs/_eval/*.json
+!runs/**/run_meta.json
+!runs/**/metrics.csv
+!runs/**/RESULT.md
+!runs/_eval/summary.csv

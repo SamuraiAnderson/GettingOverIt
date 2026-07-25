@@ -1,0 +1,37 @@
+{
+  "tag": "start_sil",
+  "intent": "固定起点 + SIL 精英池（190 轮）",
+  "status": "completed",
+  "note": "路线图瓶颈判断的证据之一：iter190 效率图价值仍只在起点盆地。",
+  "archived_at": "2026-07-25T19:08:43+08:00",
+  "archived_from": [
+    "checkpoints_start_sil",
+    "logs_start_sil"
+  ],
+  "console_sources": [
+    "371922.txt@2026-07-20T16:25:03.383Z",
+    "28619.txt@2026-07-20T16:50:21.087Z",
+    "576035.txt@2026-07-20T17:00:57.879Z",
+    "619994.txt@2026-07-20T17:23:05.503Z"
+  ],
+  "checkpoints_kept": [
+    "ppo_iter_0190.pt"
+  ],
+  "checkpoints_dropped": 37,
+  "keep_policy": "last",
+  "metrics_summary": {
+    "iterations_recovered": 190,
+    "iteration_range": [
+      1,
+      190
+    ],
+    "mean_reward_final": -0.5411,
+    "mean_reward_max": 1.0509,
+    "value_loss_final": 50.949206,
+    "value_loss_max": 213.24467
+  },
+  "command": "Get-Process python,GettingOverIt -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 3; echo \"---launch SIL control run (60 iters, same BC seed)---\"; & C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe -m src.training.main_ppo --resume-bc checkpoints/model_iter_0000.pt --no-random-deploy --num-agents 10 --steps-per-rollout 500 --max-iterations 60 --checkpoint-dir checkpoints_start_sil --log-dir logs_start_sil",
+  "config_repr": "TrainConfig(game_root='C:\\\\Users\\\\Symbol\\\\software\\\\game_store\\\\steam\\\\steamapps\\\\common\\\\Getting Over It', num_agents=10, port=9000, warmup_steps=100, settle_steps=30, steps_per_rollout=500, state_dim=33, action_dim=2, dynamics_clip=10.0, d_model=128, nhead=4, num_layers=3, context_len=32, patch_size=32, patch_channels=4, patch_resolution=0.5, dropout=0.1, patch_mode='dualscale', wide_patch_resolution=2.0, contact_patch_resolution=0.2, wide_channels=1, contact_channels=3, body_angle_source='hub', body_angle_offset=-90.0, body_scale=1.0, lr=0.0001, epochs=10, batch_size=256, action_scale=100.0, max_grad_norm=0.5, max_grad_norm_cap=5.0, weight_decay=0.0001, val_ratio=0.1, early_stop_patience=3, num_workers=4, max_good_trajectories=300, warmup_rollouts=50, keep_ratio=0.5, rollouts_per_iteration=3, efficiency_weight=1.0, speed_ref_steps=50, waypoint_weight=0.5, bc_waypoint_weight=0.0, abs_height_weight=0.02, progress_wx=0.5, dwell_steps=15, dwell_drop_tol=1.0, grid_resolution=1.0, diffusion_iterations=80, diffusion_alpha=0.3, height_prior_weight=0.0, random_deploy=False, drop_height=2.0, surface_padding=0.3, y_max_cutoff=380.0, settle_drop_threshold=5.0, deploy_tip_obstacle_check=True, tip_angle_source='pole', tip_angle_offset=-90.0, tip_scale=1.0, deploy_exclusion_check=True, water_y_threshold=-10.0, water_penalty=-10.0, explore_noise_std=0.1, noise_decay=0.95, gamma=0.99, gae_lambda=0.95, clip_epsilon=0.2, ppo_epochs=4, vf_coef=0.25, ent_coef=0.001, target_kl=0.03, ppo_batch_size=64, normalize_advantages=True, ppo_init_log_std=-1.6, ppo_log_std_min=-2.5, ppo_log_std_max=0.0, value_warmup_iters=5, value_warmup_epochs=8, ppo_kl_stop_factor=1.5, sil_enabled=True, sil_start_iter=5, sil_traj_cap=20, sil_keep_ratio=0.3, sil_batch_size=64, sil_epochs=1, sil_loss_coef=0.5, neg_reward_scale=0.0, reward_alpha=0.5, max_iterations=60, save_interval=5, log_dir='logs_start_sil', checkpoint_dir='checkpoints_start_sil')",
+  "resumed_bc": "checkpoints/model_iter_0000.pt",
+  "started_at": "2026-07-20T16:25:03.383Z"
+}

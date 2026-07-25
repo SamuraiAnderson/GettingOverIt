@@ -9,7 +9,7 @@ progress_wx > 0 即可让「右侧真实路径（有 reach）」压过「爬树�
 
 用法:
   # 单条：打印 secured_dy / reach 及不同占比 f 下的建议 wx
-  python -m src.tests.analysis.calibrate_progress_wx logs/reference_trajectory.json
+  python -m src.tests.analysis.calibrate_progress_wx src/Data/reference/reference_trajectory.json
 
   # 两条：过树成功轨迹 vs 爬树死路轨迹，验证在给定 wx 下前者评分更高
   python -m src.tests.analysis.calibrate_progress_wx over_tree.json dead_tree.json --wx 0.5

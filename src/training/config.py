@@ -40,8 +40,12 @@ class TrainConfig:
     # 原始状态 33 维 = 基础 29 + fakeCursor 4（cursorX/Y, cursorVelX/Y，索引 29-32）。
     # 注意：state_dim 是 C# 回传的**原始状态维度**，与模型消费的 dynamics 特征维**解耦**。
     # build_dynamics 输出维度由 dataset.DYNAMICS_DIM 决定 = 15 速度/角速度(含 cursor 速度)
-    # + 3 角度×2(sin/cos) + 6 部件相对坐标×2(含 cursor) + 1 绝对高度 = 34。
-    # 模型 dynamics_proj / 归一化 buffer 用 DYNAMICS_DIM，勿再用 state_dim 冒充特征维。
+    # + 3 角度×2(sin/cos) + 6 部件相对坐标×2(含 cursor) + 1 绝对高度 = 34 (BASE_DYNAMICS_DIM)。
+    # 另 + 5 维接触信号（contact_features.CONTACT_DIM = tip_contact / tip_grip /
+    # body_contact / pot_contact / fall_distance_norm，复刻游戏原生 HammerCollisions +
+    # PlayerSounds；body / pot 按游戏 IL 里 `rb.GetPoint().y > 0.4` 分层各自输出）
+    # → DYNAMICS_DIM = 39。模型 dynamics_proj / 归一化 buffer 用 DYNAMICS_DIM，勿再用
+    # state_dim 冒充特征维。
     state_dim: int = 33
     action_dim: int = 2
     # 归一化后动力学观测裁剪到 [-dynamics_clip, +dynamics_clip]，防止物理爆炸速度
@@ -62,7 +66,22 @@ class TrainConfig:
     #   contact: player 中心，中高精度统一接触图（高精度地形 + 锅/body 轮廓 + 锤头轮廓，co-registered）
     patch_mode: str = "dualscale"
     wide_patch_resolution: float = 2.0    # m/px，wide 分支（64m 窗口）
-    contact_patch_resolution: float = 0.2  # m/px，contact 分支（6.4m 窗口）
+    # contact 分支 8.64m 窗口（半径 4.32m）。该半径由锤子几何硬上界反推，**勿随意下调**：
+    #   |hub−player| = 0.3546m（刚性偏移）+ slider 全伸 |tip−hub| = 2.955m（关节硬限位）
+    #   = tip 原点上界 3.31m；PlayerControl IL 里另有 |cursor−player| ≤ 3.5f 硬编码钳制，
+    #   与求解器软性超调后的实测极值(≈3.49m)吻合，故按 3.5m 取设计上界。
+    #   再加 tip 轮廓半径 0.279m（player_contour.json，16 顶点）→ 轮廓需 3.78m；
+    #   再留 2 格地形上下文（锤头全伸时也要能看到它接触的那块地形）→ 需 ≈4.28m。
+    # 旧值 0.2（6.4m 窗口 / 半径 3.2m）不足：约 0.46% 的帧里锤头贴窗边、其接触的地形被裁掉，
+    # 而这些恰是「锤子伸到最远够远处落点」的高价值帧。
+    # 改分辨率而非 patch_size，是为了保持 patch shape (4,32,32) 不变 → checkpoint 完全兼容、
+    # wide 分支不受影响（否则 64m 窗口会被迫跟着变）、CNN 的 Linear(2048) 无需迁移。
+    # 分辨率变粗的代价已被 PART_RASTER_SUBSAMPLES 的面积覆盖率栅格化抵消（见 dataset.py）：
+    # 部件轮廓不再因亚像素宽而漏采，0.27m/px 下 ch3 平均非零像素反而比旧 0.2m/px 二值高约 7×。
+    # 精确接触判定另由 P2.1 的向量接触信号承担（走精确几何，不受栅格分辨率限制）。
+    # 核验：python -m src.tests.analysis.check_tip_patch_coverage
+    #      python -m src.tests.analysis.diagnose_tip_rasterization
+    contact_patch_resolution: float = 0.27  # m/px，contact 分支（8.64m 窗口，半径 4.32m）
     wide_channels: int = 1                # [0] eff
     contact_channels: int = 3             # [1] 高精度地形, [2] 锅/body 轮廓, [3] 锤头轮廓
     # 锅/body 轮廓世界朝向：player→hub 方向 + offset（body 局部 +y=躯干朝上）。
@@ -180,6 +199,18 @@ class TrainConfig:
     ppo_log_std_min: float = -2.5       # forward clamp 下限（std≈0.082 → ±8，保底探索）
     ppo_log_std_max: float = 0.0        # forward clamp 上限（std≈1.0，封顶防探索过大）
 
+    # ── PPO 探索噪声：时序连贯 OU / AR(1)（P1.1，roadmap 见 doc/optimization_roadmap.md）──
+    # 从每帧 iid 高斯改为 AR(1)：z_t = φ·z_{t-1} + √(1-φ²)·η_t，η~N(0,1)，marginal z_t~N(0,1)。
+    # 采样：raw = mean + std·z_t（tanh 前）。目标动作住在 4Hz 以下低频薄流形（见 hammer_physics /
+    # optimization_roadmap P1.1），iid 白噪声几乎在流形外，OU 把 lag-1 自相关抬到 ~φ，功率
+    # 谱下移到低频，让探索命中概率显著提高。log_prob 按**条件高斯**写出，new/old 用相同条件式，
+    # PPO ratio 数学自洽（无近似）：
+    #   raw_t | z_{t-1} ~ N(mean + std·φ·z_{t-1}, std²·(1-φ²))
+    # 为此在 PPORolloutBuffer 每步额外存 noise_prev = z_{t-1}（(2,)）。ou_enabled=False 退化为
+    # 原 iid 采样。φ=0.85 → lag-1 ≈0.85（贴近 pink 噪声 ~0.79），先从 OU 起（log_prob 好推）。
+    ou_enabled: bool = True
+    ou_phi: float = 0.85
+
     # ── 精英池停滞 → 自适应提方差（打破"贴地到树根"局部最优的发现瓶颈）──
     # 当 SIL 精英池"守得住的竖直高度"峰值连续 patience 轮无提升，临时给采样 log_std 叠 boost
     # （同时软化 SIL），制造额外探索；一旦 pool 峰值有实质提升就回落 boost，交回利用。boost 只在
@@ -212,6 +243,17 @@ class TrainConfig:
     sil_loss_coef: float = 0.5         # MSE-on-mean 损失权重（温和，防过度模仿压制探索）
     sil_max_batches: int = 40          # 每次 SIL 更新最多 minibatch 数（标准 SIL 采样式，0=遍历整池）
     sil_num_workers: int = 4           # SIL DataLoader 并行建 patch 的 worker 数（0=主进程串行）
+
+    # ── SIL 精英池：MAP-Elites 行为多样性准入（P1.2，roadmap 见 doc/optimization_roadmap.md）──
+    # 取代原 top-K% 相对门槛。行为描述子 bd = secured peak (x, y)（复用 progress_metric，
+    # 已被 dwell 过滤，不会被瞬时尖峰/落水回落污染），离散化到 sil_cell_size m 网格；
+    # 每 cell 只保留分数最高一条；is_water_trajectory 直接硬拒；|pool| < sil_cold_start_min
+    # 时任何合法轨迹入池，避免早期全挤在同一 cell 塌缩到 1 条。
+    # 相较 top-K%：绝对准入门槛 + 强制行为覆盖，防止"整批都烂时仍强化最不烂的乱晃"；
+    # cell 数量随迭代增长即为探索健康信号（验收指标）。
+    sil_map_elites_enabled: bool = True
+    sil_cell_size: float = 5.0          # 网格边长（米），(peak_x, peak_y) 离散化格
+    sil_cold_start_min: int = 5         # 池小于此数时任何合法轨迹入池
 
     # ── 非对称奖励缩放 ──
     # 0.1→0.0：速通口径「secured 进展」下跌落不再显式惩罚（时间隐式受罚：掉下去要重爬 → 步数变多 →
