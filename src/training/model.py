@@ -190,7 +190,8 @@ def expand_state_dict_for_dynamics_dim(
         if key == "dynamics_proj.weight" and old.dim() == 2 and cur.dim() == 2:
             if old.shape[0] == cur.shape[0] and cur.shape[1] > old.shape[1]:
                 pad = torch.zeros(
-                    cur.shape[0], cur.shape[1] - old.shape[1], dtype=old.dtype,
+                    cur.shape[0], cur.shape[1] - old.shape[1],
+                    dtype=old.dtype, device=old.device,
                 )
                 out[key] = torch.cat([old, pad], dim=1)
                 logger.info(
@@ -203,7 +204,7 @@ def expand_state_dict_for_dynamics_dim(
             if cur.shape[0] > old.shape[0]:
                 extra = cur.shape[0] - old.shape[0]
                 pad_val = 0.0 if key == "dyn_mean" else 1.0
-                pad = torch.full((extra,), pad_val, dtype=old.dtype)
+                pad = torch.full((extra,), pad_val, dtype=old.dtype, device=old.device)
                 out[key] = torch.cat([old, pad], dim=0)
                 logger.info(
                     "expand %s: %s → %s (pad=%.1f)",
@@ -211,6 +212,46 @@ def expand_state_dict_for_dynamics_dim(
                 )
 
     return out
+
+
+def expand_optimizer_state_for_dynamics_dim(
+    optim_state: dict,
+    current_model: nn.Module,
+) -> dict:
+    """把老 optimizer state 里与 dynamics 维度绑定的 param 的 Adam 动量扩展到当前形状。
+
+    与 `expand_state_dict_for_dynamics_dim` 配套：权重扩了 34D→39D 后，
+    从 checkpoint 恢复的 `exp_avg` / `exp_avg_sq` 仍是旧宽度（如 `dynamics_proj.weight`
+    的 (d, 34)），会与新梯度 (d, 39) 在 `optimizer.step()` 里尺寸冲突。这里按当前
+    param 形状对每个动量张量在尾部补 0（新特征起手无动量，与权重新列初始化 0 一致）。
+
+    仅处理"变大"的维度；形状一致的原样保留，其余异常交给 `load_state_dict` 显式报错。
+    依赖 optimizer state 的整数索引与 `model.parameters()` 顺序一致（同架构、仅宽度不同）。
+    """
+    if not optim_state or "state" not in optim_state:
+        return optim_state
+    logger = _logging.getLogger(__name__)
+    params = list(current_model.parameters())
+    for idx, entry in optim_state["state"].items():
+        if not isinstance(idx, int) or idx >= len(params):
+            continue
+        target_shape = tuple(params[idx].shape)
+        for mkey in ("exp_avg", "exp_avg_sq"):
+            t = entry.get(mkey)
+            if not isinstance(t, torch.Tensor) or tuple(t.shape) == target_shape:
+                continue
+            if t.dim() != len(target_shape) or any(
+                o > n for o, n in zip(t.shape, target_shape)
+            ):
+                continue  # 非"纯变大"：不猜测，留给 load_state_dict 报错
+            new = torch.zeros(target_shape, dtype=t.dtype, device=t.device)
+            new[tuple(slice(0, s) for s in t.shape)] = t
+            entry[mkey] = new
+            logger.info(
+                "expand optimizer %s[param %d]: %s → %s (pad=0)",
+                mkey, idx, tuple(t.shape), target_shape,
+            )
+    return optim_state
 
 
 class ActionPredictor(_DynamicsNormMixin, nn.Module):

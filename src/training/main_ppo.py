@@ -32,7 +32,10 @@ if str(_REPO_ROOT / "src") not in sys.path:
 from training.actor_critic import ActorCritic
 from training.config import TrainConfig
 from training.dataset import TrajectoryDataset, compute_dynamics_stats
-from training.model import expand_state_dict_for_dynamics_dim
+from training.model import (
+    expand_optimizer_state_for_dynamics_dim,
+    expand_state_dict_for_dynamics_dim,
+)
 from training.ppo_trainer import PPOTrainer
 from training.deploy_sampling import (
     default_candidate_points_path,
@@ -294,7 +297,11 @@ def main() -> None:
         model.load_state_dict(expanded)
         start_iteration = ckpt.get("iteration", 0)
         if "optimizer" in ckpt:
-            ppo_trainer.set_pending_optimizer_state(ckpt["optimizer"])
+            # 权重扩了 34D→39D 后，恢复的 Adam 动量仍是旧宽度，需同步扩展新列（补 0），
+            # 否则 optimizer.step() 会因 exp_avg (d,34) vs grad (d,39) 尺寸冲突崩溃。
+            ppo_trainer.set_pending_optimizer_state(
+                expand_optimizer_state_for_dynamics_dim(ckpt["optimizer"], model)
+            )
         logger.info("从 PPO checkpoint 恢复 (iteration=%d): %s", start_iteration, args.resume)
     elif args.resume_bc:
         bc_state = torch.load(args.resume_bc, weights_only=True)
