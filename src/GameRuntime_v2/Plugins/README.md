@@ -1,11 +1,10 @@
-# Plugins - BepInEx 插件入口
+# Plugins - BepInEx 插件入口（占位）
 
-BepInEx 插件主入口，负责初始化和组装所有服务。
+> **现状**：本目录当前不含代码。插件的 BepInEx 主入口（`BepInPlugin` / `BaseUnityPlugin`）
+> 实际是 [`Core/GameRuntimeManager.cs`](../Core/GameRuntimeManager.cs)，负责初始化与组装所有服务。
 
-## 📄 文件列表（待实现）
+BepInEx 依赖（`BepInEx.dll` / `0Harmony.dll`）通过 `GameRuntime_v2.csproj` 从游戏目录
+`$(GameRoot)\BepInEx\core` 引用；编译产物 `GameRuntime_v2.dll` 由 csproj 的构建后步骤
+自动拷贝到 `$(GameRoot)\BepInEx\plugins`。
 
-| 文件 | 说明 |
-|------|------|
-| **GoiRLPlugin.cs** | 主插件入口（强化学习训练模式） |
-| **GameRuntimeManager.cs** | 运行时管理器（服务编排和生命周期管理） |
-
+如需扩展插件装配逻辑，请编辑 `Core/GameRuntimeManager.cs`，而非在此目录新建入口。

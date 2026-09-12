@@ -4,6 +4,8 @@
 
 - `PlayerInputService.cs` - Player 输入控制服务（通过反射注入 mouseInput）
 - `PlayerStateService.cs` - Player 状态采集服务（位置、速度、各部件状态等）
+- `MouseInputOverride.cs` - Rewired `GetAxis("mouseX"/"mouseY")` 拦截（RL 模式下返回注入值、屏蔽真实鼠标）
+- `PlayerDuplicateManager.cs` - 复制体管理（多 agent 并行，每个复制体独立 Input/State 服务）
 
 ## 已实现功能
 
@@ -37,7 +39,7 @@ bool GetInputEnabled()                   // 获取输入状态
 - ✅ 锤子角度计算
 - ✅ 时间戳
 
-**状态数据**（39 个浮点数）：
+**状态数据**（`PlayerState.ToFloatArray` 输出 29 个浮点数）：
 ```
 [0-4]   Player 主体: x, y, vx, vy, 角速度
 [5-9]   Hub: x, y, vx, vy, 角度
@@ -45,14 +47,17 @@ bool GetInputEnabled()                   // 获取输入状态
 [15-18] Handle: x, y, vx, vy
 [19-22] PoleMiddle: x, y, vx, vy
 [23-26] Tip: x, y, vx, vy
-[27-38] 锤子角度, 时间戳, 预留位
+[27]    hammerAngle（派生量 atan2(tip - hub)）
+[28]    timestamp（Time.time）
 ```
+
+> **维度说明（避免混淆）**：本服务采集 **29 维**；`StepController.CollectAllStates()` 会追加 fakeCursor 4 维（索引 29-32），故 **TCP 线路协议回传 33 维**（`STATE_DIM=33`，唯一权威）；模型消费的 `DYNAMICS_DIM=39` 是 Python 侧再加工的结果（34 base + 5 接触信号），不由 C# 采集。详见 [`doc/entrypoints.md`](../../../doc/entrypoints.md) 第五节。
 
 **API**：
 ```csharp
 bool Initialize()                        // 初始化服务
 PlayerState GetCurrentState()            // 获取当前状态
-float[] GetStateArray()                  // 转换为数组（UDP发送）
+float[] GetStateArray()                  // 转换为数组（TCP 回传）
 Vector2 GetPlayerPosition()              // 获取位置
 Vector2 GetPlayerVelocity()              // 获取速度
 float GetHammerAngle()                   // 获取锤子角度
@@ -75,6 +80,8 @@ Vector2[] GetPotVertices()              // 获取 Pot 顶点
 Vector2[] GetTipVertices()              // 获取 Tip 顶点
 void UpdateRealtime()                   // 实时更新
 ```
+
+> 碰撞几何的导出与可视化实现见 [`ColliderCollection/`](../ColliderCollection/README.md)。
 
 ---
 
@@ -103,8 +110,8 @@ void UpdateRealtime()                   // 实时更新
 ### 设置游戏运行模式
 
 ```bash
-cd C:\Users\Symbol\aCodes\goi-rl
-python -c "from game_mode_controller import GameModeController; GameModeController().set_game_runtime_mode()"
+cd C:\Users\Symbol\aCodes\GettingOverIt
+python -c "from src.start import GameModeController; GameModeController().set_game_runtime_mode()"
 ```
 
 ### 启动游戏测试
@@ -173,11 +180,11 @@ Transform FindDeepChild(Transform parent, string name)
 
 ---
 
-## 下一步开发
+## 已完成（原「下一步开发」项）
 
-- [ ] UDP 通信服务（接收动作、发送状态）
-- [ ] 复制体管理（多 Player 实例）
-- [ ] 游戏测试模式（自动化测试）
+- [x] TCP 通信服务（接收动作、发送状态）—— `Communication/TcpStepServer.cs`
+- [x] 复制体管理（多 Player 实例）—— `PlayerDuplicateManager.cs`
+- [x] 游戏测试模式（键盘调试 + 物理探测）—— `Testing/PlayerDebugTool.cs`
 
 ---
 

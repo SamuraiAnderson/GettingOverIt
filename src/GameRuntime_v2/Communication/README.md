@@ -28,19 +28,38 @@ Unity 主线程                    后台 Socket 线程
 
 ## 二进制协议
 
+**小端二进制**、请求-响应式。完整命令语义与状态维度定义见 [`doc/entrypoints.md`](../../../doc/entrypoints.md) 第三节，此处为速查。
+
 ### Python → C#（命令）
 
-| 字节 | 含义 |
-|------|------|
-| 0    | 命令类型：`R`=Reset, `S`=Step, `X`=Close |
-| 1-N  | `S` 命令时：`numAgents * actionDim * 4` 字节 float32 actions |
+首字节为命令类型，其余为该命令的负载：
+
+| 命令 | 字节格式 | 含义 |
+|------|----------|------|
+| `R` (RESET) | `['R']` | 重置所有 agent 到初始快照 |
+| `S` (STEP) | `['S'][n:1B][actions: n×2×4B]` | 注入动作并推进物理 `stepFrames` 帧 |
+| `N` (NEW_SNAPSHOT) | `['N']` | 以当前状态为新基准重拍快照 |
+| `C` (CONFIG) | `['C'][active:1B][mouseXId:4B][mouseYId:4B]` | 配置 Rewired 鼠标拦截 |
+| `V` (VISUALIZE) | `['V'][enabled:1B]` | 开/关碰撞箱描边可视化 |
+| `E` (EXPORT_COLLIDERS) | `['E']` | 导出碰撞体几何到文件 |
+| `T` (TELEPORT) | `['T'][agentIndex:1B][x:4B][y:4B]` | 传送指定 agent 到世界坐标 |
+| `F` (CAMERA_FREE) | `['F'][enabled:1B]` | 启用/禁用自由相机 |
+| `X` (CLOSE) | `['X']` | 关闭训练循环并断开 |
+
+`actions` 布局为 `[a0_x, a0_y, a1_x, a1_y, ...]`，float32 小端。
 
 ### C# → Python（响应）
 
-| 字节 | 含义 |
-|------|------|
-| 0-3  | `numAgents`（int32，大端） |
-| 4-N  | `numAgents * stateDim * 4` 字节 float32 states（每个 agent 拼接） |
+```
+[n: 1B]  然后对每个 agent 交错发送:  [state_i: stateDim×4B][done_i: 1B]
+```
+
+- `n` 为 agent 数（单字节）。
+- state 与 done **逐 agent 交错**（一个 agent 的 state 紧跟其 done），Python 端必须逐 agent 读取，不能先读所有 state 再读所有 done。
+- `stateDim = 33`（基础 29 维 + fakeCursor 4 维），是唯一权威维度（`StepController.STATE_DIM`）。
+- 每个 float 显式按小端写出（`BitConverter.GetBytes`，非小端平台 `Array.Reverse`）。
+- `CONFIG` / `VISUALIZE` / `EXPORT_COLLIDERS` / `CAMERA_FREE` 回空包（`n=0`）。
+- `done` 当前恒为 false（C# 侧不判定终止，落水/终止由 Python 侧 `reward.is_water` 处理）。
 
 ## 配置
 

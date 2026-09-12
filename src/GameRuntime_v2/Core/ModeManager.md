@@ -9,12 +9,12 @@
 ### 1. 数据采集模式 (DataCollection)
 - **用途**: 前期采集 Mountain 碰撞箱等静态数据
 - **启动**: 仅初始化碰撞箱采集服务
-- **通信**: 不需要 UDP 通信
+- **通信**: 不需要 TCP 通信
 
 ### 2. 游戏运行模式 (GameRuntime)
 - **用途**: AI 训练交互
-- **启动**: 初始化 Player 控制、UDP 通信、状态发送等
-- **通信**: 双向 UDP（接收动作、发送状态）
+- **启动**: 初始化 Player 控制、TCP 步进服务端、状态采集等
+- **通信**: TCP 阻塞式请求-响应（接收动作、发送状态，帧级步进，默认 :9000）
 
 ### 3. 游戏测试模式 (GameTesting)
 - **用途**: 交互性测试和调试
@@ -40,7 +40,7 @@
 使用 Python 脚本：
 
 ```python
-from game_mode_controller import GameModeController
+from src.start import GameModeController
 
 controller = GameModeController()
 
@@ -108,7 +108,7 @@ public class GameRuntimeManager : BaseUnityPlugin
 ### 场景 1: 初次采集数据
 ```bash
 # 1. Python 设置模式
-python -c "from game_mode_controller import GameModeController; GameModeController().set_data_collection_mode()"
+python -c "from src.start import GameModeController; GameModeController().set_data_collection_mode()"
 
 # 2. 启动游戏
 # Unity 自动读取信号，进入数据采集模式
@@ -119,19 +119,19 @@ python -c "from game_mode_controller import GameModeController; GameModeControll
 ### 场景 2: AI 训练
 ```bash
 # 1. Python 设置模式
-python -c "from game_mode_controller import GameModeController; GameModeController().set_game_runtime_mode()"
+python -c "from src.start import GameModeController; GameModeController().set_game_runtime_mode()"
 
 # 2. 启动游戏
-# Unity 进入游戏运行模式，开启 UDP 通信
+# Unity 进入游戏运行模式，启动 TCP 步进服务端
 
 # 3. 启动训练脚本
-python main_train.py
+python -m src.training.main_ppo
 ```
 
 ### 场景 3: 调试测试
 ```bash
 # 1. Python 设置模式
-python -c "from game_mode_controller import GameModeController; GameModeController().set_game_testing_mode()"
+python -c "from src.start import GameModeController; GameModeController().set_game_testing_mode()"
 
 # 2. 启动游戏
 # Unity 进入测试模式，可以手动测试控制逻辑

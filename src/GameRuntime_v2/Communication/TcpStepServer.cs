@@ -10,14 +10,20 @@ namespace GoiRuntime.Communication
 	/// <summary>
 	/// TCP 阻塞步进服务器
 	///
-	/// 线路协议（小端二进制）：
-	///   Python → C#  RESET:    [cmd:1B='R']
-	///   Python → C#  STEP:     [cmd:1B='S'][n:1B][actions: n×2×4B]
-	///   Python → C#  TELEPORT:    [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]
-	///   Python → C#  CAMERA_FREE: [cmd:1B='F'][enabled:1B]
-	///   Python → C#  CLOSE:       [cmd:1B='X']
+	/// 线路协议（小端二进制，命令枚举见 CommandType）：
+	///   Python → C#  RESET:          [cmd:1B='R']
+	///   Python → C#  STEP:           [cmd:1B='S'][n:1B][actions: n×2×4B]
+	///   Python → C#  NEW_SNAPSHOT:   [cmd:1B='N']
+	///   Python → C#  CONFIG:         [cmd:1B='C'][active:1B][mouseXId:4B][mouseYId:4B]
+	///   Python → C#  VISUALIZE:      [cmd:1B='V'][enabled:1B]
+	///   Python → C#  EXPORT_COLLIDERS: [cmd:1B='E']
+	///   Python → C#  TELEPORT:       [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]
+	///   Python → C#  CAMERA_FREE:    [cmd:1B='F'][enabled:1B]
+	///   Python → C#  CLOSE:          [cmd:1B='X']
 	///
-	///   C# → Python  STATE: [n:1B][states: n×29×4B][dones: n×1B]
+	///   C# → Python  STATE: [n:1B] 然后逐 agent 交错 [state: stateDim×4B][done:1B]
+	///     （stateDim 默认 33 = PlayerState 29D + fakeCursor 4D，见 StepController.STATE_DIM）
+	///     CONFIG/VISUALIZE/EXPORT_COLLIDERS/CAMERA_FREE 回空包（n=0）
 	///
 	/// 线程模型：
 	///   - 后台线程（_bgThread）：阻塞等待 Python 命令，写入 _pendingCommand，设置 _commandReady

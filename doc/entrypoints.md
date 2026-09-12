@@ -421,4 +421,4 @@ L7 `--physics-filter-all` 产出**全量稳定候选集**，作为向训练传�
 | C# 状态 | `src/GameRuntime_v2/PlayerControl/PlayerStateService.cs` | 29D 状态采集 |
 | C# 模式/配置 | `src/GameRuntime_v2/Core/ModeManager.cs` / `Configuration/RuntimeConfig.cs` | 模式判定与运行时配置 |
 
-> 完整数据流、模型结构、奖励/评分细节见 `doc/training.md`；PPO CLI / 配方见 `doc/main_ppo_usage.md`；目录职责与通信规范见 `.cursor/rules/project-standards.mdc`。
+> 完整数据流、模型结构、奖励/评分细节见 [`training.md`](training.md)；PPO CLI / 配方见 [`main_ppo_usage.md`](main_ppo_usage.md)；如何验证这些交互（四类验证与"改了哪层重跑哪层"）见 [`verification.md`](verification.md)；环境跑出来的已知结论（含快照确定性地板）见 [`findings.md`](findings.md)；目录职责与通信规范见 `.cursor/rules/project-standards.mdc`。

@@ -10,8 +10,8 @@
 1. **设置模式**（Python）
 
 ```bash
-cd c:\Users\Symbol\aCodes\goi-rl
-python -c "from game_mode_controller import GameModeController; GameModeController().set_data_collection_mode()"
+cd c:\Users\Symbol\aCodes\GettingOverIt
+python -c "from src.start import GameModeController; GameModeController().set_data_collection_mode()"
 ```
 
 2. **启动游戏**
@@ -33,33 +33,33 @@ python -c "from game_mode_controller import GameModeController; GameModeControll
 ## 二、游戏运行模式（AI 训练）
 
 ### 目的
-与 Python 训练脚本进行 UDP 通信，进行 AI 训练。
+与 Python 训练脚本进行 TCP 帧级步进通信，进行 AI 训练。
 
 ### 步骤
 
 1. **设置模式**（Python）
 
 ```bash
-cd c:\Users\Symbol\aCodes\goi-rl
-python -c "from game_mode_controller import GameModeController; GameModeController().set_game_runtime_mode()"
+cd c:\Users\Symbol\aCodes\GettingOverIt
+python -c "from src.start import GameModeController; GameModeController().set_game_runtime_mode()"
 ```
 
 2. **启动游戏**
    - 运行 Getting Over It
-   - 插件进入游戏运行模式（当前版本提示"待实现"）
+   - 插件进入游戏运行模式，启动 `TcpStepServer`
 
 3. **启动训练脚本**
 
 ```bash
-python main_train.py
+python -m src.training.main_ppo --run-dir my_experiment --persist-game
 ```
 
-4. **训练过程**
-   - Unity 接收动作（UDP 12345）
-   - Unity 发送状态（UDP 12346）
-   - Python 执行 SAC 训练
+> 训练侧的 `RolloutWorker` 会自动完成「写模式信号 → 启动游戏 → 连接 TCP」，通常无需手动执行第 1、2 步；上面拆分只为说明底层流程。
 
-**注意**: 游戏运行模式服务尚未实现，当前仅框架。
+4. **训练过程**
+   - Python（TCP 客户端）发 `STEP`，注入 2D 鼠标动作
+   - Unity（TCP 服务端 `:9000`）帧级推进物理后回传 33 维状态
+   - Python 执行 PPO 训练
 
 ---
 
@@ -73,19 +73,17 @@ python main_train.py
 1. **设置模式**（Python）
 
 ```bash
-cd c:\Users\Symbol\aCodes\goi-rl
-python -c "from game_mode_controller import GameModeController; GameModeController().set_game_testing_mode()"
+cd c:\Users\Symbol\aCodes\GettingOverIt
+python -c "from src.start import GameModeController; GameModeController().set_game_testing_mode()"
 ```
 
 2. **启动游戏**
    - 运行 Getting Over It
-   - 插件进入测试模式（当前版本提示"待实现"）
+   - 插件进入测试模式（`PlayerDebugTool` 键盘调试 + 物理探测）
 
 3. **手动测试**
    - 使用热键或调试工具测试功能
    - 查看日志输出
-
-**注意**: 游戏测试模式服务尚未实现，当前仅框架。
 
 ---
 
@@ -105,16 +103,13 @@ python -c "from game_mode_controller import GameModeController; GameModeControll
 ```json
 {
   "mode": "DataCollection",
-  "receiveHost": "localhost",
-  "receivePort": 12345,
-  "sendHost": "localhost",
-  "sendPort": 12346,
-  "stateDimension": 39,
+  "tcpPort": 9000,
   "actionDimension": 2,
-  "updateFrequency": 40,
   "duplicateCount": 1
 }
 ```
+
+> 状态维度不在配置里持久化，唯一权威为 `StepController.STATE_DIM=33`（避免旧配置残留造成协议错位）。端口须与 `src/config/project.json` 的 `tcp_port` 一致。
 
 **优先级**: 信号文件 > 配置文件
 

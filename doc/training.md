@@ -2,6 +2,8 @@
 
 本目录实现 Getting Over It 的强化学习训练。Python 作训练侧（TCP 客户端），C# `GameRuntime_v2` 作服务端（`TcpStepServer`，端口从 `src/config/project.json` 的 `tcp_port` 读取，默认 9000）。每个 RL step 对应一次阻塞式请求-响应，实现帧级同步。
 
+> 相关文档：所有改进项遵循的**设计原则**（"缩搜索空间 ≠ 缩解空间"）与优化优先级见 [`optimization_roadmap.md`](optimization_roadmap.md)；训练侧跑出来的**已知结论**（硬探索死锁、动作低频流形等）汇总见 [`findings.md`](findings.md)；PPO 怎么跑、CLI 与推荐配方见 [`main_ppo_usage.md`](main_ppo_usage.md)。
+
 ## 一、整体架构
 
 存在两条并行训练管线，共享同一套环境接口、观测构建逻辑与投放机制。观测构建（dynamics 特征、4ch patch、定长窗口填充/mask）在离线数据集与在线采集之间**收敛为单一实现**（`dataset.build_dynamics`/`build_patch`/`left_pad_sequence`），从结构上保证训练与推理逐窗口一致，不依赖文档手动对齐：

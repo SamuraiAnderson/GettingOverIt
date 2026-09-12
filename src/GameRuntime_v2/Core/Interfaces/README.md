@@ -7,7 +7,7 @@
 | 文件 | 说明 |
 |------|------|
 | **IPlayerServices.cs** | Player 相关服务接口（输入控制、状态采集、复制体管理） |
-| **ICommunication.cs** | 通信协议接口（UDP 接收、UDP 发送） |
-| **IColliderService.cs** | 碰撞箱采集服务接口 |
+| **IStepServer.cs** | TCP 帧级步进服务端接口（`StartListening` / `TryGetCommand` / `SendResponse`） |
+| **IGameControl.cs** | 游戏控制接口（暂停/恢复、时间缩放、逐帧步进） |
 | **ITesting.cs** | 测试相关接口（测试用例、测试运行器、调试工具） |
 

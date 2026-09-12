@@ -1,5 +1,10 @@
 # GameRuntime_v2 文件总览
 
+> ⚠️ **本文件已过时，请勿据此理解现状**。其中 `UDP*` / `ICommunication` 等条目描述的是早期
+> 设计，实际通信为 **TCP 帧级步进**（`Communication/TcpStepServer.cs`），插件入口在
+> `Core/GameRuntimeManager.cs`。权威结构与交互链路以 [`doc/entrypoints.md`](../../doc/entrypoints.md)
+> 及各目录 README 为准。
+
 ## 📁 目录结构
 
 ```
