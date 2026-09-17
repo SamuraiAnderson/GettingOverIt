@@ -5,6 +5,10 @@
 
 环境：统一用 conda `getting-over-it-analysis`。
 
+新增可选的[视频参考走廊模式](reference_corridor_reward.md)：使用 `--reference-trajectory`
+启用“走廊内前进优先”的奖励，`--reference-corridor-radius 1.5` 设置半宽。
+该模式替换原 PPO 引导奖励和 wide 引导图，并停用按高度筛选的 SIL；不传时沿用本文原配方。
+
 ---
 
 ## 一、当前推荐配方（P0.1 最小任务）

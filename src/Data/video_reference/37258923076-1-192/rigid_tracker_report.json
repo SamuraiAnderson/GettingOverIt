@@ -1,0 +1,24 @@
+{
+  "implementation": "cv2.TrackerNano",
+  "opencv_version": "4.12.0",
+  "reference": "https://docs.opencv.org/4.x/d8/d69/classcv_1_1TrackerNano.html",
+  "models": {
+    "nanotrack_backbone_sim.onnx": {
+      "sha256": "530bdd0cd00f19afab79a863e71ba71e3312395a5dc9151af675082bdaaa2fc4",
+      "source": "https://github.com/HonglinChu/SiamTrackers/tree/master/NanoTrack/models/nanotrackv2"
+    },
+    "nanotrack_head_sim.onnx": {
+      "sha256": "0d8c0637be849f092cc7236cae02e55c8b9455ebe37ba50601d6115db4247cd9",
+      "source": "https://github.com/HonglinChu/SiamTrackers/tree/master/NanoTrack/models/nanotrackv2"
+    }
+  },
+  "init_box": [
+    466,
+    426,
+    73,
+    84
+  ],
+  "backward_anchor_frame": 1303,
+  "forward_frames": 692,
+  "bidirectional_frames": 587
+}

@@ -1,0 +1,4 @@
+# Keep source media, generated videos, and downloaded inference weights local.
+# Track the extracted route, quality reports, plots, and model provenance.
+*.mp4
+*.onnx

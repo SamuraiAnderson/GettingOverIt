@@ -1,0 +1,66 @@
+{
+  "status": "partial_unverified_draft",
+  "training_ready": false,
+  "source_video": "src\\Data\\video_reference\\37258923076-1-192\\source.mp4",
+  "source_sha256": "ea5e4a25aae4e01ce4261b1adafe6908e2f29ae959252cf4552ecc1c60ac4f55",
+  "map": "checkpoints\\environment.json",
+  "map_sha256": "4af3dcf9d24b2687f09a2f0ff0b74d6ce763584693ec3537627ff1faea4910a7",
+  "coordinate_system": "world x right, world y up; video reference is the visible pot centre",
+  "coordinate_warning": "Pot visual centre is not calibrated to the game Player Transform origin.",
+  "actions_available": false,
+  "frame_range": [
+    203,
+    1303
+  ],
+  "frames_evaluated": 1101,
+  "player_candidate_frames": 951,
+  "camera_candidate_frames": 675,
+  "accepted_candidate_frames": 554,
+  "accepted_candidate_fraction": 0.5031789282470481,
+  "map_keyframes": 123,
+  "interpolated_frames": 74,
+  "completed_frames": 628,
+  "completed_fraction": 0.5703905540417802,
+  "interpolation_max_gap_s": 0.3,
+  "camera_max_anchor_gap_s": 3.0,
+  "camera_flow_interpolation_max_missing_frames": 6,
+  "camera_holdout": {
+    "reference": "held-out accepted map anchors, not game ground truth",
+    "predicted_anchors": 37,
+    "median_error_world": 0.03963302014713296,
+    "p90_error_world": 0.17189819429314107
+  },
+  "interpolation_method": "piecewise linear in world coordinates; speed/reversal/terrain gates; no extrapolation",
+  "interpolation_holdout": {
+    "reference": "held-out CV observations, not game ground truth",
+    "max_gap_s": 0.3,
+    "results": [
+      {
+        "hidden_frames": 2,
+        "attempted_windows": 25,
+        "filled_windows": 25,
+        "median_error_world": 0.050862655142241794,
+        "p90_error_world": 0.1552808504413064
+      },
+      {
+        "hidden_frames": 4,
+        "attempted_windows": 24,
+        "filled_windows": 24,
+        "median_error_world": 0.10161063367243604,
+        "p90_error_world": 0.2960990644188772
+      },
+      {
+        "hidden_frames": 6,
+        "attempted_windows": 22,
+        "filled_windows": 22,
+        "median_error_world": 0.14214371116905034,
+        "p90_error_world": 0.35972991060384685
+      }
+    ]
+  },
+  "map_keyframes_accepted": 61,
+  "median_accepted_map_error_px": 3.240601062774658,
+  "ground_truth_accuracy": "unknown; edge residual and agreement are quality signals, not ground truth",
+  "initial_seed": "Known start area; initial camera fit from terrain, constant until frame 292.",
+  "video_frames_visually_reviewed_for_this_revision": false
+}

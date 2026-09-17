@@ -1,0 +1,366 @@
+{
+  "holdout": {
+    "reference": "held-out CV observations, not game ground truth",
+    "max_gap_s": 0.3,
+    "results": [
+      {
+        "hidden_frames": 2,
+        "attempted_windows": 25,
+        "filled_windows": 25,
+        "median_error_world": 0.050862655142241794,
+        "p90_error_world": 0.1552808504413064
+      },
+      {
+        "hidden_frames": 4,
+        "attempted_windows": 24,
+        "filled_windows": 24,
+        "median_error_world": 0.10161063367243604,
+        "p90_error_world": 0.2960990644188772
+      },
+      {
+        "hidden_frames": 6,
+        "attempted_windows": 22,
+        "filled_windows": 22,
+        "median_error_world": 0.14214371116905034,
+        "p90_error_world": 0.35972991060384685
+      }
+    ]
+  },
+  "gaps": [
+    {
+      "start_index": 90,
+      "end_index": 92,
+      "start_s": 9.766603246753249,
+      "end_s": 9.833269480519482,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623271,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 10.789233171009142
+    },
+    {
+      "start_index": 92,
+      "end_index": 94,
+      "start_s": 9.833269480519482,
+      "end_s": 9.899935714285714,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623271,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 18.34581458454542
+    },
+    {
+      "start_index": 94,
+      "end_index": 98,
+      "start_s": 9.899935714285714,
+      "end_s": 10.03326818181818,
+      "missing_frames": 3,
+      "duration_s": 0.13333246753246542,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 17.873969022807387
+    },
+    {
+      "start_index": 99,
+      "end_index": 101,
+      "start_s": 10.0666012987013,
+      "end_s": 10.133267532467531,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623093,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 15.751162622248708
+    },
+    {
+      "start_index": 102,
+      "end_index": 107,
+      "start_s": 10.16660064935065,
+      "end_s": 10.333266233766237,
+      "missing_frames": 4,
+      "duration_s": 0.1666655844155862,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 20.23244191284633
+    },
+    {
+      "start_index": 125,
+      "end_index": 127,
+      "start_s": 10.933262337662338,
+      "end_s": 10.999928571428573,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623448,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 22.91143791056888
+    },
+    {
+      "start_index": 133,
+      "end_index": 136,
+      "start_s": 11.199927272727273,
+      "end_s": 11.299926623376624,
+      "missing_frames": 2,
+      "duration_s": 0.09999935064935173,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 19.197361470265186
+    },
+    {
+      "start_index": 142,
+      "end_index": 144,
+      "start_s": 11.499925324675326,
+      "end_s": 11.56659155844156,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623448,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 27.820321793097754
+    },
+    {
+      "start_index": 147,
+      "end_index": 149,
+      "start_s": 11.66659090909091,
+      "end_s": 11.733257142857145,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623448,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 22.438595137115993
+    },
+    {
+      "start_index": 153,
+      "end_index": 162,
+      "start_s": 11.86658961038961,
+      "end_s": 12.166587662337662,
+      "missing_frames": 8,
+      "duration_s": 0.2999980519480516,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 13.913442994723072
+    },
+    {
+      "start_index": 162,
+      "end_index": 165,
+      "start_s": 12.166587662337662,
+      "end_s": 12.266587012987014,
+      "missing_frames": 2,
+      "duration_s": 0.09999935064935173,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 21.636134725037852
+    },
+    {
+      "start_index": 171,
+      "end_index": 180,
+      "start_s": 12.466585714285715,
+      "end_s": 12.766583766233769,
+      "missing_frames": 8,
+      "duration_s": 0.2999980519480534,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 6.724772130120982
+    },
+    {
+      "start_index": 180,
+      "end_index": 189,
+      "start_s": 12.766583766233769,
+      "end_s": 13.06658181818182,
+      "missing_frames": 8,
+      "duration_s": 0.2999980519480516,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 16.70617153081363
+    },
+    {
+      "start_index": 189,
+      "end_index": 216,
+      "start_s": 13.06658181818182,
+      "end_s": 13.966575974025975,
+      "missing_frames": 26,
+      "duration_s": 0.8999941558441549,
+      "status": "rejected",
+      "reason": "long_gap"
+    },
+    {
+      "start_index": 216,
+      "end_index": 288,
+      "start_s": 13.966575974025975,
+      "end_s": 16.36656038961039,
+      "missing_frames": 71,
+      "duration_s": 2.3999844155844166,
+      "status": "rejected",
+      "reason": "long_gap"
+    },
+    {
+      "start_index": 306,
+      "end_index": 313,
+      "start_s": 16.966556493506495,
+      "end_s": 17.199888311688312,
+      "missing_frames": 6,
+      "duration_s": 0.23333181818181714,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 19.96000480459944
+    },
+    {
+      "start_index": 319,
+      "end_index": 323,
+      "start_s": 17.399887012987012,
+      "end_s": 17.53321948051948,
+      "missing_frames": 3,
+      "duration_s": 0.13333246753246897,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 16.98476685046018
+    },
+    {
+      "start_index": 432,
+      "end_index": 509,
+      "start_s": 21.16652922077922,
+      "end_s": 23.73317922077922,
+      "missing_frames": 76,
+      "duration_s": 2.566649999999999,
+      "status": "rejected",
+      "reason": "long_gap"
+    },
+    {
+      "start_index": 509,
+      "end_index": 511,
+      "start_s": 23.73317922077922,
+      "end_s": 23.79984545454545,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623093,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 15.665830532025566
+    },
+    {
+      "start_index": 511,
+      "end_index": 513,
+      "start_s": 23.79984545454545,
+      "end_s": 23.86651168831169,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623804,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 18.979745241705164
+    },
+    {
+      "start_index": 592,
+      "end_index": 594,
+      "start_s": 26.499827922077923,
+      "end_s": 26.56649415584416,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623804,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 25.361578363447883
+    },
+    {
+      "start_index": 596,
+      "end_index": 599,
+      "start_s": 26.633160389610392,
+      "end_s": 26.73315974025974,
+      "missing_frames": 2,
+      "duration_s": 0.09999935064934817,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 18.771904699499995
+    },
+    {
+      "start_index": 648,
+      "end_index": 657,
+      "start_s": 28.366482467532467,
+      "end_s": 28.66648051948052,
+      "missing_frames": 8,
+      "duration_s": 0.2999980519480516,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 24.167910726701088
+    },
+    {
+      "start_index": 657,
+      "end_index": 669,
+      "start_s": 28.66648051948052,
+      "end_s": 29.06647792207792,
+      "missing_frames": 11,
+      "duration_s": 0.3999974025973998,
+      "status": "rejected",
+      "reason": "long_gap"
+    },
+    {
+      "start_index": 695,
+      "end_index": 698,
+      "start_s": 29.933138961038964,
+      "end_s": 30.03313831168831,
+      "missing_frames": 2,
+      "duration_s": 0.09999935064934817,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 22.622744841725602
+    },
+    {
+      "start_index": 705,
+      "end_index": 715,
+      "start_s": 30.26647012987013,
+      "end_s": 30.5998012987013,
+      "missing_frames": 9,
+      "duration_s": 0.3333311688311724,
+      "status": "rejected",
+      "reason": "long_gap"
+    },
+    {
+      "start_index": 715,
+      "end_index": 717,
+      "start_s": 30.5998012987013,
+      "end_s": 30.66646753246753,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376622738,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 19.725942457278627
+    },
+    {
+      "start_index": 792,
+      "end_index": 891,
+      "start_s": 33.1664512987013,
+      "end_s": 36.46642987012987,
+      "missing_frames": 98,
+      "duration_s": 3.299978571428575,
+      "status": "rejected",
+      "reason": "long_gap"
+    },
+    {
+      "start_index": 900,
+      "end_index": 907,
+      "start_s": 36.76642792207792,
+      "end_s": 36.99975974025974,
+      "missing_frames": 6,
+      "duration_s": 0.23333181818181714,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 22.90681554840196
+    },
+    {
+      "start_index": 913,
+      "end_index": 915,
+      "start_s": 37.19975844155845,
+      "end_s": 37.26642467532468,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376622738,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 20.00834345614399
+    },
+    {
+      "start_index": 915,
+      "end_index": 917,
+      "start_s": 37.26642467532468,
+      "end_s": 37.33309090909091,
+      "missing_frames": 1,
+      "duration_s": 0.06666623376623448,
+      "status": "filled",
+      "reason": "short_gap_with_supported_endpoints",
+      "speed": 13.207361643765774
+    }
+  ]
+}

@@ -41,6 +41,7 @@ from .dataset import (
     build_patch,
     left_pad_sequence,
 )
+from .reference_corridor import CorridorTracker, ReferenceCorridor
 from .deploy_sampling import (
     default_candidate_points_path,
     default_exclusion_zones_path,
@@ -129,6 +130,7 @@ def _build_patches_batch(
     solid_polygons: list[np.ndarray] | None = None,
     tip_local: np.ndarray | None = None,
     body_local: list[np.ndarray] | None = None,
+    guidance_arrays: dict[int, np.ndarray] | None = None,
 ) -> np.ndarray:
     """批量构建 patches，逐样本委托 dataset.build_patch，保证与离线数据集完全一致。"""
     n = obs.shape[0]
@@ -140,7 +142,9 @@ def _build_patches_batch(
 
     for i in range(n):
         patches[i] = build_patch(
-            obs[i], terrain_mask, eff_arr, config, min_gx, min_gy,
+            obs[i], terrain_mask,
+            guidance_arrays.get(i) if guidance_arrays is not None else eff_arr,
+            config, min_gx, min_gy,
             solid_polygons=solid_polygons, tip_local=tip_local, body_local=body_local,
         )
 
@@ -208,6 +212,12 @@ class RolloutWorker:
         self._terrain_mask: np.ndarray | None = None
         self._min_gx: int = 0
         self._min_gy: int = 0
+        self.reference_corridor = (
+            ReferenceCorridor.from_file(config.reference_trajectory, config)
+            if config.reference_trajectory else None
+        )
+        self._reference_maps: list[np.ndarray] | None = None
+        self.last_corridor_metrics: dict[str, float] = {}
 
         # 表面随机采样
         self._segments: list[np.ndarray] = []
@@ -254,6 +264,7 @@ class RolloutWorker:
     ) -> None:
         """设置地形信息（从效率图获取）。"""
         self._terrain_mask = terrain_mask
+        self._reference_maps = None
         self._min_gx = min_gx
         self._min_gy = min_gy
 
@@ -621,6 +632,26 @@ class RolloutWorker:
             ))
         return _filter_water_trajectories(trajectories, self.config)
 
+    def _ppo_patches(self, obs, eff_map, trackers: dict[int, CorridorTracker]):
+        guidance = None
+        if self.reference_corridor is not None:
+            if self._reference_maps is None:
+                if self._terrain_mask is None:
+                    raise ValueError("Reference corridor observations require set_terrain_info()")
+                self._reference_maps = self.reference_corridor.guidance_maps(
+                    self._terrain_mask.shape, self._min_gx, self._min_gy,
+                    self.config.grid_resolution,
+                )
+            guidance = {
+                i: self._reference_maps[t.guidance_index]
+                for i, t in trackers.items() if t.guidance_index is not None
+            }
+        return _build_patches_batch(
+            obs, eff_map, self.config, self._min_gx, self._min_gy, self._terrain_mask,
+            solid_polygons=self._solid_polygons, tip_local=self._tip_local,
+            body_local=self._body_local, guidance_arrays=guidance,
+        )
+
     def collect_ppo(
         self,
         model: ActorCritic,
@@ -696,14 +727,16 @@ class RolloutWorker:
             )
             for i in stable_agents
         }
+        trackers = {
+            i: self.reference_corridor.tracker(obs[i, :2]) for i in stable_agents
+        } if self.reference_corridor is not None else {}
+        finished: set[int] = set()
+        corridor_steps = corridor_inside = corridor_gaps = 0
+        corridor_progress = corridor_penalties = 0.0
+        self.last_corridor_metrics = {}
 
         for step in range(n_steps):
-            patches = _build_patches_batch(
-                obs, eff_map, self.config,
-                self._min_gx, self._min_gy, self._terrain_mask,
-                solid_polygons=self._solid_polygons,
-                tip_local=self._tip_local, body_local=self._body_local,
-            )
+            patches = self._ppo_patches(obs, eff_map, trackers)
             contact_now, contact_prev = self._compute_contact_batch(obs, contact_prev)
             dynamics = build_dynamics(obs, contact_now)
 
@@ -711,6 +744,8 @@ class RolloutWorker:
             step_data: dict[int, tuple] = {}
 
             for i in stable_agents:
+                if i in finished:
+                    continue
                 dyn_history[i].append(dynamics[i].copy())
                 patch_history[i].append(patches[i].copy())
 
@@ -777,7 +812,18 @@ class RolloutWorker:
                     running_max_y=running_max_y[i],
                     normalizer=normalizer,
                     confirmer=confirmers[i],
+                    corridor=trackers.get(i),
                 )
+                done = bool(dones[i]) or is_water(new_obs[i, 1], self.config)
+                if trackers:
+                    result = trackers[i].last_step
+                    corridor_steps += 1
+                    corridor_inside += int(result.inside)
+                    corridor_gaps += int(result.gap)
+                    corridor_progress += result.progress
+                    corridor_penalties += result.deviation_penalty
+                    if done:
+                        finished.add(i)
                 agent_buffers[i].add(
                     dynamics_window=dw,
                     patch_window=pw,
@@ -787,7 +833,7 @@ class RolloutWorker:
                     log_prob=lp,
                     value=val,
                     reward=reward,
-                    done=bool(dones[i]) or is_water(new_obs[i, 1], self.config),
+                    done=done,
                     noise_prev=np_prev,
                 )
                 act_history[i].append(actions_batch[i].copy())
@@ -797,14 +843,11 @@ class RolloutWorker:
 
             prev_obs = new_obs.copy()
             obs = new_obs
+            if trackers and len(finished) == len(stable_agents):
+                break
 
         # per-agent bootstrap value + GAE
-        patches = _build_patches_batch(
-            obs, eff_map, self.config,
-            self._min_gx, self._min_gy, self._terrain_mask,
-            solid_polygons=self._solid_polygons,
-            tip_local=self._tip_local, body_local=self._body_local,
-        )
+        patches = self._ppo_patches(obs, eff_map, trackers)
         # bootstrap 帧的 contact：接续 rollout 末尾 prev 状态，保证 grip 判定连续
         contact_boot, contact_prev = self._compute_contact_batch(obs, contact_prev)
         dynamics = build_dynamics(obs, contact_boot)
@@ -828,6 +871,14 @@ class RolloutWorker:
             )
 
         buffer = _Buffer.merge(list(agent_buffers.values()))
+
+        if trackers:
+            self.last_corridor_metrics = {
+                "corridor_progress_m": corridor_progress,
+                "corridor_deviation_penalty": corridor_penalties,
+                "corridor_inside_fraction": corridor_inside / max(1, corridor_steps),
+                "corridor_gap_fraction": corridor_gaps / max(1, corridor_steps),
+            }
 
         trajectories = []
         for i in stable_agents:

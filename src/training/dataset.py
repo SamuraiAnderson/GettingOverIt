@@ -380,7 +380,7 @@ def build_patch(
     # [0] wide 攀爬效率图（player 中心，大范围低精度降采样）
     if efficiency_arr is not None:
         patch[0] = crop_centered(
-            efficiency_arr.astype(np.float32),
+            efficiency_arr.astype(np.float32, copy=False),
             px, py, min_gx, min_gy,
             size=size, patch_res=config.wide_patch_resolution,
             arr_res=config.grid_resolution,
@@ -437,7 +437,7 @@ def _build_patch_legacy(
 
     if efficiency_arr is not None:
         patch[1] = crop_centered(
-            efficiency_arr.astype(np.float32),
+            efficiency_arr.astype(np.float32, copy=False),
             px, py, min_gx, min_gy,
             size=size, patch_res=config.patch_resolution,
             arr_res=config.grid_resolution,

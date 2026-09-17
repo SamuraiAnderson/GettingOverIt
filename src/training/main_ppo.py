@@ -20,6 +20,7 @@ import argparse
 import json
 import logging
 import sys
+from dataclasses import asdict, fields
 from pathlib import Path
 
 import numpy as np
@@ -75,6 +76,9 @@ def save_checkpoint(
     optimizer: torch.optim.Optimizer | None,
     iteration: int,
     checkpoint_dir: str,
+    config: TrainConfig | None = None,
+    reference_metadata: dict | None = None,
+    value_warmup_end: int | None = None,
 ) -> None:
     out_dir = Path(checkpoint_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -83,6 +87,12 @@ def save_checkpoint(
     if optimizer is not None:
         state["optimizer"] = optimizer.state_dict()
     state["iteration"] = iteration
+    if config is not None:
+        state["config"] = asdict(config)
+    if reference_metadata is not None:
+        state["reference_corridor"] = reference_metadata
+    if value_warmup_end is not None:
+        state["value_warmup_end"] = value_warmup_end
     torch.save(state, path)
     logger.info("Checkpoint saved: %s", path)
 
@@ -171,7 +181,7 @@ def save_efficiency_map(
     logger.info("效率图已保存: %s", path)
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PPO 训练 — 策略梯度迭代循环")
     parser.add_argument("--num-agents", type=int, default=None)
     parser.add_argument("--max-iterations", type=int, default=None)
@@ -229,7 +239,42 @@ def parse_args() -> argparse.Namespace:
         "--resume-bc", type=str, default=None,
         help="从 BC（ActionPredictor）checkpoint 迁移 backbone 权重初始化 PPO",
     )
-    return parser.parse_args()
+    reference_group = parser.add_mutually_exclusive_group()
+    reference_group.add_argument(
+        "--reference-trajectory", nargs="?", const=str(
+            _REPO_ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory.json"
+        ), default=None,
+        help="启用走廊进度奖励；可指定 JSON，省略路径使用当前速通视频轨迹",
+    )
+    reference_group.add_argument(
+        "--no-reference-trajectory", dest="reference_trajectory", action="store_const", const="",
+        help="显式停用参考走廊（包括从 checkpoint 恢复的走廊设置）",
+    )
+    parser.add_argument(
+        "--reference-corridor-radius", type=float, default=None,
+        help="走廊半宽，世界米（默认 1.5）；内部只奖励前进，不惩罚偏离中心线",
+    )
+    return parser.parse_args(argv)
+
+
+def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoint: dict) -> None:
+    """Resume reference semantics before constructing observations or rewards."""
+    saved = checkpoint.get("config", {})
+    for field in fields(config):
+        if field.name.startswith("reference_") and field.name in saved:
+            setattr(config, field.name, saved[field.name])
+    if args.reference_trajectory is not None:
+        config.reference_trajectory = args.reference_trajectory or None
+    if args.reference_corridor_radius is not None:
+        config.reference_corridor_radius = args.reference_corridor_radius
+    if config.reference_trajectory:
+        config.reference_trajectory = str(Path(config.reference_trajectory).resolve())
+        if args.random_deploy is None:
+            config.random_deploy = bool(saved.get("random_deploy", False)) if saved.get("reference_trajectory") else False
+        # Existing SIL ranks/truncates by height, and rebuilds a single global map.
+        # Keep that BC contract intact; corridor PPO uses its stored input windows.
+        config.sil_enabled = False
+        config.explore_boost_enabled = False
 
 
 def main() -> None:
@@ -240,6 +285,7 @@ def main() -> None:
         raise SystemExit("--run-dir 与 --checkpoint-dir/--log-dir 互斥，二选一")
 
     config = TrainConfig()
+    resume_state = torch.load(args.resume, weights_only=False) if args.resume else {}
     if args.num_agents is not None:
         config.num_agents = args.num_agents
     if args.max_iterations is not None:
@@ -264,6 +310,7 @@ def main() -> None:
         config.value_warmup_iters = args.value_warmup_iters
     if args.random_deploy is not None:
         config.random_deploy = args.random_deploy
+    configure_reference(config, args, resume_state)
 
     # ── 运行归档 ──
     # --run-dir 把产物收敛到 runs/<tag>/ 并开启元数据/指标/控制台/精英池落盘；
@@ -278,19 +325,32 @@ def main() -> None:
         logger.info("实验归档目录: %s", paths.root)
 
     logger.info("PPO Config: %s", config)
-    if recorder is not None:
-        recorder.write_meta(config, argv=sys.argv, extra={
-            "resume": args.resume, "resume_bc": args.resume_bc,
-        })
-
     # ── 初始化 ──
     model = ActorCritic(config)
     ppo_trainer = PPOTrainer(config)
     rollout_worker = RolloutWorker(config)
+    reference = rollout_worker.reference_corridor
+    reference_meta = reference.metadata if reference is not None else None
+    if reference is not None:
+        logger.info(
+            "参考走廊: %d 连续段, %d→%d 点, 半宽 %.2fm；内部新进度 %.2f/m，外部惩罚上限 %.3f/step",
+            reference_meta["segments"], reference_meta["raw_points"], reference_meta["points"],
+            config.reference_corridor_radius, config.reference_progress_weight,
+            config.reference_deviation_weight,
+        )
+        logger.info("参考来源状态: %s；%s", reference_meta["status"], reference_meta["coordinate_warning"])
+        logger.info("走廊模式: 替代高度/向右/效率图引导，停用基于高度的 SIL 和精英池停滞加噪")
+        saved_hash = resume_state.get("reference_corridor", {}).get("sha256")
+        if saved_hash and args.reference_trajectory is None and saved_hash != reference_meta["sha256"]:
+            raise ValueError("Checkpoint reference file has changed; select --reference-trajectory explicitly to switch")
+    if recorder is not None:
+        recorder.write_meta(config, argv=sys.argv, extra={
+            "resume": args.resume, "resume_bc": args.resume_bc, "reference_corridor": reference_meta,
+        })
     start_iteration = 0
 
     if args.resume:
-        ckpt = torch.load(args.resume, weights_only=False)
+        ckpt = resume_state
         # 老 34D checkpoint → 38D 兼容：dynamics_proj 加 4 新列（初始化 0）+ dyn_mean/std 追加
         # 4 个元素（0/1）。见 model.expand_state_dict_for_dynamics_dim 文档。
         expanded = expand_state_dict_for_dynamics_dim(ckpt["model"], model.state_dict())
@@ -307,6 +367,22 @@ def main() -> None:
         bc_state = torch.load(args.resume_bc, weights_only=True)
         model.load_from_bc(bc_state)
         logger.info("从 BC checkpoint 迁移 backbone 权重: %s", args.resume_bc)
+
+    old_reference_config = {
+        k: v for k, v in resume_state.get("config", {}).items() if k.startswith("reference_")
+    }
+    reference_changed = bool(args.resume) and (
+        bool(old_reference_config.get("reference_trajectory")) != bool(config.reference_trajectory)
+        or (bool(config.reference_trajectory) and (
+            old_reference_config != {k: v for k, v in asdict(config).items() if k.startswith("reference_")}
+            or resume_state.get("reference_corridor", {}).get("sha256") != reference_meta["sha256"]
+        ))
+    )
+    warmup_end = start_iteration + config.value_warmup_iters if reference_changed else config.value_warmup_iters
+    if not reference_changed and args.value_warmup_iters is None:
+        warmup_end = max(warmup_end, int(resume_state.get("value_warmup_end", 0)))
+    if reference_changed:
+        logger.info("奖励目标改变：从当前迭代重新预热 critic %d 轮", config.value_warmup_iters)
 
     # ── 加载地形数据 ──
     game_root = Path(config.game_root)
@@ -372,11 +448,12 @@ def main() -> None:
 
     # ── 奖励归一化器 ──
     calibration_steps = config.steps_per_rollout * config.num_agents * 10
-    reward_normalizer = RewardNormalizer(calibration_steps=calibration_steps)
-    logger.info(
-        "RewardNormalizer: %d calibration steps (≈%d rollouts)",
-        calibration_steps, 10,
-    )
+    reward_normalizer = RewardNormalizer(calibration_steps=calibration_steps) if reference is None else None
+    if reward_normalizer is not None:
+        logger.info(
+            "RewardNormalizer: %d calibration steps (≈%d rollouts)",
+            calibration_steps, 10,
+        )
 
     # ── 观测归一化标定 ──
     # resume / resume-bc 已随 checkpoint 携带归一化统计；全新模型需先跑一轮标定 rollout。
@@ -443,7 +520,7 @@ def main() -> None:
             )
             logger.info("  采集完成: buffer size=%d, trajectories=%d",
                         buffer.size, len(trajectories))
-            if reward_normalizer.is_active:
+            if reward_normalizer is not None and reward_normalizer.is_active:
                 logger.info(
                     "  RewardNormalizer active: σ_h=%.4f, σ_e=%.4f, α=%.2f",
                     reward_normalizer.sigma_h, reward_normalizer.sigma_e,
@@ -458,7 +535,7 @@ def main() -> None:
                 continue
 
             # Phase 1.5: 更新效率图
-            if trajectories:
+            if trajectories and reference is None:
                 prev_eff_map = eff_map.copy()
                 eff_map.update(trajectories, config, prev_eff_map)
 
@@ -505,11 +582,11 @@ def main() -> None:
                     sil_dataset.set_trajectories(top)
 
             # Phase 2: PPO 更新（前 value_warmup_iters 轮只预热 critic，冻结策略防灾难性遗忘）
-            value_only = iteration < config.value_warmup_iters
+            value_only = iteration < warmup_end
             if value_only:
                 logger.info(
                     "Phase 2: Critic 预热 %d/%d (只训 critic_head, %d epochs, 策略冻结)",
-                    iteration + 1, config.value_warmup_iters, config.value_warmup_epochs,
+                    iteration + 1, warmup_end, config.value_warmup_epochs,
                 )
                 metrics = ppo_trainer.update_critic_only(model, buffer)
             else:
@@ -577,6 +654,7 @@ def main() -> None:
                 "sum_reward": float(reward_arr.sum()),
                 "buffer_size": float(buffer.size),
             }
+            extras.update(rollout_worker.last_corridor_metrics)
             log_metrics(iteration + 1, metrics, extras)
             if recorder is not None:
                 recorder.append_metrics(iteration + 1, metrics, extras)
@@ -585,8 +663,11 @@ def main() -> None:
                 save_checkpoint(
                     model, ppo_trainer.optimizer,
                     iteration + 1, config.checkpoint_dir,
+                    config=config, reference_metadata=reference_meta,
+                    value_warmup_end=warmup_end,
                 )
-                save_efficiency_map(eff_map, env_data, iteration + 1, config.log_dir)
+                if reference is None:
+                    save_efficiency_map(eff_map, env_data, iteration + 1, config.log_dir)
                 # 精英池只活在内存里，不随 checkpoint 走。不在这里快照，"策略当时到底
                 # 走出了什么行为"就只能靠事后重新拉游戏在环采样去猜。
                 if recorder is not None and sil_dataset is not None:
@@ -596,6 +677,8 @@ def main() -> None:
         save_checkpoint(
             model, ppo_trainer.optimizer,
             config.max_iterations, config.checkpoint_dir,
+            config=config, reference_metadata=reference_meta,
+            value_warmup_end=warmup_end,
         )
         if recorder is not None:
             if sil_dataset is not None:

@@ -264,6 +264,16 @@ class TrainConfig:
     # 最优策略不变性成立（常数倍势场仍合法、全局缩放不改 argmax）。
     reward_alpha: float = 0.5
 
+    # ── 视频参考走廊（显式启用；替代 PPO 高度/向右/效率图奖励）──
+    reference_trajectory: str | None = None
+    reference_corridor_radius: float = 1.5  # 半宽，世界米；走廊内不惩罚偏离中心线
+    reference_progress_weight: float = 1.0  # 走廊内新增路线进度，每米奖励
+    reference_deviation_weight: float = 0.01  # 走廊外每步弱惩罚的上限
+    reference_projection_window: float = 4.0  # 局部投影搜索半径，沿线米
+    reference_max_step: float = 4.0  # 单步位移超限视为跳变，仅重定位不领奖
+    reference_simplify_tolerance: float = 0.15  # 折线简化容差，保留分段缺口
+    reference_interpolated_weight: float = 0.5
+
     # ── 训练控制 ──
     max_iterations: int = 100
     save_interval: int = 5

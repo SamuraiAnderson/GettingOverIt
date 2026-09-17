@@ -24,6 +24,7 @@ from matplotlib.path import Path as MplPath
 
 if TYPE_CHECKING:
     from .config import TrainConfig
+    from .reference_corridor import CorridorTracker
 
 
 def climb_score(progress: float, peak_step: int, config: TrainConfig) -> float:
@@ -255,9 +256,11 @@ def step_reward(
     running_max_y: float,
     normalizer: RewardNormalizer | None = None,
     confirmer: NewHighConfirmer | None = None,
+    corridor: CorridorTracker | None = None,
 ) -> tuple[float, float]:
     """
-    PPO 逐步奖励（攀升门控进度势的逐步分解）。
+    PPO 逐步奖励。提供 corridor 时使用参考走廊奖励，并保留落水惩罚；
+    下述高度/向右/效率图/归一化逻辑仅用于未启用参考轨迹的旧模式。
 
     进度通道 = 纵向（secured 创新高）+ 前沿门控横向：
       - 纵向：提供 confirmer 时用**确认式创新高**（守住 dwell 步才结算，防甩飞，望远镜和 =
@@ -287,6 +290,16 @@ def step_reward(
     """
     curr_y = float(obs_curr[1])
     new_max_y = curr_y if curr_y > running_max_y else running_max_y
+
+    # 参考路线模式：进度优先，走廊内横向误差不扣分。保持物理量固定权重，
+    # 不分别归一化进度和偏离惩罚，否则稀有的小偏差可能被放大而反客为主。
+    # 原高度/向右/效率图奖励全部由路线进度替代；BC 排序保持原有分工。
+    if config.reference_trajectory and corridor is None:
+        raise ValueError("Reference reward requires a per-agent CorridorTracker")
+    if corridor is not None:
+        result = corridor.step(obs_curr[:2])
+        reward = config.water_penalty if is_water(curr_y, config) else result.reward
+        return reward, new_max_y
 
     # ── 纵向分量 ──
     if confirmer is not None:
