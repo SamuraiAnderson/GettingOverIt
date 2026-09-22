@@ -23,7 +23,7 @@ HAMMER_ANGLE_INDEX = 27
 # 锤头世界多边形重建的标定参数（近似）：
 #   world_poly = tip_center + scale * R(rod_dir + offset) @ local_poly
 #   rod_dir: angle_source="pole" 用 pole→tip；"hub" 用 hammerAngle(hub→tip)
-# 经 verify_tip_reconstruction 采样校验，pole / -90° / 1.0 使锤头颈部指向 pole、贴合地形。
+# 2026-09-19 原生 Transform 对照：pole / -180° / 1.0；旧 -90° 仅为视觉粗估。
 TipReconConfig = namedtuple(
     "TipReconConfig", ["local_poly", "angle_source", "angle_offset_deg", "scale"]
 )
@@ -32,7 +32,7 @@ TipReconConfig = namedtuple(
 def make_tip_recon_config(
     local_poly,
     angle_source: str = "pole",
-    angle_offset_deg: float = -90.0,
+    angle_offset_deg: float = -180.0,
     scale: float = 1.0,
 ) -> "TipReconConfig":
     """构造锤头重建配置；local_poly 为 tip 局部多边形 (N,2)。"""

@@ -1,4 +1,7 @@
-"""接触信号复刻——精确对齐游戏原生 HammerCollisions + PlayerSounds 判断（IL 反编译）。
+"""接触几何近似——参考游戏原生 HammerCollisions + PlayerSounds 的语义。
+
+这些是帧边界几何代理，不是原生碰撞回调真值。CONTACT_EPSILON 把原生接触点
+移动阈值借作距离阈值，body/pot 轮廓也不等价于原生接触点分层；必须另做原生对照。
 
 ## 复刻的 5 个物理量
 
@@ -37,10 +40,7 @@
   确保 patch 与派生接触信号语义一致）。
 - 环境多边形与 `traversable_mask.npz` 同源（`load_colliders` → `extract_polygons`）。
 
-## 性能
-
-- 单帧单 agent：~50-200 μs（tip 16 顶点 × 局部相关地形 ~10 个 × 平均 20 顶点）
-- 与 rollout 主循环相比可忽略；不做空间索引（bbox 预筛已足够）。
+静态地形可用 TerrainContactIndex 缓存包围盒；性能以 rollout 分阶段计时为准。
 """
 
 from __future__ import annotations
@@ -72,6 +72,30 @@ FALL_CAST_RADIUS = 0.5
 FALL_MAX_DISTANCE = 20.0
 
 CONTACT_DIM = 5  # [tip_contact, tip_grip, body_contact, pot_contact, fall_distance_norm]
+
+
+class TerrainContactIndex(Sequence):
+    """Immutable polygon/bounds cache; rebuilt whenever terrain geometry is replaced."""
+    def __init__(self, polygons):
+        self.polygons = tuple(np.asarray(p, dtype=np.float64).copy() for p in polygons if len(p) >= 3)
+        self.bounds = np.array([[*p.min(axis=0), *p.max(axis=0)] for p in self.polygons]).reshape(-1, 4)
+
+    def __len__(self):
+        return len(self.polygons)
+
+    def __getitem__(self, index):
+        return self.polygons[index]
+
+    def nearby(self, low, high, margin):
+        b = self.bounds
+        mask = ((b[:, 2] >= low[0] - margin) & (b[:, 0] <= high[0] + margin)
+                & (b[:, 3] >= low[1] - margin) & (b[:, 1] <= high[1] + margin))
+        return [self.polygons[i] for i in np.flatnonzero(mask)]
+
+    def below(self, ox, oy):
+        b = self.bounds
+        return [self.polygons[i] for i in np.flatnonzero(
+            (b[:, 0] <= ox) & (b[:, 2] >= ox) & (b[:, 1] <= oy))]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -194,6 +218,8 @@ def raycast_down_to_polygons(
     捕捉，此处只表征"离地多高"）。
     """
     best_y = -float("inf")
+    if isinstance(polygons, TerrainContactIndex):
+        polygons = polygons.below(ox, oy)
     for poly in polygons:
         p = np.asarray(poly, dtype=np.float64)
         n = len(p)
@@ -240,9 +266,9 @@ class ContactPrevState:
 class ContactConfig:
     """接触信号计算的几何参数，值默认与 `dataset.build_patch` 的 contact 通道一致。"""
     tip_angle_source: str = "pole"
-    tip_angle_offset_deg: float = -90.0
+    tip_angle_offset_deg: float = -180.0
     tip_scale: float = 1.0
-    body_angle_offset_deg: float = -90.0
+    body_angle_offset_deg: float = -84.49833
     body_scale: float = 1.0
 
 
@@ -343,6 +369,8 @@ def _min_distance_to_env(
     q_max_x, q_max_y = q[:, 0].max(), q[:, 1].max()
     margin = max(CONTACT_EPSILON * 4, 0.2)  # 至少留 0.2m 预筛半径
     best = float("inf")
+    if isinstance(env_polygons, TerrainContactIndex):
+        env_polygons = env_polygons.nearby((q_min_x, q_min_y), (q_max_x, q_max_y), margin)
     for poly in env_polygons:
         p = np.asarray(poly, dtype=np.float64)
         if len(p) < 3:

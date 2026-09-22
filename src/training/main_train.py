@@ -267,7 +267,9 @@ def main() -> None:
     _setup_logging()
     args = parse_args()
 
-    config = TrainConfig()
+    # BC archives contain bare weights/trajectories without geometry metadata.
+    # Preserve that historical contract; calibrated inputs are opt-in via main_ppo.
+    config = TrainConfig(tip_angle_offset=-90., body_angle_offset=-90.)
     if args.num_agents is not None:
         config.num_agents = args.num_agents
     if args.max_iterations is not None:
