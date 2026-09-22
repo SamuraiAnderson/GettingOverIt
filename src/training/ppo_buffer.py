@@ -9,6 +9,7 @@ PPO Rollout Buffer — 存储采集数据 + GAE 优势计算 + minibatch 迭代�
 from __future__ import annotations
 
 import logging
+import json
 from dataclasses import dataclass
 from typing import Generator
 
@@ -16,6 +17,21 @@ import numpy as np
 import torch
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class PatchWindow:
+    """References to immutable per-frame patches; materialize only a minibatch."""
+    frames: tuple[np.ndarray, ...]
+    context_len: int
+
+    def __array__(self, dtype=None, copy=None):
+        out = np.zeros((self.context_len, *self.frames[-1].shape), dtype=dtype or np.float32)
+        out[-len(self.frames):] = self.frames
+        return out
+
+    def __getitem__(self, index):
+        return np.asarray(self)[index]
 
 
 @dataclass
@@ -33,6 +49,7 @@ class PPOBatch:
     # 采集时该步的 OU 前一步归一化噪声 z_{t-1}，供条件式 log_prob 复算（PPO ratio 自洽）；
     # iid 模式恒为零向量，evaluate_actions 会在 noise_phi=0 时忽略。
     noise_prev: torch.Tensor     # (B, 2)
+    raw_actions: torch.Tensor    # (B, 2), before tanh; never reconstruct saturated samples
 
 
 class PPORolloutBuffer:
@@ -56,6 +73,8 @@ class PPORolloutBuffer:
         self._dones: list[bool] = []
         # 每步 OU 前一步归一化噪声 z_{t-1}，iid 模式下存零向量（无条件效应）
         self._noise_prev: list[np.ndarray] = []
+        self._raw_actions: list[np.ndarray] = []
+        self.policy_context: dict = {}
 
         self._advantages: np.ndarray | None = None
         self._returns: np.ndarray | None = None
@@ -76,14 +95,19 @@ class PPORolloutBuffer:
         reward: float,
         done: bool,
         noise_prev: np.ndarray | None = None,
+        *,
+        raw_action: np.ndarray,
+        patch_frames: tuple[np.ndarray, ...] | None = None,
     ) -> None:
-        """添加一个 timestep 的数据（单 agent）。包含 NaN/Inf 的数据会被丢弃。
+        """添加一个 timestep；NaN/Inf 中止本轮，避免跨缺失步骤计算 GAE。
 
         noise_prev: OU 采集时的 z_{t-1}；未提供时按 iid 模式补零向量（evaluate_actions 侧
         用 noise_phi=0 时自然忽略，两种口径一致）。
         """
         if noise_prev is None:
             noise_prev = np.zeros(action.shape, dtype=np.float32)
+        if patch_frames is not None and (not patch_frames or len(patch_frames) > len(valid_mask_window)):
+            raise ValueError("Patch frame history must fit the observation window")
 
         if not (
             np.isfinite(dynamics_window).all()
@@ -93,9 +117,12 @@ class PPORolloutBuffer:
             and np.isfinite(value)
             and np.isfinite(reward)
             and np.isfinite(noise_prev).all()
+            and np.isfinite(raw_action).all()
+            and np.isfinite(act_history_window).all()
+            and np.isfinite(valid_mask_window).all()
         ):
             logger.warning(
-                "Dropping timestep with NaN/Inf: "
+                "Invalid timestep with NaN/Inf: "
                 "dyn=%s patch=%s action=%s lp=%.4g v=%.4g r=%.4g noise=%s",
                 np.isfinite(dynamics_window).all(),
                 np.isfinite(patch_window).all(),
@@ -103,10 +130,11 @@ class PPORolloutBuffer:
                 log_prob, value, reward,
                 np.isfinite(noise_prev).all(),
             )
-            return
+            raise ValueError("Non-finite PPO transition; refusing to join discontinuous GAE history")
 
         self._dynamics.append(dynamics_window)
-        self._patches.append(patch_window)
+        self._patches.append(patch_window if patch_frames is None else
+                             PatchWindow(patch_frames, len(valid_mask_window)))
         self._act_histories.append(act_history_window)
         self._valid_masks.append(valid_mask_window)
         self._actions.append(action)
@@ -115,6 +143,7 @@ class PPORolloutBuffer:
         self._rewards.append(reward)
         self._dones.append(done)
         self._noise_prev.append(noise_prev.astype(np.float32))
+        self._raw_actions.append(np.asarray(raw_action, dtype=np.float32).copy())
 
     def compute_gae(
         self,
@@ -156,14 +185,11 @@ class PPORolloutBuffer:
         n = self.size
         indices = np.random.permutation(n)
 
-        dynamics_arr = np.array(self._dynamics)
-        patches_arr = np.array(self._patches)
-        act_hist_arr = np.array(self._act_histories)
-        valid_mask_arr = np.array(self._valid_masks)
         actions_arr = np.array(self._actions)
         log_probs_arr = np.array(self._log_probs, dtype=np.float32)
         values_arr = np.array(self._values, dtype=np.float32)
         noise_prev_arr = np.array(self._noise_prev, dtype=np.float32)
+        raw_actions_arr = np.array(self._raw_actions, dtype=np.float32)
 
         adv = self._advantages.copy()
         if normalize_advantages and len(adv) > 1:
@@ -172,16 +198,17 @@ class PPORolloutBuffer:
         for start in range(0, n, batch_size):
             idx = indices[start : start + batch_size]
             yield PPOBatch(
-                dynamics=torch.from_numpy(dynamics_arr[idx]).to(self.device),
-                patches=torch.from_numpy(patches_arr[idx]).to(self.device),
-                act_history=torch.from_numpy(act_hist_arr[idx]).to(self.device),
-                valid_mask=torch.from_numpy(valid_mask_arr[idx]).to(self.device),
+                dynamics=torch.from_numpy(np.stack([self._dynamics[i] for i in idx])).to(self.device),
+                patches=torch.from_numpy(np.stack([self._patches[i] for i in idx])).to(self.device),
+                act_history=torch.from_numpy(np.stack([self._act_histories[i] for i in idx])).to(self.device),
+                valid_mask=torch.from_numpy(np.stack([self._valid_masks[i] for i in idx])).to(self.device),
                 actions=torch.from_numpy(actions_arr[idx]).to(self.device),
                 old_log_probs=torch.from_numpy(log_probs_arr[idx]).to(self.device),
                 advantages=torch.from_numpy(adv[idx]).to(self.device),
                 returns=torch.from_numpy(self._returns[idx]).to(self.device),
                 old_values=torch.from_numpy(values_arr[idx]).to(self.device),
                 noise_prev=torch.from_numpy(noise_prev_arr[idx]).to(self.device),
+                raw_actions=torch.from_numpy(raw_actions_arr[idx]).to(self.device),
             )
 
     @classmethod
@@ -194,6 +221,8 @@ class PPORolloutBuffer:
             return merged
         for b in buffers:
             assert b._advantages is not None, "merge 前需先 compute_gae"
+            if b.policy_context != buffers[0].policy_context:
+                raise ValueError("Cannot merge different behavior-policy contexts")
             merged._dynamics.extend(b._dynamics)
             merged._patches.extend(b._patches)
             merged._act_histories.extend(b._act_histories)
@@ -204,6 +233,8 @@ class PPORolloutBuffer:
             merged._rewards.extend(b._rewards)
             merged._dones.extend(b._dones)
             merged._noise_prev.extend(b._noise_prev)
+            merged._raw_actions.extend(b._raw_actions)
+        merged.policy_context = dict(buffers[0].policy_context)
         merged._advantages = np.concatenate([b._advantages for b in buffers])
         merged._returns = np.concatenate([b._returns for b in buffers])
         return merged
@@ -220,5 +251,62 @@ class PPORolloutBuffer:
         self._rewards.clear()
         self._dones.clear()
         self._noise_prev.clear()
+        self._raw_actions.clear()
+        self.policy_context.clear()
         self._advantages = None
         self._returns = None
+
+    def save(self, path) -> None:
+        """Versioned exact model inputs; does not rebuild patches from a changed map."""
+        if self._advantages is None or not self.size:
+            raise ValueError("Only nonempty, finalized rollouts can be archived")
+        names = ("dynamics", "act_histories", "valid_masks", "actions",
+                 "raw_actions", "log_probs", "values", "rewards", "dones", "noise_prev")
+        arrays = {name: np.asarray(getattr(self, "_" + name)) for name in names}
+        frames, ids, windows = [], {}, []
+        for window in self._patches:
+            source = window.frames if isinstance(window, PatchWindow) else tuple(window)
+            ctx = window.context_len if isinstance(window, PatchWindow) else len(window)
+            index = [-1] * (ctx - len(source))
+            for frame in source:
+                if id(frame) not in ids:
+                    ids[id(frame)] = len(frames)
+                    frames.append(frame)
+                index.append(ids[id(frame)])
+            windows.append(index)
+        arrays["patch_frames"] = np.stack(frames)
+        arrays["patch_indices"] = np.array(windows, dtype=np.int32)
+        np.savez_compressed(path, **arrays, advantages=self._advantages, returns=self._returns,
+                            metadata=json.dumps({"version": 2, "policy_context": self.policy_context}))
+
+    def patch_storage_bytes(self) -> int:
+        """Physical frame bytes, counting shared history references only once."""
+        arrays = {}
+        for window in self._patches:
+            for frame in window.frames if isinstance(window, PatchWindow) else (window,):
+                arrays[id(frame)] = frame
+        return sum(a.nbytes for a in arrays.values())
+
+    @classmethod
+    def load(cls, path, device="cpu") -> PPORolloutBuffer:
+        buffer = cls(device)
+        with np.load(path, allow_pickle=False) as data:
+            metadata = json.loads(str(data["metadata"]))
+            if metadata["version"] == 3:
+                from .decision_buffer import DecisionRolloutBuffer
+                return DecisionRolloutBuffer.load(path, device)
+            if metadata["version"] not in (1, 2):
+                raise ValueError("Unsupported PPO input archive version")
+            buffer.policy_context = metadata["policy_context"]
+            for name in ("dynamics", "act_histories", "valid_masks", "actions",
+                         "raw_actions", "log_probs", "values", "rewards", "dones", "noise_prev"):
+                setattr(buffer, "_" + name, list(data[name]))
+            if metadata["version"] == 1:
+                buffer._patches = list(data["patches"])
+            else:
+                frames = list(data["patch_frames"])
+                buffer._patches = [PatchWindow(tuple(frames[i] for i in ids if i >= 0), len(ids))
+                                   for ids in data["patch_indices"]]
+            buffer._advantages = data["advantages"]
+            buffer._returns = data["returns"]
+        return buffer

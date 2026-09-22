@@ -32,6 +32,7 @@ from .contact_features import (
     CONTACT_DIM,
     ContactConfig,
     ContactPrevState,
+    TerrainContactIndex,
     compute_contact_row,
     split_body_pot_local,
 )
@@ -236,6 +237,7 @@ class RolloutWorker:
 
         # 运行时锤头卡障碍过滤（与 L7 离线筛选同一判据）
         self._solid_polygons: list[np.ndarray] | None = None
+        self._contact_polygons: TerrainContactIndex | None = None
         self._tip_cfg = None
         # dualscale patch 接触分支几何 & 接触信号
         # （tip_contact/tip_grip/body_contact/pot_contact/fall_distance）
@@ -255,6 +257,7 @@ class RolloutWorker:
             body_angle_offset_deg=self.config.body_angle_offset,
             body_scale=self.config.body_scale,
         )
+        self._feature_surface_index = None
 
     def set_terrain_info(
         self,
@@ -299,6 +302,8 @@ class RolloutWorker:
         """
         # patch dualscale 接触分支几何（与 deploy 过滤开关无关）
         self._solid_polygons = polygons
+        self._feature_surface_index = None  # New geometry invalidates candidate-surface features.
+        self._contact_polygons = TerrainContactIndex(polygons)
         self._tip_local = extract_tip_local(player_data)
         self._body_local = extract_body_local(player_data)
         # 按名称拆分：body_contact / pot_contact 需分别对独立多边形做距离查询
@@ -517,7 +522,7 @@ class RolloutWorker:
                 tip_local=self._tip_local,
                 body_local=self._body_only_local,
                 pot_local=self._pot_only_local,
-                env_polygons=self._solid_polygons,
+                env_polygons=self._contact_polygons if self._contact_polygons is not None else self._solid_polygons,
                 cfg=self._contact_cfg,
             )
             contact[i] = row
@@ -585,6 +590,7 @@ class RolloutWorker:
         contact_prev: dict[int, ContactPrevState] = {}
 
         c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
+        contact_now = c0
         for i in range(num_agents):
             all_states[i].append(obs[i].copy())
             all_contacts[i].append(c0[i].copy())
@@ -596,7 +602,6 @@ class RolloutWorker:
                 solid_polygons=self._solid_polygons,
                 tip_local=self._tip_local, body_local=self._body_local,
             )
-            contact_now, contact_prev = self._compute_contact_batch(obs, contact_prev)
             dynamics = build_dynamics(obs, contact_now)
 
             actions = np.zeros((num_agents, 2), dtype=np.float32)
@@ -617,6 +622,7 @@ class RolloutWorker:
 
             obs, _ = self.env.step(actions)
             c_next, contact_prev = self._compute_contact_batch(obs, contact_prev)
+            contact_now = c_next
             for i in range(num_agents):
                 all_states[i].append(obs[i].copy())
                 all_actions[i].append(actions[i].copy())
@@ -658,6 +664,10 @@ class RolloutWorker:
         n_steps: int,
         eff_map: ClimbingEfficiencyMap | None = None,
         normalizer: RewardNormalizer | None = None,
+        *,
+        deterministic: bool = False,
+        initial_offsets: np.ndarray | None = None,
+        native_diagnostics: bool = False,
     ) -> tuple[PPORolloutBuffer, list[Trajectory]]:
         """
         PPO 采集：每步记录 (action, log_prob, value, reward)。
@@ -668,8 +678,19 @@ class RolloutWorker:
         """
         from .ppo_buffer import PPORolloutBuffer as _Buffer
         from .reward import NewHighConfirmer, RewardNormalizer, is_water, step_reward
+        from .policy_audit import policy_context
+        from .policy_features import experimental_enabled
+        if experimental_enabled(self.config):
+            from .experimental_rollout import collect_decisions
+            return collect_decisions(self, model, n_steps, eff_map, normalizer,
+                deterministic=deterministic, initial_offsets=initial_offsets, native_diagnostics=native_diagnostics)
+
+        started = time.perf_counter()
+        timings = {name: 0.0 for name in ("patch", "contact", "inference", "env", "bootstrap", "diagnostics")}
 
         assert self.env is not None, "请先调用 setup() 或 launch_game()"
+        if n_steps < 1 or self.config.ppo_inference_batch_size < 0:
+            raise ValueError("Positive rollout length and nonnegative inference batch size required")
         num_agents = self.config.num_agents
         ctx = self.config.context_len
         device = next(model.parameters()).device
@@ -678,7 +699,17 @@ class RolloutWorker:
         # new_log_prob 对不上 → 重要性采样比 ratio 系统性偏离 1 → approx_kl 虚高、策略被污染。
         model.eval()
 
+        if native_diagnostics:
+            # Enable before RESET so the first retained packet is sampled beside the state.
+            self.env.observation_diagnostics()
         obs = self._reset_and_deploy()
+        if initial_offsets is not None:
+            if self.config.random_deploy or np.shape(initial_offsets) != (num_agents, 2):
+                raise ValueError("Fixed evaluation offsets require fixed deployment and shape (N, 2)")
+            positions = obs[:, :2].copy() + initial_offsets
+            for i, position in enumerate(positions):
+                if np.any(initial_offsets[i]):
+                    obs = self.env.teleport(float(position[0]), float(position[1]), agent_index=i)
 
         stable_agents = self._get_stable_agents(obs)
         n_skipped = num_agents - len(stable_agents)
@@ -700,6 +731,12 @@ class RolloutWorker:
         # 接触信号跨帧状态与历史缓冲（与 raw_states 一样：首帧存进 all_contacts）
         contact_prev: dict[int, ContactPrevState] = {}
         c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
+        contact_now = c0
+        self.last_native_diagnostics = []
+        if native_diagnostics:
+            self.last_native_diagnostics.append(self.env.observation_diagnostics())
+            if not self.last_native_diagnostics[-1].get("aligned", False):
+                raise ValueError("Native diagnostics must be captured at the physics-step boundary (plugin v2)")
         all_contacts: dict[int, list[np.ndarray]] = {
             i: [c0[i].copy()] for i in stable_agents
         }
@@ -713,7 +750,9 @@ class RolloutWorker:
         # （若起手 z_{-1}=0，则 σ_cond=std·√(1-φ²) 会系统性压低首步探索方差）。
         # φ=0 或 ou_enabled=False → 条件退化 iid，z_t 即当步 η_t。
         # 每步存 z_prev 到 buffer，PPO 更新用条件式 log_prob → ratio 数学自洽。
-        ou_phi = self.config.ou_phi if self.config.ou_enabled else 0.0
+        ou_phi = self.config.ou_phi if self.config.ou_enabled and not deterministic else 0.0
+        for b in agent_buffers.values():
+            b.policy_context = policy_context(model, ou_phi, deterministic)
         ou_state: dict[int, np.ndarray] = {
             i: np.random.randn(self.config.action_dim).astype(np.float32)
             for i in stable_agents
@@ -730,83 +769,82 @@ class RolloutWorker:
         trackers = {
             i: self.reference_corridor.tracker(obs[i, :2]) for i in stable_agents
         } if self.reference_corridor is not None else {}
+        # 走廊模式逐帧字段（供 SIL 剪枝/排序/patch 重建；非走廊模式保持空 dict）：
+        # corridor_credit[i] 与 raw_actions[i] 对齐（动作 t 获得的 credited 进度）；
+        # corridor_guidance[i] 与 raw_states[i] 对齐（处理完 state[t] 后的引导段索引，
+        # 即该帧 patch wide 通道所用地图；-1 = 无引导）。首帧为 tracker 初始状态。
+        corridor_credit: dict[int, list[float]] = {i: [] for i in stable_agents} if trackers else {}
+        corridor_guidance: dict[int, list[int]] = (
+            {i: [trackers[i].guidance_index if trackers[i].guidance_index is not None else -1]
+             for i in stable_agents} if trackers else {}
+        )
         finished: set[int] = set()
         corridor_steps = corridor_inside = corridor_gaps = 0
         corridor_progress = corridor_penalties = 0.0
         self.last_corridor_metrics = {}
 
         for step in range(n_steps):
+            phase_start = time.perf_counter()
             patches = self._ppo_patches(obs, eff_map, trackers)
-            contact_now, contact_prev = self._compute_contact_batch(obs, contact_prev)
+            timings["patch"] += time.perf_counter() - phase_start
             dynamics = build_dynamics(obs, contact_now)
 
             actions_batch = np.zeros((num_agents, 2), dtype=np.float32)
             step_data: dict[int, tuple] = {}
-
-            for i in stable_agents:
-                if i in finished:
-                    continue
+            phase_start = time.perf_counter()
+            active = sorted(stable_agents - finished)
+            windows = {}
+            for i in active:
                 dyn_history[i].append(dynamics[i].copy())
                 patch_history[i].append(patches[i].copy())
-
-                dyn_window, pat_window, act_window, valid_mask = _build_history_window(
+                windows[i] = _build_history_window(
                     dyn_history[i], patch_history[i], act_history[i],
                     ctx,
                 )
-
-                dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
-                pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)
-                act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
-                vm_t = torch.from_numpy(valid_mask[np.newaxis].astype(np.float32)).to(device)
-
-                z_prev = ou_state[i]
-                z_prev_t = torch.from_numpy(z_prev[np.newaxis]).to(device)
-
+            inference_batch = self.config.ppo_inference_batch_size or max(1, len(active))
+            for start in range(0, len(active), inference_batch):
+                ids = active[start:start + inference_batch]
+                dyn_t, pat_t, act_t, vm_t = (
+                    torch.from_numpy(np.stack([windows[i][k] for i in ids])).to(device)
+                    for k in range(4)
+                )
+                z_prev_t = torch.from_numpy(np.stack([ou_state[i] for i in ids])).to(device)
                 with torch.no_grad():
                     av = model.get_action_and_value(
                         dyn_t, pat_t, act_t, valid_mask=vm_t,
                         noise_prev=z_prev_t, noise_phi=ou_phi,
+                        deterministic=deterministic,
                     )
-
-                action_np = av.action.cpu().numpy().squeeze(0)
-                z_t = av.noise.cpu().numpy().squeeze(0) if av.noise is not None else None
-
-                if not (np.isfinite(action_np).all()
-                        and np.isfinite(av.log_prob.item())
-                        and np.isfinite(av.value.item())
-                        and (z_t is None or np.isfinite(z_t).all())):
-                    logger.warning(
-                        "NaN/Inf model output at step=%d agent=%d, "
-                        "falling back to zero action",
-                        step, i,
-                    )
-                    action_np = np.zeros(2, dtype=np.float32)
-                    step_data[i] = (
-                        dyn_window.copy(), pat_window.copy(), act_window.copy(),
-                        valid_mask.copy(), 0.0, 0.0, z_prev.copy(),
-                    )
-                    # 零动作 fallback：不推进 OU 状态，避免异常噪声影响后续步
+                output = [tensor.detach().cpu().numpy() for tensor in
+                          (av.action, av.raw_action, av.log_prob, av.value, av.noise)]
+                if not all(np.isfinite(array).all() for array in output):
+                    raise FloatingPointError(f"Invalid policy output at step={step}, agents={ids}")
+                for j, i in enumerate(ids):
+                    action_np, latent_np, lp, val, z_t = (array[j] for array in output)
+                    z_prev = ou_state[i]
+                    ou_state[i] = z_t.copy()
                     actions_batch[i] = action_np
-                    continue
+                    step_data[i] = (*windows[i], float(lp), float(val), z_prev.copy(), latent_np.copy())
+            timings["inference"] += time.perf_counter() - phase_start
 
-                # 推进 OU 状态：z_t 已就绪，作为下一步的 z_prev
-                if z_t is not None:
-                    ou_state[i] = z_t.astype(np.float32)
-
-                actions_batch[i] = action_np
-                step_data[i] = (
-                    dyn_window.copy(), pat_window.copy(), act_window.copy(),
-                    valid_mask.copy(), av.log_prob.item(), av.value.item(),
-                    z_prev.copy(),
-                )
-
+            phase_start = time.perf_counter()
             new_obs, dones = self.env.step(actions_batch)
+            timings["env"] += time.perf_counter() - phase_start
+            phase_start = time.perf_counter()
             contact_next, contact_prev = self._compute_contact_batch(new_obs, contact_prev)
+            timings["contact"] += time.perf_counter() - phase_start
+            if native_diagnostics:
+                phase_start = time.perf_counter()
+                self.last_native_diagnostics.append(self.env.observation_diagnostics())
+                if (not self.last_native_diagnostics[-1].get("aligned", False)
+                        or self.last_native_diagnostics[-1]["sequence"] <= self.last_native_diagnostics[-2]["sequence"]):
+                    raise ValueError("Native diagnostic snapshot did not advance with the environment")
+                timings["diagnostics"] += time.perf_counter() - phase_start
 
             for i in stable_agents:
                 if i not in step_data:
                     continue
-                dw, pw, aw, vm, lp, val, np_prev = step_data[i]
+                dw, pw, aw, vm, lp, val, np_prev, latent = step_data[i]
                 reward, running_max_y[i] = step_reward(
                     prev_obs[i], new_obs[i], eff_map, self.config,
                     running_max_y=running_max_y[i],
@@ -815,6 +853,8 @@ class RolloutWorker:
                     corridor=trackers.get(i),
                 )
                 done = bool(dones[i]) or is_water(new_obs[i, 1], self.config)
+                if done:
+                    finished.add(i)
                 if trackers:
                     result = trackers[i].last_step
                     corridor_steps += 1
@@ -835,23 +875,35 @@ class RolloutWorker:
                     reward=reward,
                     done=done,
                     noise_prev=np_prev,
+                    raw_action=latent,
+                    patch_frames=tuple(patch_history[i][-ctx:]),
                 )
                 act_history[i].append(actions_batch[i].copy())
                 raw_states[i].append(new_obs[i].copy())
                 raw_actions[i].append(actions_batch[i].copy())
                 all_contacts[i].append(contact_next[i].copy())
+                if trackers:
+                    # 此时 tracker 已在 step_reward 内完成本步 step：last_step.progress
+                    # 是本动作获得的 credited；guidance_index 是 new_obs 帧的引导段。
+                    corridor_credit[i].append(float(trackers[i].last_step.progress))
+                    gid = trackers[i].guidance_index
+                    corridor_guidance[i].append(gid if gid is not None else -1)
 
             prev_obs = new_obs.copy()
             obs = new_obs
-            if trackers and len(finished) == len(stable_agents):
+            contact_now = contact_next
+            if len(finished) == len(stable_agents):
                 break
 
         # per-agent bootstrap value + GAE
+        phase_start = time.perf_counter()
         patches = self._ppo_patches(obs, eff_map, trackers)
         # bootstrap 帧的 contact：接续 rollout 末尾 prev 状态，保证 grip 判定连续
-        contact_boot, contact_prev = self._compute_contact_batch(obs, contact_prev)
-        dynamics = build_dynamics(obs, contact_boot)
+        dynamics = build_dynamics(obs, contact_now)
         for i in stable_agents:
+            if i in finished:
+                agent_buffers[i].compute_gae(0.0, self.config.gamma, self.config.gae_lambda)
+                continue
             dyn_history[i].append(dynamics[i].copy())
             patch_history[i].append(patches[i].copy())
             dyn_window, pat_window, act_window, valid_mask = _build_history_window(
@@ -871,6 +923,13 @@ class RolloutWorker:
             )
 
         buffer = _Buffer.merge(list(agent_buffers.values()))
+        timings["bootstrap"] = time.perf_counter() - phase_start
+        timings["total"] = time.perf_counter() - started
+        self.last_profile = {f"rollout_{k}_seconds": v for k, v in timings.items()}
+        self.last_profile["rollout_samples_per_second"] = buffer.size / timings["total"]
+        self.last_profile["rollout_patch_storage_bytes"] = float(buffer.patch_storage_bytes())
+        self.last_profile["rollout_patch_window_bytes"] = float(
+            buffer.size * ctx * self.config.patch_channels * self.config.patch_size**2 * 4)
 
         if trackers:
             self.last_corridor_metrics = {
@@ -887,6 +946,10 @@ class RolloutWorker:
                     raw_states=np.array(raw_states[i]),
                     actions=np.array(raw_actions[i]),
                     contact=np.array(all_contacts[i], dtype=np.float32),
+                    corridor_progress=(np.array(corridor_credit[i], dtype=np.float32)
+                                       if trackers else None),
+                    guidance_index=(np.array(corridor_guidance[i], dtype=np.int8)
+                                    if trackers else None),
                 ))
 
         return buffer, trajectories

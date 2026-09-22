@@ -9,7 +9,7 @@ PPO 可读取 `src/Data/video_reference/37258923076-1-192/reference_trajectory.j
 在项目根目录的 PowerShell 中：
 
 ```powershell
-conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --reference-trajectory --reference-corridor-radius 1.5 --no-random-deploy --steps-per-rollout 400 --max-iterations 40 --run-dir ppo_reference_corridor --persist-game
+conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --reference-trajectory --reference-corridor-radius 1.5 --recipe ppo-ou --seed 7 --geometry-profile native-pose-v1 --no-random-deploy --steps-per-rollout 400 --max-iterations 40 --run-dir ppo_reference_corridor --persist-game
 ```
 
 `--reference-trajectory` 不带路径时使用当前视频的 JSON；也可传另一个同格式文件。
@@ -32,8 +32,13 @@ conda run --no-capture-output -n getting-over-it-analysis python -m src.training
 也不构成任意时长轨迹之间的严格字典序约束。长时间偏离仍会累计惩罚。
 
 启用时，旧的高度创新高、只奖励向右、学习到的效率图奖励不参与 PPO 奖励。
-效率图停止更新。旧 SIL 按高度筛选和截断样本，与路线目标不一致，因此走廊模式停用
-SIL 和依赖其精英池的停滞加噪；基础 OU 探索保留。BC 评分函数本身不改动。
+效率图停止更新。SIL 精英池已迁移到走廊口径：rollout 逐帧记录 `corridor_progress`
+（逐步 credited）与 `guidance_index`（引导段索引），剪枝截到 credited 首次封顶
+（+dwell 观察窗），排序分 = credited 总量 + 速度项（`corridor_score`），行为描述子
+取封顶点位置，BC 窗口覆盖全部推进动作；patch wide 通道按 `guidance_index` 从
+预栅格化引导场重建，与在线采集逐点一致。停滞探测器改跟踪精英池 max credited。
+非走廊轨迹（无 `corridor_progress` 字段）仍走高度口径，两种口径在同一池内按字段
+自动分派。BC 评分函数本身不改动。
 
 ## 几何和连续性
 
@@ -54,14 +59,20 @@ SIL 和依赖其精英池的停滞加噪；基础 OU 探索保留。BC 评分函
 
 当前连续段预先栅格化为路线引导场，复用现有 wide 通道；缺口中显示下一段。
 沿线值随进度增加，离线逐渐衰减。其余地形/身体/锤头通道保持原构建方式，
-张量仍为 `(4,32,32)`。每个 PPO 样本保存当时的完整输入窗口，更新直接复用；
-bootstrap 也调用同一构建函数。走廊模式只支持这一 PPO 流程，旧 BC/SIL 数据集不承担
-动态参考段的重建。无需改变状态协议和模型层尺寸，但引导通道语义已经改变，需要训练适应。
+张量仍为 `(4,32,32)`。每个 PPO 样本保存当时的输入，patch 按帧共享并按索引重建窗口；更新使用相同数值并重新计算 CNN；
+bootstrap 也调用同一构建函数。SIL 精英池自 2026-09-23 起支持走廊模式：轨迹逐帧记录
+引导段索引（`guidance_index`），重建时按索引从预栅格化引导场选图，与在线采集逐点一致
+（单测 `test_prune_trajectory.py` 的 patch 一致性用例）。无需改变状态协议和模型层尺寸，
+但引导通道语义已经改变，需要训练适应。
 
 checkpoint 保存走廊配置、文件 SHA256 和 critic 预热结束迭代。
 `--resume` 自动恢复走廊设置，若原文件内容改变会拒绝静默恢复；显式指定
 `--reference-trajectory PATH` 可切换参考。`--no-reference-trajectory` 可切回原奖励。
 从旧奖励切到路线奖励或改变路线配置时，恢复训练会重新预热 critic。
+
+2026-09-19 起，PPO 保存 tanh 前 raw action、OU 条件及采样配置；更新前检查冻结策略概率一致性。新训练采用经过原生姿态对照的几何偏移，旧 checkpoint 保留旧值；显式 `--geometry-profile native-pose-v1` 才迁移已保存的策略，并重新预热 critic。形状兼容不代表输入语义相同。
+
+局部评估入口为 `python -m src.training.local_evaluation`，与训练共用采集、接触及 patch 管线；默认考核连续段内 5 米有效进度和 10 步保持，不把参考缺口当作成功。完整命令、归档及实测限制见[运行手册](main_ppo_usage.md)和[执行记录](optimization_execution_2026-09-19.md)。
 
 ## 验证和观察
 

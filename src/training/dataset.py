@@ -152,6 +152,53 @@ class Trajectory:
     # None 表示"未计算"（build_dynamics 会零填充，兼容旧 checkpoint 或临时构造的
     # 轨迹）；生产链路（rollout/dataset）应始终填充。
     contact: np.ndarray | None = None
+    # ── 走廊模式字段（仅 reference 模式采集/重放后填充，否则 None）──
+    # corridor_progress: (T,) float32，与 actions 对齐；progress[t] = 动作 t 获得的
+    #   credited 走廊进度（CorridorStep.progress）。cumsum 即评估 trace 的
+    #   credited_progress_m 序列。是走廊模式剪枝/排序/BC 截断的唯一进度依据。
+    # guidance_index: (T+1,) int8，与 states 对齐；处理完 state[t] 后 tracker 的
+    #   引导段索引（patch wide 通道用 reference_maps[guidance[t]] 重建），-1 = 无引导。
+    corridor_progress: np.ndarray | None = None
+    guidance_index: np.ndarray | None = None
+
+
+def prune_trajectory(traj: Trajectory, config: "TrainConfig") -> Trajectory:
+    """在"最后有效推进点"（+dwell 观察窗）处物理截断轨迹，去除峰后跌落/来回震荡段。
+
+    截断口径二选一（按轨迹自带字段自动分派）：
+      - 走廊模式（traj.corridor_progress 非 None）：截到 credited 累计首次封顶的
+        动作索引 cap（corridor_cap_index），cut = cap + 2 + dwell_steps。
+        峰后走廊外震荡/跌落段被移除；cap 之后 dwell 窗保留作"守住证据"。
+      - 高度模式（默认）：截到 progress_metric 的 secured peak，
+        cut = peak_idx + 1 + dwell_steps；与 _rebuild_index 的 BC 截断、
+        score_trajectory 的 waypoint 终点、MAP-Elites 的 bd、效率图 update 同口径。
+
+    多保留 dwell_steps 个峰后状态作为 _secured_held / 观察窗：截断后窗口不越界，
+    入池后各处重算口径与完整轨迹逐点一致，剪枝不改变下游判断。
+    BC 监督窗口仍由 _rebuild_index 截到最后有效推进点，峰后动作不进 BC。
+
+    score/iteration 沿用原轨迹（调用方通常在入池前对剪枝结果重算 score）。
+    对已完成剪枝的轨迹幂等（cap/peak 不变、cut 不短于现长时原样返回副本）。
+    """
+    if traj.corridor_progress is not None:
+        from .reference_corridor import corridor_cap_index
+        cap = corridor_cap_index(traj.corridor_progress)
+        cut = min(cap + 2 + config.dwell_steps, len(traj.raw_states))
+    else:
+        _progress, peak_idx, _dy, _reach = progress_metric(traj.raw_states, config)
+        cut = min(peak_idx + 1 + config.dwell_steps, len(traj.raw_states))
+    cut = max(cut, 2)  # 至少保留 1 个动作，维持 (T+1, D)/(T, 2) 结构
+    return Trajectory(
+        raw_states=traj.raw_states[:cut],
+        actions=traj.actions[: cut - 1],
+        score=traj.score,
+        iteration=traj.iteration,
+        contact=traj.contact[:cut] if traj.contact is not None else None,
+        corridor_progress=(traj.corridor_progress[: cut - 1]
+                           if traj.corridor_progress is not None else None),
+        guidance_index=(traj.guidance_index[:cut]
+                        if traj.guidance_index is not None else None),
+    )
 
 
 def crop_centered(
@@ -510,6 +557,7 @@ class TrajectoryDataset(Dataset):
         solid_polygons: list[np.ndarray] | None = None,
         tip_local: np.ndarray | None = None,
         body_local: list[np.ndarray] | None = None,
+        reference_maps: list[np.ndarray] | None = None,
     ):
         self.config = config
         self.terrain_mask = terrain_mask
@@ -520,6 +568,10 @@ class TrajectoryDataset(Dataset):
         self.solid_polygons = solid_polygons
         self.tip_local = tip_local
         self.body_local = body_local
+        # 走廊模式：每连续段一张预栅格化引导场（ReferenceCorridor.guidance_maps），
+        # __getitem__ 按 traj.guidance_index 选图重建 patch wide 通道，
+        # 与 rollout._ppo_patches 在线构建逐点一致；非走廊轨迹不受影响。
+        self.reference_maps = reference_maps
         self.trajectories: list[Trajectory] = []
         self._index: list[tuple[int, int]] = []  # (traj_idx, window_start)
 
@@ -552,14 +604,23 @@ class TrajectoryDataset(Dataset):
 
     def _behavior_cell_id(
         self, raw_states: np.ndarray, cell_size: float,
+        corridor_progress: np.ndarray | None = None,
     ) -> tuple[int, int] | None:
-        """行为描述子 bd = secured peak (x, y) → 网格 cell_id。
+        """行为描述子 bd = 最后有效推进点的 (x, y) → 网格 cell_id。
 
-        peak_idx 复用 progress_metric（dwell 过滤甩飞尖峰后的守住峰），保证描述子
-        不被瞬时冲高/落水回落污染。返回 (gx, gy)；异常输入返回 None。
+        推进点口径：
+          - 走廊模式（corridor_progress 非 None）：credited 累计首次封顶的动作索引
+            对应的状态位置（corridor_cap_index），不被走廊外震荡/跌落污染；
+          - 高度模式（默认）：progress_metric 的 secured peak（dwell 过滤甩飞尖峰
+            后的守住峰）。
+        返回 (gx, gy)；异常输入返回 None。
         """
         try:
-            _p, peak_idx, _dy, _r = progress_metric(raw_states, self.config)
+            if corridor_progress is not None:
+                from .reference_corridor import corridor_cap_index
+                peak_idx = corridor_cap_index(corridor_progress) + 1  # 动作索引 → 结果状态
+            else:
+                _p, peak_idx, _dy, _r = progress_metric(raw_states, self.config)
         except Exception:
             return None
         if peak_idx < 0 or peak_idx >= len(raw_states):
@@ -599,7 +660,7 @@ class TrajectoryDataset(Dataset):
         cell_map: dict[tuple[int, int], Trajectory] = {}
         extras: list[Trajectory] = []
         for t in self.trajectories:
-            cid = self._behavior_cell_id(t.raw_states, cell_size)
+            cid = self._behavior_cell_id(t.raw_states, cell_size, t.corridor_progress)
             if cid is None:
                 continue
             if cid not in cell_map:
@@ -616,7 +677,7 @@ class TrajectoryDataset(Dataset):
         for traj, sc in zip(trajs, scores):
             if is_water_trajectory(traj.raw_states, self.config):
                 continue
-            cid = self._behavior_cell_id(traj.raw_states, cell_size)
+            cid = self._behavior_cell_id(traj.raw_states, cell_size, traj.corridor_progress)
             if cid is None:
                 continue
             traj.score = float(sc)
@@ -669,16 +730,22 @@ class TrajectoryDataset(Dataset):
         观测 obs_0..obs_tau（含当前 obs_tau）与历史动作 act_0..act_{tau-1}。
         早期步 (tau < ctx-1) 通过左填充 + key_padding_mask 处理，与推理起步阶段一致。
 
-        secured peak 截断: tau ∈ [0, min(peak_idx, T-1)]，peak_idx 为 progress_metric 的
-        secured 峰（dwell 驻留过滤甩飞尖峰后的守住峰），排除越过峰后的跌落段与瞬时尖峰段，
-        与 base_score / score_trajectory / 效率图 update 的口径统一。
+        有效推进点截断，tau ∈ [0, min(cap_idx, T-1)]，排除越过推进点后的跌落/震荡段：
+          - 走廊模式（traj.corridor_progress 非 None）：cap_idx = credited 首次封顶的
+            动作索引（corridor_cap_index），与 prune_trajectory / corridor_score 同口径；
+          - 高度模式（默认）：cap_idx = progress_metric 的 secured peak（dwell 驻留
+            过滤甩飞尖峰后的守住峰），与 base_score / 效率图 update 同口径。
         """
         self._index = []
         for ti, traj in enumerate(self.trajectories):
-            _progress, peak_idx, _dy, _reach = progress_metric(
-                traj.raw_states, self.config
-            )
-            max_target = min(peak_idx, len(traj.actions) - 1)
+            if traj.corridor_progress is not None:
+                from .reference_corridor import corridor_cap_index
+                cap_idx = corridor_cap_index(traj.corridor_progress)
+            else:
+                _progress, cap_idx, _dy, _reach = progress_metric(
+                    traj.raw_states, self.config
+                )
+            max_target = min(cap_idx, len(traj.actions) - 1)
             for tau in range(max_target + 1):
                 self._index.append((ti, tau))
 
@@ -701,7 +768,20 @@ class TrajectoryDataset(Dataset):
         dyn_real = build_dynamics(obs_real, contact_real)   # (k_obs, DYNAMICS_DIM=39)
         dynamics, valid_mask = left_pad_sequence(dyn_real, ctx)
 
-        pat_real = np.stack([self._build_patch(s) for s in obs_real])  # (k_obs, ch, ps, ps)
+        # patch 窗口：走廊轨迹按 guidance_index 逐帧选引导段地图（与 rollout 在线构建一致）；
+        # 非走廊轨迹沿用效率图。窗口与 obs_real 同切片，保持 state/patch 逐帧对齐。
+        if traj.guidance_index is not None:
+            if self.reference_maps is None:
+                raise ValueError(
+                    "轨迹带 guidance_index 但数据集未配置 reference_maps；"
+                    "走廊模式构造 TrajectoryDataset 时必须传入 reference.guidance_maps(...)"
+                )
+            gid_window = traj.guidance_index[max(0, tau - ctx + 1): tau + 1]
+            pat_real = np.stack([
+                self._build_patch(s, int(g)) for s, g in zip(obs_real, gid_window)
+            ])
+        else:
+            pat_real = np.stack([self._build_patch(s) for s in obs_real])  # (k_obs, ch, ps, ps)
         patches, _ = left_pad_sequence(pat_real, ctx)
 
         # 动作历史窗口: act_{tau-ctx .. tau-1}（当前步之前）的真实切片，同样左填充
@@ -722,12 +802,20 @@ class TrajectoryDataset(Dataset):
             torch.from_numpy(target_action),
         )
 
-    def _build_patch(self, step_state: np.ndarray) -> np.ndarray:
-        """即时构建 patch（委托模块级 build_patch，保证离线/在线一致）。"""
+    def _build_patch(self, step_state: np.ndarray, guidance_id: int | None = None) -> np.ndarray:
+        """即时构建 patch（委托模块级 build_patch，保证离线/在线一致）。
+
+        guidance_id 非 None 时（走廊轨迹）：wide 通道取 reference_maps[guidance_id]，
+        -1（末段之后 gap 无引导）对应全零 wide——与 rollout._ppo_patches 中
+        guidance_index=None 的 agent 不传 guidance_arrays 的行为一致。
+        """
+        eff = self.efficiency_arr
+        if guidance_id is not None:
+            eff = self.reference_maps[guidance_id] if guidance_id >= 0 else None
         return build_patch(
             step_state,
             self.terrain_mask,
-            self.efficiency_arr,
+            eff,
             self.config,
             self._min_gx,
             self._min_gy,

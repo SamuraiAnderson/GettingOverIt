@@ -28,6 +28,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class StalePolicyError(ValueError):
+    """A correctly recorded rollout is too far from the learner to consume."""
+
+
 class _KLAdapter:
     """target_kl 自适应: 比例式调节 + 硬边界 clamp。"""
 
@@ -120,20 +124,18 @@ class PPOTrainer:
                 weight_decay=self.config.weight_decay,
             )
 
+        from .policy_audit import audit_policy
+        if buffer.policy_context.get("deterministic"):
+            raise ValueError("Evaluation rollouts cannot be used for PPO training")
+        audit = audit_policy(model, buffer, max_samples=128)
         cfg = self.config
         total_value_loss = 0.0
         n_updates = 0
         for _epoch in range(cfg.value_warmup_epochs):
-            for batch in buffer.get_batches(
-                cfg.ppo_batch_size, normalize_advantages=False,
+            from .decision_buffer import evaluated_batches
+            for batch, _, _, new_value in evaluated_batches(
+                model, buffer, cfg.ppo_batch_size, normalize_advantages=False,
             ):
-                _, _, new_value = model.evaluate_actions(
-                    batch.dynamics,
-                    batch.patches,
-                    batch.act_history,
-                    batch.actions,
-                    valid_mask=batch.valid_mask,
-                )
                 value_loss = 0.5 * (new_value - batch.returns).pow(2).mean()
                 if not torch.isfinite(value_loss):
                     model.zero_grad(set_to_none=True)
@@ -159,12 +161,16 @@ class PPOTrainer:
             "target_kl": float(self._kl_adapter.target or 0),
             "max_grad_norm": self._grad_norm_adapter.max_grad_norm,
             "value_only": 1.0,
+            **audit,
         }
 
     def update(
         self,
         model: ActorCritic,
         buffer: PPORolloutBuffer,
+        *,
+        behavior_model: ActorCritic | None = None,
+        max_behavior_kl: float = 0.01,
     ) -> dict[str, float]:
         """
         PPO 更新。
@@ -189,10 +195,23 @@ class PPOTrainer:
                 logger.info("已恢复 optimizer state")
                 self._pending_optim_state = None
 
+        from .policy_audit import audit_policy, policy_replay_metrics
+        if buffer.policy_context.get("deterministic"):
+            raise ValueError("Evaluation rollouts cannot be used for PPO training")
+        audit = audit_policy(model if behavior_model is None else behavior_model,
+                             buffer, max_samples=128)
+        lag = 0.0
+        if behavior_model is not None:
+            if not np.isfinite(max_behavior_kl) or max_behavior_kl <= 0:
+                raise ValueError("max_behavior_kl must be finite and positive")
+            drift = policy_replay_metrics(model, buffer, max_samples=512)
+            lag = drift["preupdate_kl"]
+            if lag > max_behavior_kl:
+                raise StalePolicyError(f"Behavior KL {lag:.6g} exceeds {max_behavior_kl:.6g}")
         cfg = self.config
         # OU 探索：ratio 数学自洽要求 new/old log_prob 用同一条件式（见 actor_critic.evaluate_actions），
         # 即 raw|z_{t-1} ~ N(mean+std·φ·z_{t-1}, std²·(1-φ²))。ou_enabled=False → phi=0 退化 iid。
-        ou_phi = cfg.ou_phi if cfg.ou_enabled else 0.0
+        # evaluated_batches reads the archived OU condition for every decision.
 
         total_policy_loss = 0.0
         total_value_loss = 0.0
@@ -202,28 +221,37 @@ class PPOTrainer:
         total_loss_sum = 0.0
         n_updates = 0
         early_stopped = False
+        self.last_update_trace = []
+        stop_kl = 0.0
 
         for epoch in range(cfg.ppo_epochs):
             if early_stopped:
                 break
 
-            for batch in buffer.get_batches(
-                cfg.ppo_batch_size,
+            from .decision_buffer import evaluated_batches
+            for batch, new_log_prob, entropy, new_value in evaluated_batches(
+                model, buffer, cfg.ppo_batch_size,
                 normalize_advantages=cfg.normalize_advantages,
             ):
-                new_log_prob, entropy, new_value = model.evaluate_actions(
-                    batch.dynamics,
-                    batch.patches,
-                    batch.act_history,
-                    batch.actions,
-                    valid_mask=batch.valid_mask,
-                    noise_prev=batch.noise_prev,
-                    noise_phi=ou_phi,
-                )
-
                 # ── 策略损失 (clipped surrogate) ──
                 log_ratio = new_log_prob - batch.old_log_probs
                 ratio = log_ratio.exp()
+
+                # These probabilities describe the CURRENT parameters, before
+                # optimizer.step(). Stop before applying another excessive step.
+                with torch.no_grad():
+                    approx_kl = ((ratio - 1.0) - log_ratio).mean().item()
+                effective_kl = self._kl_adapter.target
+                if not np.isfinite(approx_kl):
+                    raise ValueError("Non-finite minibatch KL")
+                trace = {"epoch": epoch, "pre_step_kl": approx_kl,
+                         "samples": len(batch.actions), "applied": False}
+                self.last_update_trace.append(trace)
+                if effective_kl is not None and approx_kl > cfg.ppo_kl_stop_factor * effective_kl:
+                    early_stopped, stop_kl = True, approx_kl
+                    logger.info("KL early stop BEFORE update %d: %.6f > %.6f",
+                                n_updates + 1, approx_kl, cfg.ppo_kl_stop_factor * effective_kl)
+                    break
 
                 surr1 = ratio * batch.advantages
                 surr2 = (
@@ -265,6 +293,8 @@ class PPOTrainer:
                 total_norm = clip_grad_norm_(model.parameters(), effective_grad_norm)
                 self._grad_norm_adapter.record(total_norm.item())
                 self.optimizer.step()
+                trace.update(applied=True, policy_loss=policy_loss.item(),
+                             value_loss=value_loss.item(), grad_norm=float(total_norm))
 
                 if any(
                     not torch.isfinite(p).all()
@@ -293,23 +323,11 @@ class PPOTrainer:
                 n_updates += 1
                 self._global_step += 1
 
-                # KL 早停：逐 minibatch 检查，超阈值立即停止（防止整个 epoch 无保护更新把 KL 冲爆）
-                effective_kl = self._kl_adapter.target
-                if effective_kl is not None and approx_kl > cfg.ppo_kl_stop_factor * effective_kl:
-                    logger.info(
-                        "KL 早停(minibatch): epoch %d/%d, update %d, "
-                        "approx_kl=%.4f > %.2f×target_kl=%.4f",
-                        epoch + 1, cfg.ppo_epochs, n_updates,
-                        approx_kl, cfg.ppo_kl_stop_factor, effective_kl,
-                    )
-                    early_stopped = True
-                    break
-
         n = max(n_updates, 1)
         final_avg_kl = total_approx_kl / n
 
         # 迭代结束后自适应 target_kl
-        self._kl_adapter.adapt(final_avg_kl)
+        self._kl_adapter.adapt(max(final_avg_kl, stop_kl))
 
         metrics = {
             "policy_loss": total_policy_loss / n,
@@ -319,8 +337,12 @@ class PPOTrainer:
             "clip_fraction": total_clip_frac / n,
             "total_loss": total_loss_sum / n,
             "n_updates": float(n_updates),
+            "early_stopped": float(early_stopped),
+            "stop_kl": stop_kl,
+            "behavior_kl": lag,
             "target_kl": float(self._kl_adapter.target or 0),
             "max_grad_norm": self._grad_norm_adapter.max_grad_norm,
+            **audit,
         }
         return metrics
 

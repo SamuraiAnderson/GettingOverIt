@@ -176,6 +176,50 @@ class ReferenceCorridor:
         return maps
 
 
+def replay_corridor_fields(
+    route: "ReferenceCorridor", raw_states: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """从状态序列确定性重放 CorridorTracker，恢复逐 step 走廊字段。
+
+    返回 (corridor_progress, guidance_index)：
+      - corridor_progress: (T,) float32，与 actions 对齐；progress[t] 是动作 t 把
+        state[t] 推进到 state[t+1] 所获得的 credited 进度（CorridorStep.progress）。
+        cumsum(corridor_progress)[t] = 第 t 步后的 total_progress（评估归档 trace 的
+        credited_progress_m 口径）。
+      - guidance_index: (T+1,) int8，与 states 对齐；guidance[t] 是处理完 state[t]
+        之后 tracker 的引导段索引（patch 构建即用该时刻的值），无引导（末段之后
+        的 gap）记 -1。
+
+    tracker 投影窗口只依赖前序状态，重放与 rollout 在线记录逐点一致；
+    与 local_evaluation 的 trace 重建共用同一 tracker 语义。
+    """
+    tracker = route.tracker(raw_states[0, :2])
+    T = len(raw_states) - 1
+    progress = np.zeros(T, dtype=np.float32)
+    guidance = np.full(T + 1, -1, dtype=np.int8)
+    if tracker.guidance_index is not None:
+        guidance[0] = tracker.guidance_index
+    for t in range(T):
+        result = tracker.step(raw_states[t + 1, :2])
+        progress[t] = result.progress
+        if tracker.guidance_index is not None:
+            guidance[t + 1] = tracker.guidance_index
+    return progress, guidance
+
+
+def corridor_cap_index(corridor_progress: np.ndarray) -> int:
+    """credited 累计首次封顶的动作索引：最小 k 使 cumsum(progress)[k] ≈ total。
+
+    即"最后一个有净推进的动作"；全零轨迹返回 0。剪枝/BC 截断/行为描述子共用此口径。
+    容差取相对 1e-6：float32 逐步累加与一次性求和的截断顺序不同，绝对误差随 T 增长。
+    """
+    total = float(corridor_progress.sum(dtype=np.float64))
+    if total <= 0.0:
+        return 0
+    cumulative = np.cumsum(corridor_progress, dtype=np.float64)
+    return int(np.searchsorted(cumulative, total * (1 - 1e-6), side="left"))
+
+
 @dataclass(frozen=True)
 class CorridorStep:
     reward: float = 0.0

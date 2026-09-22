@@ -54,6 +54,21 @@ def climb_score(progress: float, peak_step: int, config: TrainConfig) -> float:
     return progress + config.efficiency_weight * speed_term
 
 
+def corridor_score(corridor_progress: np.ndarray, config: TrainConfig) -> float:
+    """走廊模式的精英池排序分：credited 总进度 + 速度项（复用 climb_score 结构）。
+
+    corridor_progress: (T,) 逐步 credited（Trajectory.corridor_progress）。
+    进度量 = 累计 credited（评估 credited_progress_m 口径）；peak_step = 首次封顶
+    动作索引 + 1（越快封顶越优），与 base_score 的 progress/peak_step 结构对齐。
+    不含绝对高度项——走廊模式的目标函数是路线进度，高度由参考线隐式表达。
+    零推进轨迹得 0 分（climb_score(0, ·) = 0），在 MAP-Elites 中自然垫底。
+    """
+    from .reference_corridor import corridor_cap_index
+    total = float(corridor_progress.sum())
+    cap_step = corridor_cap_index(corridor_progress) + 1
+    return climb_score(total, cap_step, config)
+
+
 def _secured_held(y: np.ndarray, dwell: int, tol: float) -> np.ndarray:
     """逐位置的「守住高度」held[t] = 从 t 起 dwell 步窗口内可持续的高度。
 

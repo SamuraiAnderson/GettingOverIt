@@ -20,6 +20,8 @@ import argparse
 import json
 import logging
 import sys
+import random
+import time
 from dataclasses import asdict, fields
 from pathlib import Path
 
@@ -32,7 +34,15 @@ if str(_REPO_ROOT / "src") not in sys.path:
 
 from training.actor_critic import ActorCritic
 from training.config import TrainConfig
-from training.dataset import TrajectoryDataset, compute_dynamics_stats
+from training.geometry_profile import configure_geometry
+from training.experimental_policy import create_actor_critic
+from training.experiment_options import add_experiment_arguments, apply_experiment_arguments, restore_initialization_shape
+from training.dataset import (
+    Trajectory,
+    TrajectoryDataset,
+    compute_dynamics_stats,
+    prune_trajectory,
+)
 from training.model import (
     expand_optimizer_state_for_dynamics_dim,
     expand_state_dict_for_dynamics_dim,
@@ -45,9 +55,11 @@ from training.deploy_sampling import (
     filter_points_by_height,
     load_candidate_points,
 )
+from training.reference_corridor import replay_corridor_fields
 from training.reward import (
     ClimbingEfficiencyMap,
     RewardNormalizer,
+    corridor_score,
     progress_metric,
     score_trajectory,
 )
@@ -95,6 +107,14 @@ def save_checkpoint(
         state["value_warmup_end"] = value_warmup_end
     torch.save(state, path)
     logger.info("Checkpoint saved: %s", path)
+
+
+def _sil_score(traj: "Trajectory", eff_map: "ClimbingEfficiencyMap", config: TrainConfig) -> float:
+    """精英池排序分分派：走廊轨迹用 credited 进度口径（corridor_score），
+    其余沿用高度口径（score_trajectory）。与 prune_trajectory / _rebuild_index 同步。"""
+    if traj.corridor_progress is not None:
+        return corridor_score(traj.corridor_progress, config)
+    return score_trajectory(traj.raw_states, eff_map, config)
 
 
 def log_metrics(iteration: int, metrics: dict[str, float], extras: dict | None = None) -> None:
@@ -183,9 +203,22 @@ def save_efficiency_map(
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PPO 训练 — 策略梯度迭代循环")
+    add_experiment_arguments(parser)
     parser.add_argument("--num-agents", type=int, default=None)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--geometry-profile", choices=("native-pose-v1", "legacy"), default=None,
+                        help="Explicitly select contact/patch pose calibration; resume otherwise preserves checkpoint geometry")
+    parser.add_argument("--save-rollout-inputs", action="store_true",
+                        help="Archive complete PPO inputs under checkpoint_dir for exact replay")
+    parser.add_argument("--recipe", choices=("ppo", "ppo-ou", "ppo-ou-sil"), default=None,
+                        help="Fixed ablation; disables adaptive exploration and experimental contact heads")
     parser.add_argument("--max-iterations", type=int, default=None)
     parser.add_argument("--steps-per-rollout", type=int, default=None)
+    parser.add_argument("--ppo-batch-size", type=int, default=None)
+    parser.add_argument("--save-interval", type=int, default=None,
+                        help="Checkpoint interval in completed training iterations")
+    parser.add_argument("--torch-threads", type=int, default=None,
+                        help="CPU threads used by PyTorch in this process")
     parser.add_argument(
         "--y-max-cutoff", type=float, default=None,
         help=(
@@ -206,6 +239,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="（旧式）效率图输出目录；新实验请改用 --run-dir")
     parser.add_argument("--lr", type=float, default=None)
     parser.add_argument("--ent-coef", type=float, default=None)
+    parser.add_argument("--gamma", type=float, default=None,
+                        help="PPO return discount per physical step; retained on resume")
+    parser.add_argument("--gae-lambda", type=float, default=None,
+                        help="GAE trace decay per physical step; retained on resume")
     parser.add_argument(
         "--init-log-std", type=float, default=None,
         help="PPO 探索噪声初值上限 log_std（覆盖 config.ppo_init_log_std；越小噪声越小）",
@@ -217,6 +254,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--value-warmup-iters", type=int, default=None,
         help="开局只预热 critic 的迭代数（覆盖 config.value_warmup_iters；0=禁用）",
+    )
+    parser.add_argument(
+        "--sil-seed", type=str, nargs="+", default=None, metavar="NPZ",
+        help="精英池冷启动种子轨迹（.npz，含 raw_states/actions/contact），可多个；"
+             "入池时按 score_trajectory 现算分数，后续与采集轨迹一同参与 MAP-Elites 竞争",
     )
     parser.add_argument(
         "--resume", type=str, default=None,
@@ -254,7 +296,28 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--reference-corridor-radius", type=float, default=None,
         help="走廊半宽，世界米（默认 1.5）；内部只奖励前进，不惩罚偏离中心线",
     )
-    return parser.parse_args(argv)
+    parser.add_argument("--reference-deviation-weight", type=float, default=None,
+                        help="Maximum corridor deviation penalty per physical step")
+    args = parser.parse_args(argv)
+    for name in ("ppo_batch_size", "save_interval", "torch_threads"):
+        value = getattr(args, name)
+        if value is not None and value < 1:
+            parser.error(f"--{name.replace('_', '-')} must be positive")
+    return args
+
+
+def configure_credit(config: TrainConfig, args: argparse.Namespace, checkpoint: dict) -> None:
+    """Keep return semantics fixed within a resumed run; ablations start fresh."""
+    saved = checkpoint.get("config", {})
+    for name in ("gamma", "gae_lambda"):
+        previous = saved.get(name, getattr(config, name))
+        value = getattr(args, name)
+        value = previous if value is None else value
+        if not np.isfinite(value) or not 0 <= value <= 1 or (name == "gamma" and value == 0):
+            raise ValueError(f"Invalid {name}: {value}")
+        if checkpoint and value != previous:
+            raise ValueError(f"Changing {name} on resume requires --init-from and a fresh run")
+        setattr(config, name, value)
 
 
 def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoint: dict) -> None:
@@ -267,6 +330,10 @@ def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoin
         config.reference_trajectory = args.reference_trajectory or None
     if args.reference_corridor_radius is not None:
         config.reference_corridor_radius = args.reference_corridor_radius
+    if args.reference_deviation_weight is not None:
+        config.reference_deviation_weight = args.reference_deviation_weight
+    if not np.isfinite(config.reference_deviation_weight) or config.reference_deviation_weight < 0:
+        raise ValueError("reference_deviation_weight must be finite and nonnegative")
     if config.reference_trajectory:
         config.reference_trajectory = str(Path(config.reference_trajectory).resolve())
         if args.random_deploy is None:
@@ -280,18 +347,49 @@ def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoin
 def main() -> None:
     _setup_logging()
     args = parse_args()
+    if args.torch_threads is not None:
+        torch.set_num_threads(args.torch_threads)
+    logger.info("PyTorch CPU threads: %d", torch.get_num_threads())
 
     if args.run_dir and (args.checkpoint_dir or args.log_dir):
         raise SystemExit("--run-dir 与 --checkpoint-dir/--log-dir 互斥，二选一")
 
     config = TrainConfig()
     resume_state = torch.load(args.resume, weights_only=False) if args.resume else {}
+    if args.init_from and (args.resume or args.resume_bc):
+        raise ValueError("--init-from is mutually exclusive with --resume / --resume-bc")
+    init_state = torch.load(args.init_from, map_location="cpu", weights_only=False) if args.init_from else {}
+    restore_initialization_shape(config, init_state)
+    # Restore the actual network/input contract, not today's defaults.
+    for field in fields(config):
+        if field.name in resume_state.get("config", {}) and field.name not in ("game_root", "port"):
+            setattr(config, field.name, resume_state["config"][field.name])
+    if args.resume and "actor_mean_contact.weight" not in resume_state["model"]:
+        config.contact_heads_enabled = False
+    geometry_changed = configure_geometry(config, resume_state or init_state or ({"bc": True} if args.resume_bc else None),
+                                           args.geometry_profile)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if args.recipe:
+        if args.resume and "actor_mean_contact.weight" in resume_state["model"]:
+            raise ValueError("Fixed single-head baseline requires a single-head checkpoint")
+        config.ou_enabled = args.recipe != "ppo"
+        config.sil_enabled = args.recipe == "ppo-ou-sil"
+        config.explore_boost_enabled = False
+        config.contact_heads_enabled = False
+        config.phase_weighting_enabled = False
+        config.sil_advantage_weighting_enabled = False
     if args.num_agents is not None:
         config.num_agents = args.num_agents
     if args.max_iterations is not None:
         config.max_iterations = args.max_iterations
     if args.steps_per_rollout is not None:
         config.steps_per_rollout = args.steps_per_rollout
+    if args.ppo_batch_size is not None:
+        config.ppo_batch_size = args.ppo_batch_size
+    if args.save_interval is not None:
+        config.save_interval = args.save_interval
     if args.y_max_cutoff is not None:
         config.y_max_cutoff = args.y_max_cutoff
     if args.checkpoint_dir is not None:
@@ -310,7 +408,14 @@ def main() -> None:
         config.value_warmup_iters = args.value_warmup_iters
     if args.random_deploy is not None:
         config.random_deploy = args.random_deploy
+    configure_credit(config, args, resume_state)
     configure_reference(config, args, resume_state)
+    apply_experiment_arguments(config, args, resume_state)
+    from training.policy_features import experimental_enabled
+    if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
+        raise ValueError("Representation experiments support PPO --init-from/--resume and disable legacy BC/SIL")
+    # 走廊模式 SIL 已迁移到走廊口径（剪枝/排序/bd/BC 截断全部基于 credited 进度，
+    # patch wide 通道按 guidance_index 重建引导场），ppo-ou-sil 不再与走廊互斥。
 
     # ── 运行归档 ──
     # --run-dir 把产物收敛到 runs/<tag>/ 并开启元数据/指标/控制台/精英池落盘；
@@ -326,9 +431,10 @@ def main() -> None:
 
     logger.info("PPO Config: %s", config)
     # ── 初始化 ──
-    model = ActorCritic(config)
+    model = create_actor_critic(config)
     ppo_trainer = PPOTrainer(config)
     rollout_worker = RolloutWorker(config)
+    rollout_worker._rng = np.random.default_rng(args.seed)
     reference = rollout_worker.reference_corridor
     reference_meta = reference.metadata if reference is not None else None
     if reference is not None:
@@ -345,7 +451,7 @@ def main() -> None:
             raise ValueError("Checkpoint reference file has changed; select --reference-trajectory explicitly to switch")
     if recorder is not None:
         recorder.write_meta(config, argv=sys.argv, extra={
-            "resume": args.resume, "resume_bc": args.resume_bc, "reference_corridor": reference_meta,
+            "resume": args.resume, "resume_bc": args.resume_bc, "init_from": args.init_from, "reference_corridor": reference_meta,
         })
     start_iteration = 0
 
@@ -363,6 +469,12 @@ def main() -> None:
                 expand_optimizer_state_for_dynamics_dim(ckpt["optimizer"], model)
             )
         logger.info("从 PPO checkpoint 恢复 (iteration=%d): %s", start_iteration, args.resume)
+    elif args.init_from:
+        if hasattr(model, "initialize_from"):
+            loaded = model.initialize_from(init_state["model"])
+            logger.info("显式暖启动：加载 %d 个兼容张量；新模块初始化，不恢复 optimizer/iteration", len(loaded))
+        else:
+            model.load_state_dict(init_state["model"])
     elif args.resume_bc:
         bc_state = torch.load(args.resume_bc, weights_only=True)
         model.load_from_bc(bc_state)
@@ -371,6 +483,8 @@ def main() -> None:
     old_reference_config = {
         k: v for k, v in resume_state.get("config", {}).items() if k.startswith("reference_")
     }
+    # Collection and update must use the same device from the first rollout.
+    model = model.to(ppo_trainer.device)
     reference_changed = bool(args.resume) and (
         bool(old_reference_config.get("reference_trajectory")) != bool(config.reference_trajectory)
         or (bool(config.reference_trajectory) and (
@@ -378,11 +492,14 @@ def main() -> None:
             or resume_state.get("reference_corridor", {}).get("sha256") != reference_meta["sha256"]
         ))
     )
-    warmup_end = start_iteration + config.value_warmup_iters if reference_changed else config.value_warmup_iters
-    if not reference_changed and args.value_warmup_iters is None:
+    semantics_changed = reference_changed or geometry_changed
+    warmup_end = start_iteration + config.value_warmup_iters if semantics_changed else config.value_warmup_iters
+    if not semantics_changed and args.value_warmup_iters is None:
         warmup_end = max(warmup_end, int(resume_state.get("value_warmup_end", 0)))
     if reference_changed:
         logger.info("奖励目标改变：从当前迭代重新预热 critic %d 轮", config.value_warmup_iters)
+    if geometry_changed:
+        logger.info("几何输入标定改变：从当前迭代重新预热 critic %d 轮", config.value_warmup_iters)
 
     # ── 加载地形数据 ──
     game_root = Path(config.game_root)
@@ -433,8 +550,20 @@ def main() -> None:
     # patch 接触分支几何（dualscale 需要，无论是否随机投放）；也用于运行时锤头卡障碍过滤
     rollout_worker.set_deploy_obstacle_geometry(polygons, player_data)
 
-    # ── Self-Imitation 精英轨迹池 ──（复用 BC 侧 TrajectoryDataset：top-K% 过滤 + secured-peak
-    # 窗口截断 + 用当前 eff_map 即时重建 patch；只存 raw_states/actions，内存开销近零）
+    # ── Self-Imitation 精英轨迹池 ──（复用 BC 侧 TrajectoryDataset：top-K% 过滤 + 推进点
+    # 窗口截断 + 即时重建 patch；只存 raw_states/actions，内存开销近零。
+    # 走廊模式：轨迹自带 corridor_progress/guidance_index（rollout 逐帧记录），
+    # 剪枝/排序/BC 截断走 credited 口径，patch wide 通道按 guidance_index 从
+    # reference_maps 选引导段地图重建，与在线采集逐点一致）
+    reference_maps = None
+    if reference is not None and config.sil_enabled:
+        reference_maps = reference.guidance_maps(
+            eff_map.traversable.shape, eff_map._min_gx, eff_map._min_gy,
+            config.grid_resolution,
+        )
+        # 共享给 rollout_worker，避免在线采集时重复栅格化
+        if rollout_worker._reference_maps is None:
+            rollout_worker._reference_maps = reference_maps
     sil_dataset = (
         TrajectoryDataset(
             config, eff_map.traversable, eff_map.get_arr(),
@@ -442,9 +571,42 @@ def main() -> None:
             solid_polygons=polygons,
             tip_local=extract_tip_local(player_data),
             body_local=extract_body_local(player_data),
+            reference_maps=reference_maps,
         )
         if config.sil_enabled else None
     )
+
+    # ── 精英池冷启动种子（可选）：外部剪枝后的优质轨迹直接入池，iteration=-1 标记；
+    # 首轮 add_trajectories_map_elites 会用当前池重建 cell_map，种子照常参与竞争/被替换。
+    # 走廊模式下若种子未携带 corridor 字段，从 raw_states 确定性重放 tracker 补齐。
+    if sil_dataset is not None and args.sil_seed:
+        seed_trajs: list[Trajectory] = []
+        for seed_path in args.sil_seed:
+            z = np.load(seed_path)
+            traj = Trajectory(
+                raw_states=np.asarray(z["raw_states"], dtype=np.float32),
+                actions=np.asarray(z["actions"], dtype=np.float32),
+                contact=(np.asarray(z["contact"], dtype=np.float32)
+                         if "contact" in z.files else None),
+                iteration=-1,
+                corridor_progress=(np.asarray(z["corridor_progress"], dtype=np.float32)
+                                   if "corridor_progress" in z.files else None),
+                guidance_index=(np.asarray(z["guidance_index"], dtype=np.int8)
+                                if "guidance_index" in z.files else None),
+            )
+            if reference is not None and traj.corridor_progress is None:
+                traj.corridor_progress, traj.guidance_index = replay_corridor_fields(
+                    reference, traj.raw_states,
+                )
+                logger.info("SIL 种子走廊字段重放: %s (credited=%.3fm)",
+                            seed_path, float(traj.corridor_progress.sum()))
+            traj.score = _sil_score(traj, eff_map, config)
+            seed_trajs.append(traj)
+            logger.info("SIL 种子: %s (T=%d, score=%.3f)",
+                        seed_path, len(traj.actions), traj.score)
+        if seed_trajs:
+            sil_dataset.set_trajectories(seed_trajs)
+            logger.info("SIL 精英池冷启动: %d 条种子轨迹入池", len(seed_trajs))
 
     # ── 奖励归一化器 ──
     calibration_steps = config.steps_per_rollout * config.num_agents * 10
@@ -520,6 +682,21 @@ def main() -> None:
             )
             logger.info("  采集完成: buffer size=%d, trajectories=%d",
                         buffer.size, len(trajectories))
+            if hasattr(rollout_worker, "last_feature_scales"):
+                diagnostics_dir = Path(config.checkpoint_dir) / "feature_diagnostics"
+                diagnostics_dir.mkdir(parents=True, exist_ok=True)
+                (diagnostics_dir / f"iter_{iteration + 1:04d}.json").write_text(json.dumps({
+                    "feature_scales": rollout_worker.last_feature_scales,
+                    "segments": rollout_worker.last_segment_trace,
+                    "profile": rollout_worker.last_profile}, indent=2), encoding="utf-8")
+            if args.save_rollout_inputs and buffer.size:
+                archive_dir = Path(config.checkpoint_dir) / "rollouts"
+                archive_dir.mkdir(parents=True, exist_ok=True)
+                buffer.save(archive_dir / f"iter_{iteration + 1:04d}.npz")
+                torch.save({"model": model.state_dict(), "config": asdict(config),
+                            "reference_corridor": reference_meta or {},
+                            "policy_context": buffer.policy_context},
+                           archive_dir / f"behavior_{iteration + 1:04d}.pt")
             if reward_normalizer is not None and reward_normalizer.is_active:
                 logger.info(
                     "  RewardNormalizer active: σ_h=%.4f, σ_e=%.4f, α=%.2f",
@@ -545,13 +722,18 @@ def main() -> None:
             # sil_map_elites_enabled=False 时回退到旧 top-K% 相对门槛路径。
             if sil_dataset is not None and trajectories:
                 sil_dataset.update_efficiency_arr(eff_map.get_arr())
-                sil_scores = [
-                    score_trajectory(t.raw_states, eff_map, config)
-                    for t in trajectories
-                ]
+                # 入池前物理剪枝：截到 secured peak（+dwell 观察窗），峰后跌落/震荡段
+                # 不进精英池存储；score/bd/BC 窗口口径与完整轨迹一致（见 prune_trajectory）。
+                # 注：效率图 update（Phase 1.5）仍用完整轨迹——峰后段是"这些点曾到达峰"
+                # 的信用记录，属效率图后缀口径的一部分，不剪。
+                if config.sil_prune_enabled:
+                    pool_trajs = [prune_trajectory(t, config) for t in trajectories]
+                else:
+                    pool_trajs = trajectories
+                sil_scores = [_sil_score(t, eff_map, config) for t in pool_trajs]
                 if config.sil_map_elites_enabled:
                     me_stats = sil_dataset.add_trajectories_map_elites(
-                        trajectories, sil_scores,
+                        pool_trajs, sil_scores,
                         iteration=iteration,
                         cell_size=config.sil_cell_size,
                         cold_start_min=config.sil_cold_start_min,
@@ -570,7 +752,7 @@ def main() -> None:
                         )
                 else:
                     sil_dataset.add_trajectories(
-                        trajectories, sil_scores,
+                        pool_trajs, sil_scores,
                         keep_ratio=config.sil_keep_ratio, iteration=iteration,
                     )
                 # 按分数保留 top-N 兜底（防 cell 数长期无界增长；MAP-Elites 下同 cell
@@ -582,6 +764,7 @@ def main() -> None:
                     sil_dataset.set_trajectories(top)
 
             # Phase 2: PPO 更新（前 value_warmup_iters 轮只预热 critic，冻结策略防灾难性遗忘）
+            update_started = time.perf_counter()
             value_only = iteration < warmup_end
             if value_only:
                 logger.info(
@@ -610,12 +793,15 @@ def main() -> None:
                     loss_coef=config.sil_loss_coef * _sil_scale,
                 ))
 
-            # Phase 2.6: 停滞探测器 — 按精英池 max secured_dy(竖直)判断是否停滞，
-            # 停滞则抬 boost、有进展则回落；设 model.exploration_boost 供【下一轮】采集+更新一致生效。
+            update_seconds = time.perf_counter() - update_started
+            # Phase 2.6: 停滞探测器 — 按精英池最佳进度判断是否停滞（走廊轨迹取 credited
+            # 总进度，其余取 secured_dy 竖直口径），停滞则抬 boost、有进展则回落；
+            # 设 model.exploration_boost 供【下一轮】采集+更新一致生效。
             if (config.explore_boost_enabled and sil_dataset is not None
                     and iteration >= config.sil_start_iter):
                 sdys = [
-                    float(progress_metric(t.raw_states, config)[2])
+                    float(t.corridor_progress.sum()) if t.corridor_progress is not None
+                    else float(progress_metric(t.raw_states, config)[2])
                     for t in sil_dataset.trajectories
                 ]
                 cur_best = max(sdys) if sdys else 0.0
@@ -655,6 +841,8 @@ def main() -> None:
                 "buffer_size": float(buffer.size),
             }
             extras.update(rollout_worker.last_corridor_metrics)
+            extras.update(rollout_worker.last_profile)
+            extras["update_and_sil_seconds"] = update_seconds
             log_metrics(iteration + 1, metrics, extras)
             if recorder is not None:
                 recorder.append_metrics(iteration + 1, metrics, extras)

@@ -35,6 +35,7 @@ class TrainConfig:
     warmup_steps: int = 100
     settle_steps: int = 30
     steps_per_rollout: int = 500
+    ppo_inference_batch_size: int = 0  # 0 = all active agents; 1 = serial profiling baseline
 
     # ── 模型 ──
     # 原始状态 33 维 = 基础 29 + fakeCursor 4（cursorX/Y, cursorVelX/Y，索引 29-32）。
@@ -60,6 +61,25 @@ class TrainConfig:
     patch_resolution: float = 0.5    # 仅 legacy 单尺度使用
     dropout: float = 0.1
 
+    # Independent PPO representation experiments; legacy baseline stays unchanged.
+    policy_backbone: str = "transformer"  # transformer | gru
+    relation_features: bool = False
+    event_features: bool = False
+    event_branch: bool = False
+    geometry_features: bool = False
+    trend_features: bool = False
+    event_source: str = "native"  # native physics contacts | explicitly labelled geometry proxy
+    normalize_action_history: bool = False
+    feature_position_scale: float = 3.5
+    feature_velocity_scale: float = 10.0
+    feature_angular_scale: float = 10.0  # radians / second
+    feature_clip: float = 4.0
+    feature_step_seconds: float = 1.0 / 120.0  # verified against native fixedDeltaTime * stepFrames
+    geometry_query_radius: float = 3.0
+    recurrent_seq_len: int = 16  # decisions per TBPTT chunk; full prefix burn-in, no gradient
+    action_segment_steps: int = 1  # >1 samples two endpoints, linearly interpolated per STEP
+    segment_interrupt_contacts: bool = True
+
     # ── patch 尺度模式 ──
     # legacy: 原单尺度 4ch（player 中心 0.5m/px）；dualscale: 双分支（见 doc/training.md）
     #   wide  : player 中心，大范围低精度（攀爬效率图，全局引导）
@@ -78,16 +98,16 @@ class TrainConfig:
     # wide 分支不受影响（否则 64m 窗口会被迫跟着变）、CNN 的 Linear(2048) 无需迁移。
     # 分辨率变粗的代价已被 PART_RASTER_SUBSAMPLES 的面积覆盖率栅格化抵消（见 dataset.py）：
     # 部件轮廓不再因亚像素宽而漏采，0.27m/px 下 ch3 平均非零像素反而比旧 0.2m/px 二值高约 7×。
-    # 精确接触判定另由 P2.1 的向量接触信号承担（走精确几何，不受栅格分辨率限制）。
+    # 接触向量来自几何距离代理，不受栅格分辨率限制；仍需与原生物理接触对照。
     # 核验：python -m src.tests.analysis.check_tip_patch_coverage
     #      python -m src.tests.analysis.diagnose_tip_rasterization
     contact_patch_resolution: float = 0.27  # m/px，contact 分支（8.64m 窗口，半径 4.32m）
     wide_channels: int = 1                # [0] eff
     contact_channels: int = 3             # [1] 高精度地形, [2] 锅/body 轮廓, [3] 锤头轮廓
     # 锅/body 轮廓世界朝向：player→hub 方向 + offset（body 局部 +y=躯干朝上）。
-    # NOTE: offset=-90 为几何推断的粗标定，精确值待 verify_body_reconstruction sweep / C# 真值。
+    # 2026-09-19 原生 Transform 对照标定；旧 checkpoint 的显式配置仍按原值恢复。
     body_angle_source: str = "hub"        # hub: player→hub 方向
-    body_angle_offset: float = -90.0
+    body_angle_offset: float = -84.49833
     body_scale: float = 1.0
 
     # ── 训练 ──
@@ -162,7 +182,7 @@ class TrainConfig:
     # settle 后锤头嵌进障碍物的 agent 视为无效投放并跳过（与 L7 离线筛选同一判据）
     deploy_tip_obstacle_check: bool = True
     tip_angle_source: str = "pole"      # pole: pole→tip；hub: hammerAngle
-    tip_angle_offset: float = -90.0     # 锤杆朝向到锤头局部系的偏移（度）
+    tip_angle_offset: float = -180.0    # 原生 Tip Transform 相对 pole→tip 的标定偏移
     tip_scale: float = 1.0              # 锤头局部多边形缩放
     # 人工涂抹排除区：落点若落入 deploy_exclusion_zones.json 的圆内则剔除（离线+运行时同判据）
     deploy_exclusion_check: bool = True
@@ -211,6 +231,20 @@ class TrainConfig:
     ou_enabled: bool = True
     ou_phi: float = 0.85
 
+    # P2.2：tip_contact 硬 gate；原 actor_mean / actor_log_std 是空中头。
+    contact_heads_enabled: bool = True
+    contact_gate_threshold: float = 0.5
+    contact_log_std_offset: float = -0.5
+
+    # P3.1：接触前后 K 帧保留完整进度奖励，纯空中弱化；PBRS / 落水惩罚不变。
+    phase_weighting_enabled: bool = True
+    phase_window: int = 7
+    phase_airborne_weight: float = 0.25
+    # P3.2：正 GAE 优势强化 SIL 子段；非正优势保留弱权重，不删除动作。
+    sil_advantage_weighting_enabled: bool = True
+    sil_advantage_floor: float = 0.1
+    sil_advantage_cap: float = 5.0
+
     # ── 精英池停滞 → 自适应提方差（打破"贴地到树根"局部最优的发现瓶颈）──
     # 当 SIL 精英池"守得住的竖直高度"峰值连续 patience 轮无提升，临时给采样 log_std 叠 boost
     # （同时软化 SIL），制造额外探索；一旦 pool 峰值有实质提升就回落 boost，交回利用。boost 只在
@@ -254,6 +288,9 @@ class TrainConfig:
     sil_map_elites_enabled: bool = True
     sil_cell_size: float = 5.0          # 网格边长（米），(peak_x, peak_y) 离散化格
     sil_cold_start_min: int = 5         # 池小于此数时任何合法轨迹入池
+    # 入池前物理剪枝：在 secured peak（+dwell 观察窗）处截断，去除峰后跌落/来回震荡段，
+    # 精英池只存"有效推进 + 守住证据"，BC 窗口/score/bd 口径与完整轨迹一致（见 dataset.prune_trajectory）。
+    sil_prune_enabled: bool = True
 
     # ── 非对称奖励缩放 ──
     # 0.1→0.0：速通口径「secured 进展」下跌落不再显式惩罚（时间隐式受罚：掉下去要重爬 → 步数变多 →

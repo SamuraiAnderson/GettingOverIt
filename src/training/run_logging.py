@@ -163,6 +163,13 @@ def save_elites(path: Path, trajectories: Sequence[Any]) -> int:
         contact = getattr(traj, "contact", None)
         if contact is not None:
             arrays[f"t{i}_contact"] = np.asarray(contact, dtype=np.float32)
+        # 走廊模式字段（credited 进度 / 引导段索引），非走廊轨迹缺省
+        cprog = getattr(traj, "corridor_progress", None)
+        if cprog is not None:
+            arrays[f"t{i}_corridor_progress"] = np.asarray(cprog, dtype=np.float32)
+        gid = getattr(traj, "guidance_index", None)
+        if gid is not None:
+            arrays[f"t{i}_guidance_index"] = np.asarray(gid, dtype=np.int8)
         scores.append(float(getattr(traj, "score", 0.0)))
         iters.append(int(getattr(traj, "iteration", 0)))
     arrays["scores"] = np.asarray(scores, dtype=np.float32)

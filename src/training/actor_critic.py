@@ -11,15 +11,18 @@ backbone 结构与 ActionPredictor 完全一致，便于对比和迁移。
 from __future__ import annotations
 
 import logging
+import math
 from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.distributions import Normal
 
-from .dataset import DYNAMICS_DIM
-from .model import DualScaleSpatialEncoder, _DynamicsNormMixin, build_attn_mask
+from .dataset import BASE_DYNAMICS_DIM, DYNAMICS_DIM
+from .model import (DualScaleSpatialEncoder, _DynamicsNormMixin, build_attn_mask,
+                    expand_state_dict_for_dynamics_dim)
 
 if TYPE_CHECKING:
     from .config import TrainConfig
@@ -34,6 +37,7 @@ class ActionValue(NamedTuple):
     # 采样使用的 OU 归一化噪声 z_t（raw = mean + std·z_t）。iid 路径返回该步的 η_t（marginal
     # 相同 N(0,1)），供 buffer 存 noise_prev 用于下一步条件式 log_prob（PPO ratio 自洽）。
     noise: torch.Tensor | None = None
+    raw_action: torch.Tensor | None = None
 
 
 class ActorCritic(_DynamicsNormMixin, nn.Module):
@@ -81,6 +85,11 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         # ── Actor head ──
         self.actor_mean = nn.Linear(d, config.action_dim)
         self.actor_log_std = nn.Parameter(torch.zeros(config.action_dim))
+        if config.contact_heads_enabled:
+            self.actor_mean_contact = nn.Linear(d, config.action_dim)
+            self.actor_log_std_contact = nn.Parameter(torch.full(
+                (config.action_dim,), config.contact_log_std_offset,
+            ))
 
         # 运行时探索 boost：非可学习标量，仅在 forward 里叠加到 log_std（采集+更新一致），
         # 不入 state_dict/梯度。停滞探测器按轮设置（见 main_ppo Phase 2.6）。
@@ -95,6 +104,19 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
 
         self._action_scale = config.action_scale
         self._init_weights()
+        if config.contact_heads_enabled:
+            self.actor_mean_contact.load_state_dict(self.actor_mean.state_dict())
+
+    def load_state_dict(self, state_dict, strict=True, assign=False):
+        """34D / 单头旧权重迁移：两头复制旧均值，接触头降低初始探索方差。"""
+        state = expand_state_dict_for_dynamics_dim(state_dict, self.state_dict())
+        if self.config.contact_heads_enabled and "actor_mean_contact.weight" not in state:
+            for suffix in ("weight", "bias"):
+                state[f"actor_mean_contact.{suffix}"] = state[f"actor_mean.{suffix}"].clone()
+            state["actor_log_std_contact"] = (
+                state["actor_log_std"].clone() + self.config.contact_log_std_offset
+            )
+        return super().load_state_dict(state, strict=strict, assign=assign)
 
     def _init_weights(self) -> None:
         nn.init.orthogonal_(self.actor_mean.weight, gain=0.01)
@@ -115,6 +137,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         my_state = self.state_dict()
         loaded, skipped = 0, 0
 
+        bc_state_dict = expand_state_dict_for_dynamics_dim(bc_state_dict, my_state)
         for key, param in bc_state_dict.items():
             target_key = key
             if key.startswith("action_head."):
@@ -144,6 +167,9 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
             calibrated = min(torch.log(output_scale).item(), self.config.ppo_init_log_std)
             calibrated = max(calibrated, self.config.ppo_log_std_min)
         self.actor_log_std.data.fill_(calibrated)
+        if self.config.contact_heads_enabled:
+            self.actor_mean_contact.load_state_dict(self.actor_mean.state_dict())
+            self.actor_log_std_contact.data.fill_(calibrated + self.config.contact_log_std_offset)
 
         logger.info(
             "BC→PPO 权重迁移完成: %d 层已加载, %d 层跳过 "
@@ -204,15 +230,32 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         """raw → tanh(raw) * scale"""
         return torch.tanh(raw) * self._action_scale
 
-    @staticmethod
     def _log_prob_squash(
-        log_prob_raw: torch.Tensor, raw_action: torch.Tensor
+        self, log_prob_raw: torch.Tensor, raw_action: torch.Tensor
     ) -> torch.Tensor:
         """修正 tanh 变换的 log_prob: log π(a) = log π_raw(u) - Σ log(1 - tanh²(u))"""
-        correction = torch.log(1.0 - torch.tanh(raw_action).pow(2) + 1e-6)
+        # log(1-tanh(u)^2) = 2*(log(2)-u-softplus(-2u)); finite even at saturation.
+        correction = 2.0 * (math.log(2.0) - raw_action - F.softplus(-2.0 * raw_action))
+        correction = correction + math.log(self._action_scale)
         return log_prob_raw - correction.sum(dim=-1)
 
     # ── public API ──
+
+    def contact_mask(self, dynamics: torch.Tensor) -> torch.Tensor:
+        # gate 必须读原始 0/1，不能读经 dyn_mean/std 归一化后的数值。
+        return dynamics[:, -1, BASE_DYNAMICS_DIM] >= self.config.contact_gate_threshold
+
+    def _actor_parameters(self, feat, dynamics):
+        mean = self.actor_mean(feat)
+        log_std = self.actor_log_std.expand_as(mean)
+        if self.config.contact_heads_enabled:
+            gate = self.contact_mask(dynamics).unsqueeze(-1)
+            mean = torch.where(gate, self.actor_mean_contact(feat), mean)
+            log_std = torch.where(gate, self.actor_log_std_contact.expand_as(mean), log_std)
+        std = (log_std + self.exploration_boost).clamp(
+            self.config.ppo_log_std_min, self.config.ppo_log_std_max,
+        ).exp()
+        return mean, std
 
     def forward(
         self,
@@ -228,15 +271,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         调用方需通过 get_action_and_value / evaluate_actions 获取修正后的量。
         """
         feat = self._backbone(dynamics, patches, actions, valid_mask)
-        mean = self.actor_mean(feat)
-        _LOG_STD_MIN = self.config.ppo_log_std_min
-        _LOG_STD_MAX = self.config.ppo_log_std_max
-        std = (
-            (self.actor_log_std + self.exploration_boost)
-            .clamp(_LOG_STD_MIN, _LOG_STD_MAX)
-            .exp()
-            .expand_as(mean)
-        )
+        mean, std = self._actor_parameters(feat, dynamics)
         dist = Normal(mean, std)
         value = self.critic_head(feat).squeeze(-1)
         return dist, value
@@ -250,6 +285,8 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
 
         noise_phi==0.0 或 noise_prev is None 时退化为 iid 高斯（μ_cond=mean, σ_cond=std）。
         """
+        if not 0.0 <= noise_phi < 1.0:
+            raise ValueError("noise_phi must be in [0, 1)")
         if noise_phi == 0.0 or noise_prev is None:
             return mean, std
         # 允许 noise_prev broadcast 到 mean 的 shape：采集 (1, action_dim)、评估 (B, action_dim)
@@ -268,6 +305,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         valid_mask: torch.Tensor | None = None,
         noise_prev: torch.Tensor | None = None,
         noise_phi: float = 0.0,
+        deterministic: bool = False,
     ) -> ActionValue:
         """
         采集用：从策略中采样动作，返回 (squashed_action, log_prob, value, noise=z_t)。
@@ -286,7 +324,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         mu_cond, sigma_cond = self._ou_conditional(mean, std, noise_prev, noise_phi)
         cond_dist = Normal(mu_cond, sigma_cond)
 
-        raw_action = cond_dist.rsample()
+        raw_action = mean if deterministic else cond_dist.rsample()
         # 归一化噪声 z_t = (raw - mean) / std（iid 路径下 = η_t，仍是 N(0,1)），
         # 交回调用方作为下一步 noise_prev；det 化以脱离计算图。
         with torch.no_grad():
@@ -295,7 +333,8 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         log_prob_raw = cond_dist.log_prob(raw_action).sum(dim=-1)
         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
         action = self._squash_action(raw_action)
-        return ActionValue(action=action, log_prob=log_prob, value=value, noise=z_t)
+        return ActionValue(action=action, log_prob=log_prob, value=value, noise=z_t,
+                           raw_action=raw_action.detach())
 
     def evaluate_actions(
         self,
@@ -306,6 +345,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         valid_mask: torch.Tensor | None = None,
         noise_prev: torch.Tensor | None = None,
         noise_phi: float = 0.0,
+        raw_actions: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         训练用：对已执行的动作重新计算 log_prob、entropy、value。
@@ -324,10 +364,12 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         cond_dist = Normal(mu_cond, sigma_cond)
 
         # 反 squash: squashed → raw
-        clamped = taken_actions.clamp(
-            -self._action_scale * 0.999, self._action_scale * 0.999
-        )
-        raw_action = torch.atanh(clamped / self._action_scale)
+        # tanh 饱和后无法反演原采样。在线 buffer 保留 raw，避免未更新时 ratio 已偏离 1。
+        if raw_actions is None:
+            eps = torch.finfo(taken_actions.dtype).eps
+            raw_action = torch.atanh((taken_actions / self._action_scale).clamp(-1 + eps, 1 - eps))
+        else:
+            raw_action = raw_actions
 
         log_prob_raw = cond_dist.log_prob(raw_action).sum(dim=-1)
         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
@@ -372,6 +414,6 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
             vm_t = torch.from_numpy(vm.astype(np.float32)).to(device)
 
         feat = self._backbone(dyn_t, pat_t, act_t, vm_t)
-        mean = self.actor_mean(feat)
+        mean, _ = self._actor_parameters(feat, dyn_t)
         action = self._squash_action(mean)
         return action.cpu().numpy().squeeze(0)
