@@ -206,6 +206,34 @@ class CorridorRewardTests(unittest.TestCase):
             t = r.tracker(segment.points[0])
             self.assertTrue(np.isfinite(t.step(segment.points[0]).reward))
 
+    def test_credit_ablation_survives_checkpoint_resume_without_default_reset(self):
+        from training.main_ppo import configure_credit, configure_reference, parse_args, save_checkpoint
+        cfg = TrainConfig()
+        args = parse_args(["--gamma", ".998", "--gae-lambda", ".995",
+                           "--reference-trajectory", "--reference-deviation-weight", ".001"])
+        configure_credit(cfg, args, {})
+        configure_reference(cfg, args, {})
+        with tempfile.TemporaryDirectory() as temp:
+            save_checkpoint(torch.nn.Linear(2, 2), None, 1, temp, cfg)
+            saved = torch.load(Path(temp) / "ppo_iter_0001.pt", weights_only=False)
+        restored = TrainConfig()
+        configure_credit(restored, parse_args([]), saved)
+        configure_reference(restored, parse_args([]), saved)
+        self.assertEqual((restored.gamma, restored.gae_lambda, restored.reference_deviation_weight),
+                         (.998, .995, .001))
+        with self.assertRaisesRegex(ValueError, "fresh run"):
+            configure_credit(restored, parse_args(["--gamma", ".99"]), saved)
+
+    def test_invalid_credit_and_penalty_fail_before_game_launch(self):
+        from training.main_ppo import configure_credit, configure_reference, parse_args
+        for flag, value in [("--gamma", "nan"), ("--gamma", "0"),
+                            ("--gae-lambda", "1.1"), ("--gae-lambda", "-0.1")]:
+            with self.subTest(flag=flag, value=value), self.assertRaises(ValueError):
+                configure_credit(TrainConfig(), parse_args([flag, value]), {})
+        for value in ("nan", "inf", "-0.01"):
+            with self.subTest(penalty=value), self.assertRaises(ValueError):
+                configure_reference(TrainConfig(), parse_args(["--reference-deviation-weight", value]), {})
+
 
 class PPOCollectionTests(unittest.TestCase):
     def test_multi_agent_rollout_uses_corridor_and_stops_terminal_agent(self):
@@ -226,10 +254,14 @@ class PPOCollectionTests(unittest.TestCase):
             def __init__(self):
                 super().__init__()
                 self.dummy = torch.nn.Parameter(torch.zeros(1))
+                self.config = TrainConfig()
+                self.exploration_boost = 0.0
 
             def get_action_and_value(self, *args, **kwargs):
-                return SimpleNamespace(action=torch.zeros(1, 2), log_prob=torch.zeros(1),
-                                       value=torch.zeros(1), noise=torch.zeros(1, 2))
+                n = len(args[0])
+                return SimpleNamespace(action=torch.zeros(n, 2), log_prob=torch.zeros(n),
+                                       value=torch.zeros(n), noise=torch.zeros(n, 2),
+                                       raw_action=torch.zeros(n, 2))
 
             def forward(self, *args, **kwargs):
                 return torch.zeros(1, 2), torch.zeros(1)
@@ -243,7 +275,7 @@ class PPOCollectionTests(unittest.TestCase):
             env = Env()
             worker.env = env
             worker._reset_and_deploy = env.reset
-            worker._get_stable_agents = lambda obs: [0, 1]
+            worker._get_stable_agents = lambda obs: {0, 1}
             worker._compute_contact_batch = lambda obs, prev: (np.zeros((2, 5), dtype=np.float32), prev)
             worker.set_terrain_info(np.ones((50, 50), dtype=bool), -20, -20)
             buffer, trajs = worker.collect_ppo(Model(), 3)
