@@ -84,6 +84,26 @@ class _GradNormAdapter:
         return self._frozen_norm if self._frozen_norm is not None else self._default
 
 
+class _WeightedWindowView:
+    """给 TrajectoryDataset 的窗口样本追加逐窗口权重（P3.2 优势加权 SIL 用）。
+
+    包装而非修改 __getitem__ 的返回元数：BC 训练器（trainer.py）与旧 MSE 路径
+    仍消费五元组，只有加权 SIL 路径解包六元组。weights 与 dataset 窗口索引顺序对齐。
+    """
+
+    def __init__(self, base, weights: torch.Tensor) -> None:
+        self.base = base
+        self.weights = weights
+        # sil_update 读 dataset.trajectories 记指标；透传保持兼容
+        self.trajectories = base.trajectories
+
+    def __len__(self) -> int:
+        return len(self.base)
+
+    def __getitem__(self, idx: int):
+        return (*self.base[idx], self.weights[idx])
+
+
 class PPOTrainer:
     """PPO 训练器，对一轮 rollout buffer 做多 epoch minibatch 更新。"""
 
@@ -346,16 +366,94 @@ class PPOTrainer:
         }
         return metrics
 
+    @torch.no_grad()
+    def _sil_advantage_weights(
+        self, model: ActorCritic, dataset
+    ) -> tuple[np.ndarray, float]:
+        """P3.2 第一遍前向：用当前 critic 为全池窗口打 V，算 MC 优势并映射为窗口权重。
+
+        A_tau = R_tau − V(s_tau)，其中 R_tau = Σ_k γ^k·credited[tau+k] 沿精英轨迹的
+        折扣未来 credited 进度，并在该轨迹最后一个索引窗口处用 V 自举
+        （R_full(τ) = R(τ) + γ^Δ·(V(τ_last) − R(τ_last))）：V 是无限时域口径
+        （PPO 非终止截断自举训练），不自举的 R 比 V 短一个视界，A 会被系统性压负、
+        frontier 窗口受害最重。剪枝后 cap 之外 credited≡0，故无需 GAE 的 λ 折中。
+        A 在全池窗口上归一化（均值 0 方差 1）后 clamp 到 [sil_advantage_floor,
+        sil_advantage_cap]：正优势强化（至多 cap 倍），非正保留 floor 弱权重、不删除动作。
+
+        返回 (weights, pos_frac)：weights 为与 dataset 窗口索引顺序对齐的 float32 数组；
+        pos_frac 为归一化后正优势窗口比例（诊断用）。
+        """
+        from torch.utils.data import DataLoader
+
+        cfg = self.config
+        n = len(dataset)
+        values = np.empty(n, dtype=np.float64)
+        loader = DataLoader(
+            dataset, batch_size=256, shuffle=False,
+            num_workers=cfg.sil_num_workers,
+        )
+        offset = 0
+        for dyn, pat, act_hist, vm, _target in loader:
+            dyn = dyn.to(self.device)
+            pat = pat.to(self.device)
+            act_hist = act_hist.to(self.device)
+            vm = vm.to(self.device)
+            _, value = model.forward(dyn, pat, act_hist, valid_mask=vm)
+            b = value.shape[0]
+            values[offset:offset + b] = value.detach().cpu().numpy().reshape(-1)
+            offset += b
+
+        # 逐轨迹折扣未来 credited（逆序累加，O(T)），并在每条轨迹的最后一个索引窗口
+        # 处用 V 自举：V 是无限时域口径（PPO 非终止截断自举训练），R 若不补
+        # γ^Δ·V(末端) 会比 V 短一个视界，A 被系统性压负（frontier 窗口受害最重）。
+        traj_returns: list[np.ndarray] = []
+        traj_last_value: dict[int, tuple[int, float]] = {}  # ti -> (最大 tau, 其 V)
+        for idx, (ti, tau) in enumerate(dataset._index):
+            prev = traj_last_value.get(ti)
+            if prev is None or tau > prev[0]:
+                traj_last_value[ti] = (tau, values[idx])
+        for ti, traj in enumerate(dataset.trajectories):
+            credited = np.asarray(traj.corridor_progress, dtype=np.float64)
+            R = np.zeros(len(credited), dtype=np.float64)
+            run = 0.0
+            for t in range(len(credited) - 1, -1, -1):
+                run = credited[t] + cfg.gamma * run
+                R[t] = run
+            traj_returns.append(R)
+
+        # dataset._index 为 (traj_idx, tau) 列表，与 __getitem__ 同序（同包内访问）
+        # 自举的正确形式：R_full(tau) = R(tau) + γ^Δ·(V(tau_last) − R(tau_last))，
+        # 即用 V 替换 tau_last 处的不完整尾部回报，避免重复计入 R(tau_last)。
+        adv = np.empty(n, dtype=np.float64)
+        for idx, (ti, tau) in enumerate(dataset._index):
+            last_tau, last_v = traj_last_value[ti]
+            ret = (traj_returns[ti][tau]
+                   + (cfg.gamma ** (last_tau - tau)) * (last_v - traj_returns[ti][last_tau]))
+            adv[idx] = ret - values[idx]
+
+        pos_frac = float(np.mean(adv > 0.0))
+        std = float(adv.std())
+        if std < 1e-8:
+            return np.ones(n, dtype=np.float32), pos_frac
+        adv = (adv - float(adv.mean())) / (std + 1e-8)
+        weights = np.clip(adv, cfg.sil_advantage_floor, cfg.sil_advantage_cap)
+        return weights.astype(np.float32), pos_frac
+
     def sil_update(
         self, model: ActorCritic, dataset, loss_coef: float | None = None
     ) -> dict[str, float]:
         """
         Self-Imitation：对精英轨迹池做 BC 监督，把 actor 均值锚向历史最优动作。
 
-        损失用 MSE-on-mean（squash 后的均值 vs 精英动作），只作用于 actor_mean/backbone，
-        不碰 actor_log_std → 不压制探索。在 update() 之后调用，复用同一 optimizer。
-        dataset 为 TrajectoryDataset，__getitem__ 产出
-        (dynamics, patches, input_actions, valid_mask, target_action)。
+        两种损失形态：
+          - sil_advantage_weighting_enabled 且全池为走廊轨迹（P3.2 真 SIL）：
+            加权高斯 NLL（raw 空间，σ detach），窗口权重 = clamp(归一化 MC 优势,
+            floor, cap)。梯度 w.r.t. mean = w·(μ−u)/σ²，饱和处不消失（优于 MSE），
+            且 σ 不参与梯度 → 不碰 actor_log_std、不压制探索。
+          - 否则（旧路径）：MSE-on-mean（squash 后均值 vs 精英动作）。
+
+        在 update() 之后调用，复用同一 optimizer。dataset 为 TrajectoryDataset，
+        __getitem__ 产出 (dynamics, patches, input_actions, valid_mask, target_action)。
         """
         from torch.utils.data import DataLoader
 
@@ -375,8 +473,24 @@ class PPOTrainer:
                 weight_decay=cfg.weight_decay,
             )
 
+        # P3.2：优势加权权重（仅走廊模式；含非走廊轨迹时回退旧 MSE 路径）
+        weights: torch.Tensor | None = None
+        adv_pos_frac = float("nan")
+        if getattr(cfg, "sil_advantage_weighting_enabled", False):
+            if all(getattr(t, "corridor_progress", None) is not None
+                   for t in dataset.trajectories):
+                w_np, adv_pos_frac = self._sil_advantage_weights(model, dataset)
+                weights = torch.from_numpy(w_np)
+            elif not getattr(self, "_sil_adv_warned", False):
+                logger.warning(
+                    "sil_advantage_weighting 已启用但池内含非走廊轨迹，"
+                    "本路径回退 MSE-on-mean（高度模式暂无 corridor_progress 支撑）"
+                )
+                self._sil_adv_warned = True
+
+        train_view = _WeightedWindowView(dataset, weights) if weights is not None else dataset
         loader = DataLoader(
-            dataset,
+            train_view,
             batch_size=cfg.sil_batch_size,
             shuffle=True,
             drop_last=False,
@@ -390,10 +504,15 @@ class PPOTrainer:
         for _epoch in range(cfg.sil_epochs):
             if stop:
                 break
-            for dyn, pat, act_hist, vm, target in loader:
+            for batch in loader:
                 if max_batches is not None and n_updates >= max_batches:
                     stop = True
                     break
+                if weights is not None:
+                    dyn, pat, act_hist, vm, target, w = batch
+                    w = w.to(self.device)
+                else:
+                    dyn, pat, act_hist, vm, target = batch
                 dyn = dyn.to(self.device)
                 pat = pat.to(self.device)
                 act_hist = act_hist.to(self.device)
@@ -401,8 +520,18 @@ class PPOTrainer:
                 target = target.to(self.device)
 
                 dist, _ = model.forward(dyn, pat, act_hist, valid_mask=vm)
-                mean_sq = torch.tanh(dist.mean) * model._action_scale
-                loss = coef * F.mse_loss(mean_sq, target)
+                if weights is not None:
+                    # 加权高斯 NLL（raw 空间）：-log π(u|s)·w 的 mean 梯度 =
+                    # w·(μ−u)/σ²；tanh 的 Jacobian 项与 μ 无关、σ detach → 只锚均值。
+                    u_target = torch.atanh(
+                        (target / model._action_scale).clamp(-1.0 + 1e-6, 1.0 - 1e-6)
+                    )
+                    sigma = dist.stddev.detach().clamp_min(1e-6)
+                    per = 0.5 * (((dist.mean - u_target) / sigma) ** 2).sum(dim=-1)
+                    loss = coef * (w * per).sum() / w.sum().clamp_min(1e-8)
+                else:
+                    mean_sq = torch.tanh(dist.mean) * model._action_scale
+                    loss = coef * F.mse_loss(mean_sq, target)
 
                 if not torch.isfinite(loss):
                     self.optimizer.zero_grad(set_to_none=True)
@@ -418,9 +547,13 @@ class PPOTrainer:
                 total_loss += loss.item()
                 n_updates += 1
 
-        return {
+        metrics = {
             "sil_loss": total_loss / max(n_updates, 1),
             "sil_trajs": float(len(dataset.trajectories)),
             "sil_windows": float(len(dataset)),
             "sil_updates": float(n_updates),
         }
+        if weights is not None:
+            metrics["sil_adv_pos_frac"] = adv_pos_frac
+            metrics["sil_weight_mean"] = float(weights.mean())
+        return metrics

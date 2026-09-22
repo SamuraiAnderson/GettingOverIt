@@ -98,6 +98,13 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
     all_segments, active_segments, finished = [], {}, set()
     corridor_count = corridor_inside = corridor_gap = 0
     corridor_progress = corridor_penalty = 0.
+    # 走廊模式逐帧字段（供 SIL 剪枝/排序/MAP-Elites bd/P3.2 优势加权；非走廊模式保持空 dict）：
+    # corridor_credit[i] 与 raw_actions[i] 对齐（动作 t 获得的 credited 进度）；
+    # corridor_guidance[i] 与 raw_states[i] 对齐（处理完 state[t] 后的引导段索引，-1 = 无引导）。
+    # 首帧为 tracker 初始状态。与 rollout.py collect_ppo 的口径一致。
+    corridor_credit = {i: [] for i in agents} if trackers else {}
+    corridor_guidance = ({i: [trackers[i].guidance_index if trackers[i].guidance_index is not None else -1]
+                          for i in agents} if trackers else {})
 
     def frame_inputs(agent, patch):
         features = np.concatenate([build_dynamics(obs[agent], contacts[agent]), extras[agent]])
@@ -193,12 +200,17 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
             raw_states[i].append(new_obs[i].copy())
             contact_history[i].append(new_contacts[i].copy())
             if trackers:
+                # 此时 tracker 已在 step_reward 内完成本步 step：last_step.progress
+                # 是本动作获得的 credited；guidance_index 是 new_obs 帧的引导段。
                 result = trackers[i].last_step
                 corridor_count += 1
                 corridor_inside += int(result.inside)
                 corridor_gap += int(result.gap)
                 corridor_progress += result.progress
                 corridor_penalty += result.deviation_penalty
+                corridor_credit[i].append(float(result.progress))
+                gid = trackers[i].guidance_index
+                corridor_guidance[i].append(gid if gid is not None else -1)
         obs, contacts = new_obs, new_contacts
         if len(finished) == len(agents):
             break
@@ -227,7 +239,11 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
                 value = val.item()
         buffer.add_episode(frames[i], records[i], value, cfg.gamma, cfg.gae_lambda)
         trajectories.append(Trajectory(np.asarray(raw_states[i]), np.asarray(raw_actions[i]),
-                                       contact=np.asarray(contact_history[i], np.float32)))
+                                       contact=np.asarray(contact_history[i], np.float32),
+                                       corridor_progress=(np.asarray(corridor_credit[i], np.float32)
+                                                          if trackers else None),
+                                       guidance_index=(np.asarray(corridor_guidance[i], np.int8)
+                                                       if trackers else None)))
     timings["bootstrap"] = time.perf_counter() - clock
     timings["total"] = time.perf_counter() - started
     worker.last_profile = {f"rollout_{name}_seconds": value for name, value in timings.items()}

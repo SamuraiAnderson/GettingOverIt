@@ -261,6 +261,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "入池时按 score_trajectory 现算分数，后续与采集轨迹一同参与 MAP-Elites 竞争",
     )
     parser.add_argument(
+        "--corridor-sil", action="store_true",
+        help="走廊模式下启用 SIL 与 P3.2 优势加权（覆盖 configure_reference / experimental "
+             "路径的强制停用，均为走廊 SIL 机械就绪前的遗留）。explore_boost 仍保持停用"
+             "（其停滞判据是高度口径）。",
+    )
+    parser.add_argument(
         "--resume", type=str, default=None,
         help="从指定 checkpoint 恢复训练（如 checkpoints/ppo_iter_0050.pt）",
     )
@@ -340,6 +346,8 @@ def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoin
             config.random_deploy = bool(saved.get("random_deploy", False)) if saved.get("reference_trajectory") else False
         # Existing SIL ranks/truncates by height, and rebuilds a single global map.
         # Keep that BC contract intact; corridor PPO uses its stored input windows.
+        # 注（2026-09-23）：此停用是走廊 SIL 机械就绪前的遗留；--corridor-sil 在
+        # main() 的配置收尾处统一覆盖启用（见该处注释）。
         config.sil_enabled = False
         config.explore_boost_enabled = False
 
@@ -411,6 +419,14 @@ def main() -> None:
     configure_credit(config, args, resume_state)
     configure_reference(config, args, resume_state)
     apply_experiment_arguments(config, args, resume_state)
+    if args.corridor_sil and config.reference_trajectory:
+        # 走廊 SIL 机械（corridor_score / prune_trajectory 走廊分支 / MAP-Elites bd /
+        # 种子 corridor 字段重放 / P3.2 优势加权）已就绪；configure_reference 与
+        # experimental 路径里的 sil 强制停用均为就绪前遗留，在此统一覆盖。
+        # explore_boost 保持停用（其停滞判据是高度口径，走廊语义需另行论证）。
+        config.sil_enabled = True
+        config.sil_advantage_weighting_enabled = True
+        logger.info("--corridor-sil: 走廊模式启用 SIL（评分/剪枝/入池/优势加权均走走廊口径）")
     from training.policy_features import experimental_enabled
     if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
         raise ValueError("Representation experiments support PPO --init-from/--resume and disable legacy BC/SIL")
@@ -445,7 +461,10 @@ def main() -> None:
             config.reference_deviation_weight,
         )
         logger.info("参考来源状态: %s；%s", reference_meta["status"], reference_meta["coordinate_warning"])
-        logger.info("走廊模式: 替代高度/向右/效率图引导，停用基于高度的 SIL 和精英池停滞加噪")
+        if config.sil_enabled:
+            logger.info("走廊模式 + SIL：替代高度/向右/效率图引导；精英池走走廊评分/剪枝/优势加权口径")
+        else:
+            logger.info("走廊模式: 替代高度/向右/效率图引导，停用基于高度的 SIL 和精英池停滞加噪")
         saved_hash = resume_state.get("reference_corridor", {}).get("sha256")
         if saved_hash and args.reference_trajectory is None and saved_hash != reference_meta["sha256"]:
             raise ValueError("Checkpoint reference file has changed; select --reference-trajectory explicitly to switch")

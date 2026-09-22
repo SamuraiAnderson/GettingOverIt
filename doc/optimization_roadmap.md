@@ -198,6 +198,16 @@
 
 #### P3.2 · SIL 轨迹内 advantage 加权
 
+**状态：已实现（2026-09-23）**。`ppo_trainer.sil_update` 在
+`sil_advantage_weighting_enabled=True`（默认）且全池为走廊轨迹时启用：
+窗口优势 A = 折扣未来 credited（沿精英轨迹的精确 return-to-go，cap 后 credited≡0
+故无截断偏差，无需 GAE 的 λ 折中）− 当前 critic 的 V；全池窗口归一化后 clamp 到
+`[sil_advantage_floor, sil_advantage_cap]`（0.1 / 5.0）；损失为 raw 空间加权高斯 NLL
+（σ detach，不碰 log_std；梯度 w·(μ−u)/σ² 在饱和处不消失，优于 MSE）。
+高度模式（无 corridor_progress）回退旧 MSE-on-mean 并告警。
+回归测试：`src/tests/training/test_sil_advantage_weighting.py`。
+原规划与动机如下：
+
 - **内容**：现状 `_rebuild_index` 里 `for tau in range(peak+1)` 每步等权模仿。改为按
   PPO 的 advantage（或简化的 return-to-secured-peak）给每步加权，只对高优势子段做强
   模仿。
