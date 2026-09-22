@@ -112,6 +112,19 @@ namespace GoiRuntime.Communication
 		public void SendResponse(StepResponse response)
 		{
 			if (!_connected) return;
+            if (response.DiagnosticJson != null)
+            {
+                byte[] json = System.Text.Encoding.UTF8.GetBytes(response.DiagnosticJson);
+                byte[] packet = new byte[5 + json.Length];
+                packet[0] = 255; // diagnostic marker, followed by little-endian byte length
+                byte[] length = BitConverter.GetBytes(json.Length);
+                if (!BitConverter.IsLittleEndian) Array.Reverse(length);
+                Buffer.BlockCopy(length, 0, packet, 1, 4);
+                Buffer.BlockCopy(json, 0, packet, 5, json.Length);
+                _responseBytes = packet;
+                _responseReady.Set();
+                return;
+            }
 
 		// 编码：[n:1B][states: n×stateDim×4B][dones: n×1B]
 		int n = response.Dones?.Length ?? 0;

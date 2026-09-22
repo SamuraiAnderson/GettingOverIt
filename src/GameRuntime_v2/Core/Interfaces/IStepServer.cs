@@ -69,6 +69,7 @@ namespace GoiRuntime.Core.Interfaces
 
 		/// <summary>关闭连接，退出训练</summary>
 		Close = (byte)'X',
+        ObservationDiagnostics = (byte)'D',
 	}
 
 	/// <summary>
@@ -115,6 +116,7 @@ namespace GoiRuntime.Core.Interfaces
 	/// </summary>
 	public struct StepResponse
 	{
+        public string DiagnosticJson;
 		/// <summary>
 		/// 状态数组，长度 = numAgents × stateDim(29)
 		/// 布局：[agent0_s0..s28, agent1_s0..s28, ...]

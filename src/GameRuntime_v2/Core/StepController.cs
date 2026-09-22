@@ -32,6 +32,9 @@ namespace GoiRuntime.Core
 		private readonly int stepFrames;
 		private readonly int stateDim;
 		private readonly int actionDim;
+        private bool observationDiagnosticsEnabled;
+        private int observationSequence;
+        private GoiRuntime.Testing.ObservationDiagnosticPacket observationDiagnostics;
 
 		// 各 agent 的 Input 和 State 服务（索引 0 = 原始 Player）
 		private readonly List<PlayerInputService> inputServices = new List<PlayerInputService>();
@@ -410,8 +413,31 @@ namespace GoiRuntime.Core
 				result[baseOffset + BASE_STATE_DIM + 2] = cvx;
 				result[baseOffset + BASE_STATE_DIM + 3] = cvy;
 			}
+            if (observationDiagnosticsEnabled) CaptureObservationDiagnostics(true);
 			return result;
 		}
+
+        private void CaptureObservationDiagnostics(bool aligned)
+        {
+            var packet = new GoiRuntime.Testing.ObservationDiagnosticPacket
+            {
+                aligned = aligned,
+                sequence = ++observationSequence,
+                fixedDeltaTime = Time.fixedDeltaTime,
+                stepFrames = stepFrames,
+                agents = new GoiRuntime.Testing.ObservationDiagnosticAgent[numAgents]
+            };
+            for (int i = 0; i < numAgents; i++)
+                packet.agents[i] = GoiRuntime.Testing.ObservationDiagnostics.Capture(inputServices[i]);
+            observationDiagnostics = packet;
+        }
+
+        public string CollectObservationDiagnostics()
+        {
+            observationDiagnosticsEnabled = true;
+            if (observationDiagnostics == null) CaptureObservationDiagnostics(false);
+            return GoiRuntime.Testing.ObservationDiagnostics.ToJson(observationDiagnostics);
+        }
 
 	// ── 初始姿态归一化 ──────────────────────────────────────────
 

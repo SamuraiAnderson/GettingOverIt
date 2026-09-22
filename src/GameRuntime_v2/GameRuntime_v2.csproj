@@ -47,6 +47,7 @@
 
     <!-- Core: RL 步进控制器 -->
     <Compile Include="Core\StepController.cs" />
+    <Compile Include="Testing\ObservationDiagnostics.cs" />
 
     <!-- Communication: TCP 步进服务器 -->
     <Compile Include="Communication\TcpStepServer.cs" />
@@ -117,4 +118,3 @@
   <!-- Import the C# targets -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
-

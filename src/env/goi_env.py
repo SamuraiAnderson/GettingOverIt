@@ -217,6 +217,28 @@ class GoiEnv:
         logger.info("[GoiEnv] teleport agent %d → (%.2f, %.2f)", agent_index, x, y)
         return states
 
+    def observation_diagnostics(self) -> dict:
+        """Versioned optional read-only packet; requires the diagnostic-capable plugin.
+
+        No Simulate or contact-history advancement. Missing readings carry explicit
+        known flags; values never silently become observed zeros.
+        """
+        import json
+        self._send_all(b"D")
+        marker = self._recv_exact(1)[0]
+        if marker != 255:
+            # Consume an ordinary error response so the socket remains aligned.
+            if marker:
+                self._recv_exact(marker * (STATE_DIM * 4 + 1))
+            raise RuntimeError("Diagnostic response unavailable; rebuild GameRuntime_v2")
+        length = struct.unpack("<I", self._recv_exact(4))[0]
+        if not 0 < length <= 8 * 1024 * 1024:
+            raise ValueError("Invalid diagnostic packet length")
+        packet = json.loads(self._recv_exact(length))
+        if packet.get("version") not in (1, 2) or len(packet.get("agents", [])) != self.num_agents:
+            raise ValueError(f"Incompatible diagnostic packet: {packet}")
+        return packet
+
     def set_camera_free(self, enabled: bool = True) -> None:
         """
         启用/禁用自由相机模式。

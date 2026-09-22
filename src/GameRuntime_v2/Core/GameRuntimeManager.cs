@@ -466,8 +466,13 @@ namespace GoiRuntime.Core
 
 				try
 				{
-					switch (cmd.Type)
-					{
+						switch (cmd.Type)
+						{
+                        case CommandType.ObservationDiagnostics:
+                            tcpStepServer.SendResponse(new StepResponse {
+                                DiagnosticJson = stepController.CollectObservationDiagnostics()
+                            });
+                            break;
 						case CommandType.Reset:
 							stepController.Reset();
 							resp = new StepResponse
@@ -762,4 +767,3 @@ namespace GoiRuntime.Core
 		#endregion
 	}
 }
-
