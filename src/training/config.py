@@ -218,6 +218,12 @@ class TrainConfig:
     ppo_init_log_std: float = -1.6      # BC 迁移/初始化时的 log_std 上限（std≈0.20 → 中性 ≈ ±20）
     ppo_log_std_min: float = -2.5       # forward clamp 下限（std≈0.082 → ±8，保底探索）
     ppo_log_std_max: float = 0.0        # forward clamp 上限（std≈1.0，封顶防探索过大）
+    # σ 调度（M2 修复，20260924）：实测 σ≈0.52 从源 checkpoint 经 --init-from 原样继承
+    # 且全程不退化（entropy 钉死 1.51 nats），技能住在噪声里不住在均值里，det/exploration
+    # 鸿沟即免费性能。① init-from 时按 ppo_init_log_std 重设（--resume 不动，保持状态连续）；
+    # ② 每轮训练后 log_std 线性递减（巩固进展 → 探索退火），下限 ppo_log_std_min。
+    ppo_reset_log_std_on_init: bool = True
+    ppo_log_std_anneal_rate: float = 0.02   # 每轮 log_std 递减量（log 空间线性；0=关闭）
 
     # ── PPO 探索噪声：时序连贯 OU / AR(1)（P1.1，roadmap 见 doc/optimization_roadmap.md）──
     # 从每帧 iid 高斯改为 AR(1)：z_t = φ·z_{t-1} + √(1-φ²)·η_t，η~N(0,1)，marginal z_t~N(0,1)。
@@ -230,6 +236,15 @@ class TrainConfig:
     # 原 iid 采样。φ=0.85 → lag-1 ≈0.85（贴近 pink 噪声 ~0.79），先从 OU 起（log_prob 好推）。
     ou_enabled: bool = True
     ou_phi: float = 0.85
+
+    # ── 相位探索噪声（空中相放大，2026-09-24）──
+    # 物理依据：空中相是弹道运动，动作只影响锤子为下一次接触的预定位——噪声不扰动
+    # 当前轨迹，是"安全探索"通道；接触相是挥杆执行，其噪声是发现引擎
+    # （ab3：全局降 σ 伤发现），故接触相保持基准、只放大空中相。
+    # std(s) 是观测（接触特征）的确定性函数，采集/更新同经 _actor_parameters，
+    # PPO 比率自洽；与 OU 条件式正交（std_t 逐步参与条件高斯）。
+    phase_noise_enabled: bool = True
+    phase_noise_airborne_log_bonus: float = 0.5   # 空中帧 log_std 加成（+0.5 ≈ σ×1.6）
 
     # P2.2：tip_contact 硬 gate；原 actor_mean / actor_log_std 是空中头。
     contact_heads_enabled: bool = True
@@ -249,6 +264,37 @@ class TrainConfig:
     sil_advantage_weighting_enabled: bool = True
     sil_advantage_floor: float = 0.1
     sil_advantage_cap: float = 5.0
+    # 【已弃用，保留仅为旧 run_meta 兼容】pos_frac 门控。实测 critic 在精英窗口上
+    # 系统性膨胀 ~5-25×（20260923 A/B 离线复算：V p50≈5.4m vs 真实折扣回报
+    # ≈0.2-0.7m），A=R−V 恒负、pos_frac≈0，门控永久关闭。由 sil_gate_margin
+    # 的行为门控（V-free）取代。
+    sil_min_pos_frac: float = 0.1
+    # 行为门控（V-free）：池 median 总 credited ≤ 当前轮 per-agent 平均 credited
+    # × (1+margin) 时跳过本轮 SIL。同量纲（原始米、同一 tracker 口径），不依赖
+    # critic 校准。池由 MAP-Elites 维持"历史最优"，门控只在池停滞/种子弱于当前
+    # 行为时关闭。
+    sil_gate_margin: float = 0.0
+    # raw 空间模仿目标限幅（atanh 之后）：精英动作 = 策略均值 + OU 噪声，饱和动作
+    # （种子轨迹 42% 满饱和）经 atanh 映射到 ±7.6，NLL 梯度 w·(μ−u)/σ² 会把均值钉进
+    # tanh 饱和区（det 塌陷的直接机制）。clamp 保留方向、只限幅度；tanh(3)=0.995，
+    # 动作空间 ±99.5 以内不受影响；0 = 关闭。
+    sil_target_clamp: float = 3.0
+    # 1.3 critic 精英回报校准：SIL 更新时对精英窗口追加 value 损失，把 frontier 区域
+    # 系统性膨胀的 V（20260923 离线复算：V p50≈5.4m vs 真实折扣回报 0.2-0.7m）拉向
+    # 精英轨迹的 MC 回报（末窗 V 自举口径，与优势计算一致）。小系数混合防反向高估；
+    # Huber 损失压大误差的梯度。0 = 关闭。
+    sil_value_coef: float = 0.1
+    # P3.1-SIL（已接线）：精英轨迹学习的接触相位加权 + 空中帧稀疏采样。
+    # 物理依据：GOI 空中相是弹道运动，动作与结果几乎无关（克隆目标≈纯噪声）；
+    # 接触相是高杠杆决策（动作→结果信息量高）。smoke 实测 tip 接触帧仅 ~35%，
+    # 等权 SIL 把 ~65% 梯度花在空中噪声上（ab3 负收益的主要机制之一）。
+    # 接触帧（tip/body/pot 任一）前后 K 帧权重 1.0（含"即将接触"前瞻窗口）；
+    # 纯空中帧权重 airborne_weight，且训练输入时按 airborne_sample 概率稀疏保留
+    # （损失降权 × 采样稀疏 双重削弱）。与优势权重（P3.2）相乘合成。
+    sil_phase_weighting_enabled: bool = True
+    sil_phase_window: int = 7
+    sil_phase_airborne_weight: float = 0.25
+    sil_phase_airborne_sample: float = 0.25   # 空中帧稀疏保留率（1=不稀疏，0=全丢）
 
     # ── 精英池停滞 → 自适应提方差（打破"贴地到树根"局部最优的发现瓶颈）──
     # 当 SIL 精英池"守得住的竖直高度"峰值连续 patience 轮无提升，临时给采样 log_std 叠 boost
@@ -281,6 +327,11 @@ class TrainConfig:
     sil_epochs: int = 1                # 每次 PPO 迭代对精英池遍历轮数
     sil_loss_coef: float = 0.5         # MSE-on-mean 损失权重（温和，防过度模仿压制探索）
     sil_max_batches: int = 40          # 每次 SIL 更新最多 minibatch 数（标准 SIL 采样式，0=遍历整池）
+    # SIL 梯度预算从属于 PPO：本轮 SIL minibatch 上限 = ratio × 当轮 PPO 实际更新数
+    # （仍受 sil_max_batches 约束）。20260923 塌陷期 PPO 被 KL 早停到每轮 2-10 次而
+    # SIL 固定 40 次，策略实质退化为纯 BC；PPO 饥饿时 SIL 同步停手，等 KL 预算恢复。
+    # ratio < 0 = 不约束。
+    sil_budget_ratio: float = 1.0
     sil_num_workers: int = 4           # SIL DataLoader 并行建 patch 的 worker 数（0=主进程串行）
 
     # ── SIL 精英池：MAP-Elites 行为多样性准入（P1.2，roadmap 见 doc/optimization_roadmap.md）──

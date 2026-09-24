@@ -91,9 +91,11 @@ class _WeightedWindowView:
     仍消费五元组，只有加权 SIL 路径解包六元组。weights 与 dataset 窗口索引顺序对齐。
     """
 
-    def __init__(self, base, weights: torch.Tensor) -> None:
+    def __init__(self, base, weights: torch.Tensor,
+                 value_targets: torch.Tensor | None = None) -> None:
         self.base = base
         self.weights = weights
+        self.value_targets = value_targets
         # sil_update 读 dataset.trajectories 记指标；透传保持兼容
         self.trajectories = base.trajectories
 
@@ -101,6 +103,8 @@ class _WeightedWindowView:
         return len(self.base)
 
     def __getitem__(self, idx: int):
+        if self.value_targets is not None:
+            return (*self.base[idx], self.weights[idx], self.value_targets[idx])
         return (*self.base[idx], self.weights[idx])
 
 
@@ -367,21 +371,18 @@ class PPOTrainer:
         return metrics
 
     @torch.no_grad()
-    def _sil_advantage_weights(
+    def _sil_pool_values(
         self, model: ActorCritic, dataset
-    ) -> tuple[np.ndarray, float]:
-        """P3.2 第一遍前向：用当前 critic 为全池窗口打 V，算 MC 优势并映射为窗口权重。
+    ) -> tuple[np.ndarray, np.ndarray, float]:
+        """P3.2 第一遍前向：用当前 critic 为全池窗口打 V，并算每窗口 MC 回报 R_full。
 
         A_tau = R_tau − V(s_tau)，其中 R_tau = Σ_k γ^k·credited[tau+k] 沿精英轨迹的
         折扣未来 credited 进度，并在该轨迹最后一个索引窗口处用 V 自举
         （R_full(τ) = R(τ) + γ^Δ·(V(τ_last) − R(τ_last))）：V 是无限时域口径
         （PPO 非终止截断自举训练），不自举的 R 比 V 短一个视界，A 会被系统性压负、
         frontier 窗口受害最重。剪枝后 cap 之外 credited≡0，故无需 GAE 的 λ 折中。
-        A 在全池窗口上归一化（均值 0 方差 1）后 clamp 到 [sil_advantage_floor,
-        sil_advantage_cap]：正优势强化（至多 cap 倍），非正保留 floor 弱权重、不删除动作。
-
-        返回 (weights, pos_frac)：weights 为与 dataset 窗口索引顺序对齐的 float32 数组；
-        pos_frac 为归一化后正优势窗口比例（诊断用）。
+        返回 (values, ret_full, pos_frac)：均与 dataset 窗口索引顺序对齐；pos_frac =
+        (R_full − V) > 0 的窗口比例（诊断用）。优势加权与 1.3 价值校准共用本前向。
         """
         from torch.utils.data import DataLoader
 
@@ -424,23 +425,68 @@ class PPOTrainer:
         # dataset._index 为 (traj_idx, tau) 列表，与 __getitem__ 同序（同包内访问）
         # 自举的正确形式：R_full(tau) = R(tau) + γ^Δ·(V(tau_last) − R(tau_last))，
         # 即用 V 替换 tau_last 处的不完整尾部回报，避免重复计入 R(tau_last)。
-        adv = np.empty(n, dtype=np.float64)
+        ret_full = np.empty(n, dtype=np.float64)
         for idx, (ti, tau) in enumerate(dataset._index):
             last_tau, last_v = traj_last_value[ti]
-            ret = (traj_returns[ti][tau]
-                   + (cfg.gamma ** (last_tau - tau)) * (last_v - traj_returns[ti][last_tau]))
-            adv[idx] = ret - values[idx]
+            ret_full[idx] = (traj_returns[ti][tau]
+                             + (cfg.gamma ** (last_tau - tau)) * (last_v - traj_returns[ti][last_tau]))
 
-        pos_frac = float(np.mean(adv > 0.0))
+        pos_frac = float(np.mean(ret_full > values))
+        return values, ret_full, pos_frac
+
+    def _sil_advantage_weights(
+        self, model: ActorCritic, dataset
+    ) -> tuple[np.ndarray, float, np.ndarray]:
+        """A = R_full − V 全池归一化（均值 0 方差 1）后 clamp 到 [sil_advantage_floor,
+        sil_advantage_cap]：正优势强化（至多 cap 倍），非正保留 floor 弱权重、不删除动作。
+
+        返回 (weights, pos_frac, ret_full)：weights 与 ret_full 均为与 dataset 窗口索引
+        顺序对齐的数组；ret_full 供 1.3 critic 精英回报校准作 value 目标。
+        """
+        cfg = self.config
+        values, ret_full, pos_frac = self._sil_pool_values(model, dataset)
+        adv = ret_full - values
         std = float(adv.std())
         if std < 1e-8:
-            return np.ones(n, dtype=np.float32), pos_frac
+            return np.ones(len(dataset), dtype=np.float32), pos_frac, ret_full
         adv = (adv - float(adv.mean())) / (std + 1e-8)
         weights = np.clip(adv, cfg.sil_advantage_floor, cfg.sil_advantage_cap)
-        return weights.astype(np.float32), pos_frac
+        return weights.astype(np.float32), pos_frac, ret_full
+
+    def _sil_phase_weights(self, dataset) -> np.ndarray | None:
+        """P3.1-SIL：接触相位权重，与 dataset 窗口索引顺序对齐。
+
+        接触事件 = tip_contact / body_contact / pot_contact 任一（contact 列 0/2/3）。
+        接触前后 K 帧（sil_phase_window，含"即将接触"的前瞻窗口）权重 1.0，
+        纯空中帧权重 sil_phase_airborne_weight。
+
+        物理依据：空中相是弹道运动，动作与结果几乎无关（克隆目标≈纯噪声）；
+        接触相是高杠杆决策（动作→结果信息量高）。任一轨迹缺接触信号时返回 None
+        （调用方让相位分量缺失，而非报错）。
+        """
+        cfg = self.config
+        K = max(1, int(cfg.sil_phase_window))
+        w_air = float(cfg.sil_phase_airborne_weight)
+        kernel = np.ones(2 * K + 1, dtype=np.float64)
+        traj_rel: dict[int, np.ndarray] = {}
+        for ti, traj in enumerate(dataset.trajectories):
+            contact = getattr(traj, "contact", None)
+            if contact is None:
+                return None
+            c = ((contact[:, 0] > 0.5) | (contact[:, 2] > 0.5)
+                 | (contact[:, 3] > 0.5)).astype(np.float64)
+            near = np.convolve(c, kernel, mode="same") > 0
+            traj_rel[ti] = np.where(near, 1.0, w_air)
+        weights = np.empty(len(dataset), dtype=np.float32)
+        for idx, (ti, tau) in enumerate(dataset._index):
+            rel = traj_rel[ti]
+            weights[idx] = rel[min(tau, len(rel) - 1)]
+        return weights
 
     def sil_update(
-        self, model: ActorCritic, dataset, loss_coef: float | None = None
+        self, model: ActorCritic, dataset, loss_coef: float | None = None,
+        budget_updates: int | None = None,
+        behavior_progress: float | None = None,
     ) -> dict[str, float]:
         """
         Self-Imitation：对精英轨迹池做 BC 监督，把 actor 均值锚向历史最优动作。
@@ -452,10 +498,26 @@ class PPOTrainer:
             且 σ 不参与梯度 → 不碰 actor_log_std、不压制探索。
           - 否则（旧路径）：MSE-on-mean（squash 后均值 vs 精英动作）。
 
+        三道防线（20260923 C+SIL det 塌陷后引入）：
+          - 预算：budget_updates 给定时，minibatch 上限 = sil_budget_ratio × 当轮
+            PPO 实际更新数（仍受 sil_max_batches 约束），PPO 饥饿时 SIL 同步停手；
+          - 行为门控（V-free）：behavior_progress 给定（当前轮 per-agent 平均
+            credited，原始米）时，池 median 总 credited ≤ behavior ×
+            (1+sil_gate_margin) 则跳过本轮。pos_frac 口径依赖 critic 绝对水平，
+            实测 V 在精英窗口上系统性膨胀导致门控永久关闭，故改用同量纲行为比较；
+          - 限幅：raw 目标 clamp 到 ±sil_target_clamp，饱和精英动作不再把均值
+            钉进 tanh 饱和区（保留方向、只限幅度）。
+
+        相位加权（P3.1-SIL）：接触帧（tip/body/pot 任一）前后 K 帧权重 1.0，
+        纯空中帧权重 sil_phase_airborne_weight 且按 sil_phase_airborne_sample
+        概率稀疏保留（损失降权 × 采样稀疏双重削弱）。与优势权重相乘合成。
+        依据：空中相是弹道运动、动作与结果几乎无关，等权会把大部分梯度花在
+        空中噪声上（ab3 负收益的主要机制之一）。
+
         在 update() 之后调用，复用同一 optimizer。dataset 为 TrajectoryDataset，
         __getitem__ 产出 (dynamics, patches, input_actions, valid_mask, target_action)。
         """
-        from torch.utils.data import DataLoader
+        from torch.utils.data import DataLoader, Subset
 
         cfg = self.config
         coef = cfg.sil_loss_coef if loss_coef is None else loss_coef
@@ -473,22 +535,113 @@ class PPOTrainer:
                 weight_decay=cfg.weight_decay,
             )
 
-        # P3.2：优势加权权重（仅走廊模式；含非走廊轨迹时回退旧 MSE 路径）
-        weights: torch.Tensor | None = None
+        # 预算约束（防线一）：SIL minibatch 数 ≤ sil_budget_ratio × 当轮 PPO 实际
+        # 更新数（仍受 sil_max_batches 约束）。budget_updates=None（离线测试/单独
+        # 调用）时不约束。预算为 0 时直接跳过，省掉全池前向打 V 的开销。
+        max_batches = cfg.sil_max_batches if cfg.sil_max_batches > 0 else None
+        budget_cap: int | None = None
+        if budget_updates is not None and cfg.sil_budget_ratio >= 0:
+            budget_cap = int(np.ceil(max(budget_updates, 0) * cfg.sil_budget_ratio))
+            max_batches = budget_cap if max_batches is None else min(max_batches, budget_cap)
+        if max_batches is not None and max_batches <= 0:
+            logger.info(
+                "SIL 预算跳过: PPO 当轮更新 %s 次 × ratio %.2f → 0 minibatch",
+                str(budget_updates), cfg.sil_budget_ratio,
+            )
+            return {
+                "sil_trajs": float(len(dataset.trajectories)),
+                "sil_windows": float(len(dataset)),
+                "sil_updates": 0.0,
+                "sil_skipped": 1.0,
+                "sil_budget_cap": 0.0,
+            }
+
+        # 行为门控（防线二，V-free）：池 median 总 credited ≤ 当前轮行为水平
+        # × (1+margin) 时跳过。同量纲（原始米、同一 tracker 口径）行为比较，不依赖
+        # critic 校准——实测 V 在精英窗口上系统性膨胀 ~5-25×，pos_frac≈0 导致门控
+        # 永久关闭（20260923 A/B 离线复算）。仅在加权路径（全池走廊轨迹）且
+        # behavior_progress 给定时生效；门控在权重前向前计算，关闭时省掉全池打 V。
+        gate_levels: dict[str, float] | None = None
+        if behavior_progress is not None and all(
+                getattr(t, "corridor_progress", None) is not None
+                for t in dataset.trajectories):
+            pool_levels = [float(np.asarray(t.corridor_progress, dtype=np.float64).sum())
+                           for t in dataset.trajectories]
+            pool_level = float(np.median(pool_levels)) if pool_levels else 0.0
+            gate_levels = {"sil_pool_level": pool_level,
+                           "sil_behavior_level": float(behavior_progress)}
+            if pool_level <= behavior_progress * (1.0 + cfg.sil_gate_margin):
+                logger.info(
+                    "SIL 行为门控跳过: 池 median %.2fm ≤ 行为水平 %.2fm × (1+%.2f)",
+                    pool_level, behavior_progress, cfg.sil_gate_margin,
+                )
+                return {
+                    "sil_trajs": float(len(dataset.trajectories)),
+                    "sil_windows": float(len(dataset)),
+                    "sil_updates": 0.0,
+                    "sil_skipped": 1.0,
+                    **gate_levels,
+                }
+
+        # P3.2：优势权重分量（仅走廊模式；含非走廊轨迹时该分量缺失）
+        adv_w: np.ndarray | None = None
+        value_targets: torch.Tensor | None = None
         adv_pos_frac = float("nan")
         if getattr(cfg, "sil_advantage_weighting_enabled", False):
             if all(getattr(t, "corridor_progress", None) is not None
                    for t in dataset.trajectories):
-                w_np, adv_pos_frac = self._sil_advantage_weights(model, dataset)
-                weights = torch.from_numpy(w_np)
+                w_np, adv_pos_frac, ret_np = self._sil_advantage_weights(model, dataset)
+                adv_w = w_np
+                # 1.3 critic 精英回报校准目标（末窗 V 自举口径，与优势计算一致）
+                if cfg.sil_value_coef > 0:
+                    value_targets = torch.from_numpy(ret_np.astype(np.float32))
             elif not getattr(self, "_sil_adv_warned", False):
                 logger.warning(
                     "sil_advantage_weighting 已启用但池内含非走廊轨迹，"
-                    "本路径回退 MSE-on-mean（高度模式暂无 corridor_progress 支撑）"
+                    "优势权重分量缺失（高度模式暂无 corridor_progress 支撑）"
                 )
                 self._sil_adv_warned = True
 
-        train_view = _WeightedWindowView(dataset, weights) if weights is not None else dataset
+        # P3.1-SIL：接触相位权重分量（与优势权重相乘合成；无接触信号时缺失）
+        phase_w: np.ndarray | None = None
+        if getattr(cfg, "sil_phase_weighting_enabled", False):
+            phase_w = self._sil_phase_weights(dataset)
+            if phase_w is None and not getattr(self, "_sil_phase_warned", False):
+                logger.warning(
+                    "sil_phase_weighting 已启用但池内含缺接触信号的轨迹，"
+                    "相位权重分量缺失"
+                )
+                self._sil_phase_warned = True
+
+        combined_w: np.ndarray | None = None
+        if adv_w is not None and phase_w is not None:
+            combined_w = adv_w * phase_w
+        elif adv_w is not None:
+            combined_w = adv_w
+        elif phase_w is not None:
+            combined_w = phase_w
+        weights = (torch.from_numpy(combined_w.astype(np.float32))
+                   if combined_w is not None else None)
+
+        train_view = (_WeightedWindowView(dataset, weights, value_targets)
+                      if weights is not None else dataset)
+        # 空中帧稀疏采样（P3.1-SIL 加强）：接触帧全保留，空中帧按概率保留；
+        # 在权重计算之后做——权重值不变，只减少空中窗口的出场次数。
+        if phase_w is not None and 0.0 <= cfg.sil_phase_airborne_sample < 1.0:
+            airborne = phase_w < 1.0 - 1e-9
+            keep = np.ones(len(dataset), dtype=bool)
+            keep[airborne] = (np.random.rand(int(airborne.sum()))
+                              < cfg.sil_phase_airborne_sample)
+            indices = np.flatnonzero(keep)
+            if len(indices) == 0:
+                logger.info("SIL 空中帧稀疏采样后窗口为空，跳过本轮")
+                return {
+                    "sil_trajs": float(len(dataset.trajectories)),
+                    "sil_windows": float(len(dataset)),
+                    "sil_updates": 0.0,
+                    "sil_skipped": 1.0,
+                }
+            train_view = Subset(train_view, indices)
         loader = DataLoader(
             train_view,
             batch_size=cfg.sil_batch_size,
@@ -497,8 +650,8 @@ class PPOTrainer:
             num_workers=cfg.sil_num_workers,
         )
 
-        max_batches = cfg.sil_max_batches if cfg.sil_max_batches > 0 else None
         total_loss = 0.0
+        total_value_loss = 0.0
         n_updates = 0
         stop = False
         for _epoch in range(cfg.sil_epochs):
@@ -509,26 +662,45 @@ class PPOTrainer:
                     stop = True
                     break
                 if weights is not None:
-                    dyn, pat, act_hist, vm, target, w = batch
+                    if value_targets is not None:
+                        dyn, pat, act_hist, vm, target, w, vtarget = batch
+                        vtarget = vtarget.to(self.device)
+                    else:
+                        dyn, pat, act_hist, vm, target, w = batch
+                        vtarget = None
                     w = w.to(self.device)
                 else:
                     dyn, pat, act_hist, vm, target = batch
+                    vtarget = None
                 dyn = dyn.to(self.device)
                 pat = pat.to(self.device)
                 act_hist = act_hist.to(self.device)
                 vm = vm.to(self.device)
                 target = target.to(self.device)
 
-                dist, _ = model.forward(dyn, pat, act_hist, valid_mask=vm)
+                dist, value_pred = model.forward(dyn, pat, act_hist, valid_mask=vm)
                 if weights is not None:
                     # 加权高斯 NLL（raw 空间）：-log π(u|s)·w 的 mean 梯度 =
                     # w·(μ−u)/σ²；tanh 的 Jacobian 项与 μ 无关、σ detach → 只锚均值。
                     u_target = torch.atanh(
                         (target / model._action_scale).clamp(-1.0 + 1e-6, 1.0 - 1e-6)
                     )
+                    # 限幅（防线三）：精英动作含 OU 噪声，满饱和动作 atanh 后到 ±7.6，
+                    # 会把均值钉进 tanh 饱和区。clamp 保留方向、只限幅度；0 = 关闭。
+                    if cfg.sil_target_clamp > 0:
+                        u_target = u_target.clamp(
+                            -cfg.sil_target_clamp, cfg.sil_target_clamp
+                        )
                     sigma = dist.stddev.detach().clamp_min(1e-6)
                     per = 0.5 * (((dist.mean - u_target) / sigma) ** 2).sum(dim=-1)
                     loss = coef * (w * per).sum() / w.sum().clamp_min(1e-8)
+                    # 1.3 critic 精英回报校准：frontier 区域 V 系统性膨胀（20260923
+                    # 复算 p50≈5.4m vs 真实折扣回报 0.2-0.7m），小系数 Huber 把 V 拉向
+                    # 精英 MC 回报；均匀加权（池内皆精英），防反向高估。
+                    if vtarget is not None:
+                        v_loss = F.smooth_l1_loss(value_pred, vtarget)
+                        loss = loss + cfg.sil_value_coef * v_loss
+                        total_value_loss += v_loss.item()
                 else:
                     mean_sq = torch.tanh(dist.mean) * model._action_scale
                     loss = coef * F.mse_loss(mean_sq, target)
@@ -556,4 +728,13 @@ class PPOTrainer:
         if weights is not None:
             metrics["sil_adv_pos_frac"] = adv_pos_frac
             metrics["sil_weight_mean"] = float(weights.mean())
+        if phase_w is not None:
+            metrics["sil_airborne_frac"] = float(np.mean(phase_w < 1.0 - 1e-9))
+            metrics["sil_windows_kept"] = float(len(train_view))
+        if value_targets is not None:
+            metrics["sil_value_loss"] = total_value_loss / max(n_updates, 1)
+        if budget_cap is not None:
+            metrics["sil_budget_cap"] = float(budget_cap)
+        if gate_levels is not None:
+            metrics.update(gate_levels)
         return metrics

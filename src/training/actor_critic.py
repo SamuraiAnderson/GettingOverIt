@@ -20,6 +20,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
 
+from .contact_features import CONTACT_DIM
 from .dataset import BASE_DYNAMICS_DIM, DYNAMICS_DIM
 from .model import (DualScaleSpatialEncoder, _DynamicsNormMixin, build_attn_mask,
                     expand_state_dict_for_dynamics_dim)
@@ -101,6 +102,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
             nn.ReLU(),
             nn.Linear(d, 1),
         )
+
 
         self._action_scale = config.action_scale
         self._init_weights()
@@ -245,6 +247,34 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         # gate 必须读原始 0/1，不能读经 dyn_mean/std 归一化后的数值。
         return dynamics[:, -1, BASE_DYNAMICS_DIM] >= self.config.contact_gate_threshold
 
+    def airborne_mask(self, dynamics: torch.Tensor) -> torch.Tensor:
+        """完全无接触（tip/body/pot 全空）为 True。读原始 0/1 接触信号（同 contact_mask）。
+
+        接触特征列：BASE_DYNAMICS_DIM + [0]=tip_contact, [2]=body_contact, [3]=pot_contact。
+        """
+        thr = self.config.contact_gate_threshold
+        c = dynamics[:, -1, BASE_DYNAMICS_DIM:BASE_DYNAMICS_DIM + CONTACT_DIM]
+        in_contact = (c[..., 0] >= thr) | (c[..., 2] >= thr) | (c[..., 3] >= thr)
+        return ~in_contact
+
+    # ── σ 调度（M2 修复）──
+    def reset_log_std(self, log_std: float) -> None:
+        """--init-from 时把探索噪声重设到设计初值（PPO→PPO 暖启动会原样继承源
+        checkpoint 的 log_std，实测 σ≈0.52 钉死全程）。--resume 不调此函数。"""
+        with torch.no_grad():
+            self.actor_log_std.data.fill_(log_std)
+            contact = getattr(self, "actor_log_std_contact", None)
+            if contact is not None:
+                contact.data.fill_(log_std + self.config.contact_log_std_offset)
+
+    def anneal_log_std(self, rate: float, floor: float) -> None:
+        """每轮训练后 log_std 线性递减（巩固进展 → 探索退火），下限 floor。"""
+        with torch.no_grad():
+            self.actor_log_std.data.sub_(rate).clamp_(min=floor)
+            contact = getattr(self, "actor_log_std_contact", None)
+            if contact is not None:
+                contact.data.sub_(rate).clamp_(min=floor + self.config.contact_log_std_offset)
+
     def _actor_parameters(self, feat, dynamics):
         mean = self.actor_mean(feat)
         log_std = self.actor_log_std.expand_as(mean)
@@ -252,6 +282,13 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
             gate = self.contact_mask(dynamics).unsqueeze(-1)
             mean = torch.where(gate, self.actor_mean_contact(feat), mean)
             log_std = torch.where(gate, self.actor_log_std_contact.expand_as(mean), log_std)
+        if self.config.phase_noise_enabled:
+            # 空中相放大探索噪声（弹道相的"安全探索"：噪声只改变锤子预定位，
+            # 不扰动当前轨迹；接触相保持基准——其噪声是发现引擎，见 config 注释）。
+            # std 是观测的确定性函数，采集/更新同口径，PPO 比率自洽。
+            bonus = (self.airborne_mask(dynamics).unsqueeze(-1)
+                     * self.config.phase_noise_airborne_log_bonus)
+            log_std = log_std + bonus.to(log_std.dtype)
         std = (log_std + self.exploration_boost).clamp(
             self.config.ppo_log_std_min, self.config.ppo_log_std_max,
         ).exp()

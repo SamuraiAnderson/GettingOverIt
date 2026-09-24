@@ -196,7 +196,9 @@ def load_elites(path: str | Path) -> list[dict[str, Any]]:
                 "actions": data[f"t{i}_actions"],
                 "contact": data[f"t{i}_contact"] if f"t{i}_contact" in data else None,
                 "score": float(scores[i]),
-                "iteration": int(iters[i]),
+                  "iteration": int(iters[i]),
+                  "corridor_progress": data[f"t{i}_corridor_progress"] if f"t{i}_corridor_progress" in data else None,
+                  "guidance_index": data[f"t{i}_guidance_index"] if f"t{i}_guidance_index" in data else None,
             })
     return out
 

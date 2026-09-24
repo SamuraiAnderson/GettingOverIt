@@ -64,7 +64,7 @@ from training.reward import (
     score_trajectory,
 )
 from training.rollout import RolloutWorker
-from training.run_logging import RunRecorder, resolve_run_paths
+from training.run_logging import RunRecorder, resolve_run_paths, load_elites
 
 sys.path.insert(0, str(_REPO_ROOT / "src" / "tests" / "control_interaction"))
 from test_l7_surface_airdrop import (
@@ -213,6 +213,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--recipe", choices=("ppo", "ppo-ou", "ppo-ou-sil"), default=None,
                         help="Fixed ablation; disables adaptive exploration and experimental contact heads")
     parser.add_argument("--max-iterations", type=int, default=None)
+    parser.add_argument("--target-physical-samples", type=int, default=None,
+                        help="Fresh run: stop after the first complete iteration reaching this sample count (includes critic warmup)")
+    parser.add_argument("--additional-physical-samples", type=int, default=None,
+                        help="Resume: stop after this many additional physical samples, at a complete iteration")
+    parser.add_argument("--sil-resume-pool", type=str, default=None,
+                        help="Restore a saved SIL elite pool, including corridor fields, scores and source iterations")
     parser.add_argument("--steps-per-rollout", type=int, default=None)
     parser.add_argument("--ppo-batch-size", type=int, default=None)
     parser.add_argument("--save-interval", type=int, default=None,
@@ -309,6 +315,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         value = getattr(args, name)
         if value is not None and value < 1:
             parser.error(f"--{name.replace('_', '-')} must be positive")
+    if args.target_physical_samples is not None:
+        if args.target_physical_samples < 1 or args.resume:
+            parser.error("--target-physical-samples requires a positive count and a fresh run")
+    if args.additional_physical_samples is not None:
+        if args.additional_physical_samples < 1 or not args.resume or args.target_physical_samples is not None:
+            parser.error("--additional-physical-samples requires a positive count and --resume")
+    if args.sil_resume_pool and (not args.resume or args.sil_seed):
+        parser.error("--sil-resume-pool requires --resume and cannot be combined with --sil-seed")
     return args
 
 
@@ -494,6 +508,12 @@ def main() -> None:
             logger.info("显式暖启动：加载 %d 个兼容张量；新模块初始化，不恢复 optimizer/iteration", len(loaded))
         else:
             model.load_state_dict(init_state["model"])
+        # σ 重设（M2 修复）：PPO→PPO 暖启动会原样继承源 checkpoint 的 log_std
+        #（实测 σ≈0.52 全程钉死，技能住在噪声里）。按 ppo_init_log_std 拉回设计初值。
+        if config.ppo_reset_log_std_on_init and hasattr(model, "reset_log_std"):
+            model.reset_log_std(config.ppo_init_log_std)
+            logger.info("init-from σ 重设: log_std → %.2f (std=%.3f)",
+                        config.ppo_init_log_std, float(model.actor_log_std.detach().exp().mean()))
     elif args.resume_bc:
         bc_state = torch.load(args.resume_bc, weights_only=True)
         model.load_from_bc(bc_state)
@@ -627,6 +647,18 @@ def main() -> None:
             sil_dataset.set_trajectories(seed_trajs)
             logger.info("SIL 精英池冷启动: %d 条种子轨迹入池", len(seed_trajs))
 
+    if args.sil_resume_pool:
+        if sil_dataset is None:
+            raise ValueError("Restoring an elite pool requires SIL to be enabled")
+        restored_trajs = [Trajectory(**row) for row in load_elites(args.sil_resume_pool)]
+        if not restored_trajs:
+            raise ValueError("Cannot resume an empty SIL pool")
+        if reference is not None and any(t.corridor_progress is None or t.guidance_index is None
+                                         for t in restored_trajs):
+            raise ValueError("Corridor SIL pool is missing saved corridor fields")
+        sil_dataset.set_trajectories(restored_trajs)
+        logger.info("SIL 精英池完整恢复: %s (%d 条轨迹)", args.sil_resume_pool, len(restored_trajs))
+
     # ── 奖励归一化器 ──
     calibration_steps = config.steps_per_rollout * config.num_agents * 10
     reward_normalizer = RewardNormalizer(calibration_steps=calibration_steps) if reference is None else None
@@ -676,6 +708,9 @@ def main() -> None:
 
     # ── 主循环 ──
     last_iteration = start_iteration
+    completed_iterations = start_iteration
+    physical_samples = 0
+    sample_target = args.additional_physical_samples or args.target_physical_samples
     try:
         for iteration in range(start_iteration, config.max_iterations):
             last_iteration = iteration
@@ -807,10 +842,24 @@ def main() -> None:
                 _sil_scale = 1.0 - min(
                     1.0, _boost / max(config.explore_boost_max, 1e-9)
                 ) * config.explore_sil_relax
+                # 行为门控水平：当前轮 per-agent 平均 credited（原始米）。
+                # corridor_progress_m 是全 agent 逐步累加和，除以 agent 数得均值。
+                _corridor = getattr(rollout_worker, "last_corridor_metrics", None) or {}
+                _behavior = (_corridor.get("corridor_progress_m", 0.0)
+                             / max(1, config.num_agents)) if _corridor else None
                 metrics.update(ppo_trainer.sil_update(
                     model, sil_dataset,
                     loss_coef=config.sil_loss_coef * _sil_scale,
+                    # 预算从属于 PPO：当轮 PPO 被 KL 早停饥饿时 SIL 同步收敛，
+                    # 防止模仿梯度压倒在线更新（20260923 塌陷期曾 297:43）。
+                    budget_updates=int(metrics.get("n_updates", 0)),
+                    behavior_progress=_behavior,
                 ))
+
+            # Phase 2.55: σ 退火（M2 修复）：巩固进展 → 探索噪声线性退火，
+            # 下限 ppo_log_std_min；预热轮不动（策略未训练）。forward 内 clamp 兜底。
+            if config.ppo_log_std_anneal_rate > 0 and not value_only:
+                model.anneal_log_std(config.ppo_log_std_anneal_rate, config.ppo_log_std_min)
 
             update_seconds = time.perf_counter() - update_started
             # Phase 2.6: 停滞探测器 — 按精英池最佳进度判断是否停滞（走廊轨迹取 credited
@@ -865,6 +914,8 @@ def main() -> None:
             log_metrics(iteration + 1, metrics, extras)
             if recorder is not None:
                 recorder.append_metrics(iteration + 1, metrics, extras)
+            completed_iterations = iteration + 1
+            physical_samples += int(extras.get("rollout_environment_steps", buffer.size))
 
             if (iteration + 1) % config.save_interval == 0:
                 save_checkpoint(
@@ -880,17 +931,22 @@ def main() -> None:
                 if recorder is not None and sil_dataset is not None:
                     recorder.save_elites(sil_dataset.trajectories, iteration + 1)
 
+            if sample_target is not None and physical_samples >= sample_target:
+                logger.info("实际物理样本终点: %d >= %d，完成 %d 轮（含 critic 预热）",
+                            physical_samples, sample_target, completed_iterations)
+                break
+
         # 最终保存
         save_checkpoint(
             model, ppo_trainer.optimizer,
-            config.max_iterations, config.checkpoint_dir,
+            completed_iterations, config.checkpoint_dir,
             config=config, reference_metadata=reference_meta,
             value_warmup_end=warmup_end,
         )
         if recorder is not None:
             if sil_dataset is not None:
-                recorder.save_elites(sil_dataset.trajectories, config.max_iterations)
-            recorder.finalize("completed", last_iteration=config.max_iterations)
+                recorder.save_elites(sil_dataset.trajectories, completed_iterations)
+            recorder.finalize("completed", last_iteration=completed_iterations)
         logger.info("PPO 训练完成")
 
     except BaseException as exc:

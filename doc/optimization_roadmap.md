@@ -182,6 +182,10 @@
 
 #### P3.1 · 相位加权的训练信号
 
+- **状态（2026-09-24）：SIL 侧已接线**（`sil_phase_*`：接触前后 K 帧权重 1.0，
+  空中帧损失降权 × 稀疏采样双重削弱，与 P3.2 优势权重相乘合成；测试
+  `test_sil_advantage_weighting.py` 的 phase 三项）。**PPO 奖励侧仍未接线**
+  （`phase_weighting_enabled` 等三键是死开关）。
 - **内容**：把 PPO `step_reward` 与 SIL `MSE loss` 都按相位重要度加权：
   - `relevance(t) = high` 在接触前后 K 帧（K ~= 5-10）
   - `relevance(t) = low` 在纯空中飘荡帧
