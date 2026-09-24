@@ -437,20 +437,30 @@ class PPOTrainer:
     def _sil_advantage_weights(
         self, model: ActorCritic, dataset
     ) -> tuple[np.ndarray, float, np.ndarray]:
-        """A = R_full − V 全池归一化（均值 0 方差 1）后 clamp 到 [sil_advantage_floor,
-        sil_advantage_cap]：正优势强化（至多 cap 倍），非正保留 floor 弱权重、不删除动作。
+        """A = R_full − V 的正优势门控（原始 SIL 的 (R−V)₊ 过滤，Oh et al. 2018）：
+
+        **非正优势零权重、不产生模仿更新**；正优势按相对大小加权（正部均值 1），
+        sil_advantage_cap 封顶。
+
+        与旧版（全池归一化 + sil_advantage_floor 兜底）的关键区别：旧版把零点平移到
+        池内平均——原始优势为负的动作仍获 floor 权重，甚至因高于池均而获大权重，
+        偏离了 (R−V)₊ 这个关键过滤机制（20260924 评审指出）。归一化只在正部内部做
+        （保相对大小、稳损失尺度），不做全池平移。门控同时是"收益复验"：只有当前
+        critic 预期之上的窗口才值得模仿；critic 系统性高估时全池零权重、SIL 自动
+        停手（自门控），由调用方在 combined 权重和为零时跳过。
 
         返回 (weights, pos_frac, ret_full)：weights 与 ret_full 均为与 dataset 窗口索引
         顺序对齐的数组；ret_full 供 1.3 critic 精英回报校准作 value 目标。
+        pos_frac = 原始 A>0 的窗口比例（门控放行率诊断）。
         """
         cfg = self.config
         values, ret_full, pos_frac = self._sil_pool_values(model, dataset)
         adv = ret_full - values
-        std = float(adv.std())
-        if std < 1e-8:
-            return np.ones(len(dataset), dtype=np.float32), pos_frac, ret_full
-        adv = (adv - float(adv.mean())) / (std + 1e-8)
-        weights = np.clip(adv, cfg.sil_advantage_floor, cfg.sil_advantage_cap)
+        weights = np.zeros(len(dataset), dtype=np.float64)
+        pos = adv > 0.0
+        if pos.any():
+            w_pos = adv[pos] / max(float(adv[pos].mean()), 1e-12)
+            weights[pos] = np.clip(w_pos, 0.0, cfg.sil_advantage_cap)
         return weights.astype(np.float32), pos_frac, ret_full
 
     def _sil_phase_weights(self, dataset) -> np.ndarray | None:
@@ -620,6 +630,21 @@ class PPOTrainer:
             combined_w = adv_w
         elif phase_w is not None:
             combined_w = phase_w
+        # (R−V)₊ 自门控：全池无正优势窗口时 actor 模仿本轮无事可做（如 critic 系统性
+        # 高估期）。但注意：价值校准（1.3）正是修复高估的手段——门控期间必须继续做，
+        # 否则高估 → 全门控 → 不校准 → 永不高估解除的死锁。故仅当无价值目标时才跳过。
+        actor_gated_off = combined_w is not None and float(combined_w.sum()) <= 0.0
+        if actor_gated_off and value_targets is None:
+            logger.info("SIL 正优势门控：全池无 A>0 窗口，本轮跳过")
+            return {
+                "sil_trajs": float(len(dataset.trajectories)),
+                "sil_windows": float(len(dataset)),
+                "sil_updates": 0.0,
+                "sil_skipped": 1.0,
+                "sil_adv_pos_frac": adv_pos_frac,
+            }
+        if actor_gated_off:
+            logger.info("SIL 正优势门控：无 A>0 窗口，本轮仅做 1.3 价值校准")
         weights = (torch.from_numpy(combined_w.astype(np.float32))
                    if combined_w is not None else None)
 

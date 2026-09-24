@@ -257,11 +257,14 @@ class TrainConfig:
     phase_airborne_weight: float = 0.25
     # P3.2（已接线）：SIL 窗口按优势加权。A = 折扣未来 credited（沿精英轨迹，
     # cap 后 credited≡0，无需 GAE 的 λ 折中）+ 轨迹末窗 V 自举（与 V 的无限时域
-    # 口径对齐，否则 A 被系统性压负）− 当前 critic 的 V；全池窗口归一化后 clamp 到
-    # [floor, cap]：正优势强化（至多 cap 倍），非正保留 floor 弱权重、不删除动作。
+    # 口径对齐，否则 A 被系统性压负）− 当前 critic 的 V。
+    # 门控为原始 SIL 的 (R−V)₊（Oh et al. 2018）：非正优势零权重、不模仿；
+    # 正优势按相对大小加权（正部均值 1），cap 封顶；全池无正优势窗口时本轮跳过。
     # 损失为 raw 空间加权高斯 NLL（σ detach，不碰 log_std）。
     # 仅走廊模式生效（需 corridor_progress）；高度模式回退旧 MSE-on-mean 并告警。
     sil_advantage_weighting_enabled: bool = True
+    # 【已弃用，保留仅为旧 run_meta 兼容】原"非正优势保留 floor 弱权重"语义偏离了
+    # (R−V)₊ 的关键过滤（20260924 评审），现非正优势一律零权重。
     sil_advantage_floor: float = 0.1
     sil_advantage_cap: float = 5.0
     # 【已弃用，保留仅为旧 run_meta 兼容】pos_frac 门控。实测 critic 在精英窗口上

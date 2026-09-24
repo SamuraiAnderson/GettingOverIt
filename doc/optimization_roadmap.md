@@ -202,12 +202,14 @@
 
 #### P3.2 · SIL 轨迹内 advantage 加权
 
-**状态：已实现（2026-09-23）**。`ppo_trainer.sil_update` 在
-`sil_advantage_weighting_enabled=True`（默认）且全池为走廊轨迹时启用：
-窗口优势 A = 折扣未来 credited（沿精英轨迹的精确 return-to-go，cap 后 credited≡0
-故无截断偏差，无需 GAE 的 λ 折中）− 当前 critic 的 V；全池窗口归一化后 clamp 到
-`[sil_advantage_floor, sil_advantage_cap]`（0.1 / 5.0）；损失为 raw 空间加权高斯 NLL
-（σ detach，不碰 log_std；梯度 w·(μ−u)/σ² 在饱和处不消失，优于 MSE）。
+**状态：已实现（2026-09-23），门控修正为原始 SIL 的 (R−V)₊（2026-09-24）**。
+`ppo_trainer.sil_update` 在 `sil_advantage_weighting_enabled=True`（默认）且全池为
+走廊轨迹时启用：窗口优势 A = 折扣未来 credited（沿精英轨迹的精确 return-to-go，
+cap 后 credited≡0 故无截断偏差，无需 GAE 的 λ 折中）+ 末窗 V 自举 − 当前 critic 的 V。
+**非正优势零权重、不模仿**（原始 SIL 的关键过滤；旧版全池归一化+floor 兜底会模仿
+负优势动作，20260924 评审纠正）；正优势按相对大小加权（正部均值 1）、cap 封顶；
+全池无正优势窗口时 actor 模仿自动停手，但 1.3 价值校准继续（修复高估才能解除门控，
+防死锁）。损失为 raw 空间加权高斯 NLL（σ detach，不碰 log_std）。
 高度模式（无 corridor_progress）回退旧 MSE-on-mean 并告警。
 回归测试：`src/tests/training/test_sil_advantage_weighting.py`。
 原规划与动机如下：

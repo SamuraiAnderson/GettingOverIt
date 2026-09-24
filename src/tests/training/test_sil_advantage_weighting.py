@@ -83,16 +83,17 @@ class SilAdvantageWeightingTests(unittest.TestCase):
         weights, pos_frac, ret_full = trainer._sil_advantage_weights(model, ds)
         self.assertEqual(len(ret_full), len(ds))
         self.assertEqual(len(weights), len(ds))
-        self.assertTrue(np.all(weights >= cfg.sil_advantage_floor - 1e-6))
+        # (R−V)₊ 语义：权重下界为 0（非正优势零权重），上界 cap
+        self.assertTrue(np.all(weights >= 0.0))
         self.assertTrue(np.all(weights <= cfg.sil_advantage_cap + 1e-6))
         self.assertGreaterEqual(pos_frac, 0.0)
         self.assertLessEqual(pos_frac, 1.0)
 
         n_each = len(ds) // 2  # 两条等长轨迹，窗口数相同，索引先 hi 后 lo
         w_hi, w_lo = weights[:n_each], weights[n_each:]
-        # clamp 单调 → 逐点 >=；尾部两条轨迹优势同触底 floor 时取等号，故严格不等
-        # 只在分离度最大的首窗口（tau=0，R 差最大且未触 cap）上断言。
-        self.assertTrue(np.all(w_hi >= w_lo), "clamp 下单调性应保持逐点 >=")
+        # 门控+正部归一化保持单调 → 逐点 >=；尾部两轨迹优势同被门控置零时取等号，
+        # 故严格不等只在分离度最大的首窗口（tau=0，R 差最大）上断言。
+        self.assertTrue(np.all(w_hi >= w_lo), "门控下单调性应保持逐点 >=")
         self.assertGreater(w_hi[0], w_lo[0])
         self.assertGreater(w_hi.mean(), w_lo.mean())
 
@@ -196,6 +197,49 @@ class SilAdvantageWeightingTests(unittest.TestCase):
         metrics = trainer.sil_update(model, ds)
         self.assertGreater(metrics.get("sil_updates", 0), 0)
         self.assertNotIn("sil_airborne_frac", metrics)
+
+    def test_positive_advantage_gating(self):
+        """(R−V)₊：critic 系统性高估（V≫R）时全池零权重；无价值校准时自门控跳过。"""
+        cfg = _config(sil_value_coef=0.0)  # 关价值校准，测纯门控跳过
+        ds = self._dataset([_make_traj(40, 0.1), _make_traj(40, 0.05)], cfg)
+        model = ActorCritic(cfg).eval()
+        with torch.no_grad():
+            model.critic_head[2].bias.fill_(100.0)  # V 系统性远超 R
+        trainer = PPOTrainer(cfg)
+        trainer.device = torch.device("cpu")
+
+        weights, pos_frac, _ = trainer._sil_advantage_weights(model, ds)
+        self.assertTrue(np.all(weights == 0.0))
+        self.assertEqual(pos_frac, 0.0)
+
+        before = {k: v.detach().clone() for k, v in model.named_parameters()}
+        metrics = trainer.sil_update(model, ds)
+        self.assertEqual(metrics.get("sil_updates", 1), 0)   # 自门控跳过
+        self.assertEqual(metrics.get("sil_skipped"), 1.0)
+        for k, p in model.named_parameters():
+            self.assertTrue(torch.allclose(before[k], p.detach()), k)
+
+    def test_gated_off_still_calibrates_value(self):
+        """门控期间（无 A>0 窗口）价值校准（1.3）继续运行——修复高估才能解除门控。"""
+        cfg = _config(sil_value_coef=0.1)  # 价值校准开
+        ds = self._dataset([_make_traj(40, 0.1), _make_traj(40, 0.05)], cfg)
+        model = ActorCritic(cfg).eval()
+        with torch.no_grad():
+            model.critic_head[2].bias.fill_(100.0)
+        trainer = PPOTrainer(cfg)
+        trainer.device = torch.device("cpu")
+
+        before = {k: v.detach().clone() for k, v in model.named_parameters()}
+        metrics = trainer.sil_update(model, ds)
+        # 不跳过：价值校准继续；actor_mean 不动（权重全零），critic 动
+        self.assertGreater(metrics.get("sil_updates", 0), 0)
+        self.assertIn("sil_value_loss", metrics)
+        self.assertTrue(torch.allclose(
+            before["actor_mean.weight"],
+            dict(model.named_parameters())["actor_mean.weight"].detach()))
+        # V 从 100 向 R_full（~0-3）校准 → bias 严格下降（幅度小，不用 allclose 判）
+        after_bias = dict(model.named_parameters())["critic_head.2.bias"].detach()
+        self.assertLess(after_bias.item(), before["critic_head.2.bias"].item())
 
     def test_gate_skips_when_pool_not_better(self):
         """池 median 总 credited ≤ 行为水平 ×(1+margin) → 整轮跳过，模型参数不变。"""
