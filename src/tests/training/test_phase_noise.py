@@ -19,6 +19,8 @@ from training.dataset import BASE_DYNAMICS_DIM, DYNAMICS_DIM
 
 
 def _config(**kw):
+    # 相位噪声默认关闭（opt-in），测试默认显式启用；test_disabled 用 False 覆盖
+    kw.setdefault("phase_noise_enabled", True)
     return TrainConfig(d_model=16, nhead=2, num_layers=1, context_len=3,
                        num_agents=2, random_deploy=False, deploy_exclusion_check=False,
                        contact_heads_enabled=False, **kw)

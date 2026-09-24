@@ -273,6 +273,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "（其停滞判据是高度口径）。",
     )
     parser.add_argument(
+        "--phase-noise", dest="phase_noise", action=argparse.BooleanOptionalAction,
+        default=None,
+        help="空中相放大探索噪声（默认关闭，未验证机制 opt-in）；--no-phase-noise 显式关闭",
+    )
+    parser.add_argument(
         "--resume", type=str, default=None,
         help="从指定 checkpoint 恢复训练（如 checkpoints/ppo_iter_0050.pt）",
     )
@@ -428,6 +433,8 @@ def main() -> None:
         config.ppo_log_std_max = args.log_std_max
     if args.value_warmup_iters is not None:
         config.value_warmup_iters = args.value_warmup_iters
+    if args.phase_noise is not None:
+        config.phase_noise_enabled = args.phase_noise
     if args.random_deploy is not None:
         config.random_deploy = args.random_deploy
     configure_credit(config, args, resume_state)

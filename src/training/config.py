@@ -243,7 +243,8 @@ class TrainConfig:
     # （ab3：全局降 σ 伤发现），故接触相保持基准、只放大空中相。
     # std(s) 是观测（接触特征）的确定性函数，采集/更新同经 _actor_parameters，
     # PPO 比率自洽；与 OU 条件式正交（std_t 逐步参与条件高斯）。
-    phase_noise_enabled: bool = True
+    # 默认关闭（opt-in）：未验证的探索侧机制不进默认配置，实验时用 --phase-noise 显式启用。
+    phase_noise_enabled: bool = False
     phase_noise_airborne_log_bonus: float = 0.5   # 空中帧 log_std 加成（+0.5 ≈ σ×1.6）
 
     # P2.2：tip_contact 硬 gate；原 actor_mean / actor_log_std 是空中头。
