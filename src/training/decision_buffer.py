@@ -27,7 +27,8 @@ def evaluated_batches(model, buffer, batch_size, normalize_advantages=True):
         for batch in buffer.get_batches(batch_size, normalize_advantages):
             yield (batch, *model.evaluate_actions(batch.dynamics, batch.patches, batch.act_history,
                 batch.actions, valid_mask=batch.valid_mask, noise_prev=batch.noise_prev,
-                noise_phi=buffer.policy_context["noise_phi"], raw_actions=batch.raw_actions))
+                noise_phi=buffer.policy_context["noise_phi"], raw_actions=batch.raw_actions,
+                **batch.sparse_kwargs()))
 
 
 class DecisionRolloutBuffer:

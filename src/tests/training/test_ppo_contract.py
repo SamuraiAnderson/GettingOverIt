@@ -53,8 +53,10 @@ class PPOContractTests(unittest.TestCase):
         with torch.no_grad():
             model.actor_mean.weight.zero_()
             model.actor_mean.bias.copy_(torch.tensor([20., -20.]))
+        cfg = config()
+        ps = cfg.patch_size
         d = torch.randn(6, 3, DYNAMICS_DIM)
-        p = torch.randn(6, 3, 4, 32, 32)
+        p = torch.randn(6, 3, 4, ps, ps)
         a = torch.randn(6, 3, 2)
         mask = torch.tensor([[0., 0., 1.]] * 6)
         z = torch.randn(6, 2)
@@ -134,13 +136,18 @@ class PPOContractTests(unittest.TestCase):
         cfg, model, _, buffer, _, _ = self.collect()
         batch = next(buffer.get_batches(8))
         with torch.no_grad():
-            joint, value = model(batch.dynamics, batch.patches, batch.act_history, batch.valid_mask)
+            joint, value = model(batch.dynamics, batch.patches, batch.act_history, batch.valid_mask,
+                                 **batch.sparse_kwargs())
             for i in range(len(batch.actions)):
+                sparse = {k: None if v is None else v[i:i+1] for k, v in batch.sparse_kwargs().items()}
                 dist, v = model(batch.dynamics[i:i+1], batch.patches[i:i+1],
-                                batch.act_history[i:i+1], batch.valid_mask[i:i+1])
+                                batch.act_history[i:i+1], batch.valid_mask[i:i+1], **sparse)
                 torch.testing.assert_close(dist.mean[0], joint.mean[i], atol=1e-6, rtol=1e-5)
                 torch.testing.assert_close(v[0], value[i], atol=1e-5, rtol=1e-5)
-        self.assertEqual(buffer.patch_storage_bytes(), buffer.size * 4 * 32 * 32 * 4)
+        self.assertEqual(
+            buffer.patch_storage_bytes(),
+            buffer.size * cfg.patch_channels * cfg.patch_size * cfg.patch_size * 4,
+        )
 
     def test_cached_geometry_matches_uncached_geometry(self):
         rng = np.random.default_rng(1)
@@ -181,9 +188,11 @@ class PPOContractTests(unittest.TestCase):
         states[:, 1] = 5
         trajectory = Trajectory(states, np.zeros((7, 2)), contact=np.zeros((8, 5)))
         metrics, trace = score_corridor_episode(trajectory, route, 5, 3)
-        self.assertEqual(metrics["arrival_steps"], 7)
+        self.assertEqual(metrics["arrival_steps"], 5)
+        self.assertTrue(metrics["success"])
         self.assertEqual(trace[0]["contact_enter"], [0, 0, 0])
         self.assertEqual(summarize([{**metrics, "mode": "deterministic"}])["deterministic"]["success_rate"], 1)
+        self.assertEqual(summarize([{**metrics, "mode": "deterministic"}])["deterministic"]["arrival_count"], 1)
         states[1:, 0] = 6  # jump exceeds max-step; no credit
         self.assertFalse(score_corridor_episode(trajectory, route, 5, 1)[0]["success"])
 

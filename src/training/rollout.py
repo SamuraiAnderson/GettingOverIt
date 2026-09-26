@@ -198,6 +198,16 @@ def _build_history_window(
     return dyn_window, pat_window, act_window, valid_mask
 
 
+def _pad_sparse_history(contour_h, mask_h, rel_h, rmask_h, ctx):
+    if not contour_h:
+        raise ValueError("sparse history is empty; append the current frame before padding")
+    contour, _ = left_pad_sequence(np.asarray(contour_h[-ctx:]), ctx)
+    mask, _ = left_pad_sequence(np.asarray(mask_h[-ctx:]), ctx)
+    relation, _ = left_pad_sequence(np.asarray(rel_h[-ctx:]), ctx)
+    rmask, _ = left_pad_sequence(np.asarray(rmask_h[-ctx:]), ctx)
+    return contour, mask, relation, rmask
+
+
 class RolloutWorker:
     """
     数据采集工作器。
@@ -250,6 +260,7 @@ class RolloutWorker:
         self._body_local: list[np.ndarray] | None = None
         self._body_only_local: np.ndarray | None = None
         self._pot_only_local: np.ndarray | None = None
+        self._sparse_cache = None
         self._contact_cfg: ContactConfig = ContactConfig(
             tip_angle_source=self.config.tip_angle_source,
             tip_angle_offset_deg=self.config.tip_angle_offset,
@@ -308,6 +319,13 @@ class RolloutWorker:
         self._body_local = extract_body_local(player_data)
         # 按名称拆分：body_contact / pot_contact 需分别对独立多边形做距离查询
         self._body_only_local, self._pot_only_local = split_body_pot_local(player_data)
+        from .sparse_geometry import SparseGeometryCache
+        self._sparse_cache = (
+            SparseGeometryCache.build(
+                polygons, self._tip_local, self._body_only_local, self._pot_only_local,
+            )
+            if self.config.sparse_geometry else None
+        )
 
         if not self.config.deploy_tip_obstacle_check:
             self._tip_cfg = None
@@ -587,6 +605,10 @@ class RolloutWorker:
         dyn_history = [[] for _ in range(num_agents)]
         act_history = [[] for _ in range(num_agents)]
         patch_history = [[] for _ in range(num_agents)]
+        contour_history = [[] for _ in range(num_agents)]
+        cmask_history = [[] for _ in range(num_agents)]
+        relation_history = [[] for _ in range(num_agents)]
+        rmask_history = [[] for _ in range(num_agents)]
         contact_prev: dict[int, ContactPrevState] = {}
 
         c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
@@ -603,19 +625,30 @@ class RolloutWorker:
                 tip_local=self._tip_local, body_local=self._body_local,
             )
             dynamics = build_dynamics(obs, contact_now)
+            sparse = self._ppo_sparse(obs)
 
             actions = np.zeros((num_agents, 2), dtype=np.float32)
             for i in range(num_agents):
                 dyn_history[i].append(dynamics[i].copy())
                 patch_history[i].append(patches[i].copy())
+                contour_history[i].append(sparse[0][i].copy())
+                cmask_history[i].append(sparse[1][i].copy())
+                relation_history[i].append(sparse[2][i].copy())
+                rmask_history[i].append(sparse[3][i].copy())
 
                 dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                     dyn_history[i], patch_history[i], act_history[i],
                     ctx,
                 )
+                ct, cm, rt, rm = _pad_sparse_history(
+                    contour_history[i], cmask_history[i],
+                    relation_history[i], rmask_history[i], ctx,
+                )
 
                 pred = model.predict(
-                    dyn_window, pat_window, act_window, valid_mask=valid_mask
+                    dyn_window, pat_window, act_window, valid_mask=valid_mask,
+                    contour_tokens=ct, contour_mask=cm,
+                    relation_tokens=rt, relation_mask=rm,
                 )
                 noise = np.random.normal(0, noise_std * scale, size=2).astype(np.float32)
                 actions[i] = np.clip(pred + noise, -scale, scale)
@@ -657,6 +690,21 @@ class RolloutWorker:
             solid_polygons=self._solid_polygons, tip_local=self._tip_local,
             body_local=self._body_local, guidance_arrays=guidance,
         )
+
+    def _ppo_sparse(self, obs):
+        from .sparse_geometry import build_sparse_geometry, empty_sparse_frame
+        blank = empty_sparse_frame(self.config)
+        n = len(obs)
+        contour = np.zeros((n, *blank[0].shape), dtype=np.float32)
+        cmask = np.zeros((n, *blank[1].shape), dtype=np.float32)
+        relation = np.zeros((n, *blank[2].shape), dtype=np.float32)
+        rmask = np.zeros((n, *blank[3].shape), dtype=np.float32)
+        cache = self._sparse_cache
+        for i in range(n):
+            contour[i], cmask[i], relation[i], rmask[i] = build_sparse_geometry(
+                obs[i], cache, self.config,
+            )
+        return contour, cmask, relation, rmask
 
     def collect_ppo(
         self,
@@ -744,6 +792,10 @@ class RolloutWorker:
         dyn_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
         act_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
         patch_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        contour_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        cmask_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        relation_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        rmask_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
 
         # OU（时序连贯探索噪声）per-agent AR(1) 状态。
         # z_prev 初值 ~ N(0,1)：保证第 0 步条件采样的 z_0 仍 marginal N(0,1)
@@ -786,6 +838,7 @@ class RolloutWorker:
         for step in range(n_steps):
             phase_start = time.perf_counter()
             patches = self._ppo_patches(obs, eff_map, trackers)
+            sparse = self._ppo_sparse(obs)
             timings["patch"] += time.perf_counter() - phase_start
             dynamics = build_dynamics(obs, contact_now)
 
@@ -797,16 +850,26 @@ class RolloutWorker:
             for i in active:
                 dyn_history[i].append(dynamics[i].copy())
                 patch_history[i].append(patches[i].copy())
-                windows[i] = _build_history_window(
-                    dyn_history[i], patch_history[i], act_history[i],
-                    ctx,
+                contour_history[i].append(sparse[0][i].copy())
+                cmask_history[i].append(sparse[1][i].copy())
+                relation_history[i].append(sparse[2][i].copy())
+                rmask_history[i].append(sparse[3][i].copy())
+                windows[i] = (
+                    *_build_history_window(
+                        dyn_history[i], patch_history[i], act_history[i],
+                        ctx,
+                    ),
+                    *_pad_sparse_history(
+                        contour_history[i], cmask_history[i],
+                        relation_history[i], rmask_history[i], ctx,
+                    ),
                 )
             inference_batch = self.config.ppo_inference_batch_size or max(1, len(active))
             for start in range(0, len(active), inference_batch):
                 ids = active[start:start + inference_batch]
-                dyn_t, pat_t, act_t, vm_t = (
+                dyn_t, pat_t, act_t, vm_t, ct_t, cm_t, rt_t, rm_t = (
                     torch.from_numpy(np.stack([windows[i][k] for i in ids])).to(device)
-                    for k in range(4)
+                    for k in range(8)
                 )
                 z_prev_t = torch.from_numpy(np.stack([ou_state[i] for i in ids])).to(device)
                 with torch.no_grad():
@@ -814,6 +877,8 @@ class RolloutWorker:
                         dyn_t, pat_t, act_t, valid_mask=vm_t,
                         noise_prev=z_prev_t, noise_phi=ou_phi,
                         deterministic=deterministic,
+                        contour_tokens=ct_t, contour_mask=cm_t,
+                        relation_tokens=rt_t, relation_mask=rm_t,
                     )
                 output = [tensor.detach().cpu().numpy() for tensor in
                           (av.action, av.raw_action, av.log_prob, av.value, av.noise)]
@@ -844,7 +909,7 @@ class RolloutWorker:
             for i in stable_agents:
                 if i not in step_data:
                     continue
-                dw, pw, aw, vm, lp, val, np_prev, latent = step_data[i]
+                dw, pw, aw, vm, ct, cm, rt, rm, lp, val, np_prev, latent = step_data[i]
                 reward, running_max_y[i] = step_reward(
                     prev_obs[i], new_obs[i], eff_map, self.config,
                     running_max_y=running_max_y[i],
@@ -877,6 +942,10 @@ class RolloutWorker:
                     noise_prev=np_prev,
                     raw_action=latent,
                     patch_frames=tuple(patch_history[i][-ctx:]),
+                    contour_window=ct,
+                    contour_mask_window=cm,
+                    relation_window=rt,
+                    relation_mask_window=rm,
                 )
                 act_history[i].append(actions_batch[i].copy())
                 raw_states[i].append(new_obs[i].copy())
@@ -898,6 +967,7 @@ class RolloutWorker:
         # per-agent bootstrap value + GAE
         phase_start = time.perf_counter()
         patches = self._ppo_patches(obs, eff_map, trackers)
+        sparse = self._ppo_sparse(obs)
         # bootstrap 帧的 contact：接续 rollout 末尾 prev 状态，保证 grip 判定连续
         dynamics = build_dynamics(obs, contact_now)
         for i in stable_agents:
@@ -906,16 +976,30 @@ class RolloutWorker:
                 continue
             dyn_history[i].append(dynamics[i].copy())
             patch_history[i].append(patches[i].copy())
+            contour_history[i].append(sparse[0][i].copy())
+            cmask_history[i].append(sparse[1][i].copy())
+            relation_history[i].append(sparse[2][i].copy())
+            rmask_history[i].append(sparse[3][i].copy())
             dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                 dyn_history[i], patch_history[i], act_history[i],
                 ctx,
+            )
+            ct, cm, rt, rm = _pad_sparse_history(
+                contour_history[i], cmask_history[i],
+                relation_history[i], rmask_history[i], ctx,
             )
             dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
             pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)
             act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
             vm_t = torch.from_numpy(valid_mask[np.newaxis].astype(np.float32)).to(device)
             with torch.no_grad():
-                _, v = model.forward(dyn_t, pat_t, act_t, valid_mask=vm_t)
+                _, v = model.forward(
+                    dyn_t, pat_t, act_t, valid_mask=vm_t,
+                    contour_tokens=torch.from_numpy(ct[np.newaxis]).to(device),
+                    contour_mask=torch.from_numpy(cm[np.newaxis]).to(device),
+                    relation_tokens=torch.from_numpy(rt[np.newaxis]).to(device),
+                    relation_mask=torch.from_numpy(rm[np.newaxis]).to(device),
+                )
             agent_buffers[i].compute_gae(
                 last_value=v.item(),
                 gamma=self.config.gamma,

@@ -22,8 +22,8 @@ from torch.distributions import Normal
 
 from .contact_features import CONTACT_DIM
 from .dataset import BASE_DYNAMICS_DIM, DYNAMICS_DIM
-from .model import (DualScaleSpatialEncoder, _DynamicsNormMixin, build_attn_mask,
-                    expand_state_dict_for_dynamics_dim)
+from .model import (DualScaleSpatialEncoder, SparseGeometryMixin, _DynamicsNormMixin,
+                    build_attn_mask, expand_state_dict_for_dynamics_dim)
 
 if TYPE_CHECKING:
     from .config import TrainConfig
@@ -41,13 +41,13 @@ class ActionValue(NamedTuple):
     raw_action: torch.Tensor | None = None
 
 
-class ActorCritic(_DynamicsNormMixin, nn.Module):
+class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
     """
     共享 backbone 的 Actor-Critic 网络。
 
     输入格式与 ActionPredictor 相同：
     - dynamics: (B, T, state_dim)
-    - patches:  (B, T, 4, 32, 32)
+    - patches:  (B, T, C, H, H)  # H = config.patch_size
     - actions:  (B, T, 2)
     - valid_mask: (B, T) 可选，1=有效 0=左填充
 
@@ -108,6 +108,8 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         self._init_weights()
         if config.contact_heads_enabled:
             self.actor_mean_contact.load_state_dict(self.actor_mean.state_dict())
+        # 新模块挂在参数列表末尾，旧 checkpoint / optimizer 下标仍对齐。
+        self._init_sparse_encoders(config)
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """34D / 单头旧权重迁移：两头复制旧均值，接触头降低初始探索方差。"""
@@ -195,6 +197,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         patches: torch.Tensor,
         actions: torch.Tensor,
         valid_mask: torch.Tensor | None = None,
+        contour_tokens: torch.Tensor | None = None,
+        contour_mask: torch.Tensor | None = None,
+        relation_tokens: torch.Tensor | None = None,
+        relation_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """共享特征提取，返回最后一个 token 的 embedding (B, d)。"""
         B, T, _ = dynamics.shape
@@ -209,6 +215,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
 
         fused = torch.cat([dyn_feat, spat_feat], dim=-1)
         obs_embed = self.fusion(fused)
+        obs_embed = obs_embed + self._sparse_residual(
+            B * T, dynamics.device, dyn_feat.dtype,
+            contour_tokens, contour_mask, relation_tokens, relation_mask,
+        ).reshape(B, T, d)
 
         act_embed = self.action_proj(actions)
 
@@ -300,6 +310,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         patches: torch.Tensor,
         actions: torch.Tensor,
         valid_mask: torch.Tensor | None = None,
+        contour_tokens: torch.Tensor | None = None,
+        contour_mask: torch.Tensor | None = None,
+        relation_tokens: torch.Tensor | None = None,
+        relation_mask: torch.Tensor | None = None,
     ) -> tuple[Normal, torch.Tensor]:
         """
         返回 (distribution_on_raw_space, value)。
@@ -307,7 +321,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         注意：返回的 Normal 分布是 squash 之前的。
         调用方需通过 get_action_and_value / evaluate_actions 获取修正后的量。
         """
-        feat = self._backbone(dynamics, patches, actions, valid_mask)
+        feat = self._backbone(
+            dynamics, patches, actions, valid_mask,
+            contour_tokens, contour_mask, relation_tokens, relation_mask,
+        )
         mean, std = self._actor_parameters(feat, dynamics)
         dist = Normal(mean, std)
         value = self.critic_head(feat).squeeze(-1)
@@ -343,6 +360,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         noise_prev: torch.Tensor | None = None,
         noise_phi: float = 0.0,
         deterministic: bool = False,
+        contour_tokens: torch.Tensor | None = None,
+        contour_mask: torch.Tensor | None = None,
+        relation_tokens: torch.Tensor | None = None,
+        relation_mask: torch.Tensor | None = None,
     ) -> ActionValue:
         """
         采集用：从策略中采样动作，返回 (squashed_action, log_prob, value, noise=z_t)。
@@ -354,7 +375,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         否则退化为 iid 高斯（原行为）。
         返回 ActionValue.noise = z_t（供调用方作为下一步的 noise_prev）。
         """
-        dist, value = self.forward(dynamics, patches, actions, valid_mask)
+        dist, value = self.forward(
+            dynamics, patches, actions, valid_mask,
+            contour_tokens, contour_mask, relation_tokens, relation_mask,
+        )
         mean = dist.mean
         std = dist.stddev
 
@@ -383,6 +407,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         noise_prev: torch.Tensor | None = None,
         noise_phi: float = 0.0,
         raw_actions: torch.Tensor | None = None,
+        contour_tokens: torch.Tensor | None = None,
+        contour_mask: torch.Tensor | None = None,
+        relation_tokens: torch.Tensor | None = None,
+        relation_mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         训练用：对已执行的动作重新计算 log_prob、entropy、value。
@@ -393,7 +421,10 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         returns: (log_prob, entropy, value)。log_prob 与 entropy 按条件高斯口径，
         与采集时一致 → 保证 ratio = exp(new_lp - old_lp) 无系统偏差。
         """
-        dist, value = self.forward(dynamics, patches, act_history, valid_mask)
+        dist, value = self.forward(
+            dynamics, patches, act_history, valid_mask,
+            contour_tokens, contour_mask, relation_tokens, relation_mask,
+        )
         mean = dist.mean
         std = dist.stddev
 
@@ -421,12 +452,16 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
         patches: np.ndarray,
         action_history: np.ndarray,
         valid_mask: np.ndarray | None = None,
+        contour_tokens: np.ndarray | None = None,
+        contour_mask: np.ndarray | None = None,
+        relation_tokens: np.ndarray | None = None,
+        relation_mask: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         确定性推理（评估用）：直接用 mean，不采样。
 
         dynamics: (T, state_dim) 或 (1, T, state_dim)
-        patches: (T, 4, 32, 32) 或 (1, T, 4, 32, 32)
+        patches: (T, C, H, H) 或 (1, T, C, H, H)
         action_history: (T, 2) 或 (1, T, 2)
         valid_mask: (T,) 或 (1, T) 可选，1=有效 0=左填充
         returns: (2,)
@@ -450,7 +485,19 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
             vm = valid_mask[np.newaxis] if valid_mask.ndim == 1 else valid_mask
             vm_t = torch.from_numpy(vm.astype(np.float32)).to(device)
 
-        feat = self._backbone(dyn_t, pat_t, act_t, vm_t)
+        def _opt(arr, min_ndim):
+            if arr is None:
+                return None
+            arr = np.asarray(arr, dtype=np.float32)
+            if arr.ndim == min_ndim:
+                arr = arr[np.newaxis]
+            return torch.from_numpy(arr).to(device)
+
+        feat = self._backbone(
+            dyn_t, pat_t, act_t, vm_t,
+            _opt(contour_tokens, 3), _opt(contour_mask, 2),
+            _opt(relation_tokens, 3), _opt(relation_mask, 2),
+        )
         mean, _ = self._actor_parameters(feat, dyn_t)
         action = self._squash_action(mean)
         return action.cpu().numpy().squeeze(0)

@@ -19,6 +19,13 @@ import torch
 logger = logging.getLogger(__name__)
 
 
+def _stack_optional(rows: list, idx, device):
+    picked = [rows[i] for i in idx]
+    if not picked or any(item is None for item in picked):
+        return None
+    return torch.from_numpy(np.stack(picked)).to(device)
+
+
 @dataclass(frozen=True)
 class PatchWindow:
     """References to immutable per-frame patches; materialize only a minibatch."""
@@ -38,7 +45,7 @@ class PatchWindow:
 class PPOBatch:
     """PPO 训练用的一个 minibatch。"""
     dynamics: torch.Tensor       # (B, T, state_dim)
-    patches: torch.Tensor        # (B, T, 4, 32, 32)
+    patches: torch.Tensor        # (B, T, C, H, H)
     act_history: torch.Tensor    # (B, T, 2)
     valid_mask: torch.Tensor     # (B, T)
     actions: torch.Tensor        # (B, 2)
@@ -50,6 +57,20 @@ class PPOBatch:
     # iid 模式恒为零向量，evaluate_actions 会在 noise_phi=0 时忽略。
     noise_prev: torch.Tensor     # (B, 2)
     raw_actions: torch.Tensor    # (B, 2), before tanh; never reconstruct saturated samples
+    contour_tokens: torch.Tensor | None = None
+    contour_mask: torch.Tensor | None = None
+    relation_tokens: torch.Tensor | None = None
+    relation_mask: torch.Tensor | None = None
+
+    def sparse_kwargs(self) -> dict:
+        if self.contour_tokens is None:
+            return {}
+        return {
+            "contour_tokens": self.contour_tokens,
+            "contour_mask": self.contour_mask,
+            "relation_tokens": self.relation_tokens,
+            "relation_mask": self.relation_mask,
+        }
 
 
 class PPORolloutBuffer:
@@ -74,6 +95,10 @@ class PPORolloutBuffer:
         # 每步 OU 前一步归一化噪声 z_{t-1}，iid 模式下存零向量（无条件效应）
         self._noise_prev: list[np.ndarray] = []
         self._raw_actions: list[np.ndarray] = []
+        self._contours: list = []
+        self._cmasks: list = []
+        self._relations: list = []
+        self._rmasks: list = []
         self.policy_context: dict = {}
 
         self._advantages: np.ndarray | None = None
@@ -98,6 +123,10 @@ class PPORolloutBuffer:
         *,
         raw_action: np.ndarray,
         patch_frames: tuple[np.ndarray, ...] | None = None,
+        contour_window: np.ndarray | None = None,
+        contour_mask_window: np.ndarray | None = None,
+        relation_window: np.ndarray | None = None,
+        relation_mask_window: np.ndarray | None = None,
     ) -> None:
         """添加一个 timestep；NaN/Inf 中止本轮，避免跨缺失步骤计算 GAE。
 
@@ -109,6 +138,10 @@ class PPORolloutBuffer:
         if patch_frames is not None and (not patch_frames or len(patch_frames) > len(valid_mask_window)):
             raise ValueError("Patch frame history must fit the observation window")
 
+        sparse_ok = all(
+            arr is None or np.isfinite(arr).all()
+            for arr in (contour_window, contour_mask_window, relation_window, relation_mask_window)
+        )
         if not (
             np.isfinite(dynamics_window).all()
             and np.isfinite(patch_window).all()
@@ -120,6 +153,7 @@ class PPORolloutBuffer:
             and np.isfinite(raw_action).all()
             and np.isfinite(act_history_window).all()
             and np.isfinite(valid_mask_window).all()
+            and sparse_ok
         ):
             logger.warning(
                 "Invalid timestep with NaN/Inf: "
@@ -144,6 +178,10 @@ class PPORolloutBuffer:
         self._dones.append(done)
         self._noise_prev.append(noise_prev.astype(np.float32))
         self._raw_actions.append(np.asarray(raw_action, dtype=np.float32).copy())
+        self._contours.append(None if contour_window is None else np.asarray(contour_window, np.float32))
+        self._cmasks.append(None if contour_mask_window is None else np.asarray(contour_mask_window, np.float32))
+        self._relations.append(None if relation_window is None else np.asarray(relation_window, np.float32))
+        self._rmasks.append(None if relation_mask_window is None else np.asarray(relation_mask_window, np.float32))
 
     def compute_gae(
         self,
@@ -209,6 +247,10 @@ class PPORolloutBuffer:
                 old_values=torch.from_numpy(values_arr[idx]).to(self.device),
                 noise_prev=torch.from_numpy(noise_prev_arr[idx]).to(self.device),
                 raw_actions=torch.from_numpy(raw_actions_arr[idx]).to(self.device),
+                contour_tokens=_stack_optional(self._contours, idx, self.device),
+                contour_mask=_stack_optional(self._cmasks, idx, self.device),
+                relation_tokens=_stack_optional(self._relations, idx, self.device),
+                relation_mask=_stack_optional(self._rmasks, idx, self.device),
             )
 
     @classmethod
@@ -234,6 +276,10 @@ class PPORolloutBuffer:
             merged._dones.extend(b._dones)
             merged._noise_prev.extend(b._noise_prev)
             merged._raw_actions.extend(b._raw_actions)
+            merged._contours.extend(b._contours)
+            merged._cmasks.extend(b._cmasks)
+            merged._relations.extend(b._relations)
+            merged._rmasks.extend(b._rmasks)
         merged.policy_context = dict(buffers[0].policy_context)
         merged._advantages = np.concatenate([b._advantages for b in buffers])
         merged._returns = np.concatenate([b._returns for b in buffers])
@@ -252,6 +298,10 @@ class PPORolloutBuffer:
         self._dones.clear()
         self._noise_prev.clear()
         self._raw_actions.clear()
+        self._contours.clear()
+        self._cmasks.clear()
+        self._relations.clear()
+        self._rmasks.clear()
         self.policy_context.clear()
         self._advantages = None
         self._returns = None
@@ -276,6 +326,11 @@ class PPORolloutBuffer:
             windows.append(index)
         arrays["patch_frames"] = np.stack(frames)
         arrays["patch_indices"] = np.array(windows, dtype=np.int32)
+        if self._contours and all(item is not None for item in self._contours):
+            arrays["contours"] = np.stack(self._contours)
+            arrays["cmasks"] = np.stack(self._cmasks)
+            arrays["relations"] = np.stack(self._relations)
+            arrays["rmasks"] = np.stack(self._rmasks)
         np.savez_compressed(path, **arrays, advantages=self._advantages, returns=self._returns,
                             metadata=json.dumps({"version": 2, "policy_context": self.policy_context}))
 
@@ -309,4 +364,15 @@ class PPORolloutBuffer:
                                    for ids in data["patch_indices"]]
             buffer._advantages = data["advantages"]
             buffer._returns = data["returns"]
+            n = buffer.size
+            if "contours" in data.files:
+                buffer._contours = list(data["contours"])
+                buffer._cmasks = list(data["cmasks"])
+                buffer._relations = list(data["relations"])
+                buffer._rmasks = list(data["rmasks"])
+            else:
+                buffer._contours = [None] * n
+                buffer._cmasks = [None] * n
+                buffer._relations = [None] * n
+                buffer._rmasks = [None] * n
         return buffer

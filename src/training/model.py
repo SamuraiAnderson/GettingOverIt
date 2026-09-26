@@ -4,7 +4,7 @@ ActionPredictor — 多模态 Transformer 动作预测网络。
 双模态输入:
 - 动力学分支: Linear(DYNAMICS_DIM, d_model) 编码动力学特征
   （速度/角速度 + 角度 sin/cos + 部件相对坐标 + 绝对高度），并做观测归一化
-- 空间感知分支: CNN(4ch, 32x32) → 128D 局部 patch
+- 空间感知分支: CNN(4ch, patch_size×patch_size) → 128D 局部 patch
 融合后送入 Transformer Encoder，交错拼接 [obs, act] 序列，预测 a_{t+1}。
 左填充位通过 key_padding_mask 在注意力中被忽略。
 """
@@ -24,29 +24,122 @@ if TYPE_CHECKING:
     from .config import TrainConfig
 
 
-class SpatialEncoder(nn.Module):
-    """CNN 编码 in_channels 通道 32x32 局部 patch → out_dim 维特征（单分支）。"""
+def _spatial_conv_stack(in_channels: int, d_model: int, spatial_size: int) -> nn.Sequential:
+    """Conv–ReLU–pool until 4×4, then Linear(C·16 → d_model).
 
-    def __init__(self, in_channels: int = 4, d_model: int = 128):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Conv2d(in_channels, 32, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),   # 32 -> 16
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),   # 16 -> 8
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),   # 8 -> 4
-            nn.Flatten(),      # 128 * 4 * 4 = 2048
-            nn.Linear(128 * 4 * 4, d_model),
-            nn.ReLU(),
+    32×32 走原来的三层（通道 32/64/128）；64×64 多一层 128 通道，仍落到 4×4。
+    """
+    if spatial_size < 8 or spatial_size & (spatial_size - 1):
+        raise ValueError(f"patch spatial size must be a power of 2 >= 8, got {spatial_size}")
+    layers: list[nn.Module] = []
+    in_c = in_channels
+    out_c = 32
+    size = spatial_size
+    while size > 4:
+        layers.extend(
+            [
+                nn.Conv2d(in_c, out_c, kernel_size=3, padding=1),
+                nn.ReLU(),
+                nn.MaxPool2d(2),
+            ]
         )
+        in_c = out_c
+        out_c = min(128, out_c * 2)
+        size //= 2
+    layers.extend(
+        [
+            nn.Flatten(),
+            nn.Linear(in_c * 4 * 4, d_model),
+            nn.ReLU(),
+        ]
+    )
+    return nn.Sequential(*layers)
+
+
+class SpatialEncoder(nn.Module):
+    """CNN 编码 in_channels 通道 patch_size×patch_size 局部 patch → out_dim 维特征（单分支）。"""
+
+    def __init__(self, in_channels: int = 4, d_model: int = 128, spatial_size: int = 32):
+        super().__init__()
+        self.spatial_size = spatial_size
+        self.net = _spatial_conv_stack(in_channels, d_model, spatial_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """x: (N, C, 32, 32) → (N, d_model)"""
+        """x: (N, C, H, H) → (N, d_model)，H 必须等于 spatial_size。"""
         return self.net(x)
+
+
+class TokenSetEncoder(nn.Module):
+    """Shared MLP + per-group mean/max pool. Empty groups contribute zeros."""
+
+    def __init__(self, in_dim: int, hidden: int, n_groups: int, d_model: int):
+        super().__init__()
+        self.n_groups = n_groups
+        self.mlp = nn.Sequential(
+            nn.Linear(in_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+        )
+        self.proj = nn.Linear(hidden * n_groups * 2, d_model)
+        nn.init.zeros_(self.proj.weight)
+        nn.init.zeros_(self.proj.bias)
+
+    def forward(self, tokens: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        """tokens (N, K, F), mask (N, K) → (N, d_model). Group = argmax of leading one-hot."""
+        encoded = self.mlp(tokens)
+        group = tokens[..., : self.n_groups].argmax(dim=-1)
+        pieces = []
+        for g in range(self.n_groups):
+            gm = mask * (group == g).to(mask.dtype)
+            count = gm.sum(dim=1).clamp(min=1.0).unsqueeze(-1)
+            weighted = encoded * gm.unsqueeze(-1)
+            mean = weighted.sum(dim=1) / count
+            filled = encoded.masked_fill(gm.unsqueeze(-1) < 0.5, -1e9)
+            pooled = filled.max(dim=1).values
+            empty = gm.sum(dim=1, keepdim=True) < 0.5
+            mean = mean.masked_fill(empty, 0.0)
+            pooled = pooled.masked_fill(empty, 0.0)
+            pieces.extend([mean, pooled])
+        return self.proj(torch.cat(pieces, dim=-1))
+
+
+class SparseGeometryMixin:
+    def _init_sparse_encoders(self, config: TrainConfig):
+        from .sparse_geometry import CONTOUR_DIM, N_CONTOUR_CLASS, N_RELATION_PART, RELATION_DIM
+        if config.sparse_geometry:
+            hidden = config.sparse_mlp_hidden
+            self.contour_encoder = TokenSetEncoder(CONTOUR_DIM, hidden, N_CONTOUR_CLASS, config.d_model)
+            self.relation_encoder = TokenSetEncoder(RELATION_DIM, hidden, N_RELATION_PART, config.d_model)
+        else:
+            self.contour_encoder = None
+            self.relation_encoder = None
+
+    def _sparse_residual(
+        self,
+        batch_time: int,
+        device: torch.device,
+        dtype: torch.dtype,
+        contour_tokens: torch.Tensor | None,
+        contour_mask: torch.Tensor | None,
+        relation_tokens: torch.Tensor | None,
+        relation_mask: torch.Tensor | None,
+    ) -> torch.Tensor:
+        d = self.config.d_model
+        if self.contour_encoder is None:
+            return torch.zeros(batch_time, d, device=device, dtype=dtype)
+        residual = torch.zeros(batch_time, d, device=device, dtype=dtype)
+        if contour_tokens is not None and contour_mask is not None:
+            residual = residual + self.contour_encoder(
+                contour_tokens.reshape(batch_time, *contour_tokens.shape[-2:]),
+                contour_mask.reshape(batch_time, contour_mask.shape[-1]),
+            )
+        if relation_tokens is not None and relation_mask is not None:
+            residual = residual + self.relation_encoder(
+                relation_tokens.reshape(batch_time, *relation_tokens.shape[-2:]),
+                relation_mask.reshape(batch_time, relation_mask.shape[-1]),
+            )
+        return residual
 
 
 class DualScaleSpatialEncoder(nn.Module):
@@ -62,16 +155,16 @@ class DualScaleSpatialEncoder(nn.Module):
         super().__init__()
         self.mode = config.patch_mode
         if self.mode == "legacy":
-            self.encoder = SpatialEncoder(config.patch_channels, d_model)
+            self.encoder = SpatialEncoder(config.patch_channels, d_model, config.patch_size)
         else:
             self.wide_channels = config.wide_channels
             half = d_model // 2
-            self.wide = SpatialEncoder(config.wide_channels, half)
-            self.contact = SpatialEncoder(config.contact_channels, d_model - half)
+            self.wide = SpatialEncoder(config.wide_channels, half, config.patch_size)
+            self.contact = SpatialEncoder(config.contact_channels, d_model - half, config.patch_size)
             self.proj = nn.Linear(half + (d_model - half), d_model)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """x: (N, C, 32, 32) → (N, d_model)"""
+        """x: (N, C, H, H) → (N, d_model)"""
         if self.mode == "legacy":
             return self.encoder(x)
         w = self.wide(x[:, : self.wide_channels])
@@ -170,7 +263,8 @@ def expand_state_dict_for_dynamics_dim(
       - `dyn_mean`: (old,) → (new,)，新元素 pad 0（等价"零均值假设，后续 warmup 再重标定"）
       - `dyn_std`: (old,) → (new,)，新元素 pad 1（避免除零）
 
-    其他 shape 一致的 key 原样返回；其他 shape 不一致的 key 保留原值，
+    缺省的 `contour_encoder.*` / `relation_encoder.*` 用当前模型的初始化值补齐
+    （输出投影为零，残差起手为 0）。其他 shape 不一致的 key 保留原值，
     由 `load_state_dict(strict=False/True)` 自行报错，让不预期的迁移显式暴露。
 
     典型使用：
@@ -211,6 +305,9 @@ def expand_state_dict_for_dynamics_dim(
                     key, tuple(old.shape), tuple(cur.shape), pad_val,
                 )
 
+    for key, cur in current_state.items():
+        if key not in out and key.startswith(("contour_encoder.", "relation_encoder.")):
+            out[key] = cur
     return out
 
 
@@ -254,13 +351,13 @@ def expand_optimizer_state_for_dynamics_dim(
     return optim_state
 
 
-class ActionPredictor(_DynamicsNormMixin, nn.Module):
+class ActionPredictor(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
     """
     Transformer 动作预测网络。
 
     输入: (dynamics, patches, actions) → 预测 a_{t+1}
     - dynamics: (B, T, DYNAMICS_DIM=39)  # 34 base + 5 接触信号（见 contact_features）
-    - patches: (B, T, 4, 32, 32)
+    - patches: (B, T, C, H, H)  # H = config.patch_size
     - actions: (B, T, 2)
 
     序列构造: 交错拼接 [obs_0, act_0, obs_1, act_1, ..., obs_{T-1}, act_{T-1}]
@@ -306,6 +403,7 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
         self.action_head = nn.Linear(d, config.action_dim)
 
         self._action_scale = config.action_scale
+        self._init_sparse_encoders(config)
 
     def _causal_mask(self, seq_len: int, device: torch.device) -> torch.Tensor:
         """生成上三角 causal mask，防止看到未来信息。"""
@@ -320,12 +418,16 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
         patches: torch.Tensor,
         actions: torch.Tensor,
         valid_mask: torch.Tensor | None = None,
+        contour_tokens: torch.Tensor | None = None,
+        contour_mask: torch.Tensor | None = None,
+        relation_tokens: torch.Tensor | None = None,
+        relation_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         训练前向。
 
         dynamics: (B, T, state_dim)
-        patches: (B, T, 4, 32, 32)
+        patches: (B, T, C, H, H)
         actions: (B, T, 2)
         valid_mask: (B, T) 可选，1=有效 0=左填充；填充位在注意力中被忽略
         returns: (B, 2)
@@ -340,13 +442,17 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
         dyn_feat = self.dynamics_proj(dynamics)  # (B, T, d)
 
         # 空间分支: reshape → CNN → reshape
-        patches_flat = patches.reshape(B * T, *patches.shape[2:])  # (B*T, 4, 32, 32)
+        patches_flat = patches.reshape(B * T, *patches.shape[2:])  # (B*T, C, H, H)
         spat_feat = self.spatial_encoder(patches_flat)  # (B*T, d)
         spat_feat = spat_feat.reshape(B, T, d)  # (B, T, d)
 
         # 融合
         fused = torch.cat([dyn_feat, spat_feat], dim=-1)  # (B, T, 2d)
         obs_embed = self.fusion(fused)  # (B, T, d)
+        obs_embed = obs_embed + self._sparse_residual(
+            B * T, dynamics.device, dyn_feat.dtype,
+            contour_tokens, contour_mask, relation_tokens, relation_mask,
+        ).reshape(B, T, d)
 
         # 动作编码
         act_embed = self.action_proj(actions)  # (B, T, d)
@@ -379,12 +485,16 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
         patches: np.ndarray,
         action_history: np.ndarray,
         valid_mask: np.ndarray | None = None,
+        contour_tokens: np.ndarray | None = None,
+        contour_mask: np.ndarray | None = None,
+        relation_tokens: np.ndarray | None = None,
+        relation_mask: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         单步推理。
 
         dynamics: (T, state_dim) 或 (1, T, state_dim)
-        patches: (T, 4, 32, 32) 或 (1, T, 4, 32, 32)
+        patches: (T, C, H, H) 或 (1, T, C, H, H)
         action_history: (T, 2) 或 (1, T, 2)
         valid_mask: (T,) 或 (1, T) 可选，1=有效 0=左填充
         returns: (2,)
@@ -408,5 +518,19 @@ class ActionPredictor(_DynamicsNormMixin, nn.Module):
             vm = valid_mask[np.newaxis] if valid_mask.ndim == 1 else valid_mask
             vm_t = torch.from_numpy(vm.astype(np.float32)).to(device)
 
-        pred = self.forward(dyn_t, pat_t, act_t, valid_mask=vm_t)  # (1, 2)
+        def _opt(arr, min_ndim):
+            if arr is None:
+                return None
+            arr = np.asarray(arr, dtype=np.float32)
+            if arr.ndim == min_ndim:
+                arr = arr[np.newaxis]
+            return torch.from_numpy(arr).to(device)
+
+        pred = self.forward(
+            dyn_t, pat_t, act_t, valid_mask=vm_t,
+            contour_tokens=_opt(contour_tokens, 3),
+            contour_mask=_opt(contour_mask, 2),
+            relation_tokens=_opt(relation_tokens, 3),
+            relation_mask=_opt(relation_mask, 2),
+        )
         return pred.cpu().numpy().squeeze(0)

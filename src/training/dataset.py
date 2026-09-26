@@ -2,7 +2,7 @@
 轨迹数据集 — 极简存储 + 即时 patch 构建 + peak 截断 + 滑动窗口管理。
 
 轨迹只存原始 33D 状态 + 动作（~70KB/条）。
-地形图静态共享，效率图使用最新版，patch 在 __getitem__ 中即时构建。
+地形图静态共享，效率图使用最新版；4ch 粗图与稀疏几何都在 __getitem__ 中即时构建。
 """
 
 from __future__ import annotations
@@ -540,7 +540,7 @@ class TrajectoryDataset(Dataset):
     """
     轨迹数据集。
 
-    持有全局地形 mask 和效率图引用，在 __getitem__ 中即时构建 4ch patch。
+    持有全局地形 mask 和效率图引用，在 __getitem__ 中即时构建 4ch 粗图与稀疏几何。
     准入策略两条：
       - BC 路径：add_trajectories 做 top-K% 筛选 + trim_oldest FIFO 滑动窗口。
       - PPO/SIL 路径（P1.2）：add_trajectories_map_elites 走 MAP-Elites 网格式行为多样性准入
@@ -574,6 +574,7 @@ class TrajectoryDataset(Dataset):
         self.reference_maps = reference_maps
         self.trajectories: list[Trajectory] = []
         self._index: list[tuple[int, int]] = []  # (traj_idx, window_start)
+        self._sparse_cache = None
 
     def update_efficiency_arr(self, new_arr: np.ndarray | None) -> None:
         """每轮迭代后更新效率图引用。"""
@@ -791,15 +792,30 @@ class TrajectoryDataset(Dataset):
             act_real = acts[max(0, tau - ctx): tau].astype(np.float32)  # (k_act, 2)
         input_actions, _ = left_pad_sequence(act_real, ctx)
 
+        sparse_rows = [self._build_sparse(s) for s in obs_real]
+        contour_real = np.stack([row[0] for row in sparse_rows])
+        cmask_real = np.stack([row[1] for row in sparse_rows])
+        relation_real = np.stack([row[2] for row in sparse_rows])
+        rmask_real = np.stack([row[3] for row in sparse_rows])
+        contours, _ = left_pad_sequence(contour_real, ctx)
+        cmasks, _ = left_pad_sequence(cmask_real, ctx)
+        relations, _ = left_pad_sequence(relation_real, ctx)
+        rmasks, _ = left_pad_sequence(rmask_real, ctx)
+
         # 有效性由观测驱动（与推理 _build_history_window 共用 left_pad_sequence，天然一致）
         target_action = acts[tau].astype(np.float32)
 
+        # 九元组：原五元组观测 + 轮廓/接触关系 token（与 rollout 共用 build_sparse_geometry）
         return (
             torch.from_numpy(dynamics),
             torch.from_numpy(patches),
             torch.from_numpy(input_actions),
             torch.from_numpy(valid_mask),
             torch.from_numpy(target_action),
+            torch.from_numpy(contours),
+            torch.from_numpy(cmasks),
+            torch.from_numpy(relations),
+            torch.from_numpy(rmasks),
         )
 
     def _build_patch(self, step_state: np.ndarray, guidance_id: int | None = None) -> np.ndarray:
@@ -823,3 +839,19 @@ class TrajectoryDataset(Dataset):
             tip_local=self.tip_local,
             body_local=self.body_local,
         )
+
+    def _sparse_geometry_cache(self):
+        if not self.config.sparse_geometry:
+            return None
+        if self._sparse_cache is None:
+            from .sparse_geometry import SparseGeometryCache
+            body = self.body_local[0] if self.body_local else None
+            pot = self.body_local[1] if self.body_local and len(self.body_local) > 1 else None
+            self._sparse_cache = SparseGeometryCache.build(
+                self.solid_polygons or [], self.tip_local, body, pot,
+            )
+        return self._sparse_cache
+
+    def _build_sparse(self, step_state: np.ndarray):
+        from .sparse_geometry import build_sparse_geometry
+        return build_sparse_geometry(step_state, self._sparse_geometry_cache(), self.config)

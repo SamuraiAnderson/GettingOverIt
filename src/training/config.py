@@ -85,25 +85,21 @@ class TrainConfig:
     #   wide  : player 中心，大范围低精度（攀爬效率图，全局引导）
     #   contact: player 中心，中高精度统一接触图（高精度地形 + 锅/body 轮廓 + 锤头轮廓，co-registered）
     patch_mode: str = "dualscale"
-    wide_patch_resolution: float = 2.0    # m/px，wide 分支（64m 窗口）
-    # contact 分支 8.64m 窗口（半径 4.32m）。该半径由锤子几何硬上界反推，**勿随意下调**：
-    #   |hub−player| = 0.3546m（刚性偏移）+ slider 全伸 |tip−hub| = 2.955m（关节硬限位）
-    #   = tip 原点上界 3.31m；PlayerControl IL 里另有 |cursor−player| ≤ 3.5f 硬编码钳制，
-    #   与求解器软性超调后的实测极值(≈3.49m)吻合，故按 3.5m 取设计上界。
-    #   再加 tip 轮廓半径 0.279m（player_contour.json，16 顶点）→ 轮廓需 3.78m；
-    #   再留 2 格地形上下文（锤头全伸时也要能看到它接触的那块地形）→ 需 ≈4.28m。
-    # 旧值 0.2（6.4m 窗口 / 半径 3.2m）不足：约 0.46% 的帧里锤头贴窗边、其接触的地形被裁掉，
-    # 而这些恰是「锤子伸到最远够远处落点」的高价值帧。
-    # 改分辨率而非 patch_size，是为了保持 patch shape (4,32,32) 不变 → checkpoint 完全兼容、
-    # wide 分支不受影响（否则 64m 窗口会被迫跟着变）、CNN 的 Linear(2048) 无需迁移。
-    # 分辨率变粗的代价已被 PART_RASTER_SUBSAMPLES 的面积覆盖率栅格化抵消（见 dataset.py）：
-    # 部件轮廓不再因亚像素宽而漏采，0.27m/px 下 ch3 平均非零像素反而比旧 0.2m/px 二值高约 7×。
-    # 接触向量来自几何距离代理，不受栅格分辨率限制；仍需与原生物理接触对照。
+    wide_patch_resolution: float = 2.0    # m/px，wide 分支（32×2.0 = 64 m 窗口）
+    # contact 粗图 8.64m 窗口（32×0.27，半径 4.32m）。半径由锤子几何硬上界反推，**勿缩小窗口**。
+    # 细交互不靠把 CNN 加到 256²，而走 sparse_geometry（同窗连续轮廓 + 多候选接触关系）。
     # 核验：python -m src.tests.analysis.check_tip_patch_coverage
-    #      python -m src.tests.analysis.diagnose_tip_rasterization
-    contact_patch_resolution: float = 0.27  # m/px，contact 分支（8.64m 窗口，半径 4.32m）
+    contact_patch_resolution: float = 0.27  # m/px，粗 contact 图（8.64m 窗口）
     wide_channels: int = 1                # [0] eff
     contact_channels: int = 3             # [1] 高精度地形, [2] 锅/body 轮廓, [3] 锤头轮廓
+    # 稀疏局部几何：256 格精度的窗口只编码轮廓 token 与接触关系，不进 CNN。
+    # 地形轮廓/法线按已到达的 8.64 m 窗惰性物化，未到达区域不预计算。
+    sparse_geometry: bool = True
+    sparse_window_cells: int = 256
+    sparse_window_meters: float = 8.64
+    sparse_max_contour_tokens: int = 128
+    sparse_relation_k: int = 8
+    sparse_mlp_hidden: int = 32
     # 锅/body 轮廓世界朝向：player→hub 方向 + offset（body 局部 +y=躯干朝上）。
     # 2026-09-19 原生 Transform 对照标定；旧 checkpoint 的显式配置仍按原值恢复。
     body_angle_source: str = "hub"        # hub: player→hub 方向

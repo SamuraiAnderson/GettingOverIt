@@ -22,6 +22,8 @@ from torch.nn.utils import clip_grad_norm_
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, random_split
 
+from .sparse_geometry import parse_window_batch
+
 if TYPE_CHECKING:
     from .config import TrainConfig
     from .dataset import TrajectoryDataset
@@ -99,14 +101,21 @@ class Trainer:
             model.train()
             train_loss_sum = 0.0
             train_batches = 0
-            for dynamics, patches, actions, valid_mask, target in train_loader:
+            for batch in train_loader:
+                dynamics, patches, actions, valid_mask, target, ct, cm, rt, rm, _, _ = parse_window_batch(batch)
                 dynamics = dynamics.to(self.device)
                 patches = patches.to(self.device)
                 actions = actions.to(self.device)
                 valid_mask = valid_mask.to(self.device)
                 target = target.to(self.device)
 
-                pred = model(dynamics, patches, actions, valid_mask=valid_mask)
+                pred = model(
+                    dynamics, patches, actions, valid_mask=valid_mask,
+                    contour_tokens=None if ct is None else ct.to(self.device),
+                    contour_mask=None if cm is None else cm.to(self.device),
+                    relation_tokens=None if rt is None else rt.to(self.device),
+                    relation_mask=None if rm is None else rm.to(self.device),
+                )
                 loss = F.mse_loss(pred, target)
 
                 self.optimizer.zero_grad()
@@ -122,14 +131,21 @@ class Trainer:
             val_loss_sum = 0.0
             val_batches = 0
             with torch.no_grad():
-                for dynamics, patches, actions, valid_mask, target in val_loader:
+                for batch in val_loader:
+                    dynamics, patches, actions, valid_mask, target, ct, cm, rt, rm, _, _ = parse_window_batch(batch)
                     dynamics = dynamics.to(self.device)
                     patches = patches.to(self.device)
                     actions = actions.to(self.device)
                     valid_mask = valid_mask.to(self.device)
                     target = target.to(self.device)
 
-                    pred = model(dynamics, patches, actions, valid_mask=valid_mask)
+                    pred = model(
+                        dynamics, patches, actions, valid_mask=valid_mask,
+                        contour_tokens=None if ct is None else ct.to(self.device),
+                        contour_mask=None if cm is None else cm.to(self.device),
+                        relation_tokens=None if rt is None else rt.to(self.device),
+                        relation_mask=None if rm is None else rm.to(self.device),
+                    )
                     val_loss_sum += F.mse_loss(pred, target).item()
                     val_batches += 1
 

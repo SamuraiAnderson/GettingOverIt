@@ -64,7 +64,9 @@ class ExperimentalActorCritic(ActorCritic):
         self.load_state_dict(target)
         return loaded
 
-    def _encode_frames(self, dynamics, patches, actions):
+    def _encode_frames(self, dynamics, patches, actions,
+                       contour_tokens=None, contour_mask=None,
+                       relation_tokens=None, relation_mask=None):
         b, t, width = dynamics.shape
         self.encoded_frame_count += b * t
         if width != DYNAMICS_DIM + self.extra_dim:
@@ -73,6 +75,10 @@ class ExperimentalActorCritic(ActorCritic):
         dynamics_embed = self.dynamics_proj(self._normalize_dynamics(base))
         spatial = self.spatial_encoder(patches.reshape(b*t, *patches.shape[2:])).reshape(b, t, -1)
         obs = self.fusion(torch.cat([dynamics_embed, spatial], dim=-1))
+        obs = obs + self._sparse_residual(
+            b * t, dynamics.device, dynamics_embed.dtype,
+            contour_tokens, contour_mask, relation_tokens, relation_mask,
+        ).reshape(b, t, -1)
         for name, projection in self.feature_projections.items():
             obs = obs + projection(extras[..., self.layout[name]])
         event = None
@@ -82,13 +88,16 @@ class ExperimentalActorCritic(ActorCritic):
         history = actions / self.config.action_scale if self.config.normalize_action_history else actions
         return obs, self.action_proj(history), event
 
-    def recurrent_features(self, dynamics, patches, actions, hidden=None, valid_mask=None, reset_mask=None):
+    def recurrent_features(self, dynamics, patches, actions, hidden=None, valid_mask=None, reset_mask=None,
+                           contour_tokens=None, contour_mask=None, relation_tokens=None, relation_mask=None):
         """One frame at collection; consecutive frames at training. Masked pads do not advance h."""
         # cuDNN needs its training kernel to retain backward intermediates. This
         # single-layer GRU has dropout=0, so using that kernel in BOTH collection
         # and updates preserves deterministic policy semantics while enabling gradients.
         self.gru.train(True)
-        obs, action, events = self._encode_frames(dynamics, patches, actions)
+        obs, action, events = self._encode_frames(
+            dynamics, patches, actions, contour_tokens, contour_mask, relation_tokens, relation_mask,
+        )
         inputs = torch.cat([obs, action], dim=-1)
         if hidden is None:
             hidden = inputs.new_zeros(1, inputs.shape[0], self.config.d_model)
@@ -110,11 +119,19 @@ class ExperimentalActorCritic(ActorCritic):
             output = output + self.event_to_heads(events)
         return output, hidden
 
-    def _backbone(self, dynamics, patches, actions, valid_mask=None):
+    def _backbone(self, dynamics, patches, actions, valid_mask=None,
+                  contour_tokens=None, contour_mask=None,
+                  relation_tokens=None, relation_mask=None):
         if self.config.policy_backbone == "gru":
-            output, _ = self.recurrent_features(dynamics, patches, actions, valid_mask=valid_mask)
+            output, _ = self.recurrent_features(
+                dynamics, patches, actions, valid_mask=valid_mask,
+                contour_tokens=contour_tokens, contour_mask=contour_mask,
+                relation_tokens=relation_tokens, relation_mask=relation_mask,
+            )
             return output[:, -1]
-        obs, action, event = self._encode_frames(dynamics, patches, actions)
+        obs, action, event = self._encode_frames(
+            dynamics, patches, actions, contour_tokens, contour_mask, relation_tokens, relation_mask,
+        )
         b, t, d = obs.shape
         seq = obs.new_zeros(b, 2*t, d)
         seq[:, 0::2], seq[:, 1::2] = obs, action

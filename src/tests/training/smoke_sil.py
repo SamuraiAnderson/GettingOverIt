@@ -57,9 +57,11 @@ def main() -> None:
     assert len(dataset) > 0, "精英池窗口为空"
 
     # __getitem__ 形状检查
-    dyn, pat, act_hist, vm, target = dataset[0]
+    sample = dataset[0]
+    dyn, pat, act_hist, vm, target = sample[:5]
     print(f"样本形状: dyn={tuple(dyn.shape)} pat={tuple(pat.shape)} "
-          f"act={tuple(act_hist.shape)} vm={tuple(vm.shape)} target={tuple(target.shape)}")
+          f"act={tuple(act_hist.shape)} vm={tuple(vm.shape)} target={tuple(target.shape)} "
+          f"n={len(sample)}")
 
     model = ActorCritic(config)
     trainer = PPOTrainer(config)

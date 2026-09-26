@@ -20,6 +20,8 @@ import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 from torch.optim import AdamW
 
+from .sparse_geometry import parse_window_batch
+
 if TYPE_CHECKING:
     from .actor_critic import ActorCritic
     from .config import TrainConfig
@@ -87,8 +89,8 @@ class _GradNormAdapter:
 class _WeightedWindowView:
     """给 TrajectoryDataset 的窗口样本追加逐窗口权重（P3.2 优势加权 SIL 用）。
 
-    包装而非修改 __getitem__ 的返回元数：BC 训练器（trainer.py）与旧 MSE 路径
-    仍消费五元组，只有加权 SIL 路径解包六元组。weights 与 dataset 窗口索引顺序对齐。
+    包装而非修改 __getitem__ 的返回元数：在基样本（现为九元组）末尾追加
+    权重，以及可选的价值目标。weights 与 dataset 窗口索引顺序对齐。
     """
 
     def __init__(self, base, weights: torch.Tensor,
@@ -394,12 +396,19 @@ class PPOTrainer:
             num_workers=cfg.sil_num_workers,
         )
         offset = 0
-        for dyn, pat, act_hist, vm, _target in loader:
+        for batch in loader:
+            dyn, pat, act_hist, vm, _target, ct, cm, rt, rm, _, _ = parse_window_batch(batch)
             dyn = dyn.to(self.device)
             pat = pat.to(self.device)
             act_hist = act_hist.to(self.device)
             vm = vm.to(self.device)
-            _, value = model.forward(dyn, pat, act_hist, valid_mask=vm)
+            _, value = model.forward(
+                dyn, pat, act_hist, valid_mask=vm,
+                contour_tokens=None if ct is None else ct.to(self.device),
+                contour_mask=None if cm is None else cm.to(self.device),
+                relation_tokens=None if rt is None else rt.to(self.device),
+                relation_mask=None if rm is None else rm.to(self.device),
+            )
             b = value.shape[0]
             values[offset:offset + b] = value.detach().cpu().numpy().reshape(-1)
             offset += b
@@ -525,7 +534,7 @@ class PPOTrainer:
         空中噪声上（ab3 负收益的主要机制之一）。
 
         在 update() 之后调用，复用同一 optimizer。dataset 为 TrajectoryDataset，
-        __getitem__ 产出 (dynamics, patches, input_actions, valid_mask, target_action)。
+        __getitem__ 产出九元组（五元组观测 + 四份稀疏几何），加权包装再追加权重。
         """
         from torch.utils.data import DataLoader, Subset
 
@@ -686,24 +695,26 @@ class PPOTrainer:
                 if max_batches is not None and n_updates >= max_batches:
                     stop = True
                     break
-                if weights is not None:
-                    if value_targets is not None:
-                        dyn, pat, act_hist, vm, target, w, vtarget = batch
-                        vtarget = vtarget.to(self.device)
-                    else:
-                        dyn, pat, act_hist, vm, target, w = batch
-                        vtarget = None
+                dyn, pat, act_hist, vm, target, ct, cm, rt, rm, w, vtarget = parse_window_batch(batch)
+                if weights is None:
+                    w = vtarget = None
+                elif w is not None:
                     w = w.to(self.device)
-                else:
-                    dyn, pat, act_hist, vm, target = batch
-                    vtarget = None
+                if vtarget is not None:
+                    vtarget = vtarget.to(self.device)
                 dyn = dyn.to(self.device)
                 pat = pat.to(self.device)
                 act_hist = act_hist.to(self.device)
                 vm = vm.to(self.device)
                 target = target.to(self.device)
 
-                dist, value_pred = model.forward(dyn, pat, act_hist, valid_mask=vm)
+                dist, value_pred = model.forward(
+                    dyn, pat, act_hist, valid_mask=vm,
+                    contour_tokens=None if ct is None else ct.to(self.device),
+                    contour_mask=None if cm is None else cm.to(self.device),
+                    relation_tokens=None if rt is None else rt.to(self.device),
+                    relation_mask=None if rm is None else rm.to(self.device),
+                )
                 if weights is not None:
                     # 加权高斯 NLL（raw 空间）：-log π(u|s)·w 的 mean 梯度 =
                     # w·(μ−u)/σ²；tanh 的 Jacobian 项与 μ 无关、σ detach → 只锚均值。

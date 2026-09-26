@@ -74,6 +74,8 @@ def main():
     assert ch_sum[2] > 0, "contact 锅/body 轮廓空"
     assert ch_sum[3] > 0, "contact 锤头轮廓空"
     assert np.isfinite(p).all()
+    assert abs(cfg_dual.patch_size * cfg_dual.contact_patch_resolution - 8.64) < 1e-6
+    assert abs(cfg_dual.patch_size * cfg_dual.wide_patch_resolution - 64.0) < 1e-6
 
     # ── build_patch: legacy ──
     cfg_leg = replace(base, patch_mode="legacy")

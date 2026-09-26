@@ -6,7 +6,7 @@
 
 ## 一、整体架构
 
-存在两条并行训练管线，共享同一套环境接口、观测构建逻辑与投放机制。观测构建（dynamics 特征、4ch patch、定长窗口填充/mask）在离线数据集与在线采集之间**收敛为单一实现**（`dataset.build_dynamics`/`build_patch`/`left_pad_sequence`），从结构上保证训练与推理逐窗口一致，不依赖文档手动对齐：
+存在两条并行训练管线，共享同一套环境接口、观测构建逻辑与投放机制。观测构建（dynamics 特征、4ch 粗图、稀疏几何 token、定长窗口填充/mask）在离线数据集与在线采集之间**收敛为单一实现**（`dataset.build_dynamics`/`build_patch`/`sparse_geometry.build_sparse_geometry`/`left_pad_sequence`），从结构上保证训练与推理逐窗口一致，不依赖文档手动对齐：
 
 | 管线 | 入口 | 算法 |
 |------|------|------|
@@ -24,9 +24,10 @@
 | `main_ppo.py` | PPO 训练入口：启动游戏 → collect_ppo → PPO update → checkpoint |
 | `rollout.py` | 数据采集核心：`RolloutWorker` 管理游戏生命周期、deploy、多种采集模式 |
 | `deploy_sampling.py` | 空投几何采样（纯数学，无游戏依赖）：弧长加权、固定点池、分层分配 |
-| `model.py` | `ActionPredictor` + `SpatialEncoder`（BC 策略网络） |
+| `model.py` | `ActionPredictor` + `SpatialEncoder` + `TokenSetEncoder`（BC 策略网络） |
 | `actor_critic.py` | `ActorCritic`（PPO Actor-Critic，共享 backbone） |
-| `dataset.py` | `Trajectory` 数据结构、`TrajectoryDataset`，以及**离线/在线共享的观测构建原语**：`build_dynamics`、`build_patch`（单样本 4ch patch）、`left_pad_sequence`（定长窗口左填充 + valid_mask） |
+| `sparse_geometry.py` | 静态几何缓存 + 轮廓/接触关系 token；离线 `__getitem__` 与在线 `rollout._ppo_sparse` 共用 |
+| `dataset.py` | `Trajectory` 数据结构、`TrajectoryDataset`，以及**离线/在线共享的观测构建原语**：`build_dynamics`、`build_patch`（单样本 4ch 粗图）、`left_pad_sequence`（定长窗口左填充 + valid_mask） |
 | `trainer.py` | BC 监督训练器（MSE + AdamW + early stopping） |
 | `ppo_trainer.py` | PPO 更新器（clipped surrogate + value clip + entropy + KL 早停） |
 | `ppo_buffer.py` | PPO on-policy buffer（GAE + minibatch，非持久 replay） |
@@ -38,7 +39,7 @@
 
 ## 二、模型网络结构（BC 与 PPO 共享 backbone）
 
-三模态输入，上下文长度 `context_len=32`：
+主输入四路，上下文长度 `context_len=32`：
 
 - **dynamics** `(B, T, 39)` — 由 `dataset.build_dynamics()` 从原始 33D 状态构建的特征（水平方向平移等变），组成：
   - 15 维速度/角速度（player + 各部件线速度、player 角速度、**cursor 线速度**），原始值，见 `VELOCITY_INDICES`
@@ -48,27 +49,30 @@
   - 以上 34 维为 `BASE_DYNAMICS_DIM`。
   - **5 维接触信号**（`contact_features.CONTACT_DIM`，roadmap P2.1）：`tip_contact` / `tip_grip` / `body_contact` / `pot_contact` / `fall_distance_norm`。Python 端以多边形几何复刻游戏原生 `HammerCollisions` + `PlayerSounds` 判断（阈值 `CONTACT_EPSILON=0.03m`、`GRIP_VEL_THRESHOLD=0.3`、向下射线 clip[0,20]/20 均对齐反编译 IL），**wire 协议不变（C# 仍只回传 33D）**。`body_contact` 与 `pot_contact` 按游戏 IL 里 `rb.GetPoint(contact).y > 0.4` 分层各自输出（body 触地=撞头 pain，pot 触地=稳定支点，语义相反，合并会互相抵消）。详见 `doc/optimization_roadmap.md` P2.1。
   - 维度常量 `DYNAMICS_DIM = BASE_DYNAMICS_DIM + CONTACT_DIM = 39`，**与 `config.state_dim=33`（原始状态维度）解耦**：模型 `dynamics_proj`/归一化 buffer 用 `DYNAMICS_DIM`，`state_dim` 仅指 C# 回传的原始 33 维。
-- **patches** `(B, T, 4, 32, 32)` — 局部空间图，由 `config.patch_mode` 决定语义（离线 `dataset.build_patch` 与在线 `rollout._build_patches_batch` 共用同一实现）：
-  - **`dualscale`（默认，双分支 · 强调碰撞几何）**：通道切分为 wide `[0]` + contact `[1:4]`，编码器 `DualScaleSpatialEncoder` 分两路 CNN 编码后 concat 融合。两分支均以 player 为中心，仅尺度不同：
-    - `[0]` wide 攀爬效率图 — player 中心、**大范围低精度**（`wide_patch_resolution=2.0` m/px → 64 m 窗口，降采样）。效率图本就从 traversable 地形 mask 扩散而来，已隐含全局地形结构，故 wide 只放它做全局引导。
-    - `[1]` contact 高精度地形实心 mask — player 中心、**中高精度**（`contact_patch_resolution=0.27` m/px → 8.64 m 窗口，半径 4.32 m），由 `rasterize_solid_local` 逐格点在多边形内判定（二值；地形特征米级，远大于一格，不需抗锯齿）。
+- **patches** `(B, T, 4, 32, 32)` — 整体低分辨率图，由 `config.patch_mode` 决定语义（离线 `dataset.build_patch` 与在线 `rollout._build_patches_batch` 共用同一实现）。细交互不再靠把 CNN 加到 256²，而走下方稀疏几何。
+  - **`dualscale`（默认，双分支）**：通道切分为 wide `[0]` + contact `[1:4]`，编码器 `DualScaleSpatialEncoder` 分两路 CNN 编码后 concat 融合。两分支均以 player 为中心，仅尺度不同：
+    - `[0]` wide 攀爬效率图 — player 中心、**大范围低精度**（`wide_patch_resolution=2.0` m/px → 64 m 窗口）。提供周围地形、候选支点和攀爬方向，避免策略只看到眼前接触点。
+    - `[1]` contact 地形实心 mask — player 中心、**粗接触图**（`contact_patch_resolution=0.27` m/px → 8.64 m 窗口，半径 4.32 m），由 `rasterize_solid_local` 逐格点在多边形内判定。
     - `[2]` contact 锅/body 碰撞轮廓 — `body∪pot` 局部轮廓按 `player→hub` 方向 + `body_angle_offset` 重建为世界多边形后，按**面积覆盖率**栅格化（与地形同栅格 co-registered）。
     - `[3]` contact 锤头碰撞轮廓 — tip 局部轮廓按 `pole→tip` 方向 + `tip_angle_offset` 重建后同样按面积覆盖率栅格化（同一 player 中心网格）。
-    - **部件轮廓必须抗锯齿（`PART_RASTER_SUBSAMPLES=4`）**：Player 部件远小于一格——真实 tip 轮廓 bbox 仅 `0.148 × 0.448` m，在 0.2 m/px 下宽 0.74 px、0.27 m/px 下 0.55 px，**都不足 1 像素**。旧的「格心在多边形内」二值判据下，多边形可整体落在相邻格心之间而一个格心都不含 → **整帧通道全零、锤头对 CNN 完全不可见**：实测旧配置（0.2 m/px 二值）空通道率 **8.7%**，平均仅 1.28 个像素。改为面积覆盖率（每格取被多边形覆盖的面积比例，`subsamples²` 个子采样点估计）后空通道率归 **0%**，且**亚像素位置与朝向由灰度强度承载**，信息量高于同分辨率的二值。子采样只在轮廓 bbox（通常几格）内做，故图元开销仅 +16%（44.4 → 51.4 μs），`build_patch` 整体 0.445 ms/次不变量级。诊断/基准：`python -m src.tests.analysis.diagnose_tip_rasterization`、`bench_patch_raster`；正确性单测 `src/tests/training/test_raster_area_coverage.py`（覆盖率总和 ≈ 多边形面积、内部格=1、`subsamples=1` 严格退化为旧二值）。
+    - **部件轮廓必须抗锯齿（`PART_RASTER_SUBSAMPLES=4`）**：Player 部件远小于一格——真实 tip 轮廓 bbox 仅 `0.148 × 0.448` m，在 0.27 m/px 下宽约 0.55 px。旧的「格心在多边形内」二值判据下锤头可以对 CNN 完全不可见，故粗图仍用面积覆盖率。连续尖角与短边由稀疏轮廓 token 保留，不依赖把栅格加密到 256²。
     - 三个 contact 通道 co-registered，使 CNN 直接看到锅/锤头各自与地形、以及彼此的接触关系。身体姿态另由 dynamics 向量承载。
-    - **刻意不在 patch 里另加"接触边缘/接触点"通道**，理由是分辨率与职责分工：
-      - **分辨率失配 6.7×**：contact 栅格 `0.2` m/px，而游戏接触阈值 `CONTACT_EPSILON=0.03` m。一格比阈值粗 6.7 倍 → "贴着接触"与"悬空 0.15m"落在同一格，patch 上长得一样；且栅格化是「格中心点在多边形内」判定（`MplPath.contains_points`），两多边形相切时边界格标 0 还是 1 完全取决于亚格子舍入 → **在 patch 分辨率下标出来的接触是走样的噪声，不是 ground truth**。
-      - **CNN 已能从现有通道取到接触的空间信息**：ch1/ch2/ch3 co-registered，故"重叠区域"= 逐像素 AND = `relu(ch1+ch2-1)`，一个 1×1 卷积 + ReLU 就精确表达；接触法向同理（地形 mask 的局部梯度即法向，conv 第一层天生是梯度算子）。这与 P2.1 里"多边形距离查询是 O(V·E) 符号几何算法、CNN 学不动"是**完全不同量级**的难度，不需要替它算。
-      - **职责分工**：patch 管**空间布局**（哪里有什么形状，格子级精度够用）；dynamics 向量管**精确物理谓词**（亚格子接触判定、grip 状态机、离地距离）——后者正是 P2.1 的 5 维接触信号，用精确几何算、不受栅格分辨率限制。在 patch 里再标一遍，等于用低精度媒介重复表达已用高精度媒介表达好的东西。
-    - **窗口半径由锤子几何硬上界反推（已修复出窗，勿下调）**：contact 半径需 ≥ **3.78 m**，来自 `|hub−player| = 0.3546`（刚性偏移）+ slider 全伸 `|tip−hub| = 2.955`（关节硬限位）= tip 原点上界 **3.31 m**，取 `PlayerControl` IL 里硬编码的 `|cursor−player| ≤ 3.5f` 作设计上界（与求解器软性超调实测极值 ≈3.49 m 吻合），再加 tip 轮廓半径 **0.279 m**；另留 2 格地形上下文（锤头全伸时也要看得到它接触的那块地形）→ ≈**4.28 m**。旧配置 `32 × 0.2` = 半径 3.2 m 不足，约 **0.46%** 的帧里锤头贴窗边、接触的地形被裁掉，而这些恰是「锤子伸到最远够远处落点」的高价值帧。现配置 `32 × 0.27` = 半径 **4.32 m**，余量 +0.51 m。
+    - **粗图不承担亚格子接触**：contact 栅格是 `0.27` m/px，游戏接触阈值 `CONTACT_EPSILON=0.03` m，一格比阈值粗约 9 倍。精确接触谓词仍走 5D 接触向量；连续位移/法线/相对速度走稀疏接触关系 token。CNN 只提供周围布局。
+    - **窗口半径由锤子几何硬上界反推（已修复出窗，勿缩小窗口）**：contact 半径需 ≥ **3.78 m**，来自 `|hub−player| = 0.3546`（刚性偏移）+ slider 全伸 `|tip−hub| = 2.955`（关节硬限位）= tip 原点上界 **3.31 m**，取 `PlayerControl` IL 里硬编码的 `|cursor−player| ≤ 3.5f` 作设计上界（与求解器软性超调实测极值 ≈3.49 m 吻合），再加 tip 轮廓半径 **0.279 m**；另留约 0.5 m 地形上下文（锤头全伸时也要看得到它接触的那块地形）→ ≈**4.28 m**。旧配置 `32 × 0.2` = 半径 3.2 m 不足。默认 `32 × 0.27` = 半径 **4.32 m**，格子保持 32。细交互用同窗连续轮廓，不把 CNN 加到 256²。
       - **注意**：`|tip−player|` 有几何硬上界，其分布在上界处**截断而非高斯**。早期用 `dyn_mean/dyn_std` 正态外推得出的「2.9% 的帧 tip 中心出窗」是严重高估（正态尾延伸到无穷）——15.2 万真实帧里 tip 中心从未出过 3.2 m 窗口，真正的问题只是贴边裁掉周围地形。故核验一律走几何判据，勿用统计外推。
-      - **为何改分辨率而非 `patch_size`**：保持 patch shape `(4,32,32)` 不变 → checkpoint 完全兼容（`SpatialEncoder` 里 `Linear(128*4*4, d)` 的 flatten 维度锁死 2048，改 size 需做空间对齐的权重迁移）、wide 分支不被迫从 64 m 变 80 m、每帧栅格化格点数不变。分辨率变粗的信息代价已被上面的面积覆盖率栅格化抵消。
+      - **格子数与窗口解耦**：窗口米数由 `patch_size × resolution` 固定，不要缩小窗口。细交互走稀疏轮廓，不把 CNN `patch_size` 加到 256。
       - 核验：`python -m src.tests.analysis.check_tip_patch_coverage`（几何硬上界 + 360° 最坏姿态扫描）；回归单测 `src/tests/training/test_patch_tip_coverage.py`（走真实 `build_patch`，断言 360° 全伸姿态下 ch3 既非空也不贴窗边，并反向确认旧 0.2 m/px 确实会裁）。
     - **ch2 仍是 `body∪pot` 合并**（与向量端 P2.1 把 `body_contact`/`pot_contact` 拆开**有意不对称**）：patch 是空间图，body 与 pot 本就空间分居上下，CNN 从形状上能区分上半团/下半团；而向量端若合并成单个标量 0/1 则是真正的信息丢失（两者语义相反会抵消）。故只拆向量端。
     - **TODO（轮廓朝向为粗标定）**：锤头 `tip_angle_offset=-90°`（`pole/-90/scale=1`，经 `verify_tip_reconstruction` 粗扫描）与 body `body_angle_offset=-90°`（`player→hub / -90 / scale=1`，经 `verify_body_reconstruction` 粗扫描确认躯干朝上、锅贴地）均已在 90° 粒度确认，但仍为近似；精确值待细粒度扫描或 C# 回传部件世界顶点真值。
   - **`legacy`（旧单尺度 4ch，A/B baseline）**：以 player 为中心 0.5 m/px 的 4 通道 — ch0 地形可通行 mask、ch1 攀爬效率图、ch2 身体部件（player/hub/slider）高斯 blob、ch3 锤子部件（handle/pole/tip）高斯 blob。
 - **actions** `(B, T, 2)` — 历史动作。
 - **valid_mask** `(B, T)` — 1=有效 / 0=左填充；用于 episode 起步阶段历史不足时的 padding（见第 2.1、四节）。
+- **sparse geometry**（默认开）— 与粗图同中心、同 8.64 m 窗，但按 256 格精度预算编码**连续轮廓**与**多候选接触关系**，空气不生成 token。离线/在线共用 `build_sparse_geometry`：
+  - 轮廓 token：类别（terrain / player / tip）one-hot + 中点相对 player 位移 + 法线 + 切线 + 边长 + known。坐标系保持世界轴与固定物理尺度，不随朝向旋转。优先保留 player/tip 边，再按距 player 远近填地形边，上限 `sparse_max_contour_tokens=128`。
+  - 接触关系：对 tip / 锅 / 身体各保留 `K=8` 个候选面（最近点位移、距离、法线、法向/切向相对速度）。部件速度 tip 用 `state[25:27]`，锅/身体用 player `state[2:4]`。查询对象是碰撞多边形本身，不是部件原点。
+  - 静态几何按**已到达区域**惰性缓存：`SparseGeometryCache` 只对进入当前 8.64 m 窗的地形多边形物化轮廓/法线；未到达区域不算边。player/tip 局部形状仍一次缓存。每步只更新部件位姿、附近查询和相对关系。**可训练编码器输出随权重变化，禁止缓存**。
+  - 编码：共享小型 ReLU MLP（`sparse_mlp_hidden=32`）分别编码轮廓与关系，再按类别/部件做 mean+max 聚合，残差加到 fusion 后的 `obs_embed`。输出投影零初始化，缺 token 或旧 checkpoint 暖启动时残差为 0。attention 留作后续对照，第一版不用。
+  - `TrajectoryDataset.__getitem__` 现返回九元组；PPO buffer 存原始 token 窗口，不存编码器隐向量。
 
 Backbone：
 
@@ -79,6 +83,7 @@ DualScaleSpatialEncoder:
   legacy    → 单 CNN(4ch→32→64→128 → Linear 2048→128)
 dynamics_proj(Linear 39→128)
   → concat → fusion(Linear 256→128) = obs_embed
+sparse TokenSetEncoder(contour) + TokenSetEncoder(relation) → 残差加到 obs_embed
 action_proj(Linear 2→128) = act_embed
   → 交错序列 [obs_0, act_0, obs_1, act_1, ...] 长度 2T=64
   → pos_embed + TransformerEncoder(3 层 / 4 头 / d=128, causal mask + key_padding_mask)

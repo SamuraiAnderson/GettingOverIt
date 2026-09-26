@@ -37,7 +37,9 @@ from training.deploy_sampling import extract_body_local, extract_tip_local
 from training.model import ActionPredictor
 from training.actor_critic import ActorCritic
 from training.reward import ClimbingEfficiencyMap
-from training.rollout import _build_history_window
+from training.contact_features import split_body_pot_local
+from training.rollout import _build_history_window, _pad_sparse_history
+from training.sparse_geometry import SparseGeometryCache, build_sparse_geometry
 
 sys.path.insert(0, str(_REPO_ROOT / "src" / "tests" / "control_interaction"))
 from test_l7_surface_airdrop import extract_polygons, load_colliders
@@ -118,6 +120,11 @@ def main() -> None:
     polygons = extract_polygons(env_data)
     tip_local = extract_tip_local(player_data)
     body_local = extract_body_local(player_data)
+    body_only, pot_only = split_body_pot_local(player_data)
+    sparse_cache = (
+        SparseGeometryCache.build(polygons, tip_local, body_only, pot_only)
+        if config.sparse_geometry else None
+    )
 
     cache_dir = Path(config.checkpoint_dir) / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -202,6 +209,10 @@ def main() -> None:
         dyn_history: list[np.ndarray] = []
         act_history: list[np.ndarray] = []
         patch_history: list[np.ndarray] = []
+        contour_history: list[np.ndarray] = []
+        cmask_history: list[np.ndarray] = []
+        relation_history: list[np.ndarray] = []
+        rmask_history: list[np.ndarray] = []
         max_y = float(obs[0, 1])
 
         for step in range(n_steps):
@@ -211,19 +222,33 @@ def main() -> None:
                 solid_polygons=polygons, tip_local=tip_local, body_local=body_local,
             )
             dynamics = build_dynamics(cur_obs)
+            contour, cmask, relation, rmask = build_sparse_geometry(
+                cur_obs, sparse_cache, config,
+            )
             dyn_history.append(dynamics.copy())
             patch_history.append(patch.copy())
+            contour_history.append(contour)
+            cmask_history.append(cmask)
+            relation_history.append(relation)
+            rmask_history.append(rmask)
 
             dyn_window, pat_window, act_window, valid_mask = _build_history_window(
                 dyn_history, patch_history, act_history, ctx,
             )
+            ct, cm, rt, rm = _pad_sparse_history(
+                contour_history, cmask_history, relation_history, rmask_history, ctx,
+            )
+            sparse = dict(
+                contour_tokens=ct, contour_mask=cm,
+                relation_tokens=rt, relation_mask=rm,
+            )
             if is_ppo:
                 pred = model.predict_deterministic(
-                    dyn_window, pat_window, act_window, valid_mask=valid_mask
+                    dyn_window, pat_window, act_window, valid_mask=valid_mask, **sparse
                 )
             else:
                 pred = model.predict(
-                    dyn_window, pat_window, act_window, valid_mask=valid_mask
+                    dyn_window, pat_window, act_window, valid_mask=valid_mask, **sparse
                 )
             action = np.clip(pred, -scale, scale).astype(np.float32)
             obs, _ = env.step(action.reshape(1, 2))

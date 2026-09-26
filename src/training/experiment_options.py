@@ -8,6 +8,8 @@ EXPERIMENT_FIELDS = (
     "trend_features", "event_source", "normalize_action_history", "feature_position_scale",
     "feature_velocity_scale", "feature_angular_scale", "feature_clip", "feature_step_seconds",
     "geometry_query_radius", "action_segment_steps", "segment_interrupt_contacts",
+    "sparse_geometry", "sparse_window_cells", "sparse_window_meters",
+    "sparse_max_contour_tokens", "sparse_relation_k", "sparse_mlp_hidden",
 )
 
 
@@ -57,6 +59,8 @@ def apply_experiment_arguments(config, args, checkpoint=None):
 def restore_initialization_shape(config, checkpoint):
     """Retain compatible front-end dimensions; experiment choices remain explicit."""
     for name in ("d_model", "nhead", "num_layers", "context_len", "patch_size", "patch_channels",
-                 "patch_mode", "wide_patch_resolution", "contact_patch_resolution", "wide_channels", "contact_channels"):
+                 "patch_mode", "wide_patch_resolution", "contact_patch_resolution", "wide_channels", "contact_channels",
+                 "sparse_geometry", "sparse_window_cells", "sparse_window_meters",
+                 "sparse_max_contour_tokens", "sparse_relation_k", "sparse_mlp_hidden"):
         if name in checkpoint.get("config", {}):
             setattr(config, name, checkpoint["config"][name])

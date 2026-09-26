@@ -70,6 +70,8 @@ def test_window_radius_covers_geometric_bound() -> None:
     窗口外，而这恰是「伸到最远够远处落点」的高价值帧。故要求额外留 2 格余量。
     """
     cfg = TrainConfig()
+    assert abs(cfg.patch_size * cfg.contact_patch_resolution - 8.64) < 1e-9
+    assert abs(cfg.patch_size * cfg.wide_patch_resolution - 64.0) < 1e-9
     half_window = cfg.patch_size / 2.0 * cfg.contact_patch_resolution
     need_contour = CURSOR_CLAMP_RADIUS + TIP_CONTOUR_RADIUS
     need_context = need_contour + 2.0 * cfg.contact_patch_resolution
@@ -150,7 +152,8 @@ def test_body_and_tip_coexist_in_window() -> None:
 def test_old_resolution_would_have_failed() -> None:
     """反向确认：旧的 0.2 m/px 配置在硬上界处确实会裁掉锤头（证明本修复非空操作）。"""
     cfg = TrainConfig()
-    cfg.contact_patch_resolution = 0.2  # 回到旧值
+    cfg.patch_size = 32
+    cfg.contact_patch_resolution = 0.2  # 旧 32×0.2 会裁锤头
     px, py = 0.0, 0.0
     state = _make_state(px, py, px + CURSOR_CLAMP_RADIUS, py)  # 水平全伸
 
