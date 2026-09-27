@@ -28,52 +28,156 @@ from training.rollout import RolloutWorker, _warmup_and_snapshot
 from tests.control_interaction.test_l7_surface_airdrop import load_colliders, extract_polygons
 
 
-def score_corridor_episode(trajectory, route, goal_progress=5.0, dwell=10, fall_drop=3.0):
-    """Local success = credited progress + current forward position, held in corridor.
+def projection_from_start(route, tracker, start_segment, start_progress):
+    """Current projection along verified segments, measured from the reset location.
 
-    The target is relative to the fixed reset location on its continuous segment.
-    Gaps are never counted as success. Drop is peak-to-current player height.
+    Later continuous segments count after the agent enters them. A gap
+    (`waiting`) reports the end of the last confirmed segment.
     """
-    if goal_progress <= 0 or dwell < 1 or fall_drop <= 0:
-        raise ValueError("Positive goal, dwell, and fall threshold required")
+    if tracker.segment_index < start_segment:
+        return 0.0
+    first = route.segments[start_segment].length - start_progress
+    if tracker.segment_index == start_segment:
+        return first if tracker.waiting else max(0.0, tracker.progress - start_progress)
+    middle = sum(route.segments[i].length for i in range(start_segment + 1, tracker.segment_index))
+    tail = route.segments[tracker.segment_index].length if tracker.waiting else tracker.progress
+    return first + middle + tail
+
+
+def _remaining_reference_m(route, start_segment, start_progress):
+    return (route.segments[start_segment].length - start_progress
+            + sum(segment.length for segment in route.segments[start_segment + 1:]))
+
+
+HOLD_STEPS = 120
+HOLD_PROGRESS_SLACK_M = 0.3
+HOLD_INSIDE_FRACTION = 0.95
+STEPS_PER_SECOND = 120.0
+
+
+def _tolerant_hold(frames, arrival, goal_progress, hold_steps, hold_progress_floor,
+                   hold_inside_fraction, config):
+    """1 s after first arrival. Gaps are unconfirmed; a short window is unobserved.
+
+    Floor slack and inside fraction are unverified parameters.
+    """
+    window = [frame for frame in frames if arrival <= frame["step"] < arrival + hold_steps]
+    if len(window) < hold_steps:
+        return False, True, False
+    if any(frame["gap"] for frame in window):
+        return False, False, True
+    watered = any(is_water(frame["y"], config) for frame in window)
+    held = (
+        all(frame["projection_m"] >= hold_progress_floor for frame in window)
+        and float(np.mean([frame["inside"] for frame in window])) >= hold_inside_fraction
+        and window[-1]["projection_m"] >= goal_progress
+        and not watered
+    )
+    return held, False, False
+
+
+def _max_retreat_m(frames, arrival):
+    after = [frame for frame in frames if frame["step"] >= arrival]
+    if not after:
+        return 0.0
+    peak = after[0]["projection_m"]
+    retreat = 0.0
+    for frame in after:
+        peak = max(peak, frame["projection_m"])
+        retreat = max(retreat, peak - frame["projection_m"])
+    return float(retreat)
+
+
+def score_corridor_episode(trajectory, route, goal_progress=5.0, dwell=10, fall_drop=3.0,
+                           hold_steps=HOLD_STEPS, hold_progress_floor=None,
+                           hold_inside_fraction=HOLD_INSIDE_FRACTION):
+    """Corridor episode score: first arrival, tolerant 1 s hold, and retention.
+
+    Arrival is the first step whose projection and credited progress are both
+    at least `goal_progress`. Subsequent verified segments count. A reference
+    gap is `reference_unconfirmed`; a hold cut short by the episode end is
+    `hold_incomplete`. Neither is a control failure.
+
+    Hold floor slack and inside fraction are unverified parameters.
+
+    `success` remains the original strict dwell on the start segment.
+    """
+    if hold_progress_floor is None:
+        hold_progress_floor = goal_progress - HOLD_PROGRESS_SLACK_M
+    if (goal_progress <= 0 or dwell < 1 or fall_drop <= 0 or hold_steps < 1
+            or hold_progress_floor < 0 or not 0 <= hold_inside_fraction <= 1):
+        raise ValueError("Positive goal, dwell, hold window, and valid hold fraction required")
     states = trajectory.raw_states
-    tracker = route.tracker(states[0, :2])
+    from training.reference_anchor import scoring_context
+    schema, meta = scoring_context(states[0], route.config, None, route)
+    tracker = route.tracker_from_state(states[0], schema, meta)
     start_segment, start_progress = tracker.segment_index, tracker.progress
-    if start_progress + goal_progress > route.segments[start_segment].length - route.config.reference_corridor_radius:
-        raise ValueError("Local goal reaches a reference gap; choose a shorter goal")
+    if _remaining_reference_m(route, start_segment, start_progress) < goal_progress:
+        raise ValueError("Local goal exceeds remaining reference length")
     held = 0
+    strict_arrival = None
     arrival = None
     peak_y = float(states[0, 1])
     fell = False
+    watered = is_water(peak_y, route.config)
     outside = 0
+    frames = []
     trace = []
     previous_contacts = None
     previous_action = np.zeros(2)
     for step, (state, action) in enumerate(zip(states[1:], trajectory.actions), 1):
-        result = tracker.step(state[:2])
+        result = route.step_state(tracker, state, schema, meta)
+        projection = projection_from_start(route, tracker, start_segment, start_progress)
         peak_y = max(peak_y, float(state[1]))
-        fell |= is_water(state[1], route.config) or peak_y - float(state[1]) >= fall_drop
+        watered |= is_water(state[1], route.config)
+        fell |= watered or peak_y - float(state[1]) >= fall_drop
         outside += int(not result.inside and not result.gap)
+        frames.append({
+            "step": step, "projection_m": projection, "credited_m": tracker.total_progress,
+            "inside": result.inside, "gap": result.gap, "y": float(state[1]),
+            "segment": tracker.segment_index,
+        })
+        if (arrival is None and projection >= goal_progress
+                and tracker.total_progress >= goal_progress):
+            arrival = step
         qualifies = (result.inside and not result.gap and tracker.segment_index == start_segment
                      and tracker.progress >= start_progress + goal_progress
                      and tracker.total_progress >= goal_progress)
         held = held + 1 if qualifies else 0
-        if held >= dwell and arrival is None:
-            arrival = step
+        if held >= dwell and strict_arrival is None:
+            strict_arrival = step
         contacts = trajectory.contact[step - 1, [0, 2, 3]] if trajectory.contact is not None else None
         enter = np.zeros(3) if previous_contacts is None or contacts is None else (contacts > previous_contacts)
         leave = np.zeros(3) if previous_contacts is None or contacts is None else (contacts < previous_contacts)
         trace.append({"step": step, "progress_m": tracker.progress - start_progress,
+                      "projection_m": projection,
                       "credited_progress_m": tracker.total_progress, "inside": result.inside,
                       "gap": result.gap, "contact_before_action": None if contacts is None else contacts.tolist(),
                       "contact_enter": enter.astype(int).tolist(), "contact_exit": leave.astype(int).tolist(),
                       "action": action.tolist(), "action_delta": float(np.linalg.norm(action - previous_action))})
         previous_contacts, previous_action = contacts, action
+    hold_success, hold_incomplete, hold_unconfirmed = (
+        _tolerant_hold(frames, arrival, goal_progress, hold_steps, hold_progress_floor,
+                       hold_inside_fraction, route.config)
+        if arrival is not None else (False, False, False)
+    )
+    terminal_gap = bool(frames and frames[-1]["gap"])
+    same_segment = tracker.segment_index == start_segment and not tracker.waiting
     return {
-        "success": arrival is not None, "arrival_steps": arrival, "fell": bool(fell),
+        "success": strict_arrival is not None, "arrival_steps": arrival, "fell": bool(fell),
+        "watered": bool(watered),
         "left_corridor": outside > 0, "outside_fraction": outside / max(1, len(trace)),
         "credited_progress_m": tracker.total_progress, "start_segment": start_segment,
         "start_progress_m": start_progress, "steps": len(trace),
+        "hold_success": hold_success, "hold_incomplete": hold_incomplete,
+        "reference_unconfirmed": hold_unconfirmed or terminal_gap,
+        "terminal_progress_m": frames[-1]["projection_m"] if frames else 0.0,
+        "max_retreat_after_arrival_m": (
+            _max_retreat_m(frames, arrival) if arrival is not None else None),
+        "terminal_same_segment_progress_m": (
+            float(tracker.progress - start_progress) if same_segment else None),
+        "continued_on_later_segment": any(
+            frame["segment"] > start_segment and not frame["gap"] for frame in frames),
     }, trace
 
 
@@ -86,14 +190,59 @@ def summarize(records):
         p, z = successes / n, 1.96
         center = (p + z*z/(2*n)) / (1 + z*z/n)
         half = z * np.sqrt(p*(1-p)/n + z*z/(4*n*n)) / (1 + z*z/n)
-        arrivals = [r["arrival_steps"] for r in rows if r["success"]]
+        arrivals = [r["arrival_steps"] for r in rows if r.get("arrival_steps") is not None]
+        arrived = len(arrivals)
+        held = sum(bool(r.get("hold_success")) for r in rows)
+        credited = [r["credited_progress_m"] for r in rows]
+        retreats = [r["max_retreat_after_arrival_m"] for r in rows
+                    if r.get("max_retreat_after_arrival_m") is not None]
         result[mode] = {"episodes": n, "success_rate": p, "success_wilson95": [center-half, center+half],
                         "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
                         "fall_rate": float(np.mean([r["fell"] for r in rows])),
+                        "water_count": sum(bool(r.get("watered")) for r in rows),
+                        "water_rate": float(np.mean([bool(r.get("watered")) for r in rows])),
                         "leave_corridor_rate": float(np.mean([r["left_corridor"] for r in rows])),
-                        "mean_credited_progress_m": float(np.mean([r["credited_progress_m"] for r in rows])),
-                        "mean_arrival_steps": float(np.mean(arrivals)) if arrivals else None}
+                        "mean_credited_progress_m": float(np.mean(credited)),
+                        "credited_progress_median_m": float(np.median(credited)),
+                        "credited_progress_q25_m": float(np.quantile(credited, 0.25)),
+                        "mean_arrival_steps": float(np.mean(arrivals)) if arrivals else None,
+                        "mean_arrival_game_seconds": (
+                            float(np.mean(arrivals)) / STEPS_PER_SECOND if arrivals else None),
+                        "arrival_count": arrived, "arrival_rate": arrived / n,
+                        "hold_success_count": held,
+                        "hold_rate_after_arrival": held / arrived if arrived else 0.0,
+                        "hold_incomplete_count": sum(bool(r.get("hold_incomplete")) for r in rows),
+                        "terminal_progress_median_m": float(np.median(
+                            [r.get("terminal_progress_m", 0.0) for r in rows])),
+                        "max_retreat_after_arrival_median_m": (
+                            float(np.median(retreats)) if retreats else None),
+                        "reference_unconfirmed_count": sum(
+                            bool(r.get("reference_unconfirmed")) for r in rows)}
     return result
+
+
+def format_eval_line(values):
+    """Current-stage line: credited median/Q25 first; arrival and hold separate."""
+    n = values["episodes"]
+    if "credited_progress_median_m" not in values:
+        return (f"严格 1 秒 {values['success_hold_120_count']}/{n}；"
+                f"10 步成功 {values.get('successes', 0)}/{n}")
+    arrived = int(values.get("arrival_count") or 0)
+    time_s = values.get("mean_arrival_game_seconds")
+    time_bit = f"，用时 {time_s:.2f}s" if time_s is not None else ""
+    retreat = values.get("max_retreat_after_arrival_median_m")
+    retreat_bit = f"；到达后最大回退中位 {retreat:.3f}m" if retreat is not None else ""
+    return (
+        f"credited 中位 {values['credited_progress_median_m']:.3f}m"
+        f"（Q25 {values['credited_progress_q25_m']:.3f}m）；"
+        f"到达 {arrived}/{n}{time_bit}；"
+        f"到达后保持 {int(values.get('hold_success_count') or 0)}/{arrived}；"
+        f"未观察完 {int(values.get('hold_incomplete_count') or 0)}；"
+        f"参考无法确认 {int(values.get('reference_unconfirmed_count') or 0)}；"
+        f"期末投影中位 {values.get('terminal_progress_median_m', 0.0):.3f}m"
+        f"{retreat_bit}；"
+        f"落水 {int(values.get('water_count') or 0)}/{n}"
+    )
 
 
 def compare_native_contacts(contacts, packets, agent):
@@ -169,7 +318,7 @@ def main():
     cfg.num_agents = args.num_agents
     cfg.random_deploy = cfg.sil_enabled = cfg.explore_boost_enabled = False
     reference_path = args.reference_trajectory or cfg.reference_trajectory or (
-        ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory.json")
+        ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory_game_world.json")
     cfg.reference_trajectory = str(Path(reference_path).resolve())
     cfg.ou_enabled, cfg.ou_phi = args.noise_phi > 0, args.noise_phi
     cfg.ppo_inference_batch_size = args.inference_batch_size
@@ -211,7 +360,11 @@ def main():
         "init_from": args.init_from,
         "reference": worker.reference_corridor.metadata,
         "criterion": {"credited_progress_m": args.goal_progress, "dwell_steps": args.dwell,
-                      "fall_peak_drop_m": 3., "arrival_unit": "environment steps"},
+                      "fall_peak_drop_m": 3., "arrival_unit": "environment steps",
+                      "hold_steps": HOLD_STEPS,
+                      "hold_progress_floor_m": args.goal_progress - HOLD_PROGRESS_SLACK_M,
+                      "hold_inside_fraction": HOLD_INSIDE_FRACTION,
+                      "hold_parameters_unverified": True},
         "offsets": offsets.tolist(), "contact_source": "geometry_proxy",
         "native_diagnostics_requested": args.native_diagnostics,
         "initialization": "warmup then canonical snapshot; teleport jitter also clears rigid-body velocities",

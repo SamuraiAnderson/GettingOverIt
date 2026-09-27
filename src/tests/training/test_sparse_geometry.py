@@ -224,6 +224,58 @@ def test_dataset_returns_nine_tuple_from_shared_builder():
     np.testing.assert_allclose(cm[-1].numpy(), raw[1], atol=1e-6)
 
 
+def test_experimental_collect_stores_sparse_and_trains_encoder():
+    from training.experimental_policy import create_actor_critic
+    from training.ppo_trainer import PPOTrainer
+    from training.rollout import RolloutWorker
+
+    class Env:
+        def __init__(self):
+            self.index = 0
+
+        def reset(self):
+            self.index = 0
+            return np.stack([_state(), _state()])
+
+        def step(self, actions):
+            self.index += 1
+            return np.stack([_state(), _state()]), np.array([False, False])
+
+    cfg = _cfg(
+        normalize_action_history=True, num_agents=2,
+        ppo_epochs=1, ppo_batch_size=4, ou_enabled=False,
+        contact_heads_enabled=False, random_deploy=False, deploy_exclusion_check=False,
+    )
+    model = create_actor_critic(cfg)
+    worker = RolloutWorker(cfg)
+    worker.env = Env()
+    rng = np.random.default_rng(3)
+    worker._ppo_patches = lambda *args: rng.normal(
+        0, .1, (2, cfg.patch_channels, cfg.patch_size, cfg.patch_size)
+    ).astype(np.float32)
+    worker._compute_contact_batch = lambda obs, prev: (np.zeros((2, 5), np.float32), prev)
+    blank = empty_sparse_frame(cfg)
+    contour, cmask, relation, rmask = [item.copy() for item in blank]
+    contour[0, :3] = (1, 0, 0)
+    contour[0, 3:5] = (0.2, -0.1)
+    contour[0, -1] = 1
+    cmask[0] = 1
+    relation[0, :3] = (1, 0, 0)
+    relation[0, -1] = 1
+    rmask[0] = 1
+    worker._ppo_sparse = lambda obs: (
+        np.stack([contour] * 2), np.stack([cmask] * 2),
+        np.stack([relation] * 2), np.stack([rmask] * 2),
+    )
+    buffer, _ = worker.collect_ppo(model, 8)
+    assert "contour_tokens" in buffer.episodes[0]
+    assert float(buffer.episodes[0]["contour_mask"].sum()) > 0
+    before = model.contour_encoder.proj.weight.detach().clone()
+    metrics = PPOTrainer(cfg).update(model, buffer)
+    assert metrics["n_updates"] > 0
+    assert not torch.equal(before, model.contour_encoder.proj.weight.detach().cpu())
+
+
 if __name__ == "__main__":
     for _name, _fn in list(globals().items()):
         if _name.startswith("test_") and callable(_fn):

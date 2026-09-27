@@ -70,6 +70,8 @@ namespace GoiRuntime.Core.Interfaces
 		/// <summary>关闭连接，退出训练</summary>
 		Close = (byte)'X',
         ObservationDiagnostics = (byte)'D',
+		Hello = (byte)'H',
+		CalibrationCapture = (byte)'P',
 	}
 
 	/// <summary>
@@ -109,6 +111,9 @@ namespace GoiRuntime.Core.Interfaces
 
 		/// <summary>CameraFree 命令：是否启用自由相机</summary>
 		public bool CameraFreeEnabled;
+
+		/// <summary>HELLO 请求 JSON（仅主线程误入时可见；正常路径在后台线程处理）</summary>
+		public string HelloJson;
 	}
 
 	/// <summary>
@@ -117,9 +122,11 @@ namespace GoiRuntime.Core.Interfaces
 	public struct StepResponse
 	{
         public string DiagnosticJson;
+		public int Sequence;
+		public int ErrorCode;
+		public string ErrorMessage;
 		/// <summary>
-		/// 状态数组，长度 = numAgents × stateDim(29)
-		/// 布局：[agent0_s0..s28, agent1_s0..s28, ...]
+		/// 状态数组，长度 = numAgents × 内部步幅（35）
 		/// </summary>
 		public float[] States;
 

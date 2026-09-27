@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using GoiRuntime.Core.Utilities;
 using GoiRuntime.PlayerControl;
 using GoiRuntime.Core.Interfaces;
 
@@ -25,8 +27,12 @@ namespace GoiRuntime.Core
 		public const int BASE_STATE_DIM = 29;
 		/// <summary>追加的 fakeCursor 维度：绝对坐标 x,y + 速度 vx,vy。</summary>
 		public const int CURSOR_DIM = 4;
-		/// <summary>每个 agent 的完整状态维度（基础 + fakeCursor）。</summary>
-		public const int STATE_DIM = BASE_STATE_DIM + CURSOR_DIM;  // 33
+		/// <summary>经标定的参考锚点世界坐标 x/y。</summary>
+		public const int ANCHOR_DIM = 2;
+		/// <summary>旧客户端线路宽度（基础 + fakeCursor）。</summary>
+		public const int LEGACY_WIRE_DIM = BASE_STATE_DIM + CURSOR_DIM;  // 33
+		/// <summary>内部完整状态步幅（基础 + fakeCursor + 锚点）。</summary>
+		public const int STATE_DIM = LEGACY_WIRE_DIM + ANCHOR_DIM;  // 35
 
 		private readonly int numAgents;
 		private readonly int stepFrames;
@@ -35,6 +41,11 @@ namespace GoiRuntime.Core
         private bool observationDiagnosticsEnabled;
         private int observationSequence;
         private GoiRuntime.Testing.ObservationDiagnosticPacket observationDiagnostics;
+		private bool anchorCalibrationAvailable;
+		private float anchorLocalX;
+		private float anchorLocalY;
+		public bool LastAnchorCollectOk { get; private set; }
+		public int LastCollectSequence { get { return observationSequence; } }
 
 		// 各 agent 的 Input 和 State 服务（索引 0 = 原始 Player）
 		private readonly List<PlayerInputService> inputServices = new List<PlayerInputService>();
@@ -71,8 +82,16 @@ namespace GoiRuntime.Core
 
 	private bool isInitialized;
 
-	public bool IsReady => isInitialized;
-	public int NumAgents => numAgents;
+		public bool IsReady => isInitialized;
+		public int NumAgents => numAgents;
+		public int StepFrames => stepFrames;
+
+		public void SetAnchorCalibration(bool available, float localX, float localY)
+		{
+			anchorCalibrationAvailable = available;
+			anchorLocalX = localX;
+			anchorLocalY = localY;
+		}
 
 		public StepController(int numAgents, int stepFrames, int stateDim = 29, int actionDim = 2)
 		{
@@ -383,6 +402,7 @@ namespace GoiRuntime.Core
 		public float[] CollectAllStates()
 		{
 			float[] result = new float[numAgents * stateDim];
+			bool allAnchorsOk = anchorCalibrationAvailable;
 			for (int i = 0; i < numAgents; i++)
 			{
 				float[] s = (stateServices[i] != null && stateServices[i].IsReady)
@@ -412,7 +432,27 @@ namespace GoiRuntime.Core
 				result[baseOffset + BASE_STATE_DIM + 1] = cy;
 				result[baseOffset + BASE_STATE_DIM + 2] = cvx;
 				result[baseOffset + BASE_STATE_DIM + 3] = cvy;
+
+				float ax = float.NaN, ay = float.NaN;
+				Vector2 world = Vector2.zero;
+				if (anchorCalibrationAvailable && stateServices[i] != null &&
+					stateServices[i].TrySampleReferenceAnchor(anchorLocalX, anchorLocalY, out world))
+				{
+					ax = world.x;
+					ay = world.y;
+				}
+				else
+				{
+					allAnchorsOk = false;
+				}
+				if (stateDim >= LEGACY_WIRE_DIM + ANCHOR_DIM)
+				{
+					result[baseOffset + LEGACY_WIRE_DIM + 0] = ax;
+					result[baseOffset + LEGACY_WIRE_DIM + 1] = ay;
+				}
 			}
+			LastAnchorCollectOk = allAnchorsOk;
+			observationSequence++;
             if (observationDiagnosticsEnabled) CaptureObservationDiagnostics(true);
 			return result;
 		}
@@ -422,22 +462,65 @@ namespace GoiRuntime.Core
             var packet = new GoiRuntime.Testing.ObservationDiagnosticPacket
             {
                 aligned = aligned,
-                sequence = ++observationSequence,
+                sequence = observationSequence,
                 fixedDeltaTime = Time.fixedDeltaTime,
                 stepFrames = stepFrames,
                 agents = new GoiRuntime.Testing.ObservationDiagnosticAgent[numAgents]
             };
+            Camera cam = Camera.main;
             for (int i = 0; i < numAgents; i++)
-                packet.agents[i] = GoiRuntime.Testing.ObservationDiagnostics.Capture(inputServices[i]);
+                packet.agents[i] = GoiRuntime.Testing.ObservationDiagnostics.Capture(
+                    inputServices[i], stateServices[i], cam, anchorCalibrationAvailable, anchorLocalX, anchorLocalY);
             observationDiagnostics = packet;
         }
 
         public string CollectObservationDiagnostics()
         {
             observationDiagnosticsEnabled = true;
-            if (observationDiagnostics == null) CaptureObservationDiagnostics(false);
+            if (observationDiagnostics == null)
+            {
+                observationSequence++;
+                CaptureObservationDiagnostics(false);
+            }
             return GoiRuntime.Testing.ObservationDiagnostics.ToJson(observationDiagnostics);
         }
+
+		public string CollectCalibrationCapture()
+		{
+			observationDiagnosticsEnabled = true;
+			DisableBodyInterpolation();
+			observationSequence++;
+			CaptureObservationDiagnostics(true);
+			Camera cam = Camera.main;
+			string dir = Path.Combine(PathManager.DataRootPath, "CalibrationCaptures");
+			PathManager.EnsureDirectory(dir);
+			string path = Path.Combine(dir, "seq_" + observationSequence.ToString("D6") + ".ppm");
+			int width, height;
+			if (observationDiagnostics != null &&
+				GoiRuntime.Testing.CalibrationCapture.WriteCameraPpm(cam, path, out width, out height))
+			{
+				observationDiagnostics.screenshotPath = path;
+				observationDiagnostics.screenshotWidth = width;
+				observationDiagnostics.screenshotHeight = height;
+				observationDiagnostics.pixelOrigin = "image_top_left";
+			}
+			return GoiRuntime.Testing.ObservationDiagnostics.ToJson(observationDiagnostics);
+		}
+
+		private void DisableBodyInterpolation()
+		{
+			for (int i = 0; i < stateServices.Count; i++)
+			{
+				if (stateServices[i] == null || !stateServices[i].IsReady) continue;
+				GameObject go = stateServices[i].GetPlayerObject();
+				if (go == null) continue;
+				foreach (var rb in go.GetComponentsInChildren<Rigidbody2D>(true))
+				{
+					if (rb != null)
+						rb.interpolation = RigidbodyInterpolation2D.None;
+				}
+			}
+		}
 
 	// ── 初始姿态归一化 ──────────────────────────────────────────
 

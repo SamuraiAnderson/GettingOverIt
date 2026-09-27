@@ -172,7 +172,7 @@ class CorridorRewardTests(unittest.TestCase):
                                       guidance_arrays={0: maps[0], 1: maps[1]})
         expected = build_patch(obs[0], terrain, maps[0], cfg, -20, -20)
         np.testing.assert_array_equal(online[0], expected)
-        self.assertEqual(online.shape, (2, 4, 32, 32))
+        self.assertEqual(online.shape, (2, cfg.patch_channels, cfg.patch_size, cfg.patch_size))
         self.assertFalse(np.array_equal(online[0, 0], online[1, 0]))
 
     def test_cli_resume_preserves_reference_semantics_and_can_disable(self):
@@ -205,6 +205,30 @@ class CorridorRewardTests(unittest.TestCase):
         for segment in r.segments:
             t = r.tracker(segment.points[0])
             self.assertTrue(np.isfinite(t.step(segment.points[0]).reward))
+
+    def test_live_camera_tas_starts_on_live_pot(self):
+        from training.reference_anchor import LIVE_CAMERA_REFERENCE
+        payload = json.loads(LIVE_CAMERA_REFERENCE.read_text(encoding="utf-8"))
+        start = np.array([payload["segments"][0][0]["x"], payload["segments"][0][0]["y"]], dtype=float)
+        live = np.array(payload["spawn_check"]["live_detected_pot"], dtype=float)
+        self.assertLess(np.linalg.norm(start - live), 0.02)
+        self.assertGreater(payload["spawn_check"]["dist_old_to_live_pot_m"], 0.2)
+        r = ReferenceCorridor.from_file(LIVE_CAMERA_REFERENCE, TrainConfig())
+        self.assertGreaterEqual(len(r.segments), 1)
+        self.assertEqual(payload["status"], "live_camera_reprojection_v1")
+
+    def test_game_world_tas_locks_to_unity_pot(self):
+        from training.reference_anchor import DEFAULT_REFERENCE_TRAJECTORY
+        payload = json.loads(DEFAULT_REFERENCE_TRAJECTORY.read_text(encoding="utf-8"))
+        start = np.array([payload["segments"][0][0]["x"], payload["segments"][0][0]["y"]], dtype=float)
+        unity = np.array(payload["spawn_check"]["unity_transform_point_b"], dtype=float)
+        self.assertEqual(payload["status"], "game_world_spawn_lock_v1")
+        self.assertLess(np.linalg.norm(start - unity), 1e-9)
+        self.assertLess(payload["spawn_check"]["dist_to_unity_b_m"], 1e-9)
+        # Live detector residual is measurement, not the lock target.
+        self.assertLess(payload["spawn_check"]["dist_to_live_detected_m"], 0.03)
+        r = ReferenceCorridor.from_file(DEFAULT_REFERENCE_TRAJECTORY, TrainConfig())
+        self.assertGreaterEqual(len(r.segments), 1)
 
     def test_credit_ablation_survives_checkpoint_resume_without_default_reset(self):
         from training.main_ppo import configure_credit, configure_reference, parse_args, save_checkpoint
@@ -269,8 +293,14 @@ class PPOCollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "route.json"
             write_route(path, [[(0, 0), (10, 0)]])
-            cfg = TrainConfig(reference_trajectory=str(path), num_agents=2, context_len=2,
-                              random_deploy=False, deploy_exclusion_check=False)
+            cfg = TrainConfig(
+                reference_trajectory=str(path), num_agents=2, context_len=2,
+                random_deploy=False, deploy_exclusion_check=False,
+                reference_anchor_id="player_origin",
+                reference_anchor_verified=False,
+                reference_anchor_calibration_sha256=None,
+                tcp_protocol="legacy33",
+            )
             worker = RolloutWorker(cfg)
             env = Env()
             worker.env = env

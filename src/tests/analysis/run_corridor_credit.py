@@ -43,7 +43,7 @@ def report(runner, status, error=None):
              f"已记录训练物理样本 **{output['training_physical_samples']:,}**，已完成评估物理样本 **{output['evaluation_physical_samples']:,}**。训练包含 critic 预热。", "",
              "C：原配方；D：走廊外每步惩罚上限 0.01 → 0.001；T：gamma=0.998、GAE lambda=0.995，其余与 C 相同。T 比较联合时间配方，不能单独归因给 gamma 或 lambda。", "",
              "三组使用相同 B1 表示和旧源权重，各训练 seeds 7、17。中期 48k；最终默认 96k，若时间不足则统一下调。具体参数见 [manifest.json](manifest.json)。", "",
-             "主要指标为到达 5 米目标后连续保持 120 个物理步（1 秒）；并保留原 10 步成功、成功后跌落和有效进度。每次评估的每种模式回合数单独列出；未完成评估不计作零成功。", "",
+             "到达单独计数。保持用容差、允许继续前进；参考缺口与观察不足单列。当前阶段用 credited 中位数和下四分位区分改进。每次评估的每种模式回合数单独列出；未完成评估不计作零成功。", "",
              "## 已完成评估", ""]
     for r in runs:
         lines.append(f"### {r['arm']} / seed {r['seed']}：当前 {r['physical_samples']:,} 训练样本")
@@ -53,9 +53,8 @@ def report(runner, status, error=None):
             lines.append(f"{stage}；评估权重对应训练样本 {evaluation['training_samples_at_checkpoint']:,}。")
             lines.append("")
             for mode, m in evaluation["summary"].items():
-                lines.append(f"- {mode}：1 秒保持 {m['success_hold_120_count']}/{m['episodes']}；"
-                             f"10 步成功 {m['successes']}/{m['episodes']}；成功后跌落 {m['falls_after_success']}；"
-                             f"跌落率 {m['fall_rate']:.0%}；有效进度中位数 {m['credited_progress_median_m']:.2f} 米。")
+                from src.training.local_evaluation import format_eval_line
+                lines.append(f"- {mode}：{format_eval_line(m)}。")
             lines.append("")
     lines += ["## 解释边界", "", "只有两个训练 seed；同轮两个 agents 共享试验 seed，合并回合不能当作完全独立样本。奖励值随组别改变，不用累计奖励直接排名。全部候选无稳定成功时，不自动扩训或修改成功门槛。", "",
               "脚本在阶段之间自动继续，到截止时间只停止自己启动的进程树；STOP 文件在下个任务边界生效。原始权重和已有运行不会被覆盖。", ""]

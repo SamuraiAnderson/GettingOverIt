@@ -3,6 +3,7 @@ using UnityEngine;
 using System.IO;
 using GoiRuntime.Core.Configuration;
 using GoiRuntime.Core.Interfaces;
+using GoiRuntime.Core.Protocol;
 using GoiRuntime.Core.Services;
 using GoiRuntime.Core.Utilities;
 using GoiRuntime.ColliderCollection;
@@ -393,8 +394,7 @@ namespace GoiRuntime.Core
 		Logger.LogInfo("RL 模式已激活（Rewired 拦截 mouseX/mouseY，注入值将替换真实鼠标）");
 
 		// --- StepController ---
-		// 状态维度以 StepController.STATE_DIM 为唯一权威（含 fakeCursor 的 33 维），
-		// 不依赖持久化的 config.stateDimension，避免旧配置文件残留 29 造成协议不一致。
+		// 内部步幅 35；未协商的旧客户端仍按 33 维发送。
 			stepController = new StepController(numAgents, config.stepFrames, StepController.STATE_DIM, config.actionDimension);
 			if (!stepController.Initialize(
 				playerStateService, playerInputService, duplicateManager,
@@ -404,7 +404,13 @@ namespace GoiRuntime.Core
 				Logger.LogError("StepController 初始化失败，中止");
 				return;
 			}
-			Logger.LogInfo($"StepController 初始化成功（{numAgents} agent，每 step {config.stepFrames} 物理帧）");
+			Logger.LogInfo($"StepController 初始化成功（{numAgents} agent，每 step {config.stepFrames} 物理帧，内部 {StepController.STATE_DIM}D）");
+			var calib = AnchorCalibration.Load();
+			stepController.SetAnchorCalibration(calib.Available, calib.LocalX, calib.LocalY);
+			if (calib.Available)
+				Logger.LogInfo($"锚点标定可用: {calib.AnchorId} {calib.Sha256}");
+			else
+				Logger.LogInfo("锚点标定不可用；连接默认 legacy33，要求校准的 HELLO 将被拒绝");
 
 			// --- 视觉修复：启动角色手臂骨骼动画(PoseControl IK) ---
 			// RL 模式跳过游戏原生载入，从不调 StartAnimator，手臂会停在绑定姿(视觉扭曲)。
@@ -418,7 +424,16 @@ namespace GoiRuntime.Core
 			}
 
 			// --- TCP 步进服务器 ---
-			tcpStepServer = new TcpStepServer(StepController.STATE_DIM);
+			var hello = new HelloSnapshot
+			{
+				NumAgents = numAgents,
+				FixedDeltaTime = Time.fixedDeltaTime,
+				StepFrames = config.stepFrames,
+				CalibrationAvailable = calib.Available,
+				AnchorId = calib.AnchorId ?? "",
+				CalibrationSha256 = calib.Sha256 ?? "",
+			};
+			tcpStepServer = new TcpStepServer(StepController.STATE_DIM, StepController.LEGACY_WIRE_DIM, hello);
 			tcpStepServer.StartListening(config.tcpPort);
 			Logger.LogInfo($"TcpStepServer 已启动，监听端口 {config.tcpPort}");
 
@@ -451,6 +466,30 @@ namespace GoiRuntime.Core
 		Logger.LogInfo("游戏运行模式初始化完成，等待 Python 连接...");
 		}
 
+		private StepResponse StatePacket(float[] states = null, string diagnosticJson = null)
+		{
+			bool anchorsOk = diagnosticJson != null || stepController.LastAnchorCollectOk;
+			return new StepResponse
+			{
+				States = states,
+				Dones = new bool[stepController.NumAgents],
+				Sequence = stepController.LastCollectSequence,
+				ErrorCode = anchorsOk ? 0 : 1,
+				ErrorMessage = anchorsOk ? null : "reference_anchor_unavailable",
+				DiagnosticJson = diagnosticJson,
+			};
+		}
+
+		private StepResponse EmptyPacket()
+		{
+			return new StepResponse
+			{
+				States = new float[0],
+				Dones = new bool[0],
+				Sequence = stepController.LastCollectSequence,
+			};
+		}
+
 		/// <summary>
 		/// 训练主循环协程
 		/// Python 通过 TCP 发送 RESET/STEP/CLOSE 命令；C# 执行物理步进后回包
@@ -469,37 +508,28 @@ namespace GoiRuntime.Core
 						switch (cmd.Type)
 						{
                         case CommandType.ObservationDiagnostics:
-                            tcpStepServer.SendResponse(new StepResponse {
-                                DiagnosticJson = stepController.CollectObservationDiagnostics()
-                            });
+                            tcpStepServer.SendResponse(StatePacket(
+                                diagnosticJson: stepController.CollectObservationDiagnostics()));
                             break;
+						case CommandType.CalibrationCapture:
+							tcpStepServer.SendResponse(StatePacket(
+								diagnosticJson: stepController.CollectCalibrationCapture()));
+							break;
 						case CommandType.Reset:
 							stepController.Reset();
-							resp = new StepResponse
-							{
-								States = stepController.CollectAllStates(),
-								Dones  = new bool[stepController.NumAgents],
-							};
+							resp = StatePacket(stepController.CollectAllStates());
 							tcpStepServer.SendResponse(resp);
 							break;
 
 						case CommandType.Step:
 							float[] states = stepController.ExecuteStep(cmd.Actions ?? new float[0]);
-							resp = new StepResponse
-							{
-								States = states,
-								Dones  = new bool[stepController.NumAgents],
-							};
+							resp = StatePacket(states);
 							tcpStepServer.SendResponse(resp);
 							break;
 
 						case CommandType.NewSnapshot:
 							stepController.TakeNewSnapshot();
-							resp = new StepResponse
-							{
-								States = stepController.CollectAllStates(),
-								Dones  = new bool[stepController.NumAgents],
-							};
+							resp = StatePacket(stepController.CollectAllStates());
 							tcpStepServer.SendResponse(resp);
 							break;
 
@@ -511,13 +541,13 @@ namespace GoiRuntime.Core
 							if (cmd.ConfigMouseYActionId >= 0)
 								GoiRuntime.PlayerControl.RewiredMouseOverride.MouseYActionId = cmd.ConfigMouseYActionId;
 							Logger.LogInfo($"[TrainingLoop] RewiredMouseOverride: Active={cmd.ConfigRewiredMouseActive} MouseX={cmd.ConfigMouseXActionId} MouseY={cmd.ConfigMouseYActionId}");
-							resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+							resp = EmptyPacket();
 							tcpStepServer.SendResponse(resp);
 							break;
 
 					case CommandType.ExportColliders:
 						ColliderExporter.ExportAll(playerStateService.GetPlayerObject(), PathManager.CollidersPath);
-						resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+						resp = EmptyPacket();
 						tcpStepServer.SendResponse(resp);
 						break;
 
@@ -525,11 +555,7 @@ namespace GoiRuntime.Core
 						float[] teleStates = stepController.Teleport(
 							cmd.TeleportAgentIndex,
 							new Vector2(cmd.TeleportX, cmd.TeleportY));
-						resp = new StepResponse
-						{
-							States = teleStates,
-							Dones  = new bool[stepController.NumAgents],
-						};
+						resp = StatePacket(teleStates);
 						tcpStepServer.SendResponse(resp);
 						break;
 
@@ -539,7 +565,7 @@ namespace GoiRuntime.Core
 								colliderVisualizer.enabled = cmd.VisualizeEnabled;
 								Logger.LogInfo($"[TrainingLoop] ColliderVisualizer {(cmd.VisualizeEnabled ? "开启" : "关闭")}");
 							}
-							resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+							resp = EmptyPacket();
 							tcpStepServer.SendResponse(resp);
 							break;
 
@@ -549,7 +575,7 @@ namespace GoiRuntime.Core
 							freeCameraController.SetFreeMode(cmd.CameraFreeEnabled);
 							Logger.LogInfo($"[TrainingLoop] FreeCameraController {(cmd.CameraFreeEnabled ? "启用" : "禁用")}");
 						}
-						resp = new StepResponse { States = new float[0], Dones = new bool[0] };
+						resp = EmptyPacket();
 						tcpStepServer.SendResponse(resp);
 						break;
 
@@ -569,6 +595,9 @@ namespace GoiRuntime.Core
 						{
 							States = new float[stepController.NumAgents * StepController.STATE_DIM],
 							Dones  = new bool[stepController.NumAgents],
+							Sequence = stepController.LastCollectSequence,
+							ErrorCode = 2,
+							ErrorMessage = ex.Message,
 						});
 					}
 					catch { }

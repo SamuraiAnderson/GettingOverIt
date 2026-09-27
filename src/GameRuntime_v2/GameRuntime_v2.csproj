@@ -44,10 +44,13 @@
     
     <!-- Core/Configuration: 配置管理 -->
     <Compile Include="Core\Configuration\RuntimeConfig.cs" />
+    <Compile Include="Core\Configuration\AnchorCalibration.cs" />
+    <Compile Include="Core\Protocol\HelloProtocol.cs" />
 
     <!-- Core: RL 步进控制器 -->
     <Compile Include="Core\StepController.cs" />
     <Compile Include="Testing\ObservationDiagnostics.cs" />
+    <Compile Include="Testing\CalibrationCapture.cs" />
 
     <!-- Communication: TCP 步进服务器 -->
     <Compile Include="Communication\TcpStepServer.cs" />

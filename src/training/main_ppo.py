@@ -278,6 +278,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="空中相放大探索噪声（默认关闭，未验证机制 opt-in）；--no-phase-noise 显式关闭",
     )
     parser.add_argument(
+        "--sil-archive-mode", choices=("map_elites", "td_pareto"), default=None,
+        help="SIL 精英归档：map_elites 对照；td_pareto 为终点 (t,D) 前沿（默认 map_elites）",
+    )
+    parser.add_argument(
         "--resume", type=str, default=None,
         help="从指定 checkpoint 恢复训练（如 checkpoints/ppo_iter_0050.pt）",
     )
@@ -301,9 +305,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     reference_group = parser.add_mutually_exclusive_group()
     reference_group.add_argument(
         "--reference-trajectory", nargs="?", const=str(
-            _REPO_ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory.json"
+            _REPO_ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory_game_world.json"
         ), default=None,
-        help="启用走廊进度奖励；可指定 JSON，省略路径使用当前速通视频轨迹",
+        help="启用走廊进度奖励；可指定 JSON，省略路径使用实机相机重投影的速通轨迹",
     )
     reference_group.add_argument(
         "--no-reference-trajectory", dest="reference_trajectory", action="store_const", const="",
@@ -435,6 +439,8 @@ def main() -> None:
         config.value_warmup_iters = args.value_warmup_iters
     if args.phase_noise is not None:
         config.phase_noise_enabled = args.phase_noise
+    if args.sil_archive_mode is not None:
+        config.sil_archive_mode = args.sil_archive_mode
     if args.random_deploy is not None:
         config.random_deploy = args.random_deploy
     configure_credit(config, args, resume_state)
@@ -489,9 +495,25 @@ def main() -> None:
         saved_hash = resume_state.get("reference_corridor", {}).get("sha256")
         if saved_hash and args.reference_trajectory is None and saved_hash != reference_meta["sha256"]:
             raise ValueError("Checkpoint reference file has changed; select --reference-trajectory explicitly to switch")
+    from training.reference_anchor import ANCHOR_POT_CALIBRATED
+    from training.reference_fingerprint import (
+        assert_fingerprint_compatible, load_fingerprint_sidecar, reference_fingerprint,
+    )
+    if config.reference_anchor_id == ANCHOR_POT_CALIBRATED:
+        if not config.reference_anchor_verified:
+            raise ValueError("校准锅锚点尚未独立验证，拒绝正式训练")
+        if config.tcp_protocol != "anchor35":
+            raise ValueError("校准锅锚点任务必须 tcp_protocol=anchor35，禁止降级 legacy33")
+    reference_fp = reference_fingerprint(
+        config,
+        route_meta=reference_meta,
+        schema_id="anchor35" if config.tcp_protocol == "anchor35" else "legacy33",
+        raw_dim=35 if config.tcp_protocol == "anchor35" else 33,
+    )
     if recorder is not None:
         recorder.write_meta(config, argv=sys.argv, extra={
-            "resume": args.resume, "resume_bc": args.resume_bc, "init_from": args.init_from, "reference_corridor": reference_meta,
+            "resume": args.resume, "resume_bc": args.resume_bc, "init_from": args.init_from,
+            "reference_corridor": reference_meta, "reference_fingerprint": reference_fp,
         })
     start_iteration = 0
 
@@ -515,8 +537,8 @@ def main() -> None:
             logger.info("显式暖启动：加载 %d 个兼容张量；新模块初始化，不恢复 optimizer/iteration", len(loaded))
         else:
             model.load_state_dict(init_state["model"])
-        # σ 重设（M2 修复）：PPO→PPO 暖启动会原样继承源 checkpoint 的 log_std
-        #（实测 σ≈0.52 全程钉死，技能住在噪声里）。按 ppo_init_log_std 拉回设计初值。
+        # 默认不重设：继承源 checkpoint 的 log_std。打开 ppo_reset_log_std_on_init
+        # 才按 ppo_init_log_std 拉回。
         if config.ppo_reset_log_std_on_init and hasattr(model, "reset_log_std"):
             model.reset_log_std(config.ppo_init_log_std)
             logger.info("init-from σ 重设: log_std → %.2f (std=%.3f)",
@@ -628,7 +650,12 @@ def main() -> None:
     if sil_dataset is not None and args.sil_seed:
         seed_trajs: list[Trajectory] = []
         for seed_path in args.sil_seed:
+            assert_fingerprint_compatible(
+                reference_fp, load_fingerprint_sidecar(seed_path), context=str(seed_path),
+            )
             z = np.load(seed_path)
+            if config.reference_anchor_id == ANCHOR_POT_CALIBRATED and "corridor_progress" in z.files:
+                raise ValueError(f"{seed_path}: 禁止把旧 corridor_progress 混入新锚点任务")
             traj = Trajectory(
                 raw_states=np.asarray(z["raw_states"], dtype=np.float32),
                 actions=np.asarray(z["actions"], dtype=np.float32),
@@ -651,20 +678,24 @@ def main() -> None:
             logger.info("SIL 种子: %s (T=%d, score=%.3f)",
                         seed_path, len(traj.actions), traj.score)
         if seed_trajs:
-            sil_dataset.set_trajectories(seed_trajs)
-            logger.info("SIL 精英池冷启动: %d 条种子轨迹入池", len(seed_trajs))
+            sil_dataset.load_sil_pool(seed_trajs)
+            logger.info("SIL 精英池冷启动: %d 条种子轨迹入池", len(sil_dataset.trajectories))
 
     if args.sil_resume_pool:
         if sil_dataset is None:
             raise ValueError("Restoring an elite pool requires SIL to be enabled")
+        assert_fingerprint_compatible(
+            reference_fp, load_fingerprint_sidecar(args.sil_resume_pool),
+            context=str(args.sil_resume_pool),
+        )
         restored_trajs = [Trajectory(**row) for row in load_elites(args.sil_resume_pool)]
         if not restored_trajs:
             raise ValueError("Cannot resume an empty SIL pool")
         if reference is not None and any(t.corridor_progress is None or t.guidance_index is None
                                          for t in restored_trajs):
             raise ValueError("Corridor SIL pool is missing saved corridor fields")
-        sil_dataset.set_trajectories(restored_trajs)
-        logger.info("SIL 精英池完整恢复: %s (%d 条轨迹)", args.sil_resume_pool, len(restored_trajs))
+        sil_dataset.load_sil_pool(restored_trajs)
+        logger.info("SIL 精英池完整恢复: %s (%d 条轨迹)", args.sil_resume_pool, len(sil_dataset.trajectories))
 
     # ── 奖励归一化器 ──
     calibration_steps = config.steps_per_rollout * config.num_agents * 10
@@ -684,8 +715,8 @@ def main() -> None:
             rollout_worker.launch_game()
             _calib_launched = True
         elif rollout_worker.env is None:
-            from env import GoiEnv
-            rollout_worker.env = GoiEnv(port=config.port, num_agents=config.num_agents)
+            from env import make_goi_env
+            rollout_worker.env = make_goi_env(config)
             rollout_worker.env.connect()
             rollout_worker.env.reset()
 
@@ -728,10 +759,8 @@ def main() -> None:
             if manage_per_iter:
                 rollout_worker.launch_game()
             elif rollout_worker.env is None:
-                from env import GoiEnv
-                rollout_worker.env = GoiEnv(
-                    port=config.port, num_agents=config.num_agents,
-                )
+                from env import make_goi_env
+                rollout_worker.env = make_goi_env(config)
                 rollout_worker.env.connect()
                 rollout_worker.env.reset()
 
@@ -792,7 +821,20 @@ def main() -> None:
                 else:
                     pool_trajs = trajectories
                 sil_scores = [_sil_score(t, eff_map, config) for t in pool_trajs]
-                if config.sil_map_elites_enabled:
+                if config.sil_archive_mode == "td_pareto":
+                    archive_stats = sil_dataset.ingest_sil_archive(
+                        pool_trajs, sil_scores, iteration=iteration)
+                    logger.info(
+                        "[SIL/td-pareto] size=%d pareto=%d behavior=%d bucketed=%s capped=%s",
+                        int(archive_stats["sil_archive_size"]),
+                        int(archive_stats["sil_archive_pareto"]),
+                        int(archive_stats["sil_archive_behavior"]),
+                        bool(archive_stats["sil_archive_bucketed"]),
+                        bool(archive_stats["sil_archive_capped"]),
+                    )
+                    if recorder is not None:
+                        recorder.stage_metrics(**archive_stats)
+                elif config.sil_map_elites_enabled:
                     me_stats = sil_dataset.add_trajectories_map_elites(
                         pool_trajs, sil_scores,
                         iteration=iteration,
@@ -816,9 +858,10 @@ def main() -> None:
                         pool_trajs, sil_scores,
                         keep_ratio=config.sil_keep_ratio, iteration=iteration,
                     )
-                # 按分数保留 top-N 兜底（防 cell 数长期无界增长；MAP-Elites 下同 cell
-                # 至多 1 条 → 天然稀疏，通常远低于 cap，此裁剪几乎 no-op 但保底）
-                if len(sil_dataset.trajectories) > config.sil_traj_cap:
+                # map_elites / top-K 仍可按分数兜底。td_pareto 容量在 ingest 内处理，
+                # 禁止再按 traj.score 截断。
+                if (config.sil_archive_mode != "td_pareto"
+                        and len(sil_dataset.trajectories) > config.sil_traj_cap):
                     top = sorted(
                         sil_dataset.trajectories, key=lambda t: t.score, reverse=True,
                     )[: config.sil_traj_cap]

@@ -284,7 +284,12 @@ def test_corridor_score() -> None:
 
 def test_corridor_behavior_cell() -> None:
     """走廊 bd = credited 封顶点位置，而非高度峰位置。"""
-    cfg = TrainConfig()
+    cfg = TrainConfig(
+        reference_anchor_id="player_origin",
+        reference_anchor_verified=False,
+        reference_anchor_calibration_sha256=None,
+        tcp_protocol="legacy33",
+    )
     traj = _make_corridor_traj(T=200, push_to=100)
     ds = TrajectoryDataset(cfg, np.ones((4, 4), dtype=np.float32), None)
     cid = ds._behavior_cell_id(traj.raw_states, 5.0, traj.corridor_progress)

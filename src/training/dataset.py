@@ -86,9 +86,11 @@ def build_dynamics(
         `contact=None` 时填 0（等价旧 34D 行为，用于兼容尚未提供接触序列的老
         Trajectory / 单元测试）。
 
-    支持任意前置维度，末轴须为 33（原始 state_dim）。返回末轴 = DYNAMICS_DIM(39)。
+    支持任意前置维度，末轴须为 33 或 35。返回末轴 = DYNAMICS_DIM(39)。35D 多出的锚点列不进入特征。
     """
     raw = np.asarray(raw, dtype=np.float32)
+    if raw.shape[-1] not in (33, 35):
+        raise ValueError(f"build_dynamics 只接受 33/35 schema，收到末轴 {raw.shape[-1]}")
     vel = raw[..., VELOCITY_INDICES]
     ang = np.deg2rad(raw[..., ANGLE_INDICES])
     ang_feat = np.concatenate([np.sin(ang), np.cos(ang)], axis=-1)
@@ -160,6 +162,8 @@ class Trajectory:
     #   引导段索引（patch wide 通道用 reference_maps[guidance[t]] 重建），-1 = 无引导。
     corridor_progress: np.ndarray | None = None
     guidance_index: np.ndarray | None = None
+    # SIL 归档角色：td_pareto 前沿 / 行为多样性补充。缺省不影响 BC 与 MAP-Elites。
+    archive_role: str | None = None
 
 
 def prune_trajectory(traj: Trajectory, config: "TrainConfig") -> Trajectory:
@@ -317,8 +321,8 @@ def rasterize_polygon_fill(
     「格中心点在多边形内」二值判据。
 
     **为何必须抗锯齿**：Player 部件轮廓远小于一格。真实 tip 轮廓 bbox 仅
-    0.148 × 0.448 m，在 `contact_patch_resolution=0.2` m/px 下宽仅 0.74 px、
-    0.25 m/px 下 0.59 px —— 都不足 1 像素。二值判据下多边形可整体落在相邻格心
+    0.148 × 0.448 m，在旧 `0.27` m/px 下宽仅 0.55 px、现 `0.135` m/px 下约 1.1 px。
+    更粗的 0.2 / 0.25 m/px 都不足 1 像素。二值判据下多边形可整体落在相邻格心
     之间而一个格心都不含，导致**通道整帧全零、锤头对 CNN 完全不可见**：实测
     (`src/tests/analysis/diagnose_tip_rasterization.py`) 0.2 m/px 空通道率 8.7%、
     0.25 m/px 达 30%。面积覆盖率下只要有任何重叠就必有非零值，空通道率归 0，
@@ -581,9 +585,38 @@ class TrajectoryDataset(Dataset):
         self.efficiency_arr = new_arr
 
     def set_trajectories(self, trajs: list[Trajectory]) -> None:
-        """设置初始轨迹集（冷启动用）。"""
+        """设置初始轨迹集（冷启动用）。BC 与 MAP-Elites 恢复仍走这里。"""
         self.trajectories = list(trajs)
         self._rebuild_index()
+
+    def load_sil_pool(self, trajs: list[Trajectory]) -> dict[str, float]:
+        """种子导入 / 恢复：td_pareto 走同一套归档规则，MAP-Elites 原样装入。"""
+        if getattr(self.config, "sil_archive_mode", "map_elites") != "td_pareto":
+            self.set_trajectories(trajs)
+            return {"sil_archive_size": float(len(self.trajectories))}
+        self.trajectories = []
+        return self.ingest_sil_archive(trajs, [float(t.score) for t in trajs],
+                                       iteration=max((int(t.iteration) for t in trajs), default=0))
+
+    def ingest_sil_archive(
+        self,
+        trajs: list[Trajectory],
+        scores: list[float],
+        iteration: int = 0,
+    ) -> dict[str, float]:
+        """PPO/SIL 入池入口。BC 的 add_trajectories 不经过这里。"""
+        from .sil_archive import ARCHIVE_TD_PARETO, ingest_td_pareto
+        if getattr(self.config, "sil_archive_mode", "map_elites") == ARCHIVE_TD_PARETO:
+            kept, stats = ingest_td_pareto(
+                self.trajectories, trajs, scores, iteration, self.config)
+            self.trajectories = kept
+            self._rebuild_index()
+            return stats
+        return self.add_trajectories_map_elites(
+            trajs, scores, iteration=iteration,
+            cell_size=self.config.sil_cell_size,
+            cold_start_min=self.config.sil_cold_start_min,
+        )
 
     def add_trajectories(
         self,
@@ -626,8 +659,14 @@ class TrajectoryDataset(Dataset):
             return None
         if peak_idx < 0 or peak_idx >= len(raw_states):
             return None
-        bd_x = float(raw_states[peak_idx, 0])
-        bd_y = float(raw_states[peak_idx, 1])
+        if corridor_progress is not None:
+            from .reference_anchor import reference_position, scoring_context
+            schema, meta = scoring_context(raw_states[peak_idx], self.config)
+            point = reference_position(raw_states[peak_idx], schema, meta)
+            bd_x, bd_y = float(point[0]), float(point[1])
+        else:
+            bd_x = float(raw_states[peak_idx, 0])
+            bd_y = float(raw_states[peak_idx, 1])
         if not (np.isfinite(bd_x) and np.isfinite(bd_y)):
             return None
         return (
@@ -737,6 +776,13 @@ class TrajectoryDataset(Dataset):
           - 高度模式（默认）：cap_idx = progress_metric 的 secured peak（dwell 驻留
             过滤甩飞尖峰后的守住峰），与 base_score / 效率图 update 同口径。
         """
+        from .sil_archive import ARCHIVE_TD_PARETO, equal_traj_window_index
+        if (getattr(self.config, "sil_archive_mode", "map_elites") == ARCHIVE_TD_PARETO
+                and self.trajectories
+                and all(t.corridor_progress is not None for t in self.trajectories)):
+            self._index = equal_traj_window_index(
+                self.trajectories, int(getattr(self.config, "sil_td_windows_per_traj", 0)))
+            return
         self._index = []
         for ti, traj in enumerate(self.trajectories):
             if traj.corridor_progress is not None:

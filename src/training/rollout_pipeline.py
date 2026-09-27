@@ -66,7 +66,7 @@ def _actor(connection, config, output):
             audit_end = time.perf_counter()
             path = Path(output)/"checkpoints"/f"rollout_{job['id']:04d}.npz"
             buffer.save(path)
-            scores = [score_corridor_episode(t, worker.reference_corridor, 5., 120)[0]
+            scores = [score_corridor_episode(t, worker.reference_corridor, 5., 10)[0]
                       for t in trajectories]
             connection.send({"kind":"rollout", "id":job["id"], "version":job["version"],
                 "snapshot":job["snapshot"], "buffer":str(path), "audit":audit,

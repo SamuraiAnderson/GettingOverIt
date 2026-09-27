@@ -34,7 +34,9 @@ def _inputs(tip: float, body: float = 0.0, pot: float = 0.0):
     dyn[:, -1, BASE_DYNAMICS_DIM + 0] = tip    # tip_contact
     dyn[:, -1, BASE_DYNAMICS_DIM + 2] = body   # body_contact
     dyn[:, -1, BASE_DYNAMICS_DIM + 3] = pot    # pot_contact
-    pat = torch.randn(2, 3, 4, 32, 32)
+    cfg = _config()
+    ps = cfg.patch_size
+    pat = torch.randn(2, 3, 4, ps, ps)
     act = torch.randn(2, 3, 2) * 0.1
     mask = torch.ones(2, 3)
     return dyn, pat, act, mask

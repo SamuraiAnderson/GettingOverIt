@@ -146,7 +146,7 @@ def _jsonable(value: Any) -> Any:
     return repr(value)
 
 
-def save_elites(path: Path, trajectories: Sequence[Any]) -> int:
+def save_elites(path: Path, trajectories: Sequence[Any], fingerprint: dict[str, Any] | None = None) -> int:
     """把 SIL 精英池落盘成单个 npz。
 
     每条轨迹按 `t{i}_states / t{i}_actions / t{i}_contact` 存；分数与来源迭代存成
@@ -177,6 +177,9 @@ def save_elites(path: Path, trajectories: Sequence[Any]) -> int:
     arrays["n_trajectories"] = np.asarray(len(trajectories), dtype=np.int32)
     path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path, **arrays)
+    if fingerprint is not None:
+        from .reference_fingerprint import write_fingerprint_sidecar
+        write_fingerprint_sidecar(path, fingerprint)
     return len(trajectories)
 
 
@@ -350,5 +353,5 @@ class RunRecorder:
         if not trajs:
             return
         path = self.paths.elites / f"elites_iter_{iteration:04d}.npz"
-        n = save_elites(path, trajs)
+        n = save_elites(path, trajs, fingerprint=self._meta.get("reference_fingerprint"))
         logger.info("精英池快照已保存: %s (%d 条轨迹)", path, n)

@@ -272,6 +272,8 @@ def step_reward(
     normalizer: RewardNormalizer | None = None,
     confirmer: NewHighConfirmer | None = None,
     corridor: CorridorTracker | None = None,
+    state_schema=None,
+    reference_metadata=None,
 ) -> tuple[float, float]:
     """
     PPO 逐步奖励。提供 corridor 时使用参考走廊奖励，并保留落水惩罚；
@@ -312,7 +314,10 @@ def step_reward(
     if config.reference_trajectory and corridor is None:
         raise ValueError("Reference reward requires a per-agent CorridorTracker")
     if corridor is not None:
-        result = corridor.step(obs_curr[:2])
+        from .reference_anchor import reference_position
+        from .state_schema import schema_from_raw_width
+        schema = state_schema or schema_from_raw_width(np.asarray(obs_curr).shape[-1])
+        result = corridor.step(reference_position(obs_curr, schema, reference_metadata))
         reward = config.water_penalty if is_water(curr_y, config) else result.reward
         return reward, new_max_y
 

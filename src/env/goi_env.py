@@ -15,8 +15,9 @@ Getting Over It 强化学习环境接口
 
   C# → Python  STATE: [n:1B] 然后对每个 agent: [state_i: 33×4B][done_i: 1B]
 
-状态维度 33 = 基础 29 维（PlayerState.ToFloatArray）+ fakeCursor 4 维
+状态维度默认 33 = 基础 29 维（PlayerState.ToFloatArray）+ fakeCursor 4 维
 （cursorX, cursorY, cursorVelX, cursorVelY，均为绝对量，索引 29-32）。
+协商成功后的 v2 线路为 35D，多出的 33/34 是标定锚点，不由模块级 STATE_DIM 决定。
 """
 import socket
 import struct
@@ -26,9 +27,30 @@ from typing import Optional
 
 import numpy as np
 
+from env.protocol import (
+    ANCHOR_DIM,
+    HELLO_MARKER,
+    HELLO_TIMEOUT_S,
+    LEGACY_DIAGNOSTIC,
+    LEGACY_DIM,
+    PROTOCOL_V2,
+    SCHEMA_ANCHOR35,
+    V2_DIAGNOSTIC,
+    V2_ERROR,
+    V2_STATE,
+    ProtocolError,
+    decode_hello_reply_bytes,
+    encode_hello_request,
+    unpack_legacy_state,
+    unpack_v2_error,
+    unpack_v2_frame,
+    unpack_v2_state,
+    validate_hello_reply,
+)
+
 logger = logging.getLogger(__name__)
 
-STATE_DIM  = 33
+STATE_DIM  = 33  # 仅表示未协商时的默认线路宽度
 ACTION_DIM = 2
 
 CMD_RESET       = b'R'
@@ -54,6 +76,7 @@ class GoiEnv:
         port:       TCP 端口（默认 9000，与 RuntimeConfig.tcpPort 一致）
         num_agents: agent 数量（与 C# StepController 配置一致）
         timeout:    连接超时（秒）
+        protocol:   "legacy33"（默认，不发 HELLO）或 "anchor35"（必须 HELLO 成功）
         startup_settle_s:
             连接成功后的固定预热等待（秒）。游戏在 Mian 场景加载后需要
             数秒完成初始化（Rewired/关节电机等），期间注入的鼠标动作虽被
@@ -70,12 +93,27 @@ class GoiEnv:
         num_agents: int = 1,
         timeout: float = 60.0,
         startup_settle_s: float = 8.0,
+        protocol: str = "legacy33",
+        expected_anchor_id: str | None = None,
+        expected_calibration_sha256: str | None = None,
+        require_calibration: bool = False,
+        hello_timeout_s: float = HELLO_TIMEOUT_S,
     ):
+        if protocol not in ("legacy33", "anchor35"):
+            raise ValueError(f"unsupported GoiEnv protocol {protocol!r}")
         self.host       = host
         self.port       = port
         self.num_agents = num_agents
         self.timeout    = timeout
         self.startup_settle_s = startup_settle_s
+        self.protocol = protocol
+        self.expected_anchor_id = expected_anchor_id
+        self.expected_calibration_sha256 = expected_calibration_sha256
+        self.require_calibration = require_calibration
+        self.hello_timeout_s = hello_timeout_s
+        self.state_dim = LEGACY_DIM
+        self.state_schema = None
+        self.hello = None
 
         self._sock: Optional[socket.socket] = None
         self._connected = False
@@ -102,6 +140,16 @@ class GoiEnv:
                 self._sock = s
                 self._connected = True
                 logger.info("[GoiEnv] 已连接到 %s:%d", self.host, self.port)
+                if self.protocol == "anchor35":
+                    try:
+                        self._handshake_anchor35()
+                    except Exception:
+                        self.close()
+                        raise
+                else:
+                    from training.state_schema import schema_legacy33
+                    self.state_dim = LEGACY_DIM
+                    self.state_schema = schema_legacy33()
                 if self.startup_settle_s > 0:
                     # 等待游戏端初始化完成，否则前数秒的注入动作不会生效（见构造参数说明）
                     logger.info("[GoiEnv] 等待游戏初始化 %.1fs（注入生效前置条件）...",
@@ -224,18 +272,36 @@ class GoiEnv:
         known flags; values never silently become observed zeros.
         """
         import json
-        self._send_all(b"D")
+        return self._recv_diagnostic_packet(b"D")
+
+    def capture_calibration_frame(self) -> dict:
+        """Same-thread diagnostic + camera dump. Does not advance physics."""
+        return self._recv_diagnostic_packet(b"P")
+
+    def _recv_diagnostic_packet(self, command: bytes) -> dict:
+        import json
+        self._send_all(command)
         marker = self._recv_exact(1)[0]
-        if marker != 255:
-            # Consume an ordinary error response so the socket remains aligned.
+        if self.protocol == "anchor35":
+            length = struct.unpack("<I", self._recv_exact(4))[0]
+            body = self._recv_exact(length)
+            frame_type, _sequence, payload = unpack_v2_frame(bytes([marker]) + struct.pack("<I", length) + body)
+            if frame_type == V2_ERROR:
+                code, message = unpack_v2_error(payload)
+                raise ProtocolError(f"diagnostic error {code}: {message}")
+            if frame_type != V2_DIAGNOSTIC:
+                raise ProtocolError(f"expected v2 diagnostic, got type {frame_type}")
+            packet = json.loads(payload.decode("utf-8"))
+        elif marker != LEGACY_DIAGNOSTIC:
             if marker:
-                self._recv_exact(marker * (STATE_DIM * 4 + 1))
+                self._recv_exact(marker * (self.state_dim * 4 + 1))
             raise RuntimeError("Diagnostic response unavailable; rebuild GameRuntime_v2")
-        length = struct.unpack("<I", self._recv_exact(4))[0]
-        if not 0 < length <= 8 * 1024 * 1024:
-            raise ValueError("Invalid diagnostic packet length")
-        packet = json.loads(self._recv_exact(length))
-        if packet.get("version") not in (1, 2) or len(packet.get("agents", [])) != self.num_agents:
+        else:
+            length = struct.unpack("<I", self._recv_exact(4))[0]
+            if not 0 < length <= 8 * 1024 * 1024:
+                raise ValueError("Invalid diagnostic packet length")
+            packet = json.loads(self._recv_exact(length))
+        if packet.get("version") not in (1, 2, 3, 4) or len(packet.get("agents", [])) != self.num_agents:
             raise ValueError(f"Incompatible diagnostic packet: {packet}")
         return packet
 
@@ -286,32 +352,71 @@ class GoiEnv:
             raise RuntimeError("[GoiEnv] 未连接")
         self._sock.sendall(data)
 
+    def _handshake_anchor35(self) -> None:
+        from training.state_schema import schema_anchor35
+        self._sock.settimeout(self.hello_timeout_s)
+        try:
+            self._send_all(encode_hello_request(
+                protocol=PROTOCOL_V2,
+                state_schema=SCHEMA_ANCHOR35,
+                anchor_id=self.expected_anchor_id,
+                calibration_sha256=self.expected_calibration_sha256,
+                require_calibration=self.require_calibration,
+            ))
+            marker = self._recv_exact(1)[0]
+            if marker != HELLO_MARKER:
+                raise ProtocolError("old server or unknown HELLO reply")
+            length = struct.unpack("<I", self._recv_exact(4))[0]
+            body = self._recv_exact(length)
+            payload = decode_hello_reply_bytes(bytes([HELLO_MARKER]) + struct.pack("<I", length) + body)
+            validate_hello_reply(
+                payload,
+                expected_schema=SCHEMA_ANCHOR35,
+                expected_anchor_id=self.expected_anchor_id,
+                expected_calibration_sha256=self.expected_calibration_sha256,
+                require_calibration=self.require_calibration,
+                num_agents=self.num_agents,
+            )
+        except (TimeoutError, socket.timeout, OSError) as exc:
+            raise ProtocolError(f"HELLO timed out or failed: {exc}") from exc
+        finally:
+            self._sock.settimeout(None)
+        self.hello = payload
+        self.state_dim = ANCHOR_DIM
+        self.state_schema = schema_anchor35(
+            calibration_available=bool(payload.get("calibration_available")),
+            calibration_sha256=payload.get("calibration_sha256") or None,
+            anchor_id=payload.get("anchor_id") or None,
+        )
+        logger.info("[GoiEnv] HELLO ok schema=%s calib=%s",
+                    payload.get("state_schema"), payload.get("calibration_available"))
+
     def _recv_response(self):
-        """
-        读取 C# 回包，解析为 (states, dones)。
-        states shape: (num_agents, STATE_DIM)
-        dones  shape: (num_agents,) bool
+        """Parse the current-protocol reply into (states, dones)."""
+        if self.protocol == "anchor35":
+            return self._recv_v2_response()
+        first = self._recv_exact(1)
+        rest_needed = first[0] * (self.state_dim * 4 + 1)
+        payload = first + (self._recv_exact(rest_needed) if rest_needed else b"")
+        return unpack_legacy_state(payload, self.state_dim, self.num_agents)
 
-        C# 发送格式（TcpStepServer.SendResponse）：
-          [n: 1B] 然后对每个 agent: [state_i: STATE_DIM×4B][done_i: 1B]
-        注意：state 与 done 是按 agent 交错发送的，不能一次性读取所有 state 再读所有 done。
-        """
-        n = struct.unpack("B", self._recv_exact(1))[0]
-
-        all_states: list[np.ndarray] = []
-        all_dones:  list[bool]       = []
-        for _ in range(n):
-            raw_state = self._recv_exact(STATE_DIM * 4)
-            raw_done  = self._recv_exact(1)
-            all_states.append(np.frombuffer(raw_state, dtype="<f4").copy())
-            all_dones.append(bool(raw_done[0]))
-
-        if all_states:
-            states = np.stack(all_states)          # (n, STATE_DIM)
-        else:
-            states = np.zeros((0, STATE_DIM), dtype="<f4")
-        dones = np.array(all_dones, dtype=bool)    # (n,)
-
+    def _recv_v2_response(self):
+        first = self._recv_exact(1)[0]
+        length = struct.unpack("<I", self._recv_exact(4))[0]
+        if not 0 <= length <= 8 * 1024 * 1024:
+            raise ProtocolError("invalid v2 payload length")
+        body = self._recv_exact(length)
+        frame_type, _sequence, payload = unpack_v2_frame(
+            bytes([first]) + struct.pack("<I", length) + body
+        )
+        if frame_type == V2_ERROR:
+            code, message = unpack_v2_error(payload)
+            raise ProtocolError(f"server state error {code}: {message}")
+        if frame_type != V2_STATE:
+            raise ProtocolError(f"expected v2 state, got type {frame_type}")
+        states, dones = unpack_v2_state(payload, self.state_dim, self.num_agents)
+        if states.shape[0] not in (0, self.num_agents):
+            raise ProtocolError("v2 agent count mismatch")
         return states, dones
 
     def _recv_exact(self, n: int) -> bytes:
@@ -338,3 +443,18 @@ class GoiEnv:
             "max_ms":   float(arr.max()),
             "total_s":  self.total_time,
         }
+
+
+def make_goi_env(config, **kwargs) -> "GoiEnv":
+    """Build an env from TrainConfig. Transport width follows HELLO, not checkpoint state_dim."""
+    protocol = getattr(config, "tcp_protocol", "legacy33")
+    pot = getattr(config, "reference_anchor_id", "player_origin") == "pot_visible_center_v1"
+    return GoiEnv(
+        port=getattr(config, "port", 9000),
+        num_agents=getattr(config, "num_agents", 1),
+        protocol=protocol,
+        expected_anchor_id=getattr(config, "reference_anchor_id", None) if protocol == "anchor35" else None,
+        expected_calibration_sha256=getattr(config, "reference_anchor_calibration_sha256", None),
+        require_calibration=bool(pot or getattr(config, "reference_anchor_verified", False)),
+        **kwargs,
+    )

@@ -575,32 +575,54 @@ class PPOTrainer:
                 "sil_budget_cap": 0.0,
             }
 
-        # 行为门控（防线二，V-free）：池 median 总 credited ≤ 当前轮行为水平
-        # × (1+margin) 时跳过。同量纲（原始米、同一 tracker 口径）行为比较，不依赖
-        # critic 校准——实测 V 在精英窗口上系统性膨胀 ~5-25×，pos_frac≈0 导致门控
-        # 永久关闭（20260923 A/B 离线复算）。仅在加权路径（全池走廊轨迹）且
-        # behavior_progress 给定时生效；门控在权重前向前计算，关闭时省掉全池打 V。
+        # 行为门控（防线二，V-free）。map_elites：池 median 总 credited。
+        # td_pareto：按候选轨迹判断，快短点不能靠拉低中位数关掉远点；
+        # 全池跳过仅当没有任何一条 D 高于当前行为。
         gate_levels: dict[str, float] | None = None
+        eligible_ti: set[int] | None = None
         if behavior_progress is not None and all(
                 getattr(t, "corridor_progress", None) is not None
                 for t in dataset.trajectories):
-            pool_levels = [float(np.asarray(t.corridor_progress, dtype=np.float64).sum())
-                           for t in dataset.trajectories]
-            pool_level = float(np.median(pool_levels)) if pool_levels else 0.0
-            gate_levels = {"sil_pool_level": pool_level,
-                           "sil_behavior_level": float(behavior_progress)}
-            if pool_level <= behavior_progress * (1.0 + cfg.sil_gate_margin):
-                logger.info(
-                    "SIL 行为门控跳过: 池 median %.2fm ≤ 行为水平 %.2fm × (1+%.2f)",
-                    pool_level, behavior_progress, cfg.sil_gate_margin,
-                )
-                return {
-                    "sil_trajs": float(len(dataset.trajectories)),
-                    "sil_windows": float(len(dataset)),
-                    "sil_updates": 0.0,
-                    "sil_skipped": 1.0,
-                    **gate_levels,
-                }
+            from .sil_archive import ARCHIVE_TD_PARETO, credited_distance, gate_eligible_indices
+            if getattr(cfg, "sil_archive_mode", "map_elites") == ARCHIVE_TD_PARETO:
+                eligible = gate_eligible_indices(
+                    dataset.trajectories, behavior_progress, cfg.sil_gate_margin)
+                distances = [credited_distance(t) for t in dataset.trajectories]
+                pool_level = float(max(distances)) if distances else 0.0
+                gate_levels = {"sil_pool_level": pool_level,
+                               "sil_behavior_level": float(behavior_progress),
+                               "sil_gate_eligible_trajs": float(len(eligible))}
+                if not eligible:
+                    logger.info(
+                        "SIL 行为门控跳过: 无候选 D > 行为水平 %.2fm × (1+%.2f)；池 max %.2fm",
+                        behavior_progress, cfg.sil_gate_margin, pool_level,
+                    )
+                    return {
+                        "sil_trajs": float(len(dataset.trajectories)),
+                        "sil_windows": float(len(dataset)),
+                        "sil_updates": 0.0,
+                        "sil_skipped": 1.0,
+                        **gate_levels,
+                    }
+                eligible_ti = set(eligible)
+            else:
+                pool_levels = [float(np.asarray(t.corridor_progress, dtype=np.float64).sum())
+                               for t in dataset.trajectories]
+                pool_level = float(np.median(pool_levels)) if pool_levels else 0.0
+                gate_levels = {"sil_pool_level": pool_level,
+                               "sil_behavior_level": float(behavior_progress)}
+                if pool_level <= behavior_progress * (1.0 + cfg.sil_gate_margin):
+                    logger.info(
+                        "SIL 行为门控跳过: 池 median %.2fm ≤ 行为水平 %.2fm × (1+%.2f)",
+                        pool_level, behavior_progress, cfg.sil_gate_margin,
+                    )
+                    return {
+                        "sil_trajs": float(len(dataset.trajectories)),
+                        "sil_windows": float(len(dataset)),
+                        "sil_updates": 0.0,
+                        "sil_skipped": 1.0,
+                        **gate_levels,
+                    }
 
         # P3.2：优势权重分量（仅走廊模式；含非走廊轨迹时该分量缺失）
         adv_w: np.ndarray | None = None
@@ -661,19 +683,24 @@ class PPOTrainer:
                       if weights is not None else dataset)
         # 空中帧稀疏采样（P3.1-SIL 加强）：接触帧全保留，空中帧按概率保留；
         # 在权重计算之后做——权重值不变，只减少空中窗口的出场次数。
+        keep = np.ones(len(dataset), dtype=bool)
+        if eligible_ti is not None:
+            keep &= np.array([ti in eligible_ti for ti, _tau in dataset._index], dtype=bool)
         if phase_w is not None and 0.0 <= cfg.sil_phase_airborne_sample < 1.0:
             airborne = phase_w < 1.0 - 1e-9
-            keep = np.ones(len(dataset), dtype=bool)
-            keep[airborne] = (np.random.rand(int(airborne.sum()))
-                              < cfg.sil_phase_airborne_sample)
+            keep[airborne] = keep[airborne] & (np.random.rand(int(airborne.sum()))
+                                               < cfg.sil_phase_airborne_sample)
+        if eligible_ti is not None or (phase_w is not None
+                                       and 0.0 <= cfg.sil_phase_airborne_sample < 1.0):
             indices = np.flatnonzero(keep)
             if len(indices) == 0:
-                logger.info("SIL 空中帧稀疏采样后窗口为空，跳过本轮")
+                logger.info("SIL 窗口筛选后为空，跳过本轮")
                 return {
                     "sil_trajs": float(len(dataset.trajectories)),
                     "sil_windows": float(len(dataset)),
                     "sil_updates": 0.0,
                     "sil_skipped": 1.0,
+                    **(gate_levels or {}),
                 }
             train_view = Subset(train_view, indices)
         loader = DataLoader(

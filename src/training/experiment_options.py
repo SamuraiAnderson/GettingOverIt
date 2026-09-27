@@ -25,6 +25,7 @@ def add_experiment_arguments(parser):
     parser.add_argument("--action-segment-steps", type=int, default=None)
     parser.add_argument("--recurrent-seq-len", type=int, default=None)
     parser.add_argument("--feature-step-seconds", type=float, default=None)
+    parser.add_argument("--sparse-geometry", action=argparse.BooleanOptionalAction, default=None)
 
 
 def apply_experiment_arguments(config, args, checkpoint=None):
@@ -35,7 +36,8 @@ def apply_experiment_arguments(config, args, checkpoint=None):
                              ("geometry", "geometry_features"), ("trends", "trend_features")):
             setattr(config, field, group in args.features)
     for name in ("policy_backbone", "event_source", "event_branch", "normalize_action_history",
-                 "segment_interrupt_contacts", "action_segment_steps", "recurrent_seq_len", "feature_step_seconds"):
+                 "segment_interrupt_contacts", "action_segment_steps", "recurrent_seq_len",
+                 "feature_step_seconds", "sparse_geometry"):
         value = getattr(args, name)
         if value is not None:
             setattr(config, name, value)

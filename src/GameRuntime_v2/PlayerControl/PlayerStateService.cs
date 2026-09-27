@@ -319,6 +319,41 @@ namespace GoiRuntime.PlayerControl
 			if (playerTransform == null) return Vector2.zero;
 			return playerTransform.position;
 		}
+
+		public Transform GetPlayerTransform()
+		{
+			return playerTransform;
+		}
+
+		public bool TryGetBodyPose(out Vector3 position, out float rotationZ, out Vector3 scale)
+		{
+			position = Vector3.zero;
+			rotationZ = 0f;
+			scale = Vector3.one;
+			if (playerTransform == null) return false;
+			position = playerTransform.position;
+			rotationZ = playerTransform.eulerAngles.z;
+			scale = playerTransform.lossyScale;
+			return IsFinite(position.x) && IsFinite(position.y);
+		}
+
+		/// <summary>
+		/// World-space reference anchor = Player.TransformPoint(local), including rotation and scale.
+		/// </summary>
+		public bool TrySampleReferenceAnchor(float localX, float localY, out Vector2 world)
+		{
+			world = Vector2.zero;
+			if (playerTransform == null) return false;
+			Vector3 point = playerTransform.TransformPoint(new Vector3(localX, localY, 0f));
+			if (!IsFinite(point.x) || !IsFinite(point.y)) return false;
+			world = new Vector2(point.x, point.y);
+			return true;
+		}
+
+		private static bool IsFinite(float value)
+		{
+			return !float.IsNaN(value) && !float.IsInfinity(value);
+		}
 		
 		/// <summary>
 		/// 获取 Player 速度

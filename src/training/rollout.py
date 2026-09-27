@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import torch
 
-from env import GoiEnv
+from env import GoiEnv, make_goi_env
 from start import GameLauncher, GameModeController
 
 if TYPE_CHECKING:
@@ -178,7 +178,7 @@ def _build_history_window(
 
     返回 (dyn_window, pat_window, act_window, valid_mask)：
     - dyn_window: (ctx, state_dim)
-    - pat_window: (ctx, 4, 32, 32)
+    - pat_window: (ctx, C, H, H)
     - act_window: (ctx, 2)
     - valid_mask: (ctx,) —— 1=有效观测，0=左填充位（供 key_padding_mask 使用）
 
@@ -423,10 +423,7 @@ class RolloutWorker:
         GameModeController(str(game_root)).set_game_runtime_mode()
         self._game_process = GameLauncher().launch(wait=False)
 
-        self.env = GoiEnv(
-            port=self.config.port,
-            num_agents=self.config.num_agents,
-        )
+        self.env = make_goi_env(self.config)
         self.env.connect()
         self.env.reset()
 
@@ -796,6 +793,10 @@ class RolloutWorker:
         cmask_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
         relation_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
         rmask_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        contour_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        cmask_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        relation_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
+        rmask_history: dict[int, list[np.ndarray]] = {i: [] for i in stable_agents}
 
         # OU（时序连贯探索噪声）per-agent AR(1) 状态。
         # z_prev 初值 ~ N(0,1)：保证第 0 步条件采样的 z_0 仍 marginal N(0,1)
@@ -818,8 +819,16 @@ class RolloutWorker:
             )
             for i in stable_agents
         }
+        score_schema, score_meta = (None, None)
+        if self.reference_corridor is not None and stable_agents:
+            from .reference_anchor import scoring_context
+            first = next(iter(stable_agents))
+            score_schema, score_meta = scoring_context(
+                obs[first], self.config, self.env, self.reference_corridor,
+            )
         trackers = {
-            i: self.reference_corridor.tracker(obs[i, :2]) for i in stable_agents
+            i: self.reference_corridor.tracker_from_state(obs[i], score_schema, score_meta)
+            for i in stable_agents
         } if self.reference_corridor is not None else {}
         # 走廊模式逐帧字段（供 SIL 剪枝/排序/patch 重建；非走廊模式保持空 dict）：
         # corridor_credit[i] 与 raw_actions[i] 对齐（动作 t 获得的 credited 进度）；
@@ -916,6 +925,8 @@ class RolloutWorker:
                     normalizer=normalizer,
                     confirmer=confirmers[i],
                     corridor=trackers.get(i),
+                    state_schema=score_schema,
+                    reference_metadata=score_meta,
                 )
                 done = bool(dones[i]) or is_water(new_obs[i, 1], self.config)
                 if done:

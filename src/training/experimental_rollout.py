@@ -41,7 +41,7 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
         clock = time.perf_counter()
         packet = env.observation_diagnostics()
         if packet.get("version", 0) < 2 or not packet.get("aligned"):
-            raise ValueError("Experiments require aligned native physics diagnostics v2")
+            raise ValueError("Experiments require aligned native physics diagnostics v2+")
         if sequence is not None and packet["sequence"] <= sequence:
             raise ValueError("Native state did not advance")
         sequence = packet["sequence"]
@@ -81,14 +81,27 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
         worker._feature_surface_index = SurfaceIndex(worker._solid_polygons or [])
     surfaces = worker._feature_surface_index if cfg.geometry_features else None
     builders = {i: FeatureBuilder(cfg, surfaces) for i in agents}
-    trackers = {i: worker.reference_corridor.tracker(obs[i, :2]) for i in agents} if worker.reference_corridor else {}
+    score_schema = score_meta = None
+    if worker.reference_corridor and agents:
+        from .reference_anchor import scoring_context
+        score_schema, score_meta = scoring_context(obs[agents[0]], cfg, env, worker.reference_corridor)
+    trackers = {
+        i: worker.reference_corridor.tracker_from_state(obs[i], score_schema, score_meta)
+        for i in agents
+    } if worker.reference_corridor else {}
     confirmers = {i: NewHighConfirmer(float(obs[i, 1]), cfg.dwell_steps, cfg.dwell_drop_tol) for i in agents}
     peaks = {i: float(obs[i, 1]) for i in agents}
     phi = cfg.ou_phi if cfg.ou_enabled and not deterministic else 0.
     buffer = DecisionRolloutBuffer(policy_context(model, phi, deterministic))
     noises = {i: np.random.randn(model.parameter_dim).astype(np.float32) for i in agents}
     hidden = {i: None for i in agents}
+    sparse_names = ("contour_tokens", "contour_mask", "relation_tokens", "relation_mask")
+    use_sparse = bool(cfg.sparse_geometry)
     frames = {i: {name: [] for name in ("dynamics", "patches", "act_history", "step_rewards")} for i in agents}
+    if use_sparse:
+        for i in agents:
+            for name in sparse_names:
+                frames[i][name] = []
     records = {i: [] for i in agents}
     raw_states = {i: [obs[i].copy()] for i in agents}
     raw_actions = {i: [] for i in agents}
@@ -106,14 +119,33 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
     corridor_guidance = ({i: [trackers[i].guidance_index if trackers[i].guidance_index is not None else -1]
                           for i in agents} if trackers else {})
 
-    def frame_inputs(agent, patch):
+    def frame_inputs(agent, patch, sparse_row=None):
         features = np.concatenate([build_dynamics(obs[agent], contacts[agent]), extras[agent]])
         frames[agent]["dynamics"].append(features)
         frames[agent]["patches"].append(patch.copy())
         frames[agent]["act_history"].append(raw_actions[agent][-1].copy() if raw_actions[agent] else np.zeros(2, np.float32))
+        if use_sparse:
+            for name, value in zip(sparse_names, sparse_row):
+                frames[agent][name].append(value.copy())
 
     def tensor(values):
         return torch.as_tensor(np.asarray(values), dtype=torch.float32, device=device)
+
+    def sparse_kwargs(ids):
+        if not use_sparse:
+            return {}
+        stacked = [tensor(np.stack([
+            left_pad_sequence(np.asarray(frames[i][name][-cfg.context_len:]), cfg.context_len)[0]
+            for i in ids
+        ])) for name in sparse_names]
+        return dict(zip(sparse_names, stacked))
+
+    def last_sparse_kwargs(ids):
+        if not use_sparse:
+            return {}
+        return dict(zip(sparse_names, [
+            tensor([frames[i][name][-1] for i in ids])[:, None] for name in sparse_names
+        ]))
 
     def windows(ids):
         arrays, masks = [], []
@@ -128,9 +160,10 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
         active = [i for i in agents if i not in finished]
         clock = time.perf_counter()
         patches = worker._ppo_patches(obs, eff_map, trackers)
+        sparse = worker._ppo_sparse(obs) if use_sparse else None
         timings["patch"] += time.perf_counter() - clock
         for i in active:
-            frame_inputs(i, patches[i])
+            frame_inputs(i, patches[i], None if sparse is None else tuple(plane[i] for plane in sparse))
         clock = time.perf_counter()
         # The GRU consumes EVERY physical observation, even while an option is active.
         recurrent = {}
@@ -140,7 +173,7 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
                           for name in ("dynamics", "patches", "act_history")]
                 h = torch.cat([hidden[i] if hidden[i] is not None else inputs[0].new_zeros(1, 1, cfg.d_model)
                                for i in active], dim=1)
-                output, h = model.recurrent_features(*inputs, hidden=h)
+                output, h = model.recurrent_features(*inputs, hidden=h, **last_sparse_kwargs(active))
                 for k, i in enumerate(active):
                     recurrent[i], hidden[i] = output[k, 0], h[:, k:k+1].detach()
             ready = [i for i in active if i not in active_segments]
@@ -152,7 +185,10 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
                     av = model.sample_features(torch.stack([recurrent[i] for i in ids]), previous_noise, phi, deterministic)
                 else:
                     dynamics, pats, acts, mask = windows(ids)
-                    av = model.get_action_and_value(dynamics, pats, acts, mask, previous_noise, phi, deterministic)
+                    av = model.get_action_and_value(
+                        dynamics, pats, acts, mask, previous_noise, phi, deterministic,
+                        **sparse_kwargs(ids),
+                    )
                 output = [a.detach().cpu().numpy() for a in (av.action, av.raw_action, av.log_prob, av.value, av.noise)]
                 if not all(np.isfinite(a).all() for a in output):
                     raise FloatingPointError("Non-finite experimental policy output")
@@ -180,7 +216,8 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
             extra_history[i].append(extras[i])
             timings["features"] += time.perf_counter() - clock
             reward, peaks[i] = step_reward(obs[i], new_obs[i], eff_map, cfg, running_max_y=peaks[i],
-                normalizer=normalizer, confirmer=confirmers[i], corridor=trackers.get(i))
+                normalizer=normalizer, confirmer=confirmers[i], corridor=trackers.get(i),
+                state_schema=score_schema, reference_metadata=score_meta)
             option = active_segments[i]
             option["rewards"] += cfg.gamma ** option["durations"] * reward
             option["durations"] += 1
@@ -217,6 +254,7 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
 
     clock = time.perf_counter()
     patches = worker._ppo_patches(obs, eff_map, trackers)
+    sparse = worker._ppo_sparse(obs) if use_sparse else None
     trajectories = []
     for i in agents:
         # Finished agents' final frame can precede the global loop's last frame.
@@ -225,17 +263,23 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
             frames[i]["dynamics"].append(final_dynamics)
             frames[i]["patches"].append(np.zeros_like(patches[i]))  # terminal; never consumed by policy/bootstrap
             frames[i]["act_history"].append(raw_actions[i][-1].copy())
+            if use_sparse:
+                from .sparse_geometry import empty_sparse_frame
+                blank = empty_sparse_frame(cfg)
+                for name, value in zip(sparse_names, blank):
+                    frames[i][name].append(value.copy())
             value = 0.
         else:
-            frame_inputs(i, patches[i])
+            row = None if sparse is None else tuple(plane[i] for plane in sparse)
+            frame_inputs(i, patches[i], row)
             with torch.no_grad():
                 if cfg.policy_backbone == "gru":
                     inputs = [tensor(frames[i][name][-1])[None, None] for name in ("dynamics", "patches", "act_history")]
-                    feature, _ = model.recurrent_features(*inputs, hidden=hidden[i])
+                    feature, _ = model.recurrent_features(*inputs, hidden=hidden[i], **last_sparse_kwargs([i]))
                     _, val = model.distribution_from_features(feature[:, 0])
                 else:
                     dyn, pats, acts, mask = windows([i])
-                    _, val = model(dyn, pats, acts, mask)
+                    _, val = model(dyn, pats, acts, mask, **sparse_kwargs([i]))
                 value = val.item()
         buffer.add_episode(frames[i], records[i], value, cfg.gamma, cfg.gae_lambda)
         trajectories.append(Trajectory(np.asarray(raw_states[i]), np.asarray(raw_actions[i]),
@@ -264,6 +308,9 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
     if agents:
         ep = buffer.episodes[0]
         sample = min(16, len(ep["dynamics"]) - 1)
-        worker.last_profile.update(model.embedding_scales(*(tensor(ep[name][:sample])[None]
-            for name in ("dynamics", "patches", "act_history"))))
+        scale_inputs = [tensor(ep[name][:sample])[None] for name in ("dynamics", "patches", "act_history")]
+        scale_sparse = {}
+        if use_sparse:
+            scale_sparse = {name: tensor(ep[name][:sample])[None] for name in sparse_names}
+        worker.last_profile.update(model.embedding_scales(*scale_inputs, **scale_sparse))
     return buffer, trajectories

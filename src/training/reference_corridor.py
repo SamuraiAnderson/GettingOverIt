@@ -138,6 +138,21 @@ class ReferenceCorridor:
     def tracker(self, position: np.ndarray) -> CorridorTracker:
         return CorridorTracker(self, position)
 
+    def tracker_from_state(self, raw_state, state_schema=None, reference_metadata=None):
+        from .reference_anchor import reference_position
+        from .state_schema import schema_from_raw_width
+        raw = np.asarray(raw_state, dtype=np.float64)
+        schema = state_schema or schema_from_raw_width(raw.shape[-1])
+        return self.tracker(reference_position(raw, schema, reference_metadata))
+
+    def step_state(self, tracker: "CorridorTracker", raw_state,
+                   state_schema=None, reference_metadata=None):
+        from .reference_anchor import reference_position
+        from .state_schema import schema_from_raw_width
+        raw = np.asarray(raw_state, dtype=np.float64)
+        schema = state_schema or schema_from_raw_width(raw.shape[-1])
+        return tracker.step(reference_position(raw, schema, reference_metadata))
+
     def guidance_maps(self, shape: tuple[int, int], min_gx: int, min_gy: int,
                       resolution: float) -> list[np.ndarray]:
         """Cache one ordered corridor field per continuous segment in the existing grid.
@@ -178,6 +193,7 @@ class ReferenceCorridor:
 
 def replay_corridor_fields(
     route: "ReferenceCorridor", raw_states: np.ndarray,
+    state_schema=None, reference_metadata=None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """从状态序列确定性重放 CorridorTracker，恢复逐 step 走廊字段。
 
@@ -193,14 +209,14 @@ def replay_corridor_fields(
     tracker 投影窗口只依赖前序状态，重放与 rollout 在线记录逐点一致；
     与 local_evaluation 的 trace 重建共用同一 tracker 语义。
     """
-    tracker = route.tracker(raw_states[0, :2])
+    tracker = route.tracker_from_state(raw_states[0], state_schema, reference_metadata)
     T = len(raw_states) - 1
     progress = np.zeros(T, dtype=np.float32)
     guidance = np.full(T + 1, -1, dtype=np.int8)
     if tracker.guidance_index is not None:
         guidance[0] = tracker.guidance_index
     for t in range(T):
-        result = tracker.step(raw_states[t + 1, :2])
+        result = route.step_state(tracker, raw_states[t + 1], state_schema, reference_metadata)
         progress[t] = result.progress
         if tracker.guidance_index is not None:
             guidance[t + 1] = tracker.guidance_index

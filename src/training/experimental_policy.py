@@ -166,8 +166,12 @@ class ExperimentalActorCritic(ActorCritic):
         return lp, conditional.entropy().sum(-1), values
 
     @torch.no_grad()
-    def embedding_scales(self, dynamics, patches, actions):
-        obs, action, _ = self._encode_frames(dynamics, patches, actions)
+    def embedding_scales(self, dynamics, patches, actions,
+                         contour_tokens=None, contour_mask=None,
+                         relation_tokens=None, relation_mask=None):
+        obs, action, _ = self._encode_frames(
+            dynamics, patches, actions, contour_tokens, contour_mask, relation_tokens, relation_mask,
+        )
         return {"observation_embedding_rms": float(obs.square().mean().sqrt()),
                 "action_embedding_rms": float(action.square().mean().sqrt()),
                 "action_history_rms": float(actions.square().mean().sqrt()),

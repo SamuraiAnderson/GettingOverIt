@@ -74,7 +74,7 @@ def evaluation_summary(directory):
     """Re-score the saved states through the same criterion, with a 1 s hold too."""
     import numpy as np
     from types import SimpleNamespace
-    from src.training.local_evaluation import score_corridor_episode
+    from src.training.local_evaluation import score_corridor_episode, summarize as summarize_episodes
     from training.config import TrainConfig
     from training.reference_corridor import ReferenceCorridor
     result = json.loads((directory / "results.json").read_text(encoding="utf-8"))
@@ -96,30 +96,27 @@ def evaluation_summary(directory):
         raw = json.loads((directory / f"{row['mode']}_{row['trial']:03d}_agent{row['agent']}.json").read_text(encoding="utf-8"))
         states = np.array(raw["states"], dtype=np.float32)
         trajectory = SimpleNamespace(raw_states=states, actions=np.array([t["action"] for t in raw["trace"]]), contact=None)
-        held, _ = score_corridor_episode(trajectory, route, manifest["criterion"]["credited_progress_m"], dwell=120)
-        arrival = row["arrival_steps"]
+        scored, _ = score_corridor_episode(
+            trajectory, route, manifest["criterion"]["credited_progress_m"], dwell=10)
+        arrival = scored["arrival_steps"]
         ys = states[:, 1]
         after_fall = None if arrival is None else bool(np.any((ys[arrival:] < cfg.water_y_threshold) | (np.maximum.accumulate(ys)[arrival:] - ys[arrival:] >= 3)))
-        tracker = route.tracker(states[0, :2])
-        start_segment, start_progress = tracker.segment_index, tracker.progress
-        for state in states[1:]:
-            tracker.step(state[:2])
-        terminal_progress = float(tracker.progress - start_progress) if tracker.segment_index == start_segment else None
-        records.append({**row, "success_hold_120": held["success"], "fall_after_success": after_fall,
-                        "terminal_same_segment_progress_m": terminal_progress})
+        records.append({**row, **{k: scored[k] for k in (
+            "success", "arrival_steps", "hold_success", "hold_incomplete", "reference_unconfirmed",
+            "terminal_progress_m", "terminal_same_segment_progress_m", "continued_on_later_segment",
+            "watered", "max_retreat_after_arrival_m")},
+                        "success_hold_120": scored["hold_success"], "fall_after_success": after_fall})
+    scored_summary = summarize_episodes(records)
     summary = {}
     for mode in ("deterministic", "exploration"):
         rows = [r for r in records if r["mode"] == mode]
         if not rows:
             continue
-        summary[mode] = {**result["summary"][mode],
+        summary[mode] = {**result["summary"][mode], **scored_summary[mode],
             "successes": sum(r["success"] for r in rows),
             "success_hold_120_count": sum(r["success_hold_120"] for r in rows),
             "falls_after_success": sum(r["fall_after_success"] is True for r in rows),
-            "credited_progress_median_m": float(np.median([r["credited_progress_m"] for r in rows])),
-            "credited_progress_q25_m": float(np.quantile([r["credited_progress_m"] for r in rows], .25)),
             "mean_outside_fraction": float(np.mean([r["outside_fraction"] for r in rows])),
-            "mean_arrival_game_seconds": (result["summary"][mode]["mean_arrival_steps"] / 120 if result["summary"][mode]["mean_arrival_steps"] is not None else None),
             "rounds": len({r["trial"] for r in rows})}
     return {"directory": str(directory.relative_to(ROOT)), "failure": result["failure"],
             "physical_samples": sum(r["steps"] for r in records), "summary": summary, "episodes": records,

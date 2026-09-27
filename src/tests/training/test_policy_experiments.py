@@ -72,7 +72,9 @@ class PolicyExperimentTests(unittest.TestCase):
         patch_rng = np.random.default_rng(9)
         # Nonzero images exercise CNN gradients; an empty-terrain fixture would
         # give zero first-convolution weight gradients regardless of correctness.
-        worker._ppo_patches = lambda *args: patch_rng.normal(0, .1, (2, 4, 32, 32)).astype(np.float32)
+        worker._ppo_patches = lambda *args: patch_rng.normal(
+            0, .1, (2, cfg.patch_channels, cfg.patch_size, cfg.patch_size)
+        ).astype(np.float32)
         calls = []
         def contact(obs, previous):
             calls.append(obs[0, 0])
@@ -107,6 +109,14 @@ class PolicyExperimentTests(unittest.TestCase):
         self.assertLess(first.query([0, -.1], np.zeros(2), 3, 10)[0], 0)
         np.testing.assert_array_equal(first.query([20, 20], np.zeros(2), 3, 10), np.zeros(6))
 
+    def test_feature_builder_uses_first_33_of_anchor35(self):
+        cfg = config(relation_features=True)
+        raw33 = state()
+        raw35 = np.concatenate([raw33, [1.0, 2.0]]).astype(np.float32)
+        a = FeatureBuilder(cfg).step(raw33)[0]
+        b = FeatureBuilder(cfg).step(raw35)[0]
+        np.testing.assert_array_equal(a, b)
+
     def test_diagnostic_masks_distinguish_native_contact_from_surface_availability(self):
         cfg = config(relation_features=True, event_features=True, geometry_features=True, trend_features=True)
         # Native tip contact is known while there is no nearby exported surface.
@@ -139,7 +149,7 @@ class PolicyExperimentTests(unittest.TestCase):
         model = create_actor_critic(cfg).eval()
         width = DYNAMICS_DIM + feature_layout(cfg)[1]
         dyn = torch.randn(2, 8, width)
-        patches = torch.randn(2, 8, 4, 32, 32)
+        patches = torch.randn(2, 8, 4, cfg.patch_size, cfg.patch_size)
         actions = torch.randn(2, 8, 2)
         with torch.no_grad():
             full, h_full = model.recurrent_features(dyn, patches, actions)
@@ -162,7 +172,7 @@ class PolicyExperimentTests(unittest.TestCase):
         model = create_actor_critic(cfg).eval()
         width = DYNAMICS_DIM + feature_layout(cfg)[1]
         dyn = torch.randn(2, 4, width)
-        dist, value = model(dyn, torch.randn(2, 4, 4, 32, 32), torch.zeros(2, 4, 2))
+        dist, value = model(dyn, torch.randn(2, 4, 4, cfg.patch_size, cfg.patch_size), torch.zeros(2, 4, 2))
         (dist.mean.sum() + value.sum()).backward()
         self.assertGreater(model.event_to_backbone.weight.grad.abs().sum(), 0)
         self.assertGreater(model.event_to_heads.weight.grad.abs().sum(), 0)
@@ -234,7 +244,7 @@ class PolicyExperimentTests(unittest.TestCase):
         variant = create_actor_critic(cfg).eval()
         variant.initialize_from(base.state_dict())
         dyn = torch.randn(2, 4, DYNAMICS_DIM)
-        patches = torch.randn(2, 4, 4, 32, 32)
+        patches = torch.randn(2, 4, 4, cfg.patch_size, cfg.patch_size)
         actions = torch.randn(2, 4, 2)
         with torch.no_grad():
             a, v = base(dyn, patches, actions)

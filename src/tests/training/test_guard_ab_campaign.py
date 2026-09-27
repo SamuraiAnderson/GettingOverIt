@@ -67,7 +67,14 @@ class GuardABCampaignTests(unittest.TestCase):
                                                        "sil_phase_airborne_weight",
                                                        "sil_phase_airborne_sample",
                                                        "phase_noise_enabled",
-                                                       "phase_noise_airborne_log_bonus"})
+                                                       "phase_noise_airborne_log_bonus",
+                                                       "ppo_reset_log_std_on_init",
+                                                       "ppo_log_std_anneal_rate",
+                                                       "sil_archive_mode",
+                                                       "sil_td_bucket_m",
+                                                       "sil_td_bucket_enable_at",
+                                                       "sil_td_behavior_slots",
+                                                       "sil_td_windows_per_traj"})
                     self.assertEqual(args.seed, seed)
                     self.assertEqual(args.target_physical_samples, 96000)
 

@@ -1,38 +1,22 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using UnityEngine;
 using GoiRuntime.Core.Interfaces;
+using GoiRuntime.Core.Protocol;
 
 namespace GoiRuntime.Communication
 {
 	/// <summary>
-	/// TCP 阻塞步进服务器
-	///
-	/// 线路协议（小端二进制，命令枚举见 CommandType）：
-	///   Python → C#  RESET:          [cmd:1B='R']
-	///   Python → C#  STEP:           [cmd:1B='S'][n:1B][actions: n×2×4B]
-	///   Python → C#  NEW_SNAPSHOT:   [cmd:1B='N']
-	///   Python → C#  CONFIG:         [cmd:1B='C'][active:1B][mouseXId:4B][mouseYId:4B]
-	///   Python → C#  VISUALIZE:      [cmd:1B='V'][enabled:1B]
-	///   Python → C#  EXPORT_COLLIDERS: [cmd:1B='E']
-	///   Python → C#  TELEPORT:       [cmd:1B='T'][agentIndex:1B][x:4B][y:4B]
-	///   Python → C#  CAMERA_FREE:    [cmd:1B='F'][enabled:1B]
-	///   Python → C#  CLOSE:          [cmd:1B='X']
-	///
-	///   C# → Python  STATE: [n:1B] 然后逐 agent 交错 [state: stateDim×4B][done:1B]
-	///     （stateDim 默认 33 = PlayerState 29D + fakeCursor 4D，见 StepController.STATE_DIM）
-	///     CONFIG/VISUALIZE/EXPORT_COLLIDERS/CAMERA_FREE 回空包（n=0）
-	///
-	/// 线程模型：
-	///   - 后台线程（_bgThread）：阻塞等待 Python 命令，写入 _pendingCommand，设置 _commandReady
-	///   - Unity 主线程协程：轮询 TryGetCommand()，执行物理步进后调用 SendResponse()
-	///   - 两方向通过 ManualResetEvent 和 volatile 变量交换，不需要锁
+	/// TCP 阻塞步进服务器。每个连接默认 legacy33；HELLO 成功后才进入 anchor35。
 	/// </summary>
 	public class TcpStepServer : IStepServer
 	{
-		private readonly int _stateDim;
+		private readonly int _internalStateDim;
+		private readonly int _legacyWireDim;
+		private readonly HelloSnapshot _helloSnapshot;
 
 		private TcpListener _listener;
 		private TcpClient  _client;
@@ -41,32 +25,37 @@ namespace GoiRuntime.Communication
 
 		private volatile bool _running;
 		private volatile bool _connected;
+		private volatile bool _anchor35;
 
-		public TcpStepServer(int stateDim = 33)
+		public TcpStepServer(int internalStateDim, int legacyWireDim, HelloSnapshot snapshot)
 		{
-			_stateDim = stateDim > 0 ? stateDim : 33;
+			_internalStateDim = internalStateDim > 0 ? internalStateDim : 35;
+			_legacyWireDim = legacyWireDim > 0 ? legacyWireDim : 33;
+			_helloSnapshot = snapshot ?? new HelloSnapshot();
 		}
 
-	// 主线程 ↔ 后台线程共享的命令槽
+		public TcpStepServer(int stateDim = 33)
+			: this(stateDim <= 33 ? 35 : stateDim, 33, new HelloSnapshot())
+		{
+		}
+
 	private StepCommand _pendingCommand;
 	private readonly ManualResetEvent _commandReady  = new ManualResetEvent(false);
 	private volatile bool _commandReadyFlag = false;
 
-	// 发送缓冲区（在主线程写好，后台线程读取发出）
 	private byte[] _responseBytes;
 	private readonly ManualResetEvent _responseReady = new ManualResetEvent(false);
 
 		public bool IsRunning   => _running;
 		public bool IsConnected => _connected;
 
-		// ── 公共 API ──────────────────────────────────────────────
-
 		public void StartListening(int port)
 		{
 			_running = true;
+			_anchor35 = false;
 			_listener = new TcpListener(IPAddress.Loopback, port);
 			_listener.Start();
-			Debug.Log($"[TcpStepServer] 监听 127.0.0.1:{port}，等待 Python 连接...");
+			Debug.Log($"[TcpStepServer] 监听 127.0.0.1:{port}，等待 Python 连接（默认 legacy33）...");
 
 			_bgThread = new Thread(BackgroundLoop) { IsBackground = true, Name = "TcpStepServer-BG" };
 			_bgThread.Start();
@@ -75,8 +64,6 @@ namespace GoiRuntime.Communication
 	public void Stop()
 	{
 		_running = false;
-
-		// 解除后台线程可能的阻塞
 		_commandReadyFlag = true;
 		_commandReady.Set();
 		_responseReady.Set();
@@ -90,9 +77,6 @@ namespace GoiRuntime.Communication
 			Debug.Log("[TcpStepServer] 已停止");
 		}
 
-	/// <summary>
-	/// Unity 主线程（协程）调用：非阻塞检查是否有新命令
-	/// </summary>
 	public bool TryGetCommand(out StepCommand command)
 	{
 		if (_commandReadyFlag)
@@ -106,121 +90,189 @@ namespace GoiRuntime.Communication
 		return false;
 	}
 
-		/// <summary>
-		/// Unity 主线程（协程）调用：在物理步进完成后，将状态打包发出
-		/// </summary>
 		public void SendResponse(StepResponse response)
 		{
 			if (!_connected) return;
-            if (response.DiagnosticJson != null)
-            {
-                byte[] json = System.Text.Encoding.UTF8.GetBytes(response.DiagnosticJson);
-                byte[] packet = new byte[5 + json.Length];
-                packet[0] = 255; // diagnostic marker, followed by little-endian byte length
-                byte[] length = BitConverter.GetBytes(json.Length);
-                if (!BitConverter.IsLittleEndian) Array.Reverse(length);
-                Buffer.BlockCopy(length, 0, packet, 1, 4);
-                Buffer.BlockCopy(json, 0, packet, 5, json.Length);
-                _responseBytes = packet;
-                _responseReady.Set();
-                return;
-            }
+			if (response.DiagnosticJson != null)
+			{
+				_responseBytes = _anchor35
+					? PackV2Diagnostic(response.Sequence, response.DiagnosticJson)
+					: PackLegacyDiagnostic(response.DiagnosticJson);
+				_responseReady.Set();
+				return;
+			}
+			if (_anchor35 && response.ErrorCode != 0)
+			{
+				_responseBytes = PackV2Error(response.Sequence, response.ErrorCode,
+					string.IsNullOrEmpty(response.ErrorMessage) ? "state_error" : response.ErrorMessage);
+				_responseReady.Set();
+				return;
+			}
 
-		// 编码：[n:1B][states: n×stateDim×4B][dones: n×1B]
-		int n = response.Dones?.Length ?? 0;
-		byte[] buf = new byte[1 + n * _stateDim * 4 + n];
-			int offset = 0;
+			int n = response.Dones != null ? response.Dones.Length : 0;
+			int internalDim = _internalStateDim;
+			if (response.States != null && n > 0 && response.States.Length % n == 0)
+				internalDim = response.States.Length / n;
+			int wireDim = _anchor35 ? internalDim : Math.Min(_legacyWireDim, internalDim);
+			_responseBytes = _anchor35
+				? PackV2State(response, n, internalDim, wireDim)
+				: PackLegacyState(response, n, internalDim, wireDim);
+			_responseReady.Set();
+		}
 
-			buf[offset++] = (byte)n;
+		private static byte[] PackLegacyDiagnostic(string jsonText)
+		{
+			byte[] json = Encoding.UTF8.GetBytes(jsonText);
+			byte[] packet = new byte[5 + json.Length];
+			packet[0] = 255;
+			WriteInt(packet, 1, json.Length);
+			Buffer.BlockCopy(json, 0, packet, 5, json.Length);
+			return packet;
+		}
 
+		private static byte[] PackV2Diagnostic(int sequence, string jsonText)
+		{
+			byte[] json = Encoding.UTF8.GetBytes(jsonText);
+			return PackV2(HelloProtocol.V2Diagnostic, sequence, json);
+		}
+
+		private static byte[] PackV2Error(int sequence, int code, string message)
+		{
+			byte[] msg = Encoding.UTF8.GetBytes(message ?? "");
+			byte[] payload = new byte[6 + msg.Length];
+			WriteInt(payload, 0, code);
+			payload[4] = (byte)(msg.Length & 0xFF);
+			payload[5] = (byte)((msg.Length >> 8) & 0xFF);
+			Buffer.BlockCopy(msg, 0, payload, 6, msg.Length);
+			return PackV2(HelloProtocol.V2Error, sequence, payload);
+		}
+
+		private static byte[] PackV2State(StepResponse response, int n, int internalDim, int wireDim)
+		{
+			byte[] payload = new byte[1 + n * (wireDim * 4 + 1)];
+			payload[0] = (byte)n;
+			int offset = 1;
 			for (int i = 0; i < n; i++)
 			{
-				for (int j = 0; j < _stateDim; j++)
+				for (int j = 0; j < wireDim; j++)
 				{
-					float v = (response.States != null && i * _stateDim + j < response.States.Length)
-						? response.States[i * _stateDim + j] : 0f;
-					byte[] fb = BitConverter.GetBytes(v);
-					if (!BitConverter.IsLittleEndian) Array.Reverse(fb);
-					Buffer.BlockCopy(fb, 0, buf, offset, 4);
+					float v = (response.States != null && i * internalDim + j < response.States.Length)
+						? response.States[i * internalDim + j] : 0f;
+					WriteFloat(payload, offset, v);
+					offset += 4;
+				}
+				payload[offset++] = (response.Dones != null && i < response.Dones.Length && response.Dones[i])
+					? (byte)1 : (byte)0;
+			}
+			return PackV2(HelloProtocol.V2State, response.Sequence, payload);
+		}
+
+		private static byte[] PackLegacyState(StepResponse response, int n, int internalDim, int wireDim)
+		{
+			byte[] buf = new byte[1 + n * wireDim * 4 + n];
+			int offset = 0;
+			buf[offset++] = (byte)n;
+			for (int i = 0; i < n; i++)
+			{
+				for (int j = 0; j < wireDim; j++)
+				{
+					float v = (response.States != null && i * internalDim + j < response.States.Length)
+						? response.States[i * internalDim + j] : 0f;
+					WriteFloat(buf, offset, v);
 					offset += 4;
 				}
 				buf[offset++] = (response.Dones != null && i < response.Dones.Length && response.Dones[i])
 					? (byte)1 : (byte)0;
 			}
+			return buf;
+		}
 
-		// 传给后台线程发送（避免在主线程阻塞 socket write）
-		_responseBytes = buf;
-		_responseReady.Set();
-	}
+		private static byte[] PackV2(byte type, int sequence, byte[] payload)
+		{
+			byte[] body = new byte[4 + payload.Length];
+			WriteInt(body, 0, sequence);
+			Buffer.BlockCopy(payload, 0, body, 4, payload.Length);
+			byte[] packet = new byte[5 + body.Length];
+			packet[0] = type;
+			WriteInt(packet, 1, body.Length);
+			Buffer.BlockCopy(body, 0, packet, 5, body.Length);
+			return packet;
+		}
 
+		private static void WriteInt(byte[] buf, int offset, int value)
+		{
+			byte[] bytes = BitConverter.GetBytes(value);
+			if (!BitConverter.IsLittleEndian) Array.Reverse(bytes);
+			Buffer.BlockCopy(bytes, 0, buf, offset, 4);
+		}
 
-		// ── 后台线程 ──────────────────────────────────────────────
+		private static void WriteFloat(byte[] buf, int offset, float value)
+		{
+			byte[] bytes = BitConverter.GetBytes(value);
+			if (!BitConverter.IsLittleEndian) Array.Reverse(bytes);
+			Buffer.BlockCopy(bytes, 0, buf, offset, 4);
+		}
 
 		private void BackgroundLoop()
 		{
 			try
 			{
-				// 等待 Python 连接
 				_client = _listener.AcceptTcpClient();
 				_client.NoDelay = true;
 				_stream = _client.GetStream();
 				_connected = true;
-				Debug.Log("[TcpStepServer] Python 已连接");
+				_anchor35 = false;
+				Debug.Log("[TcpStepServer] Python 已连接（legacy33，等待 HELLO）");
 
 				while (_running && _connected)
 				{
-					// --- 读取命令 ---
 					int cmdByte = _stream.ReadByte();
-					if (cmdByte < 0) break;  // 连接关闭
+					if (cmdByte < 0) break;
 
 					CommandType cmdType = (CommandType)cmdByte;
+					if (cmdType == CommandType.Hello)
+					{
+						if (!HandleHelloOnBackgroundThread())
+							break;
+						continue;
+					}
+
 					StepCommand cmd = new StepCommand { Type = cmdType };
 
 					if (cmdType == CommandType.Step)
 					{
-						// 读 n（agent 数量）
 						int n = _stream.ReadByte();
 						if (n < 0) break;
-
-						// 读 n×2 个 float（actions）
 						int actionBytes = n * 2 * 4;
 						byte[] actionBuf = ReadExact(actionBytes);
 						if (actionBuf == null) break;
-
 						float[] actions = new float[n * 2];
 						for (int i = 0; i < actions.Length; i++)
-						{
 							actions[i] = BitConverter.ToSingle(actionBuf, i * 4);
-						}
 						cmd.Actions = actions;
 					}
 					else if (cmdType == CommandType.Config)
 					{
-						// 读 [active:1B][mouseXActionId:4B][mouseYActionId:4B]
 						byte[] configBuf = ReadExact(9);
 						if (configBuf == null) break;
 						cmd.ConfigRewiredMouseActive = configBuf[0] != 0;
 						cmd.ConfigMouseXActionId = BitConverter.ToInt32(configBuf, 1);
 						cmd.ConfigMouseYActionId = BitConverter.ToInt32(configBuf, 5);
 					}
-
 					else if (cmdType == CommandType.Teleport)
 					{
-						// [agentIndex:1B][x:4B][y:4B] = 9 bytes
 						byte[] teleBuf = ReadExact(9);
 						if (teleBuf == null) break;
 						cmd.TeleportAgentIndex = teleBuf[0];
 						cmd.TeleportX = BitConverter.ToSingle(teleBuf, 1);
 						cmd.TeleportY = BitConverter.ToSingle(teleBuf, 5);
 					}
-
 					else if (cmdType == CommandType.Visualize)
 					{
 						byte[] vizBuf = ReadExact(1);
 						if (vizBuf == null) break;
 						cmd.VisualizeEnabled = vizBuf[0] != 0;
 					}
-
 					else if (cmdType == CommandType.CameraFree)
 					{
 						byte[] camBuf = ReadExact(1);
@@ -228,7 +280,6 @@ namespace GoiRuntime.Communication
 						cmd.CameraFreeEnabled = camBuf[0] != 0;
 					}
 
-				// --- 通知主线程 ---
 				_pendingCommand = cmd;
 				_responseReady.Reset();
 				_commandReadyFlag = true;
@@ -236,11 +287,9 @@ namespace GoiRuntime.Communication
 
 				if (cmdType == CommandType.Close) break;
 
-				// --- 等待主线程执行完物理步进并准备好回包 ---
 				_responseReady.WaitOne();
 					if (!_running) break;
 
-					// --- 发送回包 ---
 					byte[] resp = _responseBytes;
 					if (resp != null)
 					{
@@ -256,13 +305,54 @@ namespace GoiRuntime.Communication
 			finally
 			{
 				_connected = false;
+				_anchor35 = false;
 				Debug.Log("[TcpStepServer] 后台线程退出");
 			}
 		}
 
-		/// <summary>
-		/// 从 stream 精确读取 count 字节，连接断开时返回 null
-		/// </summary>
+		private bool HandleHelloOnBackgroundThread()
+		{
+			byte[] lenBuf = ReadExact(4);
+			if (lenBuf == null) return false;
+			int length = BitConverter.ToInt32(lenBuf, 0);
+			if (length < 0 || length > 1024 * 1024) return false;
+			byte[] body = ReadExact(length);
+			if (body == null) return false;
+
+			HelloRequest request = null;
+			try
+			{
+				request = JsonUtility.FromJson<HelloRequest>(Encoding.UTF8.GetString(body));
+			}
+			catch (Exception e)
+			{
+				Debug.LogWarning("[TcpStepServer] HELLO JSON 解析失败: " + e.Message);
+			}
+
+			string reject;
+			bool accepted = HelloProtocol.TryAccept(request, _helloSnapshot, out reject);
+			if (accepted)
+			{
+				_anchor35 = true;
+				Debug.Log("[TcpStepServer] HELLO 接受，进入 anchor35");
+			}
+			else
+			{
+				_anchor35 = false;
+				Debug.LogWarning("[TcpStepServer] HELLO 拒绝: " + reject);
+			}
+
+			string reply = HelloProtocol.ToJson(_helloSnapshot, accepted, reject);
+			byte[] utf = Encoding.UTF8.GetBytes(reply);
+			byte[] packet = new byte[5 + utf.Length];
+			packet[0] = HelloProtocol.Marker;
+			WriteInt(packet, 1, utf.Length);
+			Buffer.BlockCopy(utf, 0, packet, 5, utf.Length);
+			_stream.Write(packet, 0, packet.Length);
+			_stream.Flush();
+			return true;
+		}
+
 		private byte[] ReadExact(int count)
 		{
 			byte[] buf = new byte[count];

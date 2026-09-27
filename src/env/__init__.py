@@ -1,3 +1,3 @@
-from .goi_env import GoiEnv
+from .goi_env import GoiEnv, make_goi_env
 
-__all__ = ["GoiEnv"]
+__all__ = ["GoiEnv", "make_goi_env"]

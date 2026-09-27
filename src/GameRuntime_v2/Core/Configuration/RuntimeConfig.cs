@@ -54,7 +54,7 @@ namespace GoiRuntime.Core.Configuration
 
 		/// <summary>
 		/// 状态维度（每个复制体的浮点数数量）。
-		/// 注意：RL 路径以 StepController.STATE_DIM(=33，含 fakeCursor) 为权威，此值仅作文档/兜底。
+		/// 注意：内部状态步幅以 StepController.STATE_DIM(=35) 为权威；未协商连接仍发 33 维。此值仅作文档/兜底。
 		/// </summary>
 		public int stateDimension = 33;
 

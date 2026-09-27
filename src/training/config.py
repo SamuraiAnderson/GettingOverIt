@@ -6,6 +6,8 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .reference_anchor import ANCHOR_POT_CALIBRATED, VERIFIED_CALIBRATION_SHA256
+
 _PROJECT_CONFIG = Path(__file__).resolve().parents[1] / "config" / "project.json"
 
 
@@ -47,7 +49,7 @@ class TrainConfig:
     # PlayerSounds；body / pot 按游戏 IL 里 `rb.GetPoint().y > 0.4` 分层各自输出）
     # → DYNAMICS_DIM = 39。模型 dynamics_proj / 归一化 buffer 用 DYNAMICS_DIM，勿再用
     # state_dim 冒充特征维。
-    state_dim: int = 33
+    state_dim: int = 33  # 协商前的默认线路宽度；实际 transport 以 HELLO 为准，禁止被旧 ckpt 覆盖
     action_dim: int = 2
     # 归一化后动力学观测裁剪到 [-dynamics_clip, +dynamics_clip]，防止物理爆炸速度
     # 或微方差维度（如 hub 相对坐标 std≈0.008）放大出的极端值在 Transformer 内溢出成 NaN。
@@ -93,7 +95,6 @@ class TrainConfig:
     wide_channels: int = 1                # [0] eff
     contact_channels: int = 3             # [1] 高精度地形, [2] 锅/body 轮廓, [3] 锤头轮廓
     # 稀疏局部几何：256 格精度的窗口只编码轮廓 token 与接触关系，不进 CNN。
-    # 地形轮廓/法线按已到达的 8.64 m 窗惰性物化，未到达区域不预计算。
     sparse_geometry: bool = True
     sparse_window_cells: int = 256
     sparse_window_meters: float = 8.64
@@ -214,12 +215,11 @@ class TrainConfig:
     ppo_init_log_std: float = -1.6      # BC 迁移/初始化时的 log_std 上限（std≈0.20 → 中性 ≈ ±20）
     ppo_log_std_min: float = -2.5       # forward clamp 下限（std≈0.082 → ±8，保底探索）
     ppo_log_std_max: float = 0.0        # forward clamp 上限（std≈1.0，封顶防探索过大）
-    # σ 调度（M2 修复，20260924）：实测 σ≈0.52 从源 checkpoint 经 --init-from 原样继承
-    # 且全程不退化（entropy 钉死 1.51 nats），技能住在噪声里不住在均值里，det/exploration
-    # 鸿沟即免费性能。① init-from 时按 ppo_init_log_std 重设（--resume 不动，保持状态连续）；
-    # ② 每轮训练后 log_std 线性递减（巩固进展 → 探索退火），下限 ppo_log_std_min。
-    ppo_reset_log_std_on_init: bool = True
-    ppo_log_std_anneal_rate: float = 0.02   # 每轮 log_std 递减量（log 空间线性；0=关闭）
+    # σ：默认继承 checkpoint，不强制重设、不按轮递减。actor_log_std 仍走 PPO 梯度。
+    # 历史正式 init-from 的基础 σ≈0.96–0.99（条件 σ≈0.51–0.52）。重置+退火会先砍到
+    # ≈0.20 再继续降，跨批进度变差，不能单独怪退火速度。表现触发的降噪尚未实现。
+    ppo_reset_log_std_on_init: bool = False
+    ppo_log_std_anneal_rate: float = 0.0   # 每轮 log_std 递减量（log 空间线性；0=关闭）
 
     # ── PPO 探索噪声：时序连贯 OU / AR(1)（P1.1，roadmap 见 doc/optimization_roadmap.md）──
     # 从每帧 iid 高斯改为 AR(1)：z_t = φ·z_{t-1} + √(1-φ²)·η_t，η~N(0,1)，marginal z_t~N(0,1)。
@@ -321,7 +321,7 @@ class TrainConfig:
     # 做几步 BC 监督（MSE-on-mean），把 actor 均值锚向精英动作。只作用 mean 不碰 log_std → 不压制探索。
     sil_enabled: bool = True
     sil_start_iter: int = 5             # 对齐 value_warmup_iters：critic 预热完再开 SIL
-    sil_traj_cap: int = 20             # 精英池按分数保留的轨迹上限（非 FIFO，历史最优不淘汰）
+    sil_traj_cap: int = 20             # 精英池容量。map_elites 仍可按分数兜底；td_pareto 不按 score 截断
     sil_keep_ratio: float = 0.3        # 每轮新轨迹入池的 top-K 比例
     sil_batch_size: int = 64
     sil_epochs: int = 1                # 每次 PPO 迭代对精英池遍历轮数
@@ -344,6 +344,13 @@ class TrainConfig:
     sil_map_elites_enabled: bool = True
     sil_cell_size: float = 5.0          # 网格边长（米），(peak_x, peak_y) 离散化格
     sil_cold_start_min: int = 5         # 池小于此数时任何合法轨迹入池
+    # SIL 归档：map_elites 为对照；td_pareto 是终点 (t,D) 非支配前沿，不是唯一示范来源。
+    # 前缀里程碑归档尚未实现。默认 map_elites，避免正式对照被改口径。
+    sil_archive_mode: str = "map_elites"
+    sil_td_bucket_m: float = 0.10       # 接近容量后才启用的 D 分桶宽度（米，待验证）
+    sil_td_bucket_enable_at: int = 16   # 前沿条数达到该值才分桶；池小时关闭
+    sil_td_behavior_slots: int = 3      # 前沿外另留的空间多样性条数
+    sil_td_windows_per_traj: int = 0    # 每条轨迹窗口预算；0=对齐到最短轨迹，不删原始步
     # 入池前物理剪枝：在 secured peak（+dwell 观察窗）处截断，去除峰后跌落/来回震荡段，
     # 精英池只存"有效推进 + 守住证据"，BC 窗口/score/bd 口径与完整轨迹一致（见 dataset.prune_trajectory）。
     sil_prune_enabled: bool = True
@@ -366,6 +373,13 @@ class TrainConfig:
     reference_max_step: float = 4.0  # 单步位移超限视为跳变，仅重定位不领奖
     reference_simplify_tolerance: float = 0.15  # 折线简化容差，保留分段缺口
     reference_interpolated_weight: float = 0.5
+    # 路线比较点。默认已验证的实机可见锅心；旧 player_origin 实验须显式改回。
+    reference_anchor_id: str = ANCHOR_POT_CALIBRATED
+    reference_anchor_verified: bool = True
+    reference_anchor_calibration_sha256: str | None = VERIFIED_CALIBRATION_SHA256
+    reference_anchor_source_kind: str = "native"
+    # 线路协议。默认 HELLO 进入 anchor35；必须协商成功，禁止自动降级 legacy33。
+    tcp_protocol: str = "anchor35"
 
     # ── 训练控制 ──
     max_iterations: int = 100

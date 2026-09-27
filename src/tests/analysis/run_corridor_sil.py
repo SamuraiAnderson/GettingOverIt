@@ -137,7 +137,9 @@ def comparison(runner, status, error=None):
                 continue
             det = result["summary"]["deterministic"]
             exp = result["summary"]["exploration"]
-            lines.append(f"- {label}：实际样本 {result['training_samples_at_checkpoint']:,}；det 中位数 {det['credited_progress_median_m']:.3f}m，exploration {exp['credited_progress_median_m']:.3f}m；det 保持 1 秒 {det['success_hold_120_count']}/{det['episodes']}。")
+            from src.training.local_evaluation import format_eval_line
+            lines.append(f"- {label}：实际样本 {result['training_samples_at_checkpoint']:,}；"
+                         f"det {format_eval_line(det)}；exploration {format_eval_line(exp)}。")
         if row["det_median_delta_m"] is not None:
             lines.append(f"- 同 seed det 中位数变化：{row['det_median_delta_m']:+.3f}m。")
         lines.append("")

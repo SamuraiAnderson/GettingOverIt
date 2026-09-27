@@ -81,6 +81,9 @@ class FormalRunner(Runner):
         self.event("job_started", **self.job)
         log = self.campaign / "logs" / f"{label}.log"
         started = time.monotonic()
+        if log.exists():
+            archived = log.with_name(f"{log.stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{log.suffix}")
+            log.replace(archived)
         with log.open("x", encoding="utf-8") as stream:
             self.child = subprocess.Popen(command, cwd=ROOT, env=self.env, stdout=stream,
                                           stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -184,12 +187,11 @@ def report(runner, status, error=None):
         for evaluation in run["evaluations"]:
             lines += [f"{Path(evaluation['directory']).name}，权重对应训练样本 {evaluation['training_samples_at_checkpoint']:,}：", ""]
             for mode, values in evaluation["summary"].items():
-                lines.append(f"- {mode}：保持满 1 秒 {values['success_hold_120_count']}/{values['episodes']}；"
-                             f"10 步成功 {values['successes']}/{values['episodes']}；成功后跌落 {values['falls_after_success']}；"
-                             f"有效进度中位数 {values['credited_progress_median_m']:.2f} 米。")
+                from src.training.local_evaluation import format_eval_line
+                lines.append(f"- {mode}：{format_eval_line(values)}。")
             lines.append("")
     lines += ["## 判据与执行边界", "",
-              "主要指标：同一连续路线段内累计有效进度与当前投影均前进 5 米，并在走廊内连续保持 120 物理步（1 秒）。另保留原 10 步判据。成功后跌落按落水或从已达最高点回落 3 米判断，不等于返回起点。", "",
+              "到达单独计数。保持用容差、允许继续前进：到达后观察 1 秒，投影不低于 4.7 米、至少 95% 时间在走廊内、窗口末回到 5 米、无落水；0.3 米与 95% 为待验证参数。后续已确认路段计入。参考缺口记为无法确认，观察窗不足单列，不直接算控制失败。当前阶段用 credited 中位数和下四分位区分改进。", "",
               "只有 3 个独立训练 seed；不得把同轮复制体当成独立复验。相对旧实验同时改变了学习率、batch 和并行数，不能把跨轮改善单独归因给其中一项。", "",
               "STOP 文件在下一轮控制检查时停止当前自有子进程树；每个已完成训练迭代保存 checkpoint。硬截止或故障不自动加时、不放宽概率审计/KL 阈值。", ""]
     if error:

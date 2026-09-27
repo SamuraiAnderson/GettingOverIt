@@ -145,12 +145,12 @@ class GuardABRunner(FormalRunner):
 
 
 def _median_line(result):
+    from src.training.local_evaluation import format_eval_line
     det = result["summary"]["deterministic"]
     exp = result["summary"]["exploration"]
     return (f"实际样本 {result['training_samples_at_checkpoint']:,}；"
-            f"det 中位数 {det['credited_progress_median_m']:.3f}m，"
-            f"exploration {exp['credited_progress_median_m']:.3f}m；"
-            f"det 保持 1 秒 {det['success_hold_120_count']}/{det['episodes']}")
+            f"det {format_eval_line(det)}；"
+            f"exploration {format_eval_line(exp)}")
 
 
 def comparison(runner, status, error=None):
@@ -288,8 +288,8 @@ def main():
                 "initial_checkpoint": SOURCE, "sil_seed": str(SIL_SEED), "baseline": str(BASELINE),
                 "sil_guards": {"sil_gate_margin": 0., "sil_target_clamp": 3., "sil_budget_ratio": 1.,
                                "sil_value_coef": .1},
-                "sigma_schedule": {"ppo_reset_log_std_on_init": True, "ppo_init_log_std": -1.6,
-                                   "ppo_log_std_anneal_rate": .02, "ppo_log_std_min": -2.5},
+                "sigma_schedule": {"ppo_reset_log_std_on_init": False, "ppo_init_log_std": -1.6,
+                                   "ppo_log_std_anneal_rate": 0., "ppo_log_std_min": -2.5},
                 "warmup_included": True, "sil_first_iteration": 6, "evaluation_seed": 20260922,
                 "evaluation_rounds_per_mode": 2, "controller_pid": os.getpid(),
                 "controller_create_time": psutil.Process().create_time(),

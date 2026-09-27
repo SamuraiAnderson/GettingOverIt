@@ -6,6 +6,8 @@ import torch
 
 from .dataset import left_pad_sequence
 
+_SPARSE_NAMES = ("contour_tokens", "contour_mask", "relation_tokens", "relation_mask")
+
 
 def duration_gae(rewards, values, dones, durations, bootstrap, gamma, lam):
     """Rewards already contain sum_j gamma**j * r_j; lambda decays on the environment clock."""
@@ -86,6 +88,15 @@ class DecisionRolloutBuffer:
         return tuple(self._tensor(episode[name][start:end])[None]
                      for name in ("dynamics", "patches", "act_history"))
 
+    def _sparse_kwargs(self, episode, start=None, end=None, *, windows=None):
+        if windows:
+            return dict(zip(_SPARSE_NAMES, (
+                self._tensor(np.stack([w[k] for w in windows])) for k in range(4)
+            )))
+        if episode is None or "contour_tokens" not in episode:
+            return {}
+        return {name: self._tensor(episode[name][start:end])[None] for name in _SPARSE_NAMES}
+
     def evaluated_batches(self, model, batch_size, normalize_advantages=True):
         self.device = next(model.parameters()).device
         phi = self.policy_context["noise_phi"]
@@ -108,8 +119,14 @@ class DecisionRolloutBuffer:
                 # behavior hidden states or silently zero-initialize arbitrary chunks.
                 if start:
                     with torch.no_grad():
-                        _, hidden = model.recurrent_features(*self._inputs(episode, 0, start))
-                features, _ = model.recurrent_features(*self._inputs(episode, start, end), hidden=hidden)
+                        _, hidden = model.recurrent_features(
+                            *self._inputs(episode, 0, start),
+                            **self._sparse_kwargs(episode, 0, start),
+                        )
+                features, _ = model.recurrent_features(
+                    *self._inputs(episode, start, end), hidden=hidden,
+                    **self._sparse_kwargs(episode, start, end),
+                )
                 features = features[0, torch.as_tensor(steps-start, device=self.device)]
                 batch = self._batch([(e, i) for i in range(first, last)], advantages)
                 yield (batch, *model.evaluate_features(features, batch.raw_actions, batch.noise_prev, phi))
@@ -119,19 +136,25 @@ class DecisionRolloutBuffer:
             ctx = model.config.context_len
             for begin in range(0, len(rows), batch_size):
                 selected = [rows[i] for i in order[begin:begin+batch_size]]
-                windows, masks = [], []
+                windows, masks, sparse_windows = [], [], []
                 for e, i in selected:
                     episode = self.episodes[e]
                     step = int(episode["decision_steps"][i])
-                    frames = [left_pad_sequence(episode[name][max(0, step-ctx+1):step+1], ctx)
+                    sl = slice(max(0, step-ctx+1), step+1)
+                    frames = [left_pad_sequence(episode[name][sl], ctx)
                               for name in ("dynamics", "patches", "act_history")]
                     windows.append([value for value, mask in frames])
                     masks.append(frames[0][1])
+                    if "contour_tokens" in episode:
+                        sparse_windows.append([
+                            left_pad_sequence(episode[name][sl], ctx)[0] for name in _SPARSE_NAMES
+                        ])
                 dynamics, patches, actions = (self._tensor(np.stack([w[k] for w in windows])) for k in range(3))
                 batch = self._batch(selected, advantages)
                 yield (batch, *model.evaluate_actions(dynamics, patches, actions, batch.actions,
                     valid_mask=self._tensor(masks), noise_prev=batch.noise_prev, noise_phi=phi,
-                    raw_actions=batch.raw_actions))
+                    raw_actions=batch.raw_actions,
+                    **self._sparse_kwargs(episode, windows=sparse_windows or None)))
 
     def save(self, path):
         if not self.size:

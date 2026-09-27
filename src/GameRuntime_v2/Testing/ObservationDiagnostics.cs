@@ -13,11 +13,15 @@ namespace GoiRuntime.Testing
     [Serializable]
     public class ObservationDiagnosticPacket
     {
-        public int version = 2;
+        public int version = 4;
         public bool aligned;
         public int sequence;
         public float fixedDeltaTime;
         public int stepFrames;
+        public string screenshotPath = "";
+        public int screenshotWidth;
+        public int screenshotHeight;
+        public string pixelOrigin = "image_top_left";
         public ObservationDiagnosticAgent[] agents;
     }
 
@@ -34,6 +38,16 @@ namespace GoiRuntime.Testing
         public bool[] physicsKnown = new bool[4];
         // World x, y, z-angle, scale x, scale y for each corresponding part.
         public float[] partPose = new float[20];
+        public float bodyX, bodyY, bodyZ, bodyRz, bodySx, bodySy, bodySz;
+        public bool bodyKnown;
+        public float anchorX, anchorY;
+        public bool anchorKnown;
+        public float camPosX, camPosY, camPosZ, camOrthoSize, camPixelW, camPixelH;
+        public bool camKnown;
+        public float unityScreenBodyX, unityScreenBodyY;
+        public float unityScreenAxisXX, unityScreenAxisXY;
+        public float unityScreenAxisYX, unityScreenAxisYY;
+        public bool unityScreenKnown;
     }
 
     public static class ObservationDiagnostics
@@ -49,10 +63,14 @@ namespace GoiRuntime.Testing
         {
             // Unity's runtime serializer omits arrays of custom plugin-defined classes.
             // This fixed primitive-only schema needs no general-purpose JSON dependency.
-            var json = new StringBuilder("{\"version\":2,\"fixedDeltaTime\":");
+            var json = new StringBuilder("{\"version\":4,\"fixedDeltaTime\":");
             json.Append(Number(packet.fixedDeltaTime)).Append(",\"stepFrames\":").Append(packet.stepFrames);
             json.Append(",\"aligned\":").Append(packet.aligned ? "true" : "false");
             json.Append(",\"sequence\":").Append(packet.sequence);
+            json.Append(",\"screenshotPath\":\"").Append(Escape(packet.screenshotPath)).Append('"');
+            json.Append(",\"screenshotWidth\":").Append(packet.screenshotWidth);
+            json.Append(",\"screenshotHeight\":").Append(packet.screenshotHeight);
+            json.Append(",\"pixelOrigin\":\"").Append(Escape(packet.pixelOrigin)).Append('"');
             json.Append(",\"agents\":[");
             for (int i = 0; i < packet.agents.Length; i++)
             {
@@ -65,9 +83,32 @@ namespace GoiRuntime.Testing
                 json.Append("],\"physicsContact\":[").Append(string.Join(",", Array.ConvertAll(agent.physicsContact, Number)));
                 json.Append("],\"physicsKnown\":[").Append(string.Join(",", Array.ConvertAll(agent.physicsKnown, b => b ? "true" : "false")));
                 json.Append("],\"partPose\":[").Append(string.Join(",", Array.ConvertAll(agent.partPose, Number)));
-                json.Append("]}");
+                json.Append("],\"bodyX\":").Append(Number(agent.bodyX)).Append(",\"bodyY\":").Append(Number(agent.bodyY));
+                json.Append(",\"bodyZ\":").Append(Number(agent.bodyZ)).Append(",\"bodyRz\":").Append(Number(agent.bodyRz));
+                json.Append(",\"bodySx\":").Append(Number(agent.bodySx)).Append(",\"bodySy\":").Append(Number(agent.bodySy));
+                json.Append(",\"bodySz\":").Append(Number(agent.bodySz)).Append(",\"bodyKnown\":").Append(agent.bodyKnown ? "true" : "false");
+                json.Append(",\"anchorX\":").Append(Number(agent.anchorX)).Append(",\"anchorY\":").Append(Number(agent.anchorY));
+                json.Append(",\"anchorKnown\":").Append(agent.anchorKnown ? "true" : "false");
+                json.Append(",\"camPosX\":").Append(Number(agent.camPosX)).Append(",\"camPosY\":").Append(Number(agent.camPosY));
+                json.Append(",\"camPosZ\":").Append(Number(agent.camPosZ)).Append(",\"camOrthoSize\":").Append(Number(agent.camOrthoSize));
+                json.Append(",\"camPixelW\":").Append(Number(agent.camPixelW)).Append(",\"camPixelH\":").Append(Number(agent.camPixelH));
+                json.Append(",\"camKnown\":").Append(agent.camKnown ? "true" : "false");
+                json.Append(",\"unityScreenBodyX\":").Append(Number(agent.unityScreenBodyX));
+                json.Append(",\"unityScreenBodyY\":").Append(Number(agent.unityScreenBodyY));
+                json.Append(",\"unityScreenAxisXX\":").Append(Number(agent.unityScreenAxisXX));
+                json.Append(",\"unityScreenAxisXY\":").Append(Number(agent.unityScreenAxisXY));
+                json.Append(",\"unityScreenAxisYX\":").Append(Number(agent.unityScreenAxisYX));
+                json.Append(",\"unityScreenAxisYY\":").Append(Number(agent.unityScreenAxisYY));
+                json.Append(",\"unityScreenKnown\":").Append(agent.unityScreenKnown ? "true" : "false");
+                json.Append("}");
             }
             return json.Append("]}").ToString();
+        }
+
+        private static string Escape(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
 
         private static object Read(Component component, string field)
@@ -79,8 +120,67 @@ namespace GoiRuntime.Testing
 
         public static ObservationDiagnosticAgent Capture(PlayerInputService input)
         {
+            return Capture(input, null, null, false, 0f, 0f);
+        }
+
+        public static ObservationDiagnosticAgent Capture(
+            PlayerInputService input,
+            PlayerStateService state,
+            Camera camera,
+            bool calibrationAvailable,
+            float anchorLocalX,
+            float anchorLocalY)
+        {
             var result = new ObservationDiagnosticAgent();
-            var root = input?.GetPlayerObject();
+            var root = input != null ? input.GetPlayerObject() : null;
+            if (state != null)
+            {
+                Vector3 pos;
+                float rotZ;
+                Vector3 scale;
+                result.bodyKnown = state.TryGetBodyPose(out pos, out rotZ, out scale);
+                if (result.bodyKnown)
+                {
+                    result.bodyX = pos.x; result.bodyY = pos.y; result.bodyZ = pos.z;
+                    result.bodyRz = rotZ;
+                    result.bodySx = scale.x; result.bodySy = scale.y; result.bodySz = scale.z;
+                }
+                Vector2 anchor = Vector2.zero;
+                result.anchorKnown = calibrationAvailable &&
+                    state.TrySampleReferenceAnchor(anchorLocalX, anchorLocalY, out anchor);
+                if (result.anchorKnown)
+                {
+                    result.anchorX = anchor.x;
+                    result.anchorY = anchor.y;
+                }
+            }
+            if (camera != null)
+            {
+                result.camKnown = true;
+                result.camPosX = camera.transform.position.x;
+                result.camPosY = camera.transform.position.y;
+                result.camPosZ = camera.transform.position.z;
+                result.camOrthoSize = camera.orthographic ? camera.orthographicSize : 0f;
+                result.camPixelW = camera.pixelWidth;
+                result.camPixelH = camera.pixelHeight;
+                if (state != null)
+                {
+                    Transform body = state.GetPlayerTransform();
+                    if (body != null)
+                    {
+                        Vector3 s0 = camera.WorldToScreenPoint(body.position);
+                        Vector3 sx = camera.WorldToScreenPoint(body.TransformPoint(new Vector3(1f, 0f, 0f)));
+                        Vector3 sy = camera.WorldToScreenPoint(body.TransformPoint(new Vector3(0f, 1f, 0f)));
+                        result.unityScreenBodyX = s0.x;
+                        result.unityScreenBodyY = s0.y;
+                        result.unityScreenAxisXX = sx.x;
+                        result.unityScreenAxisXY = sx.y;
+                        result.unityScreenAxisYX = sy.x;
+                        result.unityScreenAxisYY = sy.y;
+                        result.unityScreenKnown = s0.z > 0f && !float.IsNaN(s0.x) && !float.IsInfinity(s0.x);
+                    }
+                }
+            }
             if (root == null) return result;
             Component player = null, hammer = null, sounds = null;
             foreach (var component in root.GetComponentsInChildren<Component>(true))

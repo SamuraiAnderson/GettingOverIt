@@ -105,9 +105,9 @@ def report(runner, status, error=None):
                     continue
                 det = result["summary"]["deterministic"]
                 exp = result["summary"]["exploration"]
-                lines.append(f"- {label}：det 中位数 {det['credited_progress_median_m']:.3f}m，"
-                             f"exploration {exp['credited_progress_median_m']:.3f}m；"
-                             f"det 保持 1 秒 {det['success_hold_120_count']}/{det['episodes']}。")
+                from src.training.local_evaluation import format_eval_line
+                lines.append(f"- {label}：det {format_eval_line(det)}；"
+                             f"exploration {format_eval_line(exp)}。")
             lines.append("")
     if error:
         lines += ["", f"停止原因：{error}"]

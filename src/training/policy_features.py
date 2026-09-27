@@ -131,8 +131,9 @@ class FeatureBuilder:
     def step(self, state, contact_state=None, contact_known=None):
         cfg = self.config
         state = np.asarray(state, dtype=np.float32)
-        if state.shape != (33,) or not np.isfinite(state).all():
-            raise ValueError("FeatureBuilder requires a finite 33D state")
+        if state.ndim != 1 or state.shape[0] not in (33, 35) or not np.isfinite(state).all():
+            raise ValueError("FeatureBuilder requires a finite 33D or 35D state")
+        state = state[:33]
         contact = np.asarray(contact_state if contact_state is not None else np.zeros(3), dtype=bool)
         known = np.asarray(contact_known if contact_known is not None else np.zeros(3), dtype=bool)
         changed = known & self.previous_known & (contact != self.previous)

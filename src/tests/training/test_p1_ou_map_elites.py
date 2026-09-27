@@ -37,7 +37,7 @@ def test_ou_conditional_and_log_prob_consistency() -> None:
     from training.dataset import DYNAMICS_DIM
     B, T, D = 4, cfg.context_len, DYNAMICS_DIM  # 现为 39 (34 base + 5 contact)
     dynamics = torch.randn(B, T, D)
-    patches = torch.randn(B, T, 4, 32, 32)
+    patches = torch.randn(B, T, 4, cfg.patch_size, cfg.patch_size)
     act_hist = torch.randn(B, T, 2)
     valid = torch.ones(B, T)
     z_prev = torch.randn(B, 2)

@@ -65,7 +65,8 @@ def report(runner, status, error=None):
                 lines.append(f"- {label}：评估尚未完成。")
             else:
                 det, exp = (result["summary"][mode] for mode in ("deterministic", "exploration"))
-                lines.append(f"- {label}：det 有效进度中位数 {det['credited_progress_median_m']:.3f}m；探索 {exp['credited_progress_median_m']:.3f}m；det 1 秒保持成功 {det['success_hold_120_count']}/{det['episodes']}。")
+                from src.training.local_evaluation import format_eval_line
+                lines.append(f"- {label}：det {format_eval_line(det)}；探索 {format_eval_line(exp)}。")
         lines.append("")
     lines += ["评估沿用中期口径：seed=20260922，2 rounds × 8 agents，det/exploration 分开；原 96k 文件保留。",
               "288k 与 96k 的比较衡量训练延长后的变化，不是相同样本预算下的 SIL 消融。原正式 C 没有 288k 对照。续训重设随机种子，不是逐位复刻不间断运行。",

@@ -76,11 +76,14 @@ def batches_through(mode, trial, rounds):
 
 
 def route_metrics(states, cfg):
-    tracker = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg).tracker(states[0, :2])
+    route = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg)
+    from training.reference_anchor import scoring_context
+    schema, meta = scoring_context(states[0], cfg, None, route)
+    tracker = route.tracker_from_state(states[0], schema, meta)
     start, segment = tracker.progress, tracker.segment_index
     progress, credit, inside = [0.], [0.], [tracker.previous_inside]
     for state in states[1:]:
-        result = tracker.step(state[:2])
+        result = route.step_state(tracker, state, schema, meta)
         # Local comparison is defined only within this reference segment.
         if tracker.segment_index != segment:
             raise ValueError("Cross-segment replay requires an explicit ordered-segment metric")
