@@ -54,6 +54,15 @@ def climb_score(progress: float, peak_step: int, config: TrainConfig) -> float:
     return progress + config.efficiency_weight * speed_term
 
 
+def corridor_score_of(traj, config: TrainConfig) -> float:
+    """Rank a stored trajectory by its versioned endpoint, not a raw credit sum."""
+    from .reference_corridor import trajectory_endpoint
+    endpoint = trajectory_endpoint(traj)
+    if not endpoint.valid or endpoint.cap < 0 or endpoint.distance <= 0.0 or endpoint.t_cap is None:
+        return 0.0
+    return climb_score(endpoint.distance, endpoint.t_cap, config)
+
+
 def corridor_score(corridor_progress: np.ndarray, config: TrainConfig) -> float:
     """走廊模式的精英池排序分：credited 总进度 + 速度项（复用 climb_score 结构）。
 
@@ -318,6 +327,8 @@ def step_reward(
         from .state_schema import schema_from_raw_width
         schema = state_schema or schema_from_raw_width(np.asarray(obs_curr).shape[-1])
         result = corridor.step(reference_position(obs_curr, schema, reference_metadata))
+        if result.invalid:
+            return 0.0, new_max_y
         reward = config.water_penalty if is_water(curr_y, config) else result.reward
         return reward, new_max_y
 

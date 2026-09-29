@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "src"))
 
 from training.config import TrainConfig
-from training.reference_corridor import ReferenceCorridor, replay_corridor_fields
+from training.reference_corridor import ReferenceCorridor, replay_corridor_result
 from training.reference_fingerprint import reference_fingerprint, write_fingerprint_sidecar
 from training.reference_anchor import ANCHOR_PLAYER_ORIGIN, ANCHOR_POT_CALIBRATED
 
@@ -63,9 +63,20 @@ def migrate_npz(
         arrays.pop("corridor_progress", None)
         arrays.pop("guidance_index", None)
     if route is not None and kind != "legacy_kept":
-        progress, guidance = replay_corridor_fields(route, states)
-        arrays["corridor_progress"] = progress
-        arrays["guidance_index"] = guidance
+        played = replay_corridor_result(route, states)
+        arrays["corridor_progress"] = np.asarray(played["legacy_credit"], dtype=np.float32)
+        arrays["guidance_index"] = played["guidance_index"]
+        arrays["corridor_credit_events"] = played["credit_events"]
+        arrays["corridor_confirmed_progress"] = played["confirmed_progress"]
+        arrays["step_rewards"] = played["rewards"]
+        arrays["progress_mode"] = np.asarray(played["mode"])
+        note += f"; replayed {played['mode']} D={played['distance']:.4f} cap={played['cap']}"
+        if "terminated" not in data.files:
+            meta_termination = False
+        else:
+            meta_termination = True
+    else:
+        meta_termination = "terminated" in data.files
     if dest.suffix == ".npz":
         np.savez_compressed(dest, **arrays)
     else:
@@ -75,6 +86,7 @@ def migrate_npz(
         "destination": str(dest),
         "migration_kind": kind,
         "partial": bool("corridor_progress" in data.files and kind == "legacy_kept"),
+        "termination_known": meta_termination,
         "note": note,
         "raw_width": width,
     }

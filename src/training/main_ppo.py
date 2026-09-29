@@ -112,15 +112,19 @@ def save_checkpoint(
 def _sil_score(traj: "Trajectory", eff_map: "ClimbingEfficiencyMap", config: TrainConfig) -> float:
     """精英池排序分分派：走廊轨迹用 credited 进度口径（corridor_score），
     其余沿用高度口径（score_trajectory）。与 prune_trajectory / _rebuild_index 同步。"""
-    if traj.corridor_progress is not None:
-        return corridor_score(traj.corridor_progress, config)
+    if traj.corridor_progress is not None or getattr(traj, "corridor_credit_events", None) is not None:
+        from training.reward import corridor_score_of
+        return corridor_score_of(traj, config)
     return score_trajectory(traj.raw_states, eff_map, config)
 
 
 def log_metrics(iteration: int, metrics: dict[str, float], extras: dict | None = None) -> None:
     parts = [f"iter={iteration}"]
     for k, v in metrics.items():
-        parts.append(f"{k}={v:.6f}")
+        if isinstance(v, str):
+            parts.append(f"{k}={v}")
+        else:
+            parts.append(f"{k}={v:.6f}")
     if extras:
         for k, v in extras.items():
             parts.append(f"{k}={v:.4f}")
@@ -219,6 +223,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="Resume: stop after this many additional physical samples, at a complete iteration")
     parser.add_argument("--sil-resume-pool", type=str, default=None,
                         help="Restore a saved SIL elite pool, including corridor fields, scores and source iterations")
+    parser.add_argument("--sil-init-pool", type=str, default=None,
+                        help="Cold-start SIL from an elite-pool npz already scored with the current progress mode; requires --init-from")
     parser.add_argument("--steps-per-rollout", type=int, default=None)
     parser.add_argument("--ppo-batch-size", type=int, default=None)
     parser.add_argument("--save-interval", type=int, default=None,
@@ -282,6 +288,37 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="SIL 精英归档：map_elites 对照；td_pareto 为终点 (t,D) 前沿（默认 map_elites）",
     )
     parser.add_argument(
+        "--sil-td-sampling-mode",
+        choices=("legacy_min_length", "balanced_stratified", "coverage_share"),
+        default=None,
+        help="td_pareto 的 SIL 窗口采样。legacy 保持原最短轨迹预算与单一 D 门控；"
+             "balanced_stratified / coverage_share 使用完整动作区间并关闭该门控",
+    )
+    parser.add_argument(
+        "--sil-td-sampling-horizon-steps", type=int, default=None,
+        help="新采样模式的固定比较时限 H。省略时从 steps_per_rollout 解析并写入 checkpoint",
+    )
+    parser.add_argument(
+        "--sil-td-windows-per-traj", type=int, default=None,
+        help="legacy：每条轨迹窗口上限，0 对齐最短轨迹。新模式：平均计算预算 K，0 解析为 32",
+    )
+    parser.add_argument(
+        "--sil-td-sampling-seed", type=int, default=None,
+        help="SIL 采样专用种子。省略时使用 --seed，并在新模式 checkpoint 中保存解析值",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="只解析并打印采样配置，不建模型、不启动游戏、不写 run 目录",
+    )
+    parser.add_argument(
+        "--sil-only", action="store_true",
+        help="只对已恢复的精英池做模仿更新，不启动游戏、不采集、不跑 PPO",
+    )
+    parser.add_argument(
+        "--sil-only-minutes", type=float, default=None,
+        help="--sil-only 的墙钟时间上限（分钟）。到点后完成当前这次模仿更新再退出",
+    )
+    parser.add_argument(
         "--resume", type=str, default=None,
         help="从指定 checkpoint 恢复训练（如 checkpoints/ppo_iter_0050.pt）",
     )
@@ -330,8 +367,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     if args.additional_physical_samples is not None:
         if args.additional_physical_samples < 1 or not args.resume or args.target_physical_samples is not None:
             parser.error("--additional-physical-samples requires a positive count and --resume")
-    if args.sil_resume_pool and (not args.resume or args.sil_seed):
-        parser.error("--sil-resume-pool requires --resume and cannot be combined with --sil-seed")
+    if args.sil_resume_pool and (not args.resume or args.sil_seed or args.sil_init_pool):
+        parser.error("--sil-resume-pool requires --resume and cannot be combined with --sil-seed or --sil-init-pool")
+    if args.sil_init_pool and (not args.init_from or args.resume or args.sil_seed):
+        parser.error("--sil-init-pool requires --init-from and cannot be combined with --resume or --sil-seed")
+    if args.sil_only and (not args.resume or not args.sil_resume_pool):
+        parser.error("--sil-only requires --resume and --sil-resume-pool")
+    if args.sil_only and (args.sil_only_minutes is None or args.sil_only_minutes <= 0):
+        parser.error("--sil-only requires a positive --sil-only-minutes")
     return args
 
 
@@ -375,6 +418,146 @@ def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoin
         config.explore_boost_enabled = False
 
 
+def configure_sil_sampling(config: TrainConfig, args: argparse.Namespace, resume_state: dict) -> None:
+    """Resolve sampling mode, horizon, K, and seed. Old resumes stay on the legacy sampler."""
+    from training.reference_corridor import PROGRESS_MODE_V2
+    from training.sil_archive import NEW_SAMPLING_MODES, SAMPLING_LEGACY, SAMPLING_MODES
+
+    saved = resume_state.get("config", {}) if resume_state else {}
+    is_resume = bool(resume_state)
+    saved_has_mode = "sil_td_sampling_mode" in saved
+    requested_mode = getattr(args, "sil_td_sampling_mode", None)
+    requested_horizon = getattr(args, "sil_td_sampling_horizon_steps", None)
+    requested_k = getattr(args, "sil_td_windows_per_traj", None)
+    requested_seed = getattr(args, "sil_td_sampling_seed", None)
+
+    def _reject_saved_change(name: str, requested, saved_value) -> None:
+        if requested is None or not (is_resume and saved_has_mode):
+            return
+        if requested != saved_value:
+            raise ValueError(
+                f"恢复中的实验已保存 {name}={saved_value}，不能改成 {requested}；"
+                "切换采样配置需要新的 --run-dir 和显式起点"
+            )
+
+    if is_resume and not saved_has_mode:
+        if requested_mode not in (None, SAMPLING_LEGACY):
+            if not getattr(args, "run_dir", None):
+                raise ValueError(
+                    "旧 checkpoint 没有 sil_td_sampling_mode，不能在原实验里切换采样模式；"
+                    "请使用新的 --run-dir"
+                )
+            config.sil_td_sampling_mode = requested_mode
+        else:
+            config.sil_td_sampling_mode = SAMPLING_LEGACY
+    elif is_resume and saved_has_mode:
+        _reject_saved_change("sil_td_sampling_mode", requested_mode, saved.get("sil_td_sampling_mode"))
+    elif requested_mode is not None:
+        config.sil_td_sampling_mode = requested_mode
+    if config.sil_td_sampling_mode not in SAMPLING_MODES:
+        raise ValueError(f"Unknown sil_td_sampling_mode: {config.sil_td_sampling_mode}")
+
+    if config.sil_td_sampling_mode == SAMPLING_LEGACY:
+        if requested_k is not None:
+            _reject_saved_change(
+                "sil_td_windows_per_traj", requested_k, saved.get("sil_td_windows_per_traj", 0))
+            config.sil_td_windows_per_traj = int(requested_k)
+        return
+
+    if config.sil_archive_mode != "td_pareto":
+        raise ValueError(f"{config.sil_td_sampling_mode} 需要 sil_archive_mode=td_pareto")
+    if getattr(config, "reference_progress_mode", None) != PROGRESS_MODE_V2:
+        raise ValueError(f"{config.sil_td_sampling_mode} 需要 reference_progress_mode={PROGRESS_MODE_V2}")
+    if config.sil_td_sampling_mode not in NEW_SAMPLING_MODES:
+        raise ValueError(f"Unknown sil_td_sampling_mode: {config.sil_td_sampling_mode}")
+
+    if requested_horizon is not None:
+        _reject_saved_change(
+            "sil_td_sampling_horizon_steps", requested_horizon,
+            saved.get("sil_td_sampling_horizon_steps"))
+        config.sil_td_sampling_horizon_steps = int(requested_horizon)
+    elif not (is_resume and saved_has_mode):
+        if int(config.sil_td_sampling_horizon_steps) <= 0:
+            config.sil_td_sampling_horizon_steps = int(config.steps_per_rollout)
+    if int(config.sil_td_sampling_horizon_steps) < 1:
+        raise ValueError("sil_td_sampling_horizon_steps 必须是正整数")
+
+    if requested_k is not None:
+        _reject_saved_change(
+            "sil_td_windows_per_traj", requested_k, saved.get("sil_td_windows_per_traj"))
+        config.sil_td_windows_per_traj = int(requested_k)
+    elif int(config.sil_td_windows_per_traj) <= 0:
+        config.sil_td_windows_per_traj = 32
+    if int(config.sil_td_windows_per_traj) < 1:
+        raise ValueError("新采样模式的 sil_td_windows_per_traj 解析后必须为正")
+
+    if is_resume and saved_has_mode and "sil_td_sampling_seed" in saved:
+        _reject_saved_change(
+            "sil_td_sampling_seed", requested_seed, saved.get("sil_td_sampling_seed"))
+        config.sil_td_sampling_seed = int(saved["sil_td_sampling_seed"])
+    elif requested_seed is not None:
+        config.sil_td_sampling_seed = int(requested_seed)
+    elif int(config.sil_td_sampling_seed) <= 0:
+        config.sil_td_sampling_seed = int(getattr(args, "seed", 0) or 0)
+    if not config.sil_td_sampling_rule_version:
+        config.sil_td_sampling_rule_version = "coverage_v1"
+
+
+def run_sil_only(
+    args, config, model, ppo_trainer, sil_dataset, recorder, start_iteration, reference_meta,
+    warmup_end,
+) -> None:
+    """Imitation updates on the restored elite pool. No game, no PPO, pool stays frozen."""
+    if sil_dataset is None or not sil_dataset.trajectories:
+        raise ValueError("--sil-only 需要已经恢复的非空精英池")
+    if not model.dynamics_stats_ready:
+        raise ValueError("--sil-only 需要 checkpoint 里已有观测归一化统计，不能为了标定去启动游戏")
+    deadline = time.perf_counter() + float(args.sil_only_minutes) * 60.0
+    iteration = int(start_iteration)
+    logger.info(
+        "只做模仿更新 %.1f 分钟：不启动游戏、不采集、不跑 PPO；精英池保持 %d 条",
+        args.sil_only_minutes, len(sil_dataset.trajectories),
+    )
+    try:
+        while time.perf_counter() < deadline:
+            iteration += 1
+            logger.info("=" * 60)
+            logger.info("=== 模仿更新 %d ===", iteration)
+            metrics = ppo_trainer.sil_update(
+                model, sil_dataset,
+                loss_coef=config.sil_loss_coef,
+                budget_updates=None,
+                behavior_progress=None,
+                iteration=iteration,
+            )
+            log_metrics(iteration, metrics)
+            if recorder is not None:
+                recorder.append_metrics(iteration, metrics)
+                sampling_record = getattr(ppo_trainer, "last_sil_sampling", None)
+                if sampling_record is not None:
+                    recorder.save_sil_sampling(iteration, sampling_record)
+            save_checkpoint(
+                model, ppo_trainer.optimizer, iteration, config.checkpoint_dir,
+                config=config, reference_metadata=reference_meta,
+                value_warmup_end=warmup_end,
+            )
+            if recorder is not None:
+                recorder.save_elites(sil_dataset.trajectories, iteration)
+            if float(metrics.get("sil_updates", 0.0)) <= 0.0:
+                logger.warning("本轮没有模仿更新: %s", metrics.get("sil_sampling_mode", metrics))
+        if recorder is not None:
+            recorder.finalize("completed", last_iteration=iteration)
+        logger.info("模仿更新完成，最后一轮 %d", iteration)
+    except BaseException as exc:
+        if recorder is not None:
+            recorder.finalize(
+                "interrupted" if isinstance(exc, KeyboardInterrupt) else "failed",
+                last_iteration=iteration,
+                error=f"{type(exc).__name__}: {exc}",
+            )
+        raise
+
+
 def main() -> None:
     _setup_logging()
     args = parse_args()
@@ -395,6 +578,9 @@ def main() -> None:
     for field in fields(config):
         if field.name in resume_state.get("config", {}) and field.name not in ("game_root", "port"):
             setattr(config, field.name, resume_state["config"][field.name])
+    if args.resume and "reference_progress_mode" not in resume_state.get("config", {}):
+        from training.reference_corridor import PROGRESS_MODE_V1
+        config.reference_progress_mode = PROGRESS_MODE_V1
     if args.resume and "actor_mean_contact.weight" not in resume_state["model"]:
         config.contact_heads_enabled = False
     geometry_changed = configure_geometry(config, resume_state or init_state or ({"bc": True} if args.resume_bc else None),
@@ -454,6 +640,26 @@ def main() -> None:
         config.sil_enabled = True
         config.sil_advantage_weighting_enabled = True
         logger.info("--corridor-sil: 走廊模式启用 SIL（评分/剪枝/入池/优势加权均走走廊口径）")
+    configure_sil_sampling(config, args, resume_state)
+    if args.dry_run:
+        payload = {
+            "sil_td_sampling_mode": config.sil_td_sampling_mode,
+            "sil_td_sampling_horizon_steps": config.sil_td_sampling_horizon_steps,
+            "sil_td_windows_per_traj": config.sil_td_windows_per_traj,
+            "sil_td_sampling_seed": config.sil_td_sampling_seed,
+            "sil_td_sampling_rule_version": config.sil_td_sampling_rule_version,
+            "sil_archive_mode": config.sil_archive_mode,
+            "reference_progress_mode": config.reference_progress_mode,
+            "steps_per_rollout": config.steps_per_rollout,
+            "sil_batch_size": config.sil_batch_size,
+            "sil_epochs": config.sil_epochs,
+            "sil_max_batches": config.sil_max_batches,
+            "sil_budget_ratio": config.sil_budget_ratio,
+            "max_iterations": config.max_iterations,
+            "resume_iteration": int(resume_state.get("iteration", 0)) if resume_state else 0,
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
     from training.policy_features import experimental_enabled
     if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
         raise ValueError("Representation experiments support PPO --init-from/--resume and disable legacy BC/SIL")
@@ -543,6 +749,13 @@ def main() -> None:
             model.reset_log_std(config.ppo_init_log_std)
             logger.info("init-from σ 重设: log_std → %.2f (std=%.3f)",
                         config.ppo_init_log_std, float(model.actor_log_std.detach().exp().mean()))
+        from training.reference_corridor import progress_mode_of
+        source_mode = progress_mode_of(init_state.get("config", {}))
+        if source_mode != config.reference_progress_mode and hasattr(model, "reset_critic_head"):
+            model.reset_critic_head()
+            config.progress_mode_warm_start = True
+            logger.info("进度口径 %s → %s：重新初始化 critic，不恢复旧优化器",
+                        source_mode, config.reference_progress_mode)
     elif args.resume_bc:
         bc_state = torch.load(args.resume_bc, weights_only=True)
         model.load_from_bc(bc_state)
@@ -560,7 +773,7 @@ def main() -> None:
             or resume_state.get("reference_corridor", {}).get("sha256") != reference_meta["sha256"]
         ))
     )
-    semantics_changed = reference_changed or geometry_changed
+    semantics_changed = reference_changed or geometry_changed or bool(getattr(config, "progress_mode_warm_start", False))
     warmup_end = start_iteration + config.value_warmup_iters if semantics_changed else config.value_warmup_iters
     if not semantics_changed and args.value_warmup_iters is None:
         warmup_end = max(warmup_end, int(resume_state.get("value_warmup_end", 0)))
@@ -654,25 +867,30 @@ def main() -> None:
                 reference_fp, load_fingerprint_sidecar(seed_path), context=str(seed_path),
             )
             z = np.load(seed_path)
-            if config.reference_anchor_id == ANCHOR_POT_CALIBRATED and "corridor_progress" in z.files:
-                raise ValueError(f"{seed_path}: 禁止把旧 corridor_progress 混入新锚点任务")
+            if "raw_states" not in z.files or "actions" not in z.files:
+                raise ValueError(f"{seed_path}: 没有完整状态/动作，不能转成确认距离")
             traj = Trajectory(
                 raw_states=np.asarray(z["raw_states"], dtype=np.float32),
                 actions=np.asarray(z["actions"], dtype=np.float32),
                 contact=(np.asarray(z["contact"], dtype=np.float32)
                          if "contact" in z.files else None),
                 iteration=-1,
-                corridor_progress=(np.asarray(z["corridor_progress"], dtype=np.float32)
-                                   if "corridor_progress" in z.files else None),
-                guidance_index=(np.asarray(z["guidance_index"], dtype=np.int8)
-                                if "guidance_index" in z.files else None),
+                termination_known="terminated" in z.files,
             )
-            if reference is not None and traj.corridor_progress is None:
-                traj.corridor_progress, traj.guidance_index = replay_corridor_fields(
-                    reference, traj.raw_states,
-                )
-                logger.info("SIL 种子走廊字段重放: %s (credited=%.3fm)",
-                            seed_path, float(traj.corridor_progress.sum()))
+            if reference is not None:
+                from training.reference_corridor import replay_corridor_result
+                played = replay_corridor_result(reference, traj.raw_states)
+                traj.corridor_progress = np.asarray(played["legacy_credit"], dtype=np.float32)
+                traj.guidance_index = played["guidance_index"]
+                traj.corridor_credit_events = played["credit_events"]
+                traj.corridor_confirmed_progress = played["confirmed_progress"]
+                traj.step_rewards = played["rewards"]
+                traj.progress_mode = played["mode"]
+                traj.trajectory_valid = played["valid"]
+                if "terminated" in z.files:
+                    traj.terminated = np.asarray(z["terminated"], dtype=bool)
+                logger.info("SIL 种子按 %s 重放: %s (D=%.3fm)",
+                            played["mode"], seed_path, played["distance"])
             traj.score = _sil_score(traj, eff_map, config)
             seed_trajs.append(traj)
             logger.info("SIL 种子: %s (T=%d, score=%.3f)",
@@ -689,6 +907,10 @@ def main() -> None:
             context=str(args.sil_resume_pool),
         )
         restored_trajs = [Trajectory(**row) for row in load_elites(args.sil_resume_pool)]
+        from training.sil_archive import recover_v2_termination
+        recovered = sum(recover_v2_termination(traj) for traj in restored_trajs)
+        if recovered:
+            logger.info("SIL 恢复池补齐 %d 条 v2 轨迹的终止标记（全 false）", recovered)
         if not restored_trajs:
             raise ValueError("Cannot resume an empty SIL pool")
         if reference is not None and any(t.corridor_progress is None or t.guidance_index is None
@@ -696,6 +918,30 @@ def main() -> None:
             raise ValueError("Corridor SIL pool is missing saved corridor fields")
         sil_dataset.load_sil_pool(restored_trajs)
         logger.info("SIL 精英池完整恢复: %s (%d 条轨迹)", args.sil_resume_pool, len(sil_dataset.trajectories))
+
+    if args.sil_init_pool:
+        if sil_dataset is None:
+            raise ValueError("An initial SIL pool requires SIL to be enabled")
+        assert_fingerprint_compatible(
+            reference_fp, load_fingerprint_sidecar(args.sil_init_pool),
+            context=str(args.sil_init_pool),
+        )
+        from training.reference_corridor import PROGRESS_MODE_V2, trajectory_endpoint
+        from training.sil_archive import recover_v2_termination
+        init_trajs = []
+        for row in load_elites(args.sil_init_pool):
+            traj = Trajectory(**row)
+            if traj.progress_mode != PROGRESS_MODE_V2 or traj.corridor_confirmed_progress is None:
+                raise ValueError(f"{args.sil_init_pool}: every row needs confirmed_endpoint_v2 fields")
+            if not trajectory_endpoint(traj).valid:
+                raise ValueError(f"{args.sil_init_pool}: a row has no valid confirmed endpoint")
+            recover_v2_termination(traj)
+            init_trajs.append(traj)
+        if not init_trajs:
+            raise ValueError("Cannot init from an empty SIL pool")
+        sil_dataset.load_sil_pool(init_trajs)
+        logger.info("SIL 精英池按当前口径冷启动: %s (%d 条轨迹)",
+                    args.sil_init_pool, len(sil_dataset.trajectories))
 
     # ── 奖励归一化器 ──
     calibration_steps = config.steps_per_rollout * config.num_agents * 10
@@ -731,6 +977,13 @@ def main() -> None:
             rollout_worker.close_game()
     else:
         logger.info("观测归一化: 沿用 checkpoint 携带的统计量")
+
+    if args.sil_only:
+        run_sil_only(
+            args, config, model, ppo_trainer, sil_dataset, recorder,
+            start_iteration, reference_meta, warmup_end,
+        )
+        return
 
     # 游戏常驻模式：开局启动一次，循环内跳过每轮启停，仅靠 collect_ppo 的 env.reset() 复位。
     # manage_per_iter=True 时维持原有"每轮启停"行为。
@@ -895,8 +1148,9 @@ def main() -> None:
                 # 行为门控水平：当前轮 per-agent 平均 credited（原始米）。
                 # corridor_progress_m 是全 agent 逐步累加和，除以 agent 数得均值。
                 _corridor = getattr(rollout_worker, "last_corridor_metrics", None) or {}
-                _behavior = (_corridor.get("corridor_progress_m", 0.0)
-                             / max(1, config.num_agents)) if _corridor else None
+                _valid_agents = _corridor.get("corridor_valid_agents", config.num_agents)
+                _behavior = (_corridor.get("corridor_progress_m", 0.0) / _valid_agents
+                             if _corridor and _valid_agents else None)
                 metrics.update(ppo_trainer.sil_update(
                     model, sil_dataset,
                     loss_coef=config.sil_loss_coef * _sil_scale,
@@ -904,7 +1158,11 @@ def main() -> None:
                     # 防止模仿梯度压倒在线更新（20260923 塌陷期曾 297:43）。
                     budget_updates=int(metrics.get("n_updates", 0)),
                     behavior_progress=_behavior,
+                    iteration=iteration + 1,
                 ))
+                sampling_record = getattr(ppo_trainer, "last_sil_sampling", None)
+                if recorder is not None and sampling_record is not None:
+                    recorder.save_sil_sampling(iteration + 1, sampling_record)
 
             # Phase 2.55: σ 退火（M2 修复）：巩固进展 → 探索噪声线性退火，
             # 下限 ppo_log_std_min；预热轮不动（策略未训练）。forward 内 clamp 兜底。
@@ -917,8 +1175,10 @@ def main() -> None:
             # 设 model.exploration_boost 供【下一轮】采集+更新一致生效。
             if (config.explore_boost_enabled and sil_dataset is not None
                     and iteration >= config.sil_start_iter):
+                from training.reference_corridor import trajectory_endpoint
                 sdys = [
-                    float(t.corridor_progress.sum()) if t.corridor_progress is not None
+                    trajectory_endpoint(t).distance if t.corridor_progress is not None
+                    or getattr(t, "corridor_credit_events", None) is not None
                     else float(progress_metric(t.raw_states, config)[2])
                     for t in sil_dataset.trajectories
                 ]

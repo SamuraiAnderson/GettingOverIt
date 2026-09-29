@@ -15,7 +15,11 @@ from training.reference_corridor import CorridorSegment, ReferenceCorridor
 def _config():
     return TrainConfig(d_model=16, nhead=2, num_layers=1, context_len=3,
                        num_agents=2, random_deploy=False, deploy_exclusion_check=False,
-                       contact_heads_enabled=False)
+                       contact_heads_enabled=False,
+                       reference_anchor_id="player_origin",
+                       reference_anchor_verified=False,
+                       reference_anchor_calibration_sha256=None,
+                       tcp_protocol="legacy33")
 
 
 def _route(*pairs):

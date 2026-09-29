@@ -423,12 +423,27 @@ class PPOTrainer:
             if prev is None or tau > prev[0]:
                 traj_last_value[ti] = (tau, values[idx])
         for ti, traj in enumerate(dataset.trajectories):
-            credited = np.asarray(traj.corridor_progress, dtype=np.float64)
-            R = np.zeros(len(credited), dtype=np.float64)
-            run = 0.0
-            for t in range(len(credited) - 1, -1, -1):
-                run = credited[t] + cfg.gamma * run
-                R[t] = run
+            rewards = getattr(traj, "step_rewards", None)
+            mode = getattr(traj, "progress_mode", None)
+            if rewards is not None and mode == "confirmed_endpoint_v2":
+                rewards = np.asarray(rewards, dtype=np.float64)
+                terminated = np.asarray(getattr(traj, "terminated", None), dtype=bool) if getattr(traj, "terminated", None) is not None else np.zeros(len(rewards), dtype=bool)
+                bootstrap = 0.0
+                if not (len(terminated) and bool(terminated[-1])):
+                    bootstrap = float(self._bootstrap_value(model, dataset, traj))
+                R = np.zeros(len(rewards), dtype=np.float64)
+                run = bootstrap
+                for t in range(len(rewards) - 1, -1, -1):
+                    nxt = 0.0 if bool(terminated[t]) else run
+                    R[t] = rewards[t] + cfg.gamma * nxt
+                    run = R[t]
+            else:
+                credited = np.asarray(traj.corridor_progress, dtype=np.float64)
+                R = np.zeros(len(credited), dtype=np.float64)
+                run = 0.0
+                for t in range(len(credited) - 1, -1, -1):
+                    run = credited[t] + cfg.gamma * run
+                    R[t] = run
             traj_returns.append(R)
 
         # dataset._index 为 (traj_idx, tau) 列表，与 __getitem__ 同序（同包内访问）
@@ -436,12 +451,35 @@ class PPOTrainer:
         # 即用 V 替换 tau_last 处的不完整尾部回报，避免重复计入 R(tau_last)。
         ret_full = np.empty(n, dtype=np.float64)
         for idx, (ti, tau) in enumerate(dataset._index):
+            mode = getattr(dataset.trajectories[ti], "progress_mode", None)
+            rewards = getattr(dataset.trajectories[ti], "step_rewards", None)
+            if rewards is not None and mode == "confirmed_endpoint_v2":
+                ret_full[idx] = traj_returns[ti][tau]
+                continue
             last_tau, last_v = traj_last_value[ti]
             ret_full[idx] = (traj_returns[ti][tau]
                              + (cfg.gamma ** (last_tau - tau)) * (last_v - traj_returns[ti][last_tau]))
 
         pos_frac = float(np.mean(ret_full > values))
         return values, ret_full, pos_frac
+
+    @torch.no_grad()
+    def _bootstrap_value(self, model, dataset, traj) -> float:
+        """V(s[L]) at the kept result state, using the same window builder as SIL."""
+        tau = len(traj.actions)
+        window = dataset.encode_window(traj, tau, need_action=False)
+        dyn, pat, act_hist, vm, _target, ct, cm, rt, rm = window
+        _, value = model.forward(
+            dyn.unsqueeze(0).to(self.device),
+            pat.unsqueeze(0).to(self.device),
+            act_hist.unsqueeze(0).to(self.device),
+            valid_mask=vm.unsqueeze(0).to(self.device),
+            contour_tokens=None if ct is None else ct.unsqueeze(0).to(self.device),
+            contour_mask=None if cm is None else cm.unsqueeze(0).to(self.device),
+            relation_tokens=None if rt is None else rt.unsqueeze(0).to(self.device),
+            relation_mask=None if rm is None else rm.unsqueeze(0).to(self.device),
+        )
+        return float(value.detach().cpu().reshape(-1)[0])
 
     def _sil_advantage_weights(
         self, model: ActorCritic, dataset
@@ -506,6 +544,7 @@ class PPOTrainer:
         self, model: ActorCritic, dataset, loss_coef: float | None = None,
         budget_updates: int | None = None,
         behavior_progress: float | None = None,
+        iteration: int | None = None,
     ) -> dict[str, float]:
         """
         Self-Imitation：对精英轨迹池做 BC 监督，把 actor 均值锚向历史最优动作。
@@ -538,9 +577,17 @@ class PPOTrainer:
         """
         from torch.utils.data import DataLoader, Subset
 
+        from .dataset import SampledWindowView
+        from .sil_archive import (
+            NEW_SAMPLING_MODES, SAMPLING_LEGACY, build_td_sampling_plan, sampling_generator,
+        )
+
         cfg = self.config
         coef = cfg.sil_loss_coef if loss_coef is None else loss_coef
-        if len(dataset) == 0:
+        sampling_mode = str(getattr(cfg, "sil_td_sampling_mode", SAMPLING_LEGACY))
+        new_sampling = sampling_mode in NEW_SAMPLING_MODES
+        self.last_sil_sampling = None
+        if len(dataset) == 0 and not new_sampling:
             return {}
 
         model = model.to(self.device)
@@ -553,6 +600,9 @@ class PPOTrainer:
                 lr=cfg.lr,
                 weight_decay=cfg.weight_decay,
             )
+            if self._pending_optim_state is not None:
+                self.optimizer.load_state_dict(self._pending_optim_state)
+                self._pending_optim_state = None
 
         # 预算约束（防线一）：SIL minibatch 数 ≤ sil_budget_ratio × 当轮 PPO 实际
         # 更新数（仍受 sil_max_batches 约束）。budget_updates=None（离线测试/单独
@@ -567,20 +617,55 @@ class PPOTrainer:
                 "SIL 预算跳过: PPO 当轮更新 %s 次 × ratio %.2f → 0 minibatch",
                 str(budget_updates), cfg.sil_budget_ratio,
             )
-            return {
+            skipped = {
                 "sil_trajs": float(len(dataset.trajectories)),
                 "sil_windows": float(len(dataset)),
                 "sil_updates": 0.0,
                 "sil_skipped": 1.0,
                 "sil_budget_cap": 0.0,
             }
+            if new_sampling:
+                skipped["sil_sampling_mode"] = sampling_mode
+            return skipped
 
-        # 行为门控（防线二，V-free）。map_elites：池 median 总 credited。
-        # td_pareto：按候选轨迹判断，快短点不能靠拉低中位数关掉远点；
-        # 全池跳过仅当没有任何一条 D 高于当前行为。
+        # 新 (t, D) 采样在优势前向之前确定窗口。旧模式仍走下面的单一 D 门控。
+        train_source = dataset
+        phase_already_filtered = False
         gate_levels: dict[str, float] | None = None
         eligible_ti: set[int] | None = None
-        if behavior_progress is not None and all(
+        sampling_metrics: dict[str, float] = {}
+        if new_sampling:
+            if getattr(cfg, "sil_archive_mode", "map_elites") != "td_pareto":
+                raise ValueError("新 SIL 采样模式需要 sil_archive_mode=td_pareto")
+            window_budget = None if max_batches is None else int(max_batches) * int(cfg.sil_batch_size)
+            plan = build_td_sampling_plan(
+                dataset.trajectories,
+                mode=sampling_mode,
+                horizon=int(getattr(cfg, "sil_td_sampling_horizon_steps", 0)),
+                k=int(getattr(cfg, "sil_td_windows_per_traj", 0)),
+                window_budget=window_budget,
+                seed=int(getattr(cfg, "sil_td_sampling_seed", 0)),
+                iteration=0 if iteration is None else int(iteration),
+                epoch=0,
+                phase_enabled=bool(getattr(cfg, "sil_phase_weighting_enabled", False)),
+                phase_window=int(getattr(cfg, "sil_phase_window", 7)),
+                airborne_sample=float(getattr(cfg, "sil_phase_airborne_sample", 1.0)),
+                behavior_progress=behavior_progress,
+            )
+            self.last_sil_sampling = plan["record"]
+            sampling_metrics = plan["metrics"]
+            if plan["skip"]:
+                logger.info("SIL 采样跳过: %s", plan["skip_reason"])
+                return {
+                    "sil_trajs": float(len(dataset.trajectories)),
+                    "sil_windows": 0.0,
+                    "sil_updates": 0.0,
+                    "sil_skipped": 1.0,
+                    **sampling_metrics,
+                }
+            train_source = SampledWindowView(dataset, plan["index"])
+            phase_already_filtered = True
+        elif behavior_progress is not None and all(
                 getattr(t, "corridor_progress", None) is not None
                 for t in dataset.trajectories):
             from .sil_archive import ARCHIVE_TD_PARETO, credited_distance, gate_eligible_indices
@@ -606,8 +691,8 @@ class PPOTrainer:
                     }
                 eligible_ti = set(eligible)
             else:
-                pool_levels = [float(np.asarray(t.corridor_progress, dtype=np.float64).sum())
-                               for t in dataset.trajectories]
+                from .reference_corridor import trajectory_endpoint
+                pool_levels = [trajectory_endpoint(t).distance for t in dataset.trajectories]
                 pool_level = float(np.median(pool_levels)) if pool_levels else 0.0
                 gate_levels = {"sil_pool_level": pool_level,
                                "sil_behavior_level": float(behavior_progress)}
@@ -629,9 +714,13 @@ class PPOTrainer:
         value_targets: torch.Tensor | None = None
         adv_pos_frac = float("nan")
         if getattr(cfg, "sil_advantage_weighting_enabled", False):
-            if all(getattr(t, "corridor_progress", None) is not None
+            trusted = all(getattr(t, "termination_known", True) for t in dataset.trajectories)
+            if not trusted:
+                logger.info("SIL critic 监督跳过: 缺少可恢复的终止语义")
+            elif all(getattr(t, "corridor_progress", None) is not None
+                   or getattr(t, "step_rewards", None) is not None
                    for t in dataset.trajectories):
-                w_np, adv_pos_frac, ret_np = self._sil_advantage_weights(model, dataset)
+                w_np, adv_pos_frac, ret_np = self._sil_advantage_weights(model, train_source)
                 adv_w = w_np
                 # 1.3 critic 精英回报校准目标（末窗 V 自举口径，与优势计算一致）
                 if cfg.sil_value_coef > 0:
@@ -646,7 +735,7 @@ class PPOTrainer:
         # P3.1-SIL：接触相位权重分量（与优势权重相乘合成；无接触信号时缺失）
         phase_w: np.ndarray | None = None
         if getattr(cfg, "sil_phase_weighting_enabled", False):
-            phase_w = self._sil_phase_weights(dataset)
+            phase_w = self._sil_phase_weights(train_source)
             if phase_w is None and not getattr(self, "_sil_phase_warned", False):
                 logger.warning(
                     "sil_phase_weighting 已启用但池内含缺接触信号的轨迹，"
@@ -669,46 +758,62 @@ class PPOTrainer:
             logger.info("SIL 正优势门控：全池无 A>0 窗口，本轮跳过")
             return {
                 "sil_trajs": float(len(dataset.trajectories)),
-                "sil_windows": float(len(dataset)),
+                "sil_windows": float(len(train_source)),
                 "sil_updates": 0.0,
                 "sil_skipped": 1.0,
                 "sil_adv_pos_frac": adv_pos_frac,
+                **sampling_metrics,
             }
         if actor_gated_off:
             logger.info("SIL 正优势门控：无 A>0 窗口，本轮仅做 1.3 价值校准")
         weights = (torch.from_numpy(combined_w.astype(np.float32))
                    if combined_w is not None else None)
 
-        train_view = (_WeightedWindowView(dataset, weights, value_targets)
-                      if weights is not None else dataset)
+        train_view = (_WeightedWindowView(train_source, weights, value_targets)
+                      if weights is not None else train_source)
         # 空中帧稀疏采样（P3.1-SIL 加强）：接触帧全保留，空中帧按概率保留；
         # 在权重计算之后做——权重值不变，只减少空中窗口的出场次数。
-        keep = np.ones(len(dataset), dtype=bool)
+        # 新采样模式已在配额前用独立 RNG 做过同规则筛选，这里不再抽第二次。
+        keep = np.ones(len(train_source), dtype=bool)
+        apply_airborne_sample = (not phase_already_filtered and phase_w is not None
+                                 and 0.0 <= cfg.sil_phase_airborne_sample < 1.0)
         if eligible_ti is not None:
-            keep &= np.array([ti in eligible_ti for ti, _tau in dataset._index], dtype=bool)
-        if phase_w is not None and 0.0 <= cfg.sil_phase_airborne_sample < 1.0:
+            keep &= np.array([ti in eligible_ti for ti, _tau in train_source._index], dtype=bool)
+        if apply_airborne_sample:
             airborne = phase_w < 1.0 - 1e-9
             keep[airborne] = keep[airborne] & (np.random.rand(int(airborne.sum()))
                                                < cfg.sil_phase_airborne_sample)
-        if eligible_ti is not None or (phase_w is not None
-                                       and 0.0 <= cfg.sil_phase_airborne_sample < 1.0):
+        if eligible_ti is not None or apply_airborne_sample:
             indices = np.flatnonzero(keep)
             if len(indices) == 0:
                 logger.info("SIL 窗口筛选后为空，跳过本轮")
                 return {
                     "sil_trajs": float(len(dataset.trajectories)),
-                    "sil_windows": float(len(dataset)),
+                    "sil_windows": float(len(train_source)),
                     "sil_updates": 0.0,
                     "sil_skipped": 1.0,
                     **(gate_levels or {}),
+                    **sampling_metrics,
                 }
             train_view = Subset(train_view, indices)
+        loader_generator = None
+        if new_sampling:
+            # DataLoader 即使 shuffle=False 也会抽一次 base seed。放到独立 Generator，
+            # 避免新采样路径消耗 PPO / 全局 torch 随机流。
+            loader_generator = torch.Generator()
+            loader_generator.manual_seed(int(sampling_generator(
+                int(getattr(cfg, "sil_td_sampling_seed", 0)),
+                0 if iteration is None else int(iteration),
+                0,
+                "loader",
+            ).integers(0, 2**31 - 1)))
         loader = DataLoader(
             train_view,
             batch_size=cfg.sil_batch_size,
-            shuffle=True,
+            shuffle=not new_sampling,
             drop_last=False,
             num_workers=cfg.sil_num_workers,
+            generator=loader_generator,
         )
 
         total_loss = 0.0
@@ -785,9 +890,10 @@ class PPOTrainer:
         metrics = {
             "sil_loss": total_loss / max(n_updates, 1),
             "sil_trajs": float(len(dataset.trajectories)),
-            "sil_windows": float(len(dataset)),
+            "sil_windows": float(len(train_source)),
             "sil_updates": float(n_updates),
         }
+        metrics.update(sampling_metrics)
         if weights is not None:
             metrics["sil_adv_pos_frac"] = adv_pos_frac
             metrics["sil_weight_mean"] = float(weights.mean())

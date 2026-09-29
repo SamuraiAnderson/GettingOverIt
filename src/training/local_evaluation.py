@@ -127,6 +127,9 @@ def score_corridor_episode(trajectory, route, goal_progress=5.0, dwell=10, fall_
     previous_action = np.zeros(2)
     for step, (state, action) in enumerate(zip(states[1:], trajectory.actions), 1):
         result = route.step_state(tracker, state, schema, meta)
+        from training.reference_corridor import PROGRESS_MODE_V2, progress_mode_of
+        distance_now = (tracker.confirmed_d if progress_mode_of(route.config) == PROGRESS_MODE_V2
+                        else tracker.total_progress)
         projection = projection_from_start(route, tracker, start_segment, start_progress)
         peak_y = max(peak_y, float(state[1]))
         watered |= is_water(state[1], route.config)
@@ -134,15 +137,16 @@ def score_corridor_episode(trajectory, route, goal_progress=5.0, dwell=10, fall_
         outside += int(not result.inside and not result.gap)
         frames.append({
             "step": step, "projection_m": projection, "credited_m": tracker.total_progress,
+            "confirmed_progress_m": tracker.confirmed_d, "delta_d": result.delta_d,
+            "credit_event": result.credit_event, "reward": result.reward,
             "inside": result.inside, "gap": result.gap, "y": float(state[1]),
             "segment": tracker.segment_index,
         })
-        if (arrival is None and projection >= goal_progress
-                and tracker.total_progress >= goal_progress):
+        if (arrival is None and projection >= goal_progress and distance_now >= goal_progress):
             arrival = step
         qualifies = (result.inside and not result.gap and tracker.segment_index == start_segment
                      and tracker.progress >= start_progress + goal_progress
-                     and tracker.total_progress >= goal_progress)
+                     and distance_now >= goal_progress)
         held = held + 1 if qualifies else 0
         if held >= dwell and strict_arrival is None:
             strict_arrival = step
@@ -151,7 +155,12 @@ def score_corridor_episode(trajectory, route, goal_progress=5.0, dwell=10, fall_
         leave = np.zeros(3) if previous_contacts is None or contacts is None else (contacts < previous_contacts)
         trace.append({"step": step, "progress_m": tracker.progress - start_progress,
                       "projection_m": projection,
-                      "credited_progress_m": tracker.total_progress, "inside": result.inside,
+                      "credited_progress_m": tracker.total_progress,
+                      "confirmed_progress_m": tracker.confirmed_d,
+                      "delta_d": result.delta_d,
+                      "credit_event": bool(result.credit_event),
+                      "reward": result.reward,
+                      "inside": result.inside,
                       "gap": result.gap, "contact_before_action": None if contacts is None else contacts.tolist(),
                       "contact_enter": enter.astype(int).tolist(), "contact_exit": leave.astype(int).tolist(),
                       "action": action.tolist(), "action_delta": float(np.linalg.norm(action - previous_action))})
@@ -167,7 +176,11 @@ def score_corridor_episode(trajectory, route, goal_progress=5.0, dwell=10, fall_
         "success": strict_arrival is not None, "arrival_steps": arrival, "fell": bool(fell),
         "watered": bool(watered),
         "left_corridor": outside > 0, "outside_fraction": outside / max(1, len(trace)),
-        "credited_progress_m": tracker.total_progress, "start_segment": start_segment,
+        "credited_progress_m": tracker.total_progress,
+        "cap_progress_m": tracker.confirmed_d,
+        "cap_action": tracker.last_credit_action,
+        "t_cap": None if tracker.last_credit_action < 0 else tracker.last_credit_action + 1,
+        "start_segment": start_segment,
         "start_progress_m": start_progress, "steps": len(trace),
         "hold_success": hold_success, "hold_incomplete": hold_incomplete,
         "reference_unconfirmed": hold_unconfirmed or terminal_gap,
@@ -194,6 +207,7 @@ def summarize(records):
         arrived = len(arrivals)
         held = sum(bool(r.get("hold_success")) for r in rows)
         credited = [r["credited_progress_m"] for r in rows]
+        capped = [r.get("cap_progress_m", r["credited_progress_m"]) for r in rows]
         retreats = [r["max_retreat_after_arrival_m"] for r in rows
                     if r.get("max_retreat_after_arrival_m") is not None]
         result[mode] = {"episodes": n, "success_rate": p, "success_wilson95": [center-half, center+half],
@@ -205,6 +219,10 @@ def summarize(records):
                         "mean_credited_progress_m": float(np.mean(credited)),
                         "credited_progress_median_m": float(np.median(credited)),
                         "credited_progress_q25_m": float(np.quantile(credited, 0.25)),
+                        "mean_cap_progress_m": float(np.mean(capped)),
+                        "cap_progress_median_m": float(np.median(capped)),
+                        "cap_progress_q25_m": float(np.quantile(capped, 0.25)),
+                        "cap_progress_max_m": float(np.max(capped)),
                         "mean_arrival_steps": float(np.mean(arrivals)) if arrivals else None,
                         "mean_arrival_game_seconds": (
                             float(np.mean(arrivals)) / STEPS_PER_SECOND if arrivals else None),
@@ -232,9 +250,15 @@ def format_eval_line(values):
     time_bit = f"，用时 {time_s:.2f}s" if time_s is not None else ""
     retreat = values.get("max_retreat_after_arrival_median_m")
     retreat_bit = f"；到达后最大回退中位 {retreat:.3f}m" if retreat is not None else ""
+    if "cap_progress_median_m" in values:
+        head = (f"D 中位 {values['cap_progress_median_m']:.3f}m"
+                f"（Q25 {values['cap_progress_q25_m']:.3f}m）；"
+                f"legacy credited 中位 {values['credited_progress_median_m']:.3f}m；")
+    else:
+        head = (f"credited 中位 {values['credited_progress_median_m']:.3f}m"
+                f"（Q25 {values['credited_progress_q25_m']:.3f}m）；")
     return (
-        f"credited 中位 {values['credited_progress_median_m']:.3f}m"
-        f"（Q25 {values['credited_progress_q25_m']:.3f}m）；"
+        f"{head}"
         f"到达 {arrived}/{n}{time_bit}；"
         f"到达后保持 {int(values.get('hold_success_count') or 0)}/{arrived}；"
         f"未观察完 {int(values.get('hold_incomplete_count') or 0)}；"
@@ -292,12 +316,16 @@ def main():
     parser.add_argument("--no-launch", action="store_true")
     parser.add_argument("--train-smoke", type=int, default=0, help="Fresh rollouts and updates after frozen evaluation")
     parser.add_argument("--replay", type=Path, help="Offline audit of archived NPZ; requires behavior checkpoint")
+    parser.add_argument("--modes", default="deterministic,exploration",
+                        help="Comma-separated rollout modes: deterministic and/or exploration")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    args.modes = [mode.strip() for mode in args.modes.split(",") if mode.strip()]
     if (args.steps < 1 or args.rounds < 1 or args.num_agents < 1 or args.jitter < 0
             or args.train_smoke < 0 or args.goal_progress <= 0 or args.dwell < 1
-            or args.inference_batch_size < 0 or not 0 <= args.noise_phi < 1):
-        raise ValueError("Invalid evaluation lengths, jitter, goal, batch size or noise_phi (must be in [0, 1))")
+            or args.inference_batch_size < 0 or not 0 <= args.noise_phi < 1
+            or not args.modes or any(mode not in ("deterministic", "exploration") for mode in args.modes)):
+        raise ValueError("Invalid evaluation lengths, jitter, goal, batch size, noise_phi or modes")
     args.output.mkdir(parents=True, exist_ok=True)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -384,7 +412,7 @@ def main():
             _warmup_and_snapshot(worker.env, cfg.num_agents, cfg.warmup_steps)
         else:
             worker.launch_game()
-        for mode in ("deterministic", "exploration"):
+        for mode in args.modes:
             for trial in range(args.rounds):
                 # Paired initial perturbations and explicitly recorded independent policy seeds.
                 np.random.seed(args.seed + trial)

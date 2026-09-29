@@ -130,6 +130,13 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
                 nn.init.orthogonal_(m.weight, gain=1.0)
                 nn.init.zeros_(m.bias)
 
+    def reset_critic_head(self) -> None:
+        """Reinitialize only the value head after a progress-mode change."""
+        for module in self.critic_head:
+            if isinstance(module, nn.Linear):
+                nn.init.orthogonal_(module.weight, gain=1.0)
+                nn.init.zeros_(module.bias)
+
     def load_from_bc(self, bc_state_dict: dict[str, torch.Tensor]) -> None:
         """
         从 BC（ActionPredictor）的 state_dict 迁移权重。

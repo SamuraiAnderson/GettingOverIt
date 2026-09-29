@@ -350,7 +350,17 @@ class TrainConfig:
     sil_td_bucket_m: float = 0.10       # 接近容量后才启用的 D 分桶宽度（米，待验证）
     sil_td_bucket_enable_at: int = 16   # 前沿条数达到该值才分桶；池小时关闭
     sil_td_behavior_slots: int = 3      # 前沿外另留的空间多样性条数
-    sil_td_windows_per_traj: int = 0    # 每条轨迹窗口预算；0=对齐到最短轨迹，不删原始步
+    # legacy_min_length：0=对齐到最短轨迹。balanced_stratified / coverage_share：
+    # 正数是总计算预算的平均规模 K（不是每条实际固定窗口数），0 在新模式解析为 32。
+    sil_td_windows_per_traj: int = 0
+    # legacy_min_length 保持原采样与单一 D 门控。两个新模式使用完整 0..cap 候选，
+    # 并关闭单一 D 门控；coverage_share 再按 (t, D) 覆盖面积分摊轨迹配额。
+    sil_td_sampling_mode: str = "legacy_min_length"
+    # 0 = 新模式创建时从 steps_per_rollout 解析并保存。恢复只用保存值，不随池内最大 t 改变。
+    sil_td_sampling_horizon_steps: int = 0
+    # 0 = 从当次训练 seed 解析。恢复使用已保存的采样种子。
+    sil_td_sampling_seed: int = 0
+    sil_td_sampling_rule_version: str = "coverage_v1"
     # 入池前物理剪枝：在 secured peak（+dwell 观察窗）处截断，去除峰后跌落/来回震荡段，
     # 精英池只存"有效推进 + 守住证据"，BC 窗口/score/bd 口径与完整轨迹一致（见 dataset.prune_trajectory）。
     sil_prune_enabled: bool = True
@@ -373,6 +383,9 @@ class TrainConfig:
     reference_max_step: float = 4.0  # 单步位移超限视为跳变，仅重定位不领奖
     reference_simplify_tolerance: float = 0.15  # 折线简化容差，保留分段缺口
     reference_interpolated_weight: float = 0.5
+    # 距离口径。新建走廊任务默认 confirmed_endpoint_v2。
+    # 旧 checkpoint 没有该字段时必须识别为 legacy_credit_v1，不能靠这个默认值静默改口径。
+    reference_progress_mode: str = "confirmed_endpoint_v2"
     # 路线比较点。默认已验证的实机可见锅心；旧 player_origin 实验须显式改回。
     reference_anchor_id: str = ANCHOR_POT_CALIBRATED
     reference_anchor_verified: bool = True

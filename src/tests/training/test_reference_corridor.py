@@ -22,7 +22,11 @@ from training.rollout import RolloutWorker, _build_patches_batch
 
 
 def route(*parts, **kwargs):
-    config = TrainConfig(reference_corridor_radius=1.0, **kwargs)
+    config = TrainConfig(
+        reference_corridor_radius=1.0,
+        reference_progress_mode=kwargs.pop("reference_progress_mode", "legacy_credit_v1"),
+        **kwargs,
+    )
     segments = [CorridorSegment(np.asarray(p, dtype=float), np.ones(len(p) - 1)) for p in parts]
     return ReferenceCorridor(segments, config)
 
@@ -146,7 +150,7 @@ class CorridorRewardTests(unittest.TestCase):
                 [{"x": 10, "y": 0}],
                 [{"x": 15, "y": 0}, {"x": 20, "y": 0}]]}
             path.write_text(json.dumps(payload))
-            r = ReferenceCorridor.from_file(path, TrainConfig())
+            r = ReferenceCorridor.from_file(path, TrainConfig(reference_progress_mode="legacy_credit_v1"))
             self.assertEqual(len(r.segments), 2)
             self.assertEqual(r.metadata["points"], 4)
             self.assertEqual(r.tracker(np.array([0, 0])).step(np.array([1, 0])).reward, .5)
@@ -296,6 +300,7 @@ class PPOCollectionTests(unittest.TestCase):
             cfg = TrainConfig(
                 reference_trajectory=str(path), num_agents=2, context_len=2,
                 random_deploy=False, deploy_exclusion_check=False,
+                reference_progress_mode="legacy_credit_v1",
                 reference_anchor_id="player_origin",
                 reference_anchor_verified=False,
                 reference_anchor_calibration_sha256=None,
@@ -318,6 +323,86 @@ class PPOCollectionTests(unittest.TestCase):
             self.assertGreater(float(buffer._patches[0][-1, 0].max()), 0)
             again, _ = worker.collect_ppo(Model(), 1)
             np.testing.assert_allclose(again._rewards, [1, 1])
+
+
+class ConfirmedEndpointTests(unittest.TestCase):
+    def test_outside_detour_is_caught_up_at_the_next_event(self):
+        corridor = route([(0, 0), (20, 0)], reference_progress_mode="confirmed_endpoint_v2")
+        tracker = corridor.tracker(np.array([0.0, 0.0]))
+        for point in ([2.0, 2.0], [2.0, 0.0]):
+            step = tracker.step(np.array(point))
+            self.assertEqual(step.legacy_credit, 0.0)
+            self.assertEqual(step.confirmed_progress, 0.0)
+        paid = tracker.step(np.array([2.5, 0.0]))
+        self.assertAlmostEqual(paid.legacy_credit, 0.5)
+        self.assertTrue(paid.credit_event)
+        self.assertAlmostEqual(paid.confirmed_progress, 2.5)
+        self.assertAlmostEqual(paid.delta_d, 2.5)
+        self.assertAlmostEqual(paid.reward, 2.5)
+        self.assertAlmostEqual(tracker.total_progress, 0.5)
+        self.assertAlmostEqual(sum(tracker_delta(corridor, [[0, 0], [2, 2], [2, 0], [2.5, 0]])), 2.5)
+
+    def test_jump_invalidates_the_trajectory(self):
+        corridor = route([(0, 0), (20, 0)], reference_progress_mode="confirmed_endpoint_v2")
+        tracker = corridor.tracker(np.array([0.0, 0.0]))
+        jumped = tracker.step(np.array([10.0, 0.0]))
+        self.assertTrue(jumped.invalid)
+        self.assertEqual(jumped.reward, 0.0)
+        nxt = tracker.step(np.array([11.0, 0.0]))
+        self.assertTrue(nxt.invalid)
+        self.assertEqual(nxt.reward, 0.0)
+        self.assertEqual(tracker.confirmed_d, 0.0)
+
+    def test_no_event_cap_is_not_the_first_action(self):
+        from training.reference_corridor import trajectory_endpoint
+        from training.dataset import Trajectory
+        corridor = route(
+            [(0, 0), (20, 0)], reference_progress_mode="confirmed_endpoint_v2",
+            reference_anchor_id="player_origin", reference_anchor_verified=False,
+            reference_anchor_calibration_sha256=None, tcp_protocol="legacy33",
+        )
+        tracker = corridor.tracker(np.array([0.0, 0.0]))
+        tracker.step(np.array([0.0, 0.0]))
+        played = replay_states(corridor, [[0, 0], [0, 0]])
+        self.assertEqual(int(played["cap"]), -1)
+        traj = Trajectory(
+            raw_states=np.zeros((2, 33), np.float32),
+            actions=np.zeros((1, 2), np.float32),
+            corridor_progress=played["legacy_credit"].astype(np.float32),
+            corridor_credit_events=played["credit_events"],
+            corridor_confirmed_progress=played["confirmed_progress"],
+            progress_mode="confirmed_endpoint_v2",
+        )
+        endpoint = trajectory_endpoint(traj)
+        self.assertEqual(endpoint.cap, -1)
+        self.assertEqual(endpoint.distance, 0.0)
+
+    def test_replay_matches_online_steps(self):
+        corridor = route(
+            [(0, 0), (20, 0)], reference_progress_mode="confirmed_endpoint_v2",
+            reference_anchor_id="player_origin", reference_anchor_verified=False,
+            reference_anchor_calibration_sha256=None, tcp_protocol="legacy33",
+        )
+        points = [[0, 0], [1, 0], [2, 2], [2.5, 0]]
+        online = []
+        tracker = corridor.tracker(np.array(points[0], dtype=float))
+        for point in points[1:]:
+            online.append(tracker.step(np.array(point, dtype=float)).confirmed_progress)
+        played = replay_states(corridor, points)
+        np.testing.assert_allclose(played["confirmed_progress"][1:], online)
+
+
+def tracker_delta(corridor, points):
+    tracker = corridor.tracker(np.array(points[0], dtype=float))
+    return [tracker.step(np.array(point, dtype=float)).delta_d for point in points[1:]]
+
+
+def replay_states(corridor, points):
+    from training.reference_corridor import replay_corridor_result
+    states = np.zeros((len(points), 33), np.float32)
+    for i, point in enumerate(points):
+        states[i, 0], states[i, 1] = point
+    return replay_corridor_result(corridor, states)
 
 
 if __name__ == "__main__":

@@ -191,36 +191,128 @@ class ReferenceCorridor:
         return maps
 
 
+def replay_corridor_result(
+    route: "ReferenceCorridor", raw_states: np.ndarray,
+    state_schema=None, reference_metadata=None,
+    *,
+    reject_invalid: bool = True,
+) -> dict:
+    """Replay the same tracker.step used online. v2 displacement jumps are rejected."""
+    tracker = route.tracker_from_state(raw_states[0], state_schema, reference_metadata)
+    mode = progress_mode_of(route.config)
+    length = len(raw_states) - 1
+    legacy = np.zeros(length, dtype=np.float64)
+    events = np.zeros(length, dtype=bool)
+    confirmed = np.zeros(length + 1, dtype=np.float64)
+    route_progress = np.zeros(length + 1, dtype=np.float64)
+    delta = np.zeros(length, dtype=np.float64)
+    rewards = np.zeros(length, dtype=np.float64)
+    penalties = np.zeros(length, dtype=np.float64)
+    guidance = np.full(length + 1, -1, dtype=np.int8)
+    if tracker.guidance_index is not None:
+        guidance[0] = tracker.guidance_index
+    for t in range(length):
+        result = route.step_state(tracker, raw_states[t + 1], state_schema, reference_metadata)
+        if result.invalid and mode == PROGRESS_MODE_V2 and reject_invalid:
+            raise ValueError(f"Replay refused a displacement jump at action {t}")
+        legacy[t] = result.legacy_credit
+        events[t] = result.credit_event
+        confirmed[t + 1] = result.confirmed_progress
+        route_progress[t + 1] = result.route_progress
+        delta[t] = result.delta_d
+        rewards[t] = result.reward
+        penalties[t] = result.deviation_penalty
+        if tracker.guidance_index is not None:
+            guidance[t + 1] = tracker.guidance_index
+    cap = int(tracker.last_credit_action)
+    return {
+        "mode": mode,
+        "legacy_credit": legacy,
+        "credit_events": events,
+        "confirmed_progress": confirmed,
+        "route_progress": route_progress,
+        "delta_d": delta,
+        "rewards": rewards,
+        "penalties": penalties,
+        "guidance_index": guidance,
+        "valid": not tracker.invalid,
+        "invalid_reason": tracker.invalid_reason,
+        "cap": cap,
+        "distance": float(confirmed[-1]) if mode == PROGRESS_MODE_V2 else float(legacy.sum()),
+    }
+
+
 def replay_corridor_fields(
     route: "ReferenceCorridor", raw_states: np.ndarray,
     state_schema=None, reference_metadata=None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """从状态序列确定性重放 CorridorTracker，恢复逐 step 走廊字段。
+    """Legacy (credit, guidance) view of replay_corridor_result."""
+    result = replay_corridor_result(
+        route, raw_states, state_schema, reference_metadata, reject_invalid=False,
+    )
+    return np.asarray(result["legacy_credit"], dtype=np.float32), result["guidance_index"]
 
-    返回 (corridor_progress, guidance_index)：
-      - corridor_progress: (T,) float32，与 actions 对齐；progress[t] 是动作 t 把
-        state[t] 推进到 state[t+1] 所获得的 credited 进度（CorridorStep.progress）。
-        cumsum(corridor_progress)[t] = 第 t 步后的 total_progress（评估归档 trace 的
-        credited_progress_m 口径）。
-      - guidance_index: (T+1,) int8，与 states 对齐；guidance[t] 是处理完 state[t]
-        之后 tracker 的引导段索引（patch 构建即用该时刻的值），无引导（末段之后
-        的 gap）记 -1。
 
-    tracker 投影窗口只依赖前序状态，重放与 rollout 在线记录逐点一致；
-    与 local_evaluation 的 trace 重建共用同一 tracker 语义。
-    """
-    tracker = route.tracker_from_state(raw_states[0], state_schema, reference_metadata)
-    T = len(raw_states) - 1
-    progress = np.zeros(T, dtype=np.float32)
-    guidance = np.full(T + 1, -1, dtype=np.int8)
-    if tracker.guidance_index is not None:
-        guidance[0] = tracker.guidance_index
-    for t in range(T):
-        result = route.step_state(tracker, raw_states[t + 1], state_schema, reference_metadata)
-        progress[t] = result.progress
-        if tracker.guidance_index is not None:
-            guidance[t + 1] = tracker.guidance_index
-    return progress, guidance
+def cap_from_events(events: np.ndarray) -> int:
+    """Last strict credit event. No event is -1, never action 0."""
+    hits = np.flatnonzero(np.asarray(events, dtype=bool))
+    if len(hits) == 0:
+        return -1
+    return int(hits[-1])
+
+
+def trajectory_endpoint(traj) -> TrajectoryEndpoint:
+    """Single cap/distance reader. v1 keeps the cumulative-credit approximation."""
+    mode = getattr(traj, "progress_mode", None)
+    events = getattr(traj, "corridor_credit_events", None)
+    if mode is None:
+        mode = PROGRESS_MODE_V2 if events is not None else PROGRESS_MODE_V1
+    mode = resolve_progress_mode(mode)
+    valid = bool(getattr(traj, "trajectory_valid", True))
+    if not valid:
+        return TrajectoryEndpoint(False, -1, None, 0.0, mode)
+    if mode == PROGRESS_MODE_V2:
+        confirmed = getattr(traj, "corridor_confirmed_progress", None)
+        if events is None or confirmed is None:
+            return TrajectoryEndpoint(False, -1, None, 0.0, mode)
+        cap = cap_from_events(events)
+        distance = float(np.asarray(confirmed, dtype=np.float64)[-1])
+        if cap < 0:
+            return TrajectoryEndpoint(True, -1, None, 0.0, mode)
+        return TrajectoryEndpoint(True, cap, cap + 1, distance, mode)
+    legacy = getattr(traj, "corridor_progress", None)
+    if legacy is None:
+        return TrajectoryEndpoint(False, -1, None, 0.0, mode)
+    progress = np.asarray(legacy, dtype=np.float64)
+    total = float(progress.sum(dtype=np.float64))
+    cap = corridor_cap_index(progress)
+    return TrajectoryEndpoint(True, cap, cap + 1, total, mode)
+
+
+PROGRESS_MODE_V1 = "legacy_credit_v1"
+PROGRESS_MODE_V2 = "confirmed_endpoint_v2"
+DELTA_D_ABS_TOL = 1e-6
+
+
+def resolve_progress_mode(value) -> str:
+    """Missing or blank is v1. A present unknown value is an error, not a silent default."""
+    if value is None or value == "":
+        return PROGRESS_MODE_V1
+    if value in (PROGRESS_MODE_V1, PROGRESS_MODE_V2):
+        return value
+    raise ValueError(f"Unknown reference_progress_mode: {value}")
+
+
+def progress_mode_of(config) -> str:
+    if config is None:
+        return PROGRESS_MODE_V1
+    if isinstance(config, dict):
+        if "reference_progress_mode" not in config:
+            return PROGRESS_MODE_V1
+        return resolve_progress_mode(config.get("reference_progress_mode"))
+    if "reference_progress_mode" not in getattr(config, "__dataclass_fields__", {}):
+        return resolve_progress_mode(getattr(config, "reference_progress_mode", None))
+    return resolve_progress_mode(getattr(config, "reference_progress_mode", None))
 
 
 def corridor_cap_index(corridor_progress: np.ndarray) -> int:
@@ -238,11 +330,31 @@ def corridor_cap_index(corridor_progress: np.ndarray) -> int:
 
 @dataclass(frozen=True)
 class CorridorStep:
+    """One transition. `progress` remains the legacy confidence-weighted credit.
+
+    v2 distance lives in `confirmed_progress` / `delta_d`. Do not treat `progress`
+    as that distance.
+    """
     reward: float = 0.0
     progress: float = 0.0
     deviation_penalty: float = 0.0
     inside: bool = False
     gap: bool = False
+    legacy_credit: float = 0.0
+    credit_event: bool = False
+    confirmed_progress: float = 0.0
+    delta_d: float = 0.0
+    route_progress: float = 0.0
+    invalid: bool = False
+
+
+@dataclass(frozen=True)
+class TrajectoryEndpoint:
+    valid: bool
+    cap: int
+    t_cap: int | None
+    distance: float
+    mode: str
 
 
 class CorridorTracker:
@@ -256,9 +368,16 @@ class CorridorTracker:
         self.segment_index = min(range(len(projections)), key=lambda i: projections[i].distance)
         p = projections[self.segment_index]
         self.progress = self.best_progress = p.progress
+        self.start_segment = self.segment_index
+        self.start_progress = float(p.progress)
         self.previous_inside = p.distance <= route.config.reference_corridor_radius
         self.waiting = False
         self.total_progress = 0.0
+        self.confirmed_d = 0.0
+        self.last_credit_action = -1
+        self.action_count = 0
+        self.invalid = False
+        self.invalid_reason: str | None = None
         self.last_step = CorridorStep()
 
     @property
@@ -266,16 +385,53 @@ class CorridorTracker:
         idx = self.segment_index + int(self.waiting)
         return idx if idx < len(self.route.segments) else None
 
+    def route_progress(self) -> float:
+        """Arc length from this episode's initial projection. Gaps add no Euclidean link.
+
+        While waiting, the saved segment projection is used. The coordinate is not
+        filled forward to the segment end.
+        """
+        spanned = sum(seg.length for seg in self.route.segments[self.start_segment:self.segment_index])
+        return float(spanned + self.progress - self.start_progress)
+
+    def _finish(self, step: CorridorStep) -> CorridorStep:
+        self.last_step = step
+        self.action_count += 1
+        return step
+
+    def _frozen_step(self, *, invalid: bool = False, gap: bool = False) -> CorridorStep:
+        return CorridorStep(
+            reward=0.0,
+            progress=0.0,
+            legacy_credit=0.0,
+            credit_event=False,
+            confirmed_progress=self.confirmed_d,
+            delta_d=0.0,
+            route_progress=self.route_progress(),
+            invalid=invalid or self.invalid,
+            gap=gap,
+        )
+
     def step(self, position: np.ndarray) -> CorridorStep:
         position = np.asarray(position[:2], dtype=np.float64)
         if not np.isfinite(position).all():
             raise ValueError("Agent position must be finite")
         cfg = self.route.config
+        mode = progress_mode_of(cfg)
         distance_moved = float(np.linalg.norm(position - self.previous_position))
         self.previous_position = position.copy()
-        segment = self.route.segments[self.segment_index]
+        if self.invalid:
+            return self._finish(self._frozen_step(invalid=True, gap=self.waiting))
+
+        jumped = distance_moved > cfg.reference_max_step
+        if jumped and mode == PROGRESS_MODE_V2:
+            self.invalid = True
+            self.invalid_reason = "displacement"
+            return self._finish(self._frozen_step(invalid=True, gap=self.waiting))
+
         if self.waiting:
-            # Only enter the next segment at its start; no invented connecting edge.
+            # v1 keeps the historical gap return, including its lack of a jump check.
+            # v2 already rejected jumps above. Only the next segment start connects.
             nxt = self.segment_index + 1
             if (nxt < len(self.route.segments)
                     and np.linalg.norm(position - self.route.segments[nxt].points[0]) <= cfg.reference_corridor_radius):
@@ -284,28 +440,38 @@ class CorridorTracker:
                 self.progress = self.best_progress = p.progress
                 self.previous_inside = p.distance <= cfg.reference_corridor_radius
                 self.waiting = False
-            self.last_step = CorridorStep(gap=True)
-            return self.last_step
+            return self._finish(self._frozen_step(gap=True))
 
-        # The displacement bound prevents stationary projections creeping forward
-        # through a crossing. A large teleport re-baselines without giving reward.
-        jumped = distance_moved > cfg.reference_max_step
+        segment = self.route.segments[self.segment_index]
         p = segment.project(position, None if jumped else self.progress,
                             None if jumped else min(cfg.reference_projection_window, 2 * distance_moved))
         inside = p.distance <= cfg.reference_corridor_radius
         gain = max(0.0, p.progress - self.best_progress)
-        credited = gain * p.confidence if inside and self.previous_inside and not jumped else 0.0
+        legacy = gain * p.confidence if inside and self.previous_inside and not jumped else 0.0
+        event = bool(legacy > 0.0)
         self.best_progress = max(self.best_progress, p.progress)
         self.progress = p.progress
         self.previous_inside = inside
-        self.total_progress += credited
+        self.total_progress += legacy
+        route_s = self.route_progress()
+        delta = 0.0
+        if event:
+            delta = route_s - self.confirmed_d
+            if delta < -DELTA_D_ABS_TOL:
+                raise ValueError(
+                    f"confirmed distance decreased by {delta}; refusing to clip a semantic error"
+                )
+            if delta < 0.0:
+                delta = 0.0
+            self.confirmed_d = route_s
+            self.last_credit_action = self.action_count
         penalty = cfg.reference_deviation_weight * min(1.0, max(0.0, p.distance / cfg.reference_corridor_radius - 1))
-        self.last_step = CorridorStep(cfg.reference_progress_weight * credited - penalty,
-                                      credited, penalty, inside)
-        # A coarse guide must not require hitting the exact visual endpoint.
-        # Enter the unobserved gap once the agent reaches the endpoint region;
-        # the untraversed remainder is not paid out.
+        paid = delta if mode == PROGRESS_MODE_V2 else legacy
         if (inside and segment.length - p.progress <= cfg.reference_corridor_radius
                 and np.linalg.norm(position - segment.points[-1]) <= cfg.reference_corridor_radius):
             self.waiting = True
-        return self.last_step
+        return self._finish(CorridorStep(
+            cfg.reference_progress_weight * paid - penalty,
+            legacy, penalty, inside, False, legacy, event,
+            self.confirmed_d, delta, route_s, False,
+        ))

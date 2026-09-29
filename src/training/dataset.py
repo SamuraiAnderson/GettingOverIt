@@ -162,6 +162,14 @@ class Trajectory:
     #   引导段索引（patch wide 通道用 reference_maps[guidance[t]] 重建），-1 = 无引导。
     corridor_progress: np.ndarray | None = None
     guidance_index: np.ndarray | None = None
+    # v2：事件与状态对齐的确认距离。corridor_progress 只保留旧 credit 诊断。
+    corridor_credit_events: np.ndarray | None = None
+    corridor_confirmed_progress: np.ndarray | None = None
+    step_rewards: np.ndarray | None = None
+    terminated: np.ndarray | None = None
+    trajectory_valid: bool = True
+    termination_known: bool = True
+    progress_mode: str | None = None
     # SIL 归档角色：td_pareto 前沿 / 行为多样性补充。缺省不影响 BC 与 MAP-Elites。
     archive_role: str | None = None
 
@@ -184,10 +192,14 @@ def prune_trajectory(traj: Trajectory, config: "TrainConfig") -> Trajectory:
     score/iteration 沿用原轨迹（调用方通常在入池前对剪枝结果重算 score）。
     对已完成剪枝的轨迹幂等（cap/peak 不变、cut 不短于现长时原样返回副本）。
     """
-    if traj.corridor_progress is not None:
-        from .reference_corridor import corridor_cap_index
-        cap = corridor_cap_index(traj.corridor_progress)
-        cut = min(cap + 2 + config.dwell_steps, len(traj.raw_states))
+    if traj.corridor_progress is not None or traj.corridor_credit_events is not None:
+        from .reference_corridor import PROGRESS_MODE_V2, trajectory_endpoint
+        endpoint = trajectory_endpoint(traj)
+        if endpoint.mode == PROGRESS_MODE_V2 and endpoint.cap < 0:
+            cut = min(2, len(traj.raw_states))
+        else:
+            cap = endpoint.cap if endpoint.cap >= 0 else 0
+            cut = min(cap + 2 + config.dwell_steps, len(traj.raw_states))
     else:
         _progress, peak_idx, _dy, _reach = progress_metric(traj.raw_states, config)
         cut = min(peak_idx + 1 + config.dwell_steps, len(traj.raw_states))
@@ -202,6 +214,16 @@ def prune_trajectory(traj: Trajectory, config: "TrainConfig") -> Trajectory:
                            if traj.corridor_progress is not None else None),
         guidance_index=(traj.guidance_index[:cut]
                         if traj.guidance_index is not None else None),
+        corridor_credit_events=(traj.corridor_credit_events[: cut - 1]
+                                if traj.corridor_credit_events is not None else None),
+        corridor_confirmed_progress=(traj.corridor_confirmed_progress[:cut]
+                                     if traj.corridor_confirmed_progress is not None else None),
+        step_rewards=(traj.step_rewards[: cut - 1] if traj.step_rewards is not None else None),
+        terminated=(traj.terminated[: cut - 1] if traj.terminated is not None else None),
+        trajectory_valid=traj.trajectory_valid,
+        termination_known=traj.termination_known,
+        progress_mode=traj.progress_mode,
+        archive_role=traj.archive_role,
     )
 
 
@@ -540,6 +562,30 @@ def left_pad_sequence(
     return padded, valid
 
 
+class SampledWindowView:
+    """Training view that encodes only the planned `(trajectory, tau)` pairs.
+
+    The dataset keeps the full candidate index. This view is the temporary plan
+    for one SIL update, so advantage and loss see the sampled windows rather
+    than every stored action.
+    """
+
+    def __init__(self, dataset, index: list[tuple[int, int]]):
+        self.base = dataset
+        self._index = [(int(ti), int(tau)) for ti, tau in index]
+        self.trajectories = dataset.trajectories
+
+    def __len__(self) -> int:
+        return len(self._index)
+
+    def encode_window(self, traj: Trajectory, tau: int, *, need_action: bool = True):
+        return self.base.encode_window(traj, tau, need_action=need_action)
+
+    def __getitem__(self, idx: int):
+        ti, tau = self._index[idx]
+        return self.base.encode_window(self.trajectories[ti], tau)
+
+
 class TrajectoryDataset(Dataset):
     """
     轨迹数据集。
@@ -636,10 +682,7 @@ class TrajectoryDataset(Dataset):
                 self.trajectories.append(traj)
         self._rebuild_index()
 
-    def _behavior_cell_id(
-        self, raw_states: np.ndarray, cell_size: float,
-        corridor_progress: np.ndarray | None = None,
-    ) -> tuple[int, int] | None:
+    def _behavior_cell_id(self, traj: Trajectory, cell_size: float) -> tuple[int, int] | None:
         """行为描述子 bd = 最后有效推进点的 (x, y) → 网格 cell_id。
 
         推进点口径：
@@ -649,17 +692,21 @@ class TrajectoryDataset(Dataset):
             后的守住峰）。
         返回 (gx, gy)；异常输入返回 None。
         """
+        raw_states = traj.raw_states
         try:
-            if corridor_progress is not None:
-                from .reference_corridor import corridor_cap_index
-                peak_idx = corridor_cap_index(corridor_progress) + 1  # 动作索引 → 结果状态
+            if traj.corridor_progress is not None or traj.corridor_credit_events is not None:
+                from .reference_corridor import trajectory_endpoint
+                endpoint = trajectory_endpoint(traj)
+                if endpoint.cap < 0:
+                    return None
+                peak_idx = endpoint.cap + 1
             else:
                 _p, peak_idx, _dy, _r = progress_metric(raw_states, self.config)
         except Exception:
             return None
         if peak_idx < 0 or peak_idx >= len(raw_states):
             return None
-        if corridor_progress is not None:
+        if traj.corridor_progress is not None or traj.corridor_credit_events is not None:
             from .reference_anchor import reference_position, scoring_context
             schema, meta = scoring_context(raw_states[peak_idx], self.config)
             point = reference_position(raw_states[peak_idx], schema, meta)
@@ -700,7 +747,7 @@ class TrajectoryDataset(Dataset):
         cell_map: dict[tuple[int, int], Trajectory] = {}
         extras: list[Trajectory] = []
         for t in self.trajectories:
-            cid = self._behavior_cell_id(t.raw_states, cell_size, t.corridor_progress)
+            cid = self._behavior_cell_id(t, cell_size)
             if cid is None:
                 continue
             if cid not in cell_map:
@@ -717,7 +764,7 @@ class TrajectoryDataset(Dataset):
         for traj, sc in zip(trajs, scores):
             if is_water_trajectory(traj.raw_states, self.config):
                 continue
-            cid = self._behavior_cell_id(traj.raw_states, cell_size, traj.corridor_progress)
+            cid = self._behavior_cell_id(traj, cell_size)
             if cid is None:
                 continue
             traj.score = float(sc)
@@ -776,18 +823,31 @@ class TrajectoryDataset(Dataset):
           - 高度模式（默认）：cap_idx = progress_metric 的 secured peak（dwell 驻留
             过滤甩飞尖峰后的守住峰），与 base_score / 效率图 update 同口径。
         """
-        from .sil_archive import ARCHIVE_TD_PARETO, equal_traj_window_index
+        from .sil_archive import (
+            ARCHIVE_TD_PARETO, NEW_SAMPLING_MODES, SAMPLING_LEGACY,
+            equal_traj_window_index, full_candidate_index,
+        )
+        sampling_mode = getattr(self.config, "sil_td_sampling_mode", SAMPLING_LEGACY)
         if (getattr(self.config, "sil_archive_mode", "map_elites") == ARCHIVE_TD_PARETO
                 and self.trajectories
                 and all(t.corridor_progress is not None for t in self.trajectories)):
-            self._index = equal_traj_window_index(
-                self.trajectories, int(getattr(self.config, "sil_td_windows_per_traj", 0)))
+            if sampling_mode == SAMPLING_LEGACY:
+                self._index = equal_traj_window_index(
+                    self.trajectories, int(getattr(self.config, "sil_td_windows_per_traj", 0)))
+            elif sampling_mode in NEW_SAMPLING_MODES:
+                horizon = int(getattr(self.config, "sil_td_sampling_horizon_steps", 0))
+                self._index = full_candidate_index(
+                    self.trajectories, horizon if horizon > 0 else None)
+            else:
+                raise ValueError(f"Unknown sil_td_sampling_mode: {sampling_mode}")
             return
         self._index = []
         for ti, traj in enumerate(self.trajectories):
-            if traj.corridor_progress is not None:
-                from .reference_corridor import corridor_cap_index
-                cap_idx = corridor_cap_index(traj.corridor_progress)
+            if traj.corridor_progress is not None or traj.corridor_credit_events is not None:
+                from .reference_corridor import trajectory_endpoint
+                cap_idx = trajectory_endpoint(traj).cap
+                if cap_idx < 0:
+                    continue
             else:
                 _progress, cap_idx, _dy, _reach = progress_metric(
                     traj.raw_states, self.config
@@ -799,9 +859,7 @@ class TrajectoryDataset(Dataset):
     def __len__(self) -> int:
         return len(self._index)
 
-    def __getitem__(self, idx: int):
-        ti, tau = self._index[idx]
-        traj = self.trajectories[ti]
+    def encode_window(self, traj: Trajectory, tau: int, *, need_action: bool = True):
         ctx = self.config.context_len
         raw = traj.raw_states       # (T+1, 33)
         acts = traj.actions          # (T, 2)
@@ -848,8 +906,10 @@ class TrajectoryDataset(Dataset):
         relations, _ = left_pad_sequence(relation_real, ctx)
         rmasks, _ = left_pad_sequence(rmask_real, ctx)
 
-        # 有效性由观测驱动（与推理 _build_history_window 共用 left_pad_sequence，天然一致）
-        target_action = acts[tau].astype(np.float32)
+        if need_action:
+            target_action = acts[tau].astype(np.float32)
+        else:
+            target_action = np.zeros(2, dtype=np.float32)
 
         # 九元组：原五元组观测 + 轮廓/接触关系 token（与 rollout 共用 build_sparse_geometry）
         return (
@@ -863,6 +923,10 @@ class TrajectoryDataset(Dataset):
             torch.from_numpy(relations),
             torch.from_numpy(rmasks),
         )
+
+    def __getitem__(self, idx: int):
+        ti, tau = self._index[idx]
+        return self.encode_window(self.trajectories[ti], tau)
 
     def _build_patch(self, step_state: np.ndarray, guidance_id: int | None = None) -> np.ndarray:
         """即时构建 patch（委托模块级 build_patch，保证离线/在线一致）。

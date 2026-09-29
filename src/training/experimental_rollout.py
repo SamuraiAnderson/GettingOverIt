@@ -115,7 +115,14 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
     # corridor_credit[i] 与 raw_actions[i] 对齐（动作 t 获得的 credited 进度）；
     # corridor_guidance[i] 与 raw_states[i] 对齐（处理完 state[t] 后的引导段索引，-1 = 无引导）。
     # 首帧为 tracker 初始状态。与 rollout.py collect_ppo 的口径一致。
+    from .reference_corridor import PROGRESS_MODE_V2, progress_mode_of
+    distance_name = "delta_d" if trackers and progress_mode_of(cfg) == PROGRESS_MODE_V2 else "progress"
     corridor_credit = {i: [] for i in agents} if trackers else {}
+    corridor_events = {i: [] for i in agents} if trackers else {}
+    corridor_confirmed = {i: [0.0] for i in agents} if trackers else {}
+    corridor_rewards = {i: [] for i in agents} if trackers else {}
+    corridor_terminated = {i: [] for i in agents} if trackers else {}
+    invalid_agents = set()
     corridor_guidance = ({i: [trackers[i].guidance_index if trackers[i].guidance_index is not None else -1]
                           for i in agents} if trackers else {})
 
@@ -243,9 +250,16 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
                 corridor_count += 1
                 corridor_inside += int(result.inside)
                 corridor_gap += int(result.gap)
-                corridor_progress += result.progress
-                corridor_penalty += result.deviation_penalty
-                corridor_credit[i].append(float(result.progress))
+                if result.invalid:
+                    invalid_agents.add(i)
+                else:
+                    corridor_progress += getattr(result, distance_name)
+                    corridor_penalty += result.deviation_penalty
+                corridor_credit[i].append(float(result.legacy_credit))
+                corridor_events[i].append(bool(result.credit_event))
+                corridor_confirmed[i].append(float(result.confirmed_progress))
+                corridor_rewards[i].append(float(reward))
+                corridor_terminated[i].append(bool(done))
                 gid = trackers[i].guidance_index
                 corridor_guidance[i].append(gid if gid is not None else -1)
         obs, contacts = new_obs, new_contacts
@@ -281,13 +295,26 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
                     dyn, pats, acts, mask = windows([i])
                     _, val = model(dyn, pats, acts, mask, **sparse_kwargs([i]))
                 value = val.item()
+        if i in invalid_agents:
+            continue
         buffer.add_episode(frames[i], records[i], value, cfg.gamma, cfg.gae_lambda)
         trajectories.append(Trajectory(np.asarray(raw_states[i]), np.asarray(raw_actions[i]),
                                        contact=np.asarray(contact_history[i], np.float32),
                                        corridor_progress=(np.asarray(corridor_credit[i], np.float32)
                                                           if trackers else None),
                                        guidance_index=(np.asarray(corridor_guidance[i], np.int8)
-                                                       if trackers else None)))
+                                                       if trackers else None),
+                                       corridor_credit_events=(np.asarray(corridor_events[i], dtype=bool)
+                                                               if trackers else None),
+                                       corridor_confirmed_progress=(np.asarray(corridor_confirmed[i], dtype=np.float64)
+                                                                    if trackers else None),
+                                       step_rewards=(np.asarray(corridor_rewards[i], dtype=np.float64)
+                                                     if trackers else None),
+                                       terminated=(np.asarray(corridor_terminated[i], dtype=bool)
+                                                   if trackers else None),
+                                       trajectory_valid=True,
+                                       termination_known=True,
+                                       progress_mode=progress_mode_of(cfg) if trackers else None))
     timings["bootstrap"] = time.perf_counter() - clock
     timings["total"] = time.perf_counter() - started
     worker.last_profile = {f"rollout_{name}_seconds": value for name, value in timings.items()}
@@ -302,7 +329,9 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
         np.any(np.abs(physical_actions) >= .999 * cfg.action_scale, axis=-1).mean())
     worker.last_corridor_metrics = {"corridor_progress_m": corridor_progress,
         "corridor_deviation_penalty": corridor_penalty, "corridor_inside_fraction": corridor_inside/max(corridor_count, 1),
-        "corridor_gap_fraction": corridor_gap/max(corridor_count, 1)} if trackers else {}
+        "corridor_gap_fraction": corridor_gap/max(corridor_count, 1),
+        "corridor_valid_agents": float(len(agents) - len(invalid_agents)),
+        "corridor_invalid_agents": float(len(invalid_agents))} if trackers else {}
     worker.last_feature_scales = scale_report(np.concatenate([np.asarray(extra_history[i]) for i in agents]), cfg)
     worker.last_segment_trace = all_segments
     if agents:

@@ -19,7 +19,9 @@ from training.config import TrainConfig
 from training.dataset import Trajectory, prune_trajectory
 from training.deploy_sampling import extract_body_local, extract_tip_local, reconstruct_polygon_world, player_hub_angle_deg, rod_angle_deg
 from training.reference_anchor import scoring_context
-from training.reference_corridor import ReferenceCorridor, corridor_cap_index, replay_corridor_fields
+from training.reference_corridor import (
+    PROGRESS_MODE_V2, ReferenceCorridor, corridor_cap_index, progress_mode_of, replay_corridor_result,
+)
 from tests.control_interaction.test_l7_surface_airdrop import load_colliders, extract_polygons
 
 
@@ -37,20 +39,32 @@ def path_xy(states: np.ndarray) -> np.ndarray:
 
 
 def corridor_score_marks(states: np.ndarray, cfg: TrainConfig, route: ReferenceCorridor) -> dict:
-    """credited 封顶状态索引，以及剪枝后保留的最后一个状态索引。"""
+    """封顶状态索引，以及剪枝后保留的最后一个状态索引。v2 的封顶是最后一次确认事件。"""
     schema, meta = scoring_context(states, config=cfg, route=route)
-    progress, guidance = replay_corridor_fields(route, states, schema, meta)
+    played = replay_corridor_result(route, states, schema, meta, reject_invalid=False)
     traj = Trajectory(
         raw_states=states,
         actions=np.zeros((len(states) - 1, 2), np.float32),
-        corridor_progress=progress,
-        guidance_index=guidance,
+        corridor_progress=np.asarray(played["legacy_credit"], np.float32),
+        guidance_index=played["guidance_index"],
+        corridor_credit_events=np.asarray(played["credit_events"], bool),
+        corridor_confirmed_progress=np.asarray(played["confirmed_progress"], np.float64),
+        progress_mode=played["mode"],
+        trajectory_valid=bool(played["valid"]),
     )
-    cap = corridor_cap_index(progress)
+    if progress_mode_of(cfg) == PROGRESS_MODE_V2 and played["mode"] == PROGRESS_MODE_V2:
+        cap = int(played["cap"])
+        distance = float(played["distance"])
+        state_index = 0 if cap < 0 else min(cap + 1, len(states) - 1)
+    else:
+        progress = np.asarray(played["legacy_credit"], np.float64)
+        cap = corridor_cap_index(progress)
+        distance = float(progress.sum())
+        state_index = min(int(cap) + 1, len(states) - 1)
     return {
-        "credited_state_index": min(int(cap) + 1, len(states) - 1),
+        "credited_state_index": state_index,
         "prune_state_index": len(prune_trajectory(traj, cfg).raw_states) - 1,
-        "credited_progress_m": float(np.asarray(progress, np.float64).sum()),
+        "credited_progress_m": distance,
     }
 
 
@@ -78,7 +92,8 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
     title = "原始状态回放" if rank is None else f"第 {rank} 名 · 原始状态回放"
     fig.suptitle(title, fontproperties=font, fontsize=17, y=.97)
     run_tokens=episode.parents[2].name.split("_")
-    label=f"累计有效进度 {data['metrics']['credited_progress_m']:.2f} 米 · {run_tokens[-2]} / seed {run_tokens[-1][1:]}"
+    progress_name = "确认终点 D" if progress_mode_of(cfg) == PROGRESS_MODE_V2 else "累计有效进度"
+    label=f"{progress_name} {data['metrics']['credited_progress_m']:.2f} 米 · {run_tokens[-2]} / seed {run_tokens[-1][1:]}"
     if peak is not None:
         label += f" · 封顶于 {peak * cfg.feature_step_seconds:.2f}s / 第 {peak} 步"
     if cut is not None:
@@ -90,7 +105,8 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
     else:
         caption += "蓝线是 Player 原点轨迹。"
     if peak is not None or cut is not None:
-        caption += "金点为 credited 最高分（封顶），红点为裁剪点，红线为其后被剪掉的段。"
+        star = "金点为确认终点" if progress_mode_of(cfg) == PROGRESS_MODE_V2 else "金点为 credited 最高分（封顶）"
+        caption += f"{star}，红点为裁剪点，红线为其后被剪掉的段。"
     fig.text(.5, .025, caption, ha="center", fontproperties=font, fontsize=9, color="#555555")
     for poly in terrain:
         if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):

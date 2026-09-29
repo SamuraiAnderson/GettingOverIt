@@ -33,7 +33,22 @@ def reference_fingerprint(
         "reference_projection_window": getattr(config, "reference_projection_window", None),
         "reference_max_step": getattr(config, "reference_max_step", None),
         "reference_interpolated_weight": getattr(config, "reference_interpolated_weight", None),
-        "credited_algorithm": CREDITED_ALGORITHM,
+        "credited_algorithm": (
+            "confirmed_endpoint_v2"
+            if getattr(config, "reference_progress_mode", None) == "confirmed_endpoint_v2"
+            else CREDITED_ALGORITHM
+        ),
+        "reference_progress_mode": getattr(config, "reference_progress_mode", "legacy_credit_v1"),
+        "cap_rule": (
+            "last_credit_event"
+            if getattr(config, "reference_progress_mode", None) == "confirmed_endpoint_v2"
+            else "cumulative_credit_1e-6"
+        ),
+        "reward_rule": (
+            "delta_confirmed_distance"
+            if getattr(config, "reference_progress_mode", None) == "confirmed_endpoint_v2"
+            else "legacy_credit"
+        ),
     }
     payload = dict(values)
     payload["fingerprint"] = fingerprint_payload(values)

@@ -170,6 +170,20 @@ def save_elites(path: Path, trajectories: Sequence[Any], fingerprint: dict[str, 
         gid = getattr(traj, "guidance_index", None)
         if gid is not None:
             arrays[f"t{i}_guidance_index"] = np.asarray(gid, dtype=np.int8)
+        events = getattr(traj, "corridor_credit_events", None)
+        if events is not None:
+            arrays[f"t{i}_credit_events"] = np.asarray(events, dtype=bool)
+        confirmed = getattr(traj, "corridor_confirmed_progress", None)
+        if confirmed is not None:
+            arrays[f"t{i}_confirmed_progress"] = np.asarray(confirmed, dtype=np.float64)
+        rewards = getattr(traj, "step_rewards", None)
+        if rewards is not None:
+            arrays[f"t{i}_step_rewards"] = np.asarray(rewards, dtype=np.float64)
+        terminated = getattr(traj, "terminated", None)
+        if terminated is not None:
+            arrays[f"t{i}_terminated"] = np.asarray(terminated, dtype=bool)
+        if getattr(traj, "progress_mode", None):
+            arrays[f"t{i}_progress_mode"] = np.asarray(traj.progress_mode)
         scores.append(float(getattr(traj, "score", 0.0)))
         iters.append(int(getattr(traj, "iteration", 0)))
     arrays["scores"] = np.asarray(scores, dtype=np.float32)
@@ -202,6 +216,13 @@ def load_elites(path: str | Path) -> list[dict[str, Any]]:
                   "iteration": int(iters[i]),
                   "corridor_progress": data[f"t{i}_corridor_progress"] if f"t{i}_corridor_progress" in data else None,
                   "guidance_index": data[f"t{i}_guidance_index"] if f"t{i}_guidance_index" in data else None,
+                  "corridor_credit_events": data[f"t{i}_credit_events"] if f"t{i}_credit_events" in data else None,
+                  "corridor_confirmed_progress": data[f"t{i}_confirmed_progress"] if f"t{i}_confirmed_progress" in data else None,
+                  "step_rewards": data[f"t{i}_step_rewards"] if f"t{i}_step_rewards" in data else None,
+                  "terminated": data[f"t{i}_terminated"] if f"t{i}_terminated" in data else None,
+                  "termination_known": f"t{i}_terminated" in data,
+                  "progress_mode": (str(np.asarray(data[f"t{i}_progress_mode"]).reshape(-1)[0])
+                                    if f"t{i}_progress_mode" in data else None),
             })
     return out
 
@@ -347,6 +368,13 @@ class RunRecorder:
             writer.writerows(self._rows)
 
     # ── 精英池 ──
+
+    def save_sil_sampling(self, iteration: int, record: dict[str, Any]) -> None:
+        """逐轨迹采样计划。汇总列在 metrics.csv，这里保留能复核 tau 的明细。"""
+        directory = self.paths.root / "sil_sampling"
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / f"iter_{int(iteration):04d}.json"
+        path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def save_elites(self, trajectories: Iterable[Any], iteration: int) -> None:
         trajs = list(trajectories)

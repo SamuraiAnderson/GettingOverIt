@@ -826,6 +826,8 @@ class RolloutWorker:
             score_schema, score_meta = scoring_context(
                 obs[first], self.config, self.env, self.reference_corridor,
             )
+        from .reference_corridor import PROGRESS_MODE_V2, progress_mode_of
+        distance_field = "delta_d" if progress_mode_of(self.config) == PROGRESS_MODE_V2 else "progress"
         trackers = {
             i: self.reference_corridor.tracker_from_state(obs[i], score_schema, score_meta)
             for i in stable_agents
@@ -835,6 +837,13 @@ class RolloutWorker:
         # corridor_guidance[i] 与 raw_states[i] 对齐（处理完 state[t] 后的引导段索引，
         # 即该帧 patch wide 通道所用地图；-1 = 无引导）。首帧为 tracker 初始状态。
         corridor_credit: dict[int, list[float]] = {i: [] for i in stable_agents} if trackers else {}
+        corridor_events: dict[int, list[bool]] = {i: [] for i in stable_agents} if trackers else {}
+        corridor_confirmed: dict[int, list[float]] = (
+            {i: [0.0] for i in stable_agents} if trackers else {}
+        )
+        corridor_rewards: dict[int, list[float]] = {i: [] for i in stable_agents} if trackers else {}
+        corridor_terminated: dict[int, list[bool]] = {i: [] for i in stable_agents} if trackers else {}
+        invalid_agents: set[int] = set()
         corridor_guidance: dict[int, list[int]] = (
             {i: [trackers[i].guidance_index if trackers[i].guidance_index is not None else -1]
              for i in stable_agents} if trackers else {}
@@ -936,10 +945,22 @@ class RolloutWorker:
                     corridor_steps += 1
                     corridor_inside += int(result.inside)
                     corridor_gaps += int(result.gap)
-                    corridor_progress += result.progress
-                    corridor_penalties += result.deviation_penalty
+                    if result.invalid:
+                        invalid_agents.add(i)
+                        logger.warning("agent %s 轨迹因位移跳变失效，剔除本轮 PPO/SIL 样本", i)
+                    else:
+                        corridor_progress += getattr(result, distance_field)
+                        corridor_penalties += result.deviation_penalty
+                    corridor_events[i].append(bool(result.credit_event))
+                    corridor_confirmed[i].append(float(result.confirmed_progress))
+                    corridor_rewards[i].append(float(reward))
+                    corridor_terminated[i].append(bool(done))
                     if done:
                         finished.add(i)
+                if i in invalid_agents:
+                    agent_buffers[i].reset()
+                    finished.add(i)
+                    continue
                 agent_buffers[i].add(
                     dynamics_window=dw,
                     patch_window=pw,
@@ -982,6 +1003,8 @@ class RolloutWorker:
         # bootstrap 帧的 contact：接续 rollout 末尾 prev 状态，保证 grip 判定连续
         dynamics = build_dynamics(obs, contact_now)
         for i in stable_agents:
+            if i in invalid_agents:
+                continue
             if i in finished:
                 agent_buffers[i].compute_gae(0.0, self.config.gamma, self.config.gae_lambda)
                 continue
@@ -1017,7 +1040,8 @@ class RolloutWorker:
                 gae_lambda=self.config.gae_lambda,
             )
 
-        buffer = _Buffer.merge(list(agent_buffers.values()))
+        kept_buffers = [agent_buffers[i] for i in stable_agents if i not in invalid_agents]
+        buffer = _Buffer.merge(kept_buffers)
         timings["bootstrap"] = time.perf_counter() - phase_start
         timings["total"] = time.perf_counter() - started
         self.last_profile = {f"rollout_{k}_seconds": v for k, v in timings.items()}
@@ -1032,20 +1056,34 @@ class RolloutWorker:
                 "corridor_deviation_penalty": corridor_penalties,
                 "corridor_inside_fraction": corridor_inside / max(1, corridor_steps),
                 "corridor_gap_fraction": corridor_gaps / max(1, corridor_steps),
+                "corridor_valid_agents": float(len(stable_agents) - len(invalid_agents)),
+                "corridor_invalid_agents": float(len(invalid_agents)),
             }
 
         trajectories = []
         for i in stable_agents:
-            if len(raw_actions[i]) > 0:
-                trajectories.append(Trajectory(
-                    raw_states=np.array(raw_states[i]),
-                    actions=np.array(raw_actions[i]),
-                    contact=np.array(all_contacts[i], dtype=np.float32),
-                    corridor_progress=(np.array(corridor_credit[i], dtype=np.float32)
-                                       if trackers else None),
-                    guidance_index=(np.array(corridor_guidance[i], dtype=np.int8)
-                                    if trackers else None),
-                ))
+            if i in invalid_agents or len(raw_actions[i]) == 0:
+                continue
+            trajectories.append(Trajectory(
+                raw_states=np.array(raw_states[i]),
+                actions=np.array(raw_actions[i]),
+                contact=np.array(all_contacts[i], dtype=np.float32),
+                corridor_progress=(np.array(corridor_credit[i], dtype=np.float32)
+                                   if trackers else None),
+                guidance_index=(np.array(corridor_guidance[i], dtype=np.int8)
+                                if trackers else None),
+                corridor_credit_events=(np.array(corridor_events[i], dtype=bool)
+                                        if trackers else None),
+                corridor_confirmed_progress=(np.array(corridor_confirmed[i], dtype=np.float64)
+                                             if trackers else None),
+                step_rewards=(np.array(corridor_rewards[i], dtype=np.float64)
+                              if trackers else None),
+                terminated=(np.array(corridor_terminated[i], dtype=bool)
+                            if trackers else None),
+                trajectory_valid=True,
+                termination_known=True,
+                progress_mode=progress_mode_of(self.config) if trackers else None,
+            ))
 
         return buffer, trajectories
 
