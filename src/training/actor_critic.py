@@ -338,6 +338,18 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
         return dist, value
 
     @staticmethod
+    def _scaled_std(std: torch.Tensor, noise_scale: torch.Tensor | None) -> torch.Tensor:
+        """Multiply the marginal std by this step's exploration scale. None means 1."""
+        if noise_scale is None:
+            return std
+        scale = torch.as_tensor(noise_scale, dtype=std.dtype, device=std.device)
+        if scale.ndim == 1:
+            scale = scale.unsqueeze(-1)
+        if not torch.isfinite(scale).all() or torch.any(scale <= 0):
+            raise ValueError("noise_scale must be finite and positive")
+        return std * scale
+
+    @staticmethod
     def _ou_conditional(
         mean: torch.Tensor, std: torch.Tensor,
         noise_prev: torch.Tensor | None, noise_phi: float,
@@ -371,6 +383,7 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
         contour_mask: torch.Tensor | None = None,
         relation_tokens: torch.Tensor | None = None,
         relation_mask: torch.Tensor | None = None,
+        noise_scale: torch.Tensor | None = None,
     ) -> ActionValue:
         """
         采集用：从策略中采样动作，返回 (squashed_action, log_prob, value, noise=z_t)。
@@ -389,14 +402,14 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
         mean = dist.mean
         std = dist.stddev
 
-        mu_cond, sigma_cond = self._ou_conditional(mean, std, noise_prev, noise_phi)
+        std_t = self._scaled_std(std, noise_scale)
+        mu_cond, sigma_cond = self._ou_conditional(mean, std_t, noise_prev, noise_phi)
         cond_dist = Normal(mu_cond, sigma_cond)
 
         raw_action = mean if deterministic else cond_dist.rsample()
-        # 归一化噪声 z_t = (raw - mean) / std（iid 路径下 = η_t，仍是 N(0,1)），
-        # 交回调用方作为下一步 noise_prev；det 化以脱离计算图。
+        # z_t = (raw - mean) / std_t。std_t 已含本步噪声倍率，z 仍按标准正态递推。
         with torch.no_grad():
-            z_t = ((raw_action - mean) / std.clamp(min=1e-8)).detach()
+            z_t = ((raw_action - mean) / std_t.clamp(min=1e-8)).detach()
 
         log_prob_raw = cond_dist.log_prob(raw_action).sum(dim=-1)
         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
@@ -418,6 +431,7 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
         contour_mask: torch.Tensor | None = None,
         relation_tokens: torch.Tensor | None = None,
         relation_mask: torch.Tensor | None = None,
+        noise_scale: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         训练用：对已执行的动作重新计算 log_prob、entropy、value。
@@ -435,7 +449,8 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
         mean = dist.mean
         std = dist.stddev
 
-        mu_cond, sigma_cond = self._ou_conditional(mean, std, noise_prev, noise_phi)
+        std_t = self._scaled_std(std, noise_scale)
+        mu_cond, sigma_cond = self._ou_conditional(mean, std_t, noise_prev, noise_phi)
         cond_dist = Normal(mu_cond, sigma_cond)
 
         # 反 squash: squashed → raw

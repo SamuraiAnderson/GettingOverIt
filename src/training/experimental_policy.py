@@ -147,20 +147,22 @@ class ExperimentalActorCritic(ActorCritic):
             self.config.ppo_log_std_min, self.config.ppo_log_std_max).exp().expand_as(mean)
         return Normal(mean, std), self.critic_head(features).squeeze(-1)
 
-    def sample_features(self, features, noise_prev, noise_phi, deterministic=False):
+    def sample_features(self, features, noise_prev, noise_phi, deterministic=False, noise_scale=None):
         from .actor_critic import ActionValue
         distribution, value = self.distribution_from_features(features)
         mean, std = distribution.mean, distribution.stddev
-        cm, cs = self._ou_conditional(mean, std, noise_prev, noise_phi)
+        std_t = self._scaled_std(std, noise_scale)
+        cm, cs = self._ou_conditional(mean, std_t, noise_prev, noise_phi)
         conditional = Normal(cm, cs)
         raw = mean if deterministic else conditional.sample()
-        noise = ((raw - mean) / std).detach()
+        noise = ((raw - mean) / std_t.clamp(min=1e-8)).detach()
         lp = self._log_prob_squash(conditional.log_prob(raw).sum(-1), raw)
         return ActionValue(self._squash_action(raw), lp, value, noise, raw.detach())
 
-    def evaluate_features(self, features, raw, noise_prev, noise_phi):
+    def evaluate_features(self, features, raw, noise_prev, noise_phi, noise_scale=None):
         distribution, values = self.distribution_from_features(features)
-        mean, std = self._ou_conditional(distribution.mean, distribution.stddev, noise_prev, noise_phi)
+        std_t = self._scaled_std(distribution.stddev, noise_scale)
+        mean, std = self._ou_conditional(distribution.mean, std_t, noise_prev, noise_phi)
         conditional = Normal(mean, std)
         lp = self._log_prob_squash(conditional.log_prob(raw).sum(-1), raw)
         return lp, conditional.entropy().sum(-1), values

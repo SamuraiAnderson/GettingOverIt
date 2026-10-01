@@ -14,6 +14,13 @@ def policy_context(model, noise_phi: float, deterministic: bool = False) -> dict
         "log_std_max": float(model.config.ppo_log_std_max),
         "deterministic": deterministic,
     }
+    if getattr(model.config, "delayed_exploration_enabled", False):
+        from .delayed_exploration import OPEN_STEPS
+        context["delayed_exploration"] = {
+            "floor": float(model.config.delayed_exploration_floor),
+            "ramp_steps": int(model.config.delayed_exploration_ramp_steps),
+            "open_steps": list(OPEN_STEPS),
+        }
     from .policy_features import experimental_enabled
     if experimental_enabled(model.config):
         context["experiment"] = {"version": 1, **{name: getattr(model.config, name) for name in (

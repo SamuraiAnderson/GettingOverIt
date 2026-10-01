@@ -725,6 +725,7 @@ class RolloutWorker:
         from .reward import NewHighConfirmer, RewardNormalizer, is_water, step_reward
         from .policy_audit import policy_context
         from .policy_features import experimental_enabled
+        from .delayed_exploration import scales_for_agents
         if experimental_enabled(self.config):
             from .experimental_rollout import collect_decisions
             return collect_decisions(self, model, n_steps, eff_map, normalizer,
@@ -890,11 +891,14 @@ class RolloutWorker:
                     for k in range(8)
                 )
                 z_prev_t = torch.from_numpy(np.stack([ou_state[i] for i in ids])).to(device)
+                scale_np = scales_for_agents(self.config, ids, step, deterministic)
+                scale_t = torch.from_numpy(scale_np).to(device)
                 with torch.no_grad():
                     av = model.get_action_and_value(
                         dyn_t, pat_t, act_t, valid_mask=vm_t,
                         noise_prev=z_prev_t, noise_phi=ou_phi,
                         deterministic=deterministic,
+                        noise_scale=scale_t,
                         contour_tokens=ct_t, contour_mask=cm_t,
                         relation_tokens=rt_t, relation_mask=rm_t,
                     )
@@ -907,7 +911,8 @@ class RolloutWorker:
                     z_prev = ou_state[i]
                     ou_state[i] = z_t.copy()
                     actions_batch[i] = action_np
-                    step_data[i] = (*windows[i], float(lp), float(val), z_prev.copy(), latent_np.copy())
+                    step_data[i] = (*windows[i], float(lp), float(val), z_prev.copy(), latent_np.copy(),
+                                    float(scale_np[j]))
             timings["inference"] += time.perf_counter() - phase_start
 
             phase_start = time.perf_counter()
@@ -927,7 +932,7 @@ class RolloutWorker:
             for i in stable_agents:
                 if i not in step_data:
                     continue
-                dw, pw, aw, vm, ct, cm, rt, rm, lp, val, np_prev, latent = step_data[i]
+                dw, pw, aw, vm, ct, cm, rt, rm, lp, val, np_prev, latent, noise_scale = step_data[i]
                 reward, running_max_y[i] = step_reward(
                     prev_obs[i], new_obs[i], eff_map, self.config,
                     running_max_y=running_max_y[i],
@@ -973,6 +978,7 @@ class RolloutWorker:
                     done=done,
                     noise_prev=np_prev,
                     raw_action=latent,
+                    noise_scale=noise_scale,
                     patch_frames=tuple(patch_history[i][-ctx:]),
                     contour_window=ct,
                     contour_mask_window=cm,

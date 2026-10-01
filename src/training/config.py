@@ -114,6 +114,9 @@ class TrainConfig:
     action_scale: float = 100.0
     max_grad_norm: float = 0.5
     max_grad_norm_cap: float = 5.0   # GradNormAdapter 冻结值的硬上限 (default * cap_ratio)
+    # 冻结发生在进程内第 500 次更新，PPO 梯度 p95≈9 → 直接跳到 cap；Adam 二阶矩仍是按 0.5
+    # 累积的，此后约千步有效步长偏大（4h 续训第 146 轮冻结后每轮只剩 1–2 次更新）。默认固定。
+    max_grad_norm_adaptive: bool = False
     weight_decay: float = 1e-4
     val_ratio: float = 0.1
     early_stop_patience: int = 3
@@ -204,6 +207,9 @@ class TrainConfig:
     vf_coef: float = 0.25
     ent_coef: float = 0.001
     target_kl: float | None = 0.03
+    # 自适应时早停轮喂入的 KL 已超过 ppo_kl_stop_factor × target，target 只降不升，
+    # 2026-09 两次续训均被钉在下限 0.01、每轮仅 1–5 次更新。默认固定 target_kl。
+    ppo_target_kl_adaptive: bool = False
     ppo_batch_size: int = 64
     normalize_advantages: bool = True
 
@@ -232,6 +238,11 @@ class TrainConfig:
     # 原 iid 采样。φ=0.85 → lag-1 ≈0.85（贴近 pink 噪声 ~0.79），先从 OU 起（log_prob 好推）。
     ou_enabled: bool = True
     ou_phi: float = 0.85
+    # 部分 player 晚开探索。默认关闭。开启后 8 个 player 为 0/200/400/600 四档，
+    # 延迟期保留 floor 倍噪声，开启后再用 ramp_steps 线性升到满幅度。见 delayed_exploration.py。
+    delayed_exploration_enabled: bool = False
+    delayed_exploration_floor: float = 0.15
+    delayed_exploration_ramp_steps: int = 50
 
     # ── 相位探索噪声（空中相放大，2026-09-24）──
     # 物理依据：空中相是弹道运动，动作只影响锤子为下一次接触的预定位——噪声不扰动

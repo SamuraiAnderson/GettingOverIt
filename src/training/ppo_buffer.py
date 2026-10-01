@@ -61,6 +61,8 @@ class PPOBatch:
     contour_mask: torch.Tensor | None = None
     relation_tokens: torch.Tensor | None = None
     relation_mask: torch.Tensor | None = None
+    # 本步探索倍率。1 表示未延迟。更新必须用采集时的倍率，不能改回满噪声再算概率。
+    noise_scale: torch.Tensor | None = None
 
     def sparse_kwargs(self) -> dict:
         if self.contour_tokens is None:
@@ -94,6 +96,7 @@ class PPORolloutBuffer:
         self._dones: list[bool] = []
         # 每步 OU 前一步归一化噪声 z_{t-1}，iid 模式下存零向量（无条件效应）
         self._noise_prev: list[np.ndarray] = []
+        self._noise_scale: list[float] = []
         self._raw_actions: list[np.ndarray] = []
         self._contours: list = []
         self._cmasks: list = []
@@ -127,6 +130,7 @@ class PPORolloutBuffer:
         contour_mask_window: np.ndarray | None = None,
         relation_window: np.ndarray | None = None,
         relation_mask_window: np.ndarray | None = None,
+        noise_scale: float = 1.0,
     ) -> None:
         """添加一个 timestep；NaN/Inf 中止本轮，避免跨缺失步骤计算 GAE。
 
@@ -135,6 +139,9 @@ class PPORolloutBuffer:
         """
         if noise_prev is None:
             noise_prev = np.zeros(action.shape, dtype=np.float32)
+        noise_scale = float(noise_scale)
+        if not np.isfinite(noise_scale) or noise_scale <= 0.0:
+            raise ValueError("noise_scale must be finite and positive")
         if patch_frames is not None and (not patch_frames or len(patch_frames) > len(valid_mask_window)):
             raise ValueError("Patch frame history must fit the observation window")
 
@@ -177,6 +184,7 @@ class PPORolloutBuffer:
         self._rewards.append(reward)
         self._dones.append(done)
         self._noise_prev.append(noise_prev.astype(np.float32))
+        self._noise_scale.append(noise_scale)
         self._raw_actions.append(np.asarray(raw_action, dtype=np.float32).copy())
         self._contours.append(None if contour_window is None else np.asarray(contour_window, np.float32))
         self._cmasks.append(None if contour_mask_window is None else np.asarray(contour_mask_window, np.float32))
@@ -227,6 +235,7 @@ class PPORolloutBuffer:
         log_probs_arr = np.array(self._log_probs, dtype=np.float32)
         values_arr = np.array(self._values, dtype=np.float32)
         noise_prev_arr = np.array(self._noise_prev, dtype=np.float32)
+        noise_scale_arr = np.asarray(self._noise_scale, dtype=np.float32)
         raw_actions_arr = np.array(self._raw_actions, dtype=np.float32)
 
         adv = self._advantages.copy()
@@ -247,6 +256,7 @@ class PPORolloutBuffer:
                 old_values=torch.from_numpy(values_arr[idx]).to(self.device),
                 noise_prev=torch.from_numpy(noise_prev_arr[idx]).to(self.device),
                 raw_actions=torch.from_numpy(raw_actions_arr[idx]).to(self.device),
+                noise_scale=torch.from_numpy(noise_scale_arr[idx]).to(self.device),
                 contour_tokens=_stack_optional(self._contours, idx, self.device),
                 contour_mask=_stack_optional(self._cmasks, idx, self.device),
                 relation_tokens=_stack_optional(self._relations, idx, self.device),
@@ -275,6 +285,7 @@ class PPORolloutBuffer:
             merged._rewards.extend(b._rewards)
             merged._dones.extend(b._dones)
             merged._noise_prev.extend(b._noise_prev)
+            merged._noise_scale.extend(b._noise_scale)
             merged._raw_actions.extend(b._raw_actions)
             merged._contours.extend(b._contours)
             merged._cmasks.extend(b._cmasks)
@@ -297,6 +308,7 @@ class PPORolloutBuffer:
         self._rewards.clear()
         self._dones.clear()
         self._noise_prev.clear()
+        self._noise_scale.clear()
         self._raw_actions.clear()
         self._contours.clear()
         self._cmasks.clear()
@@ -311,7 +323,8 @@ class PPORolloutBuffer:
         if self._advantages is None or not self.size:
             raise ValueError("Only nonempty, finalized rollouts can be archived")
         names = ("dynamics", "act_histories", "valid_masks", "actions",
-                 "raw_actions", "log_probs", "values", "rewards", "dones", "noise_prev")
+                 "raw_actions", "log_probs", "values", "rewards", "dones", "noise_prev",
+                 "noise_scale")
         arrays = {name: np.asarray(getattr(self, "_" + name)) for name in names}
         frames, ids, windows = [], {}, []
         for window in self._patches:
@@ -356,6 +369,10 @@ class PPORolloutBuffer:
             for name in ("dynamics", "act_histories", "valid_masks", "actions",
                          "raw_actions", "log_probs", "values", "rewards", "dones", "noise_prev"):
                 setattr(buffer, "_" + name, list(data[name]))
+            if "noise_scale" in data.files:
+                buffer._noise_scale = [float(value) for value in data["noise_scale"]]
+            else:
+                buffer._noise_scale = [1.0] * buffer.size
             if metadata["version"] == 1:
                 buffer._patches = list(data["patches"])
             else:

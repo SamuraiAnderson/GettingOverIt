@@ -217,6 +217,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--recipe", choices=("ppo", "ppo-ou", "ppo-ou-sil"), default=None,
                         help="Fixed ablation; disables adaptive exploration and experimental contact heads")
     parser.add_argument("--max-iterations", type=int, default=None)
+    parser.add_argument("--max-hours", type=float, default=None,
+                        help="墙钟小时上限。到点后不再开始新一轮，当前轮会跑完")
+    parser.add_argument(
+        "--delayed-exploration", action="store_true",
+        help="8 个 player 按 0/200/400/600 四档延迟探索；延迟期保留 15%% 噪声，再经 50 步线性升到满幅度。"
+             "不随 --resume 继承，每次启动需显式给出",
+    )
     parser.add_argument("--target-physical-samples", type=int, default=None,
                         help="Fresh run: stop after the first complete iteration reaching this sample count (includes critic warmup)")
     parser.add_argument("--additional-physical-samples", type=int, default=None,
@@ -601,8 +608,16 @@ def main() -> None:
         config.num_agents = args.num_agents
     if args.max_iterations is not None:
         config.max_iterations = args.max_iterations
+    config.delayed_exploration_enabled = bool(args.delayed_exploration)
+    if args.max_hours is not None and args.max_hours <= 0:
+        raise ValueError("--max-hours 必须是正数")
     if args.steps_per_rollout is not None:
         config.steps_per_rollout = args.steps_per_rollout
+    if config.delayed_exploration_enabled and (
+            config.num_agents != 8 or config.steps_per_rollout <= 600
+            or not 0.0 < float(config.delayed_exploration_floor) <= 1.0
+            or int(config.delayed_exploration_ramp_steps) < 1):
+        raise ValueError("延迟探索需要 8 个 player、每轮多于 600 步，以及合法的残留倍率与爬升长度")
     if args.ppo_batch_size is not None:
         config.ppo_batch_size = args.ppo_batch_size
     if args.save_interval is not None:
@@ -1002,8 +1017,19 @@ def main() -> None:
     completed_iterations = start_iteration
     physical_samples = 0
     sample_target = args.additional_physical_samples or args.target_physical_samples
+    hour_limit = None if args.max_hours is None else time.monotonic() + args.max_hours * 3600
+    if config.delayed_exploration_enabled:
+        from training.delayed_exploration import OPEN_STEPS
+        logger.info(
+            "延迟探索: player 开启步 %s，延迟期倍率 %.2f，之后 %d 步线性升到 1",
+            list(OPEN_STEPS), config.delayed_exploration_floor, config.delayed_exploration_ramp_steps,
+        )
     try:
         for iteration in range(start_iteration, config.max_iterations):
+            if hour_limit is not None and time.monotonic() >= hour_limit:
+                logger.info("达到 %.2f 小时墙钟上限，停止于第 %d 轮之前",
+                            args.max_hours, iteration + 1)
+                break
             last_iteration = iteration
             logger.info("=" * 60)
             logger.info("=== PPO 迭代 %d/%d ===", iteration + 1, config.max_iterations)

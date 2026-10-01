@@ -30,6 +30,7 @@ def evaluated_batches(model, buffer, batch_size, normalize_advantages=True):
             yield (batch, *model.evaluate_actions(batch.dynamics, batch.patches, batch.act_history,
                 batch.actions, valid_mask=batch.valid_mask, noise_prev=batch.noise_prev,
                 noise_phi=buffer.policy_context["noise_phi"], raw_actions=batch.raw_actions,
+                noise_scale=batch.noise_scale,
                 **batch.sparse_kwargs()))
 
 
@@ -60,6 +61,10 @@ class DecisionRolloutBuffer:
                      "log_probs", "values", "rewards", "dones"):
             episode[name] = np.asarray([d[name] for d in decisions], dtype=(
                 np.int64 if name in ("decision_steps", "durations") else np.float32))
+        episode["noise_scale"] = np.asarray(
+            [float(d.get("noise_scale", 1.0)) for d in decisions], dtype=np.float32)
+        if np.any(episode["noise_scale"] <= 0):
+            raise ValueError("noise_scale must be positive")
         if not all(np.isfinite(x).all() for x in episode.values()):
             raise ValueError("Non-finite decision episode")
         starts, durations = episode["decision_steps"], episode["durations"]
@@ -82,7 +87,11 @@ class DecisionRolloutBuffer:
             return self._tensor(np.stack([self.episodes[e][name][i] for e, i in rows]))
         return SimpleNamespace(row_ids=rows, actions=data("actions"), raw_actions=data("raw_actions"),
             noise_prev=data("noise_prev"), old_log_probs=data("log_probs"), old_values=data("values"),
-            returns=data("returns"), advantages=self._tensor([advantages[e][i] for e, i in rows]))
+            returns=data("returns"), advantages=self._tensor([advantages[e][i] for e, i in rows]),
+            noise_scale=self._tensor([
+                1.0 if "noise_scale" not in self.episodes[e] else self.episodes[e]["noise_scale"][i]
+                for e, i in rows
+            ]))
 
     def _inputs(self, episode, start, end):
         return tuple(self._tensor(episode[name][start:end])[None]
@@ -129,7 +138,8 @@ class DecisionRolloutBuffer:
                 )
                 features = features[0, torch.as_tensor(steps-start, device=self.device)]
                 batch = self._batch([(e, i) for i in range(first, last)], advantages)
-                yield (batch, *model.evaluate_features(features, batch.raw_actions, batch.noise_prev, phi))
+                yield (batch, *model.evaluate_features(
+                    features, batch.raw_actions, batch.noise_prev, phi, noise_scale=batch.noise_scale))
         else:
             rows = [(e, i) for e, episode in enumerate(self.episodes) for i in range(len(episode["decision_steps"]))]
             order = np.random.permutation(len(rows))
@@ -153,7 +163,7 @@ class DecisionRolloutBuffer:
                 batch = self._batch(selected, advantages)
                 yield (batch, *model.evaluate_actions(dynamics, patches, actions, batch.actions,
                     valid_mask=self._tensor(masks), noise_prev=batch.noise_prev, noise_phi=phi,
-                    raw_actions=batch.raw_actions,
+                    raw_actions=batch.raw_actions, noise_scale=batch.noise_scale,
                     **self._sparse_kwargs(episode, windows=sparse_windows or None)))
 
     def save(self, path):

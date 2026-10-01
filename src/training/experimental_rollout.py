@@ -7,6 +7,7 @@ from .dataset import Trajectory, build_dynamics, left_pad_sequence
 from .decision_buffer import DecisionRolloutBuffer
 from .policy_audit import policy_context
 from .policy_features import FeatureBuilder, SurfaceIndex, scale_report
+from .delayed_exploration import scales_for_agents
 from .reward import NewHighConfirmer, is_water, step_reward
 
 
@@ -188,12 +189,15 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
             for start in range(0, len(ready), batch_size):
                 ids = ready[start:start+batch_size]
                 previous_noise = tensor([noises[i] for i in ids])
+                scale_np = scales_for_agents(cfg, ids, step, deterministic)
+                scale_t = torch.from_numpy(scale_np).to(device)
                 if cfg.policy_backbone == "gru":
-                    av = model.sample_features(torch.stack([recurrent[i] for i in ids]), previous_noise, phi, deterministic)
+                    av = model.sample_features(torch.stack([recurrent[i] for i in ids]), previous_noise, phi, deterministic, noise_scale=scale_t)
                 else:
                     dynamics, pats, acts, mask = windows(ids)
                     av = model.get_action_and_value(
                         dynamics, pats, acts, mask, previous_noise, phi, deterministic,
+                        noise_scale=scale_t,
                         **sparse_kwargs(ids),
                     )
                 output = [a.detach().cpu().numpy() for a in (av.action, av.raw_action, av.log_prob, av.value, av.noise)]
@@ -203,7 +207,8 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
                     parameters, raw, lp, value, noise = [a[j] for a in output]
                     active_segments[i] = {"decision_steps": step, "durations": 0, "actions": parameters.copy(),
                         "raw_actions": raw.copy(), "noise_prev": noises[i].copy(), "log_probs": float(lp),
-                        "values": float(value), "rewards": 0., "dones": False}
+                        "values": float(value), "rewards": 0., "dones": False,
+                        "noise_scale": float(scale_np[j])}
                     noises[i] = noise.copy()
         timings["inference"] += time.perf_counter() - clock
         executed = np.zeros((cfg.num_agents, 2), dtype=np.float32)
