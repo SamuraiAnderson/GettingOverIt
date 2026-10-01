@@ -58,18 +58,29 @@ class _KLAdapter:
         self.target = float(np.clip(self.target, self.KL_MIN, self.KL_MAX))
 
 
+def _reset_first_moment(optimizer: AdamW) -> None:
+    """PPO 与 SIL 共用一个 AdamW：上一阶段残留的一阶动量会让新阶段的头几步沿旧目标移动。
+    实测第 163 轮带 SIL 动量时 8 步 KL=0.17、优势一阶改进为负；清零后 8 步 KL=0.002。
+    二阶矩保留，步长尺度不变。"""
+    for state in optimizer.state.values():
+        exp_avg = state.get("exp_avg")
+        if exp_avg is not None:
+            exp_avg.zero_()
+
+
 class _GradNormAdapter:
     """max_grad_norm 自适应: warmup 阶段收集 p95 后冻结，带硬上限防止恢复训练时梯度爆炸。"""
 
-    def __init__(self, default_norm: float, cap: float, warmup_updates: int = 500):
+    def __init__(self, default_norm: float, cap: float, warmup_updates: int = 500, enabled: bool = True):
         self._default = default_norm
         self._cap = cap
         self._warmup = warmup_updates
+        self._enabled = enabled
         self._norms: list[float] = []
         self._frozen_norm: float | None = None
 
     def record(self, grad_norm: float) -> None:
-        if self._frozen_norm is not None:
+        if not self._enabled or self._frozen_norm is not None:
             return
         self._norms.append(grad_norm)
         if len(self._norms) >= self._warmup:
@@ -121,7 +132,8 @@ class PPOTrainer:
         self._global_step = 0
         self._pending_optim_state: dict | None = None
         self._kl_adapter = _KLAdapter(config.target_kl)
-        self._grad_norm_adapter = _GradNormAdapter(config.max_grad_norm, config.max_grad_norm_cap)
+        self._grad_norm_adapter = _GradNormAdapter(
+            config.max_grad_norm, config.max_grad_norm_cap, enabled=config.max_grad_norm_adaptive)
 
     def set_pending_optimizer_state(self, state_dict: dict) -> None:
         """暂存 optimizer state_dict，在首次 update 创建 optimizer 后应用。"""
@@ -220,6 +232,7 @@ class PPOTrainer:
                 self.optimizer.load_state_dict(self._pending_optim_state)
                 logger.info("已恢复 optimizer state")
                 self._pending_optim_state = None
+        _reset_first_moment(self.optimizer)
 
         from .policy_audit import audit_policy, policy_replay_metrics
         if buffer.policy_context.get("deterministic"):
@@ -352,8 +365,8 @@ class PPOTrainer:
         n = max(n_updates, 1)
         final_avg_kl = total_approx_kl / n
 
-        # 迭代结束后自适应 target_kl
-        self._kl_adapter.adapt(max(final_avg_kl, stop_kl))
+        if cfg.ppo_target_kl_adaptive:
+            self._kl_adapter.adapt(max(final_avg_kl, stop_kl))
 
         metrics = {
             "policy_loss": total_policy_loss / n,
@@ -572,7 +585,7 @@ class PPOTrainer:
         依据：空中相是弹道运动、动作与结果几乎无关，等权会把大部分梯度花在
         空中噪声上（ab3 负收益的主要机制之一）。
 
-        在 update() 之后调用，复用同一 optimizer。dataset 为 TrajectoryDataset，
+        在 update() 之后调用，复用同一 optimizer（开训前清零一阶动量）。dataset 为 TrajectoryDataset，
         __getitem__ 产出九元组（五元组观测 + 四份稀疏几何），加权包装再追加权重。
         """
         from torch.utils.data import DataLoader, Subset
@@ -816,6 +829,7 @@ class PPOTrainer:
             generator=loader_generator,
         )
 
+        _reset_first_moment(self.optimizer)
         total_loss = 0.0
         total_value_loss = 0.0
         n_updates = 0

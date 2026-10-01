@@ -20,9 +20,10 @@ class PipelineContractTests(unittest.TestCase):
         self.fixture = contract.PPOContractTests()
         self.fixture.setUp()
 
-    def test_kl_guard_rejects_second_batch_before_step(self):
+    def _update_with_rejected_second_batch(self, adaptive):
         cfg, model, _, buffer, _, _ = self.fixture.collect()
         cfg.ppo_batch_size = 2
+        cfg.ppo_target_kl_adaptive = adaptive
         trainer = PPOTrainer(cfg)
         def shifted(*args, **kwargs):
             for i, (batch, lp, ent, val) in enumerate(evaluated_batches(*args, **kwargs)):
@@ -33,10 +34,43 @@ class PipelineContractTests(unittest.TestCase):
         with patch("training.policy_audit.audit_policy", return_value=verified), \
              patch("training.decision_buffer.evaluated_batches", side_effect=shifted):
             metrics = trainer.update(model, buffer)
+        return cfg, trainer, metrics
+
+    def test_kl_guard_rejects_second_batch_before_step(self):
+        cfg, trainer, metrics = self._update_with_rejected_second_batch(adaptive=False)
         self.assertEqual(metrics["n_updates"], 1)
         self.assertEqual([x["applied"] for x in trainer.last_update_trace], [True, False])
         self.assertTrue(all(int(state["step"]) == 1 for state in trainer.optimizer.state.values()))
-        self.assertLess(metrics["target_kl"], cfg.target_kl)  # Rejected KL still feeds adaptation.
+        self.assertEqual(metrics["target_kl"], cfg.target_kl)
+
+    def test_adaptive_target_kl_shrinks_after_early_stop(self):
+        cfg, _, metrics = self._update_with_rejected_second_batch(adaptive=True)
+        self.assertLess(metrics["target_kl"], cfg.target_kl)
+
+    def test_grad_norm_stays_fixed_unless_adaptive(self):
+        from training.ppo_trainer import _GradNormAdapter
+        fixed = _GradNormAdapter(0.5, 5.0, warmup_updates=3, enabled=False)
+        adaptive = _GradNormAdapter(0.5, 5.0, warmup_updates=3)
+        for norm in (9.0, 9.0, 9.0):
+            fixed.record(norm)
+            adaptive.record(norm)
+        self.assertEqual(fixed.max_grad_norm, 0.5)
+        self.assertEqual(adaptive.max_grad_norm, 5.0)
+
+    def test_update_starts_without_stale_first_moment(self):
+        cfg, model, _, buffer, _, _ = self.fixture.collect()
+        behavior = copy.deepcopy(model)
+        trainer = PPOTrainer(cfg)
+        trainer.update(model, buffer)
+        self.assertTrue(trainer.optimizer.state)
+        for state in trainer.optimizer.state.values():
+            state["exp_avg"].fill_(1e3)
+        metrics = trainer.update(model, buffer, behavior_model=behavior, max_behavior_kl=1.0)
+        self.assertGreater(metrics["n_updates"], 0)
+        # Clipped gradients keep a freshly accumulated first moment far below the stale fill.
+        for state in trainer.optimizer.state.values():
+            self.assertLess(float(state["exp_avg"].abs().max()), 1.0)
+        self.assertTrue(any(float(s["exp_avg_sq"].max()) > 0 for s in trainer.optimizer.state.values()))
 
     def test_stale_rollout_rejected_without_changing_weights(self):
         cfg, model, _, buffer, _, _ = self.fixture.collect()
