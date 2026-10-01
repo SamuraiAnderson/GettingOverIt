@@ -4,6 +4,23 @@
 
 交互的根本形态：**Python 作为训练侧（TCP 客户端）**，**C# `GameRuntime_v2`（BepInEx 插件，运行在游戏进程内）作为服务端（`TcpStepServer`）**。每个 RL step 对应一次阻塞式请求-响应，实现帧级同步。端口从 `src/config/project.json` 的 `tcp_port` 读取（默认 9000），禁止硬编码。
 
+### 可选观测诊断（2026-09-19，v2）
+
+`GoiEnv.observation_diagnostics()` 发送单字节 `D`，响应为 `[255:1B][JSON字节数:uint32小端][UTF-8 JSON]`。这是独立诊断包，普通 RESET/STEP/TELEPORT 的 33D 包不变。首次 D 启用本会话的诊断缓存；在 RESET 前启用，之后每次采集原始状态时在同一主线程、物理步边界同时捕获诊断。D 返回缓存，不额外推进物理或更新几何接触历史。首次未对齐快照标记 `aligned=false`，不得用于状态对照；客户端检查 `aligned` 与递增 `sequence`。正常训练不发送 D，诊断采样默认关闭；一旦启用会保持到游戏重启。
+
+包含 `version=2`、`fixedDeltaTime`、`stepFrames`、`aligned`、`sequence` 和每 agent 的以下字段：
+
+- `control[6]`：oldMouse.x/y、mouseVelocityAverage、mouseSnap、inputsToSkip、pauseInputTimer；`controlKnown[6]` 分开标记读取有效性。
+- `contact[3]`：HammerCollisions 的 Terrain 回调接触、该接触且非 slide、PlayerSounds.isTouching；配套 `contactKnown[3]`。回调信号语义与引擎瞬时接触不同。
+- `physicsContact[4]`：Tip、root body、PotCollider、Sides 对 Terrain 的 `Collider2D.IsTouchingLayers`，同部件多个非 trigger collider 按 OR 聚合；配套 `physicsKnown[4]`。
+- `partPose[20]`：上述四部件各自的世界 x/y、Z 角度（度）、世界 scale x/y；缺失部件通过 `physicsKnown` 判断，不能把补零当真实姿态。
+
+这些字段当前用于校验接触代理和控制链可观测性，尚未加入模型的 39D 动力学输入。`local_evaluation --native-diagnostics` 会将对齐包和原始轨迹保存，额外通信开销单独计时。插件需重新编译部署；旧插件不支持本命令。实测与限制见[执行记录](optimization_execution_2026-09-19.md)。诊断 JSON 现为 version=3（增加身体姿态/相机/锚点字段），与 TCP 状态协议版本分开编号。
+
+### HELLO 与 35D（2026-09-26）
+
+新插件每个连接默认仍发 **legacy33**。客户端可发送 `H` + 长度前缀 JSON；成功后进入 **anchor35**。HELLO 回复以 `0xFE` 开头。协商后的状态/错误/诊断为带类型、长度和采样序号的 v2 帧。内部状态步幅 35，legacy 发送必须用内部步幅取 agent 再写前 33 维。缺少已验证标定时，v2 状态回明确错误，不以 Player 原点冒充锚点。正式训练默认 `tcp_protocol=anchor35` 与 `reference_anchor_id=pot_visible_center_v1`，HELLO 必须带已验证标定哈希。规格见 [tas_anchor_35d_2026-09-26.md](tas_anchor_35d_2026-09-26.md)。
+
 ---
 
 ## 一、总览：两个进程、三种模式、一条 TCP 通道

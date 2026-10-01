@@ -1,6 +1,6 @@
 # 视频参考走廊奖励
 
-PPO 可读取 `src/Data/video_reference/37258923076-1-192/reference_trajectory.json`，
+PPO 默认可读取 `src/Data/video_reference/37258923076-1-192/reference_trajectory_game_world.json`（游戏世界锅心，出生点锁到 `TransformPoint(b)`；旧地形拟合稿与 live-camera 中间稿仍保留），
 把粗略视频轨迹作为有宽度、有顺序的空间路线。运行时使用游戏直接返回的位置，
 不解码视频、不运行 CV，也不要求追上视频时间。它是路线奖励，不是鼠标动作模仿。
 
@@ -87,6 +87,16 @@ conda run --no-capture-output -n getting-over-it-analysis python -m unittest src
 运行日志和 `metrics.csv` 记录：`corridor_progress_m`（置信权重后的新增进度总和）、
 `corridor_deviation_penalty`、`corridor_inside_fraction`、`corridor_gap_fraction`。
 这些是路线奖励诊断；不能替代实际通关率、攀爬结果和轨迹检查。
+
+## 确认终点 `confirmed_endpoint_v2`
+
+新建走廊任务的 `reference_progress_mode` 默认是 `confirmed_endpoint_v2`。旧 checkpoint 没有这个字段时识别为 `legacy_credit_v1`，恢复时不会被新默认值改掉。
+
+v2 的距离 D 是最后一个有效入账动作之后、锅心在参考路线上的弧长（扣除本回合起点）。入账条件仍是原来的双端在走廊内、刷新历史最高投影、非跳变、置信权重大于 0。置信权重不再缩小 D。走廊外走过的已知弧长会在下一次入账时补进 D，不补未知缺口的直线距离。
+
+PPO 每步奖励是 `reference_progress_weight * delta_D - 偏离惩罚`。落水仍覆盖当步奖励。位移超过 `reference_max_step` 的跳变使该 agent 整条轨迹失效，不把跳过的距离留到后面补奖。
+
+`corridor_progress_m` 在 v2 里是各合法 agent 的 D 之和，不是旧 credit 之和。评估主指标是 `cap_progress_m`；`credited_progress_m` 保留为旧账诊断。
 
 参考文件仍保留 `partial_unverified_draft` / `training_ready=false` 的来源标记：
 已有世界坐标覆盖约 57% 的分析帧；锅的视觉中心与 Player 原点存在未精确校准的偏差。

@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-26",
+  "note": "Snapshot of the pre-calibration protocol and default reference task. Visual TAS-anchor calibration has not been measured.",
+  "tcp": {
+    "default_connection_mode": "legacy33",
+    "hello_command": "H",
+    "hello_reply_marker": 254,
+    "v2_state": 1,
+    "v2_error": 2,
+    "v2_diagnostic": 3,
+    "legacy_diagnostic": 255,
+    "legacy_wire_dim": 33,
+    "internal_stride": 35,
+    "field_hash_legacy33": "goi-state-v1-33",
+    "field_hash_anchor35": "goi-state-v1-35"
+  },
+  "default_training": {
+    "state_schema": "legacy33",
+    "raw_dim": 33,
+    "anchor_id": "player_origin",
+    "tcp_protocol": "legacy33",
+    "reference_anchor_verified": false,
+    "dynamics_dim": 39,
+    "credited_algorithm": "corridor_tracker_v1",
+    "reference_corridor_radius": 1.5,
+    "reference_simplify_tolerance": 0.15,
+    "reference_projection_window": 4.0,
+    "reference_max_step": 4.0,
+    "reference_progress_weight": 1.0,
+    "reference_deviation_weight": 0.01,
+    "reference_interpolated_weight": 0.5
+  },
+  "calibration_status": "unmeasured",
+  "candidate_acceptance_p95_m": 0.15
+}

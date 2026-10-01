@@ -1,0 +1,37 @@
+# PPO 早停诊断与采集／训练流水线
+
+## 已定位的问题
+
+在 C 中期策略的同一份 2,400 样本归档上，batch 128、原学习率 1e-4 的首次更新使新旧策略 KL 升至约 0.12–0.16（3 个 minibatch 打乱 seed）。旧训练器在 `optimizer.step()` 后才检查这批更新前的 KL，因此仍会执行第二次梯度更新，然后报告早停。
+
+训练器现在在每个 minibatch 的梯度更新之前检查 KL；拒绝的批次不计入 `n_updates`，拒绝时的 KL 仍参与自适应阈值计算。该修正避免额外执行已知越界的一步，但没有实现逐步回滚，不能保证第一次更新本身不越界。新日志包括 `stop_kl`、`early_stopped`、`behavior_kl` 与逐批 `last_update_trace`。
+
+同一归档改用 lr=3e-5 后，三个打乱 seed 均完成 4 epochs（76 次实际更新），结束 KL 约 0.015–0.021；lr=1e-5 也完成全部更新。单步损失拆分显示策略损失是主要漂移来源，价值损失通过共享 backbone 也会改变动作分布；只更新 critic head 不改变策略。诊断权重全部丢弃，未修改原训练 checkpoint，也未修改全局默认学习率。
+
+## 实验流水线
+
+实现位于 `src/training/rollout_pipeline.py`，由 `src/tests/analysis/benchmark_rollout_pipeline.py` 提供 `--mode serial|pipeline` 开关。普通 `main_ppo` 保留串行默认；该原型只接受当前固定轨迹走廊、B1 Transformer、单步动作和固定探索配置，暂不接受 GRU、动作段、随机投放或 SIL。
+
+- 采集进程独占游戏、TCP 和冻结模型；训练进程独占 learner 与 optimizer。两者在同一块 GPU 上工作。
+- 每轮生成独立的 CPU 权重快照，记录策略版本。采集过程中不替换参数，快照、raw action、OU 前一时刻噪声和行为 log probability 随数据保留。
+- 最多一个采集请求在途；父进程取得当前批次后，用更新前 learner 快照启动下一批，再训练当前批。版本检查只接受落后 0 或 1 次实际更新的批次。
+- 采集端先对所有决策做冻结行为概率复现。训练端用对应冻结模型复验，另用 512 个随机样本估计 learner 与行为策略的 KL。短测设置上限 0.03，超过则丢弃；未取消严格概率校验，也未放宽原 minibatch KL 保护。
+- 队列有界不意味着严格 on-policy。GAE 仍来自行为价值函数，未实现 V-trace 等异步价值修正；即使通过小滞后阈值，也需要独立的学习效果验证。
+
+## 实测与使用
+
+本次固定 batch 128、lr=3e-5、CPU 计算线程数 4，分别对 2/4/8 players 做串行与流水线对照。每个配置连续 3 回合，每回合上限 1,200 物理步（正常终止可提前结束），optimizer 跨回合保留；启动、预热和终评分开计时，记录实际采集／训练重叠、丢弃批次、直接参与更新的数据量与整卡显存峰值。更大并行数采集的总物理样本更多，此阶段用于测吞吐，不用于比较学习成功率。另做 lr=0、仍执行完整反向计算的固定权重对照，以减小策略更新后轨迹变化对吞吐结论的干扰。
+
+2026-09-22 已完成六组真实更新短测和六组固定权重对照。真实更新下，8 players 串行的参与更新吞吐最高，约 130.6 样本/秒；8 players 流水线因策略滞后拒绝 1/3 批，吞吐上界约 116.7 样本/秒（终评中断后补齐，完整计时遗失，仅报告上界）。因此下一轮候选为 **8 players / serial / batch 128 / lr=3e-5**，尚不能据此宣称学习最优。六组短测终评共 28 回合，保持满 1 秒成功 0 次。
+
+固定权重组均已确认最终参数逐位不变，全部终评权重与最终保存一致；42 项相关回归测试通过，游戏运行配置已恢复。本次短测结束，未启动新一轮长期训练。最终结果和可复算数据见 [实测报告](../runs/pipeline_20260920/RESULT.md)、[KL 诊断原始记录](../runs/pipeline_20260920/kl_diagnosis.json)。旧的 [2 players / batch 256 建议](player_throughput_plan_2026-09-20.md) 基于旧更新覆盖率，不能沿用原串行排名或 5.2 小时预算。
+
+重新运行时使用新的输出目录：
+
+```powershell
+conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.benchmark_rollout_pipeline --minutes 35 --output runs/pipeline_new_trial
+```
+
+单个配置可添加 `--trial --mode pipeline --agents 4 --rounds 3 --batch 128 --lr 0.00003`。程序拒绝接管已运行的游戏；结束时关闭自身游戏进程并恢复 runtime 配置。测试期间不要更改训练源文件；manifest 会核验源文件和初始权重 hash。
+
+正式训练配置的选择应综合 wall time、实际更新覆盖率、策略滞后拒绝率和跨 seed 保留集成功率。吞吐提升不是学习速度提升；终评的少量复制体也不是独立训练 seeds。
