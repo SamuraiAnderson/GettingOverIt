@@ -1,0 +1,97 @@
+{
+  "status": "live_camera_reprojection_v1",
+  "training_ready": false,
+  "source_video": "src\\Data\\video_reference\\37258923076-1-192\\source.mp4",
+  "source_sha256": "ea5e4a25aae4e01ce4261b1adafe6908e2f29ae959252cf4552ecc1c60ac4f55",
+  "map": "checkpoints\\environment.json",
+  "map_sha256": "4af3dcf9d24b2687f09a2f0ff0b74d6ce763584693ec3537627ff1faea4910a7",
+  "source_terrain_fit_json": "src\\Data\\video_reference\\37258923076-1-192\\reference_trajectory.json",
+  "source_terrain_fit_sha256": "e5ead0489d047fc69dae8ebf68c9973ef7af42cc7a76850264aff88370cb0f5e",
+  "coordinate_system": "world x right, world y up; TAS pot pixels unprojected with live Unity spawn camera lock, then TAS relative camera motion",
+  "coordinate_warning": "Spawn camera is the live Unity camera at spawn_upright. Later cameras keep TAS relative motion and zoom; they are not independently live-measured. Pot pixels remain TAS gold/rigid fusion, not live_dark_contour_v1.",
+  "live_camera_lock": {
+    "pose_id": "spawn_upright",
+    "camera_x": -42.3522034,
+    "camera_y": -1.31925261,
+    "orthographic_size": 5.0,
+    "scale_px_per_m": 72.0,
+    "pixel_width": 1280.0,
+    "pixel_height": 720.0,
+    "detected_px": [
+      503.77258412066965,
+      470.68059008785013
+    ],
+    "detected_world": [
+      -44.244247310418714,
+      -2.8564833628013204
+    ],
+    "samples_sha256": "24bbd9206bff2096873b789091d60f121bbefcde1e6b03418950b7803d4d7c66",
+    "profile_sha256": "d6fd4e9f0047a2a60bfa436a32279592a1176a183a63c079203e7eb202720a01",
+    "anchor_id": "pot_visible_center_v1",
+    "tas_seed_frame": 203,
+    "tas_seed_camera_x": -42.16183672709907,
+    "tas_seed_camera_y": -1.4132401817140237,
+    "tas_seed_scale_px_per_m": 73.98570876901319,
+    "delta_camera_x": -0.1903666729009288,
+    "delta_camera_y": 0.09398757171402372,
+    "scale_ratio": 0.9731609144245321
+  },
+  "actions_available": false,
+  "frame_range": [
+    203,
+    1303
+  ],
+  "frames_evaluated": 1101,
+  "player_candidate_frames": 951,
+  "camera_candidate_frames": 675,
+  "accepted_candidate_frames": 554,
+  "accepted_candidate_fraction": 0.5031789282470481,
+  "interpolated_frames": 74,
+  "completed_frames": 628,
+  "completed_fraction": 0.5703905540417802,
+  "interpolation_max_gap_s": 0.3,
+  "interpolation_method": "piecewise linear in world coordinates; speed/reversal/terrain gates; no extrapolation",
+  "interpolation_holdout": {
+    "reference": "held-out CV observations, not game ground truth",
+    "max_gap_s": 0.3,
+    "results": [
+      {
+        "hidden_frames": 2,
+        "attempted_windows": 25,
+        "filled_windows": 25,
+        "median_error_world": 0.051154268660462715,
+        "p90_error_world": 0.15728879337750926
+      },
+      {
+        "hidden_frames": 4,
+        "attempted_windows": 24,
+        "filled_windows": 24,
+        "median_error_world": 0.1056501579179264,
+        "p90_error_world": 0.30324160331801026
+      },
+      {
+        "hidden_frames": 6,
+        "attempted_windows": 22,
+        "filled_windows": 22,
+        "median_error_world": 0.1467835530185969,
+        "p90_error_world": 0.3670131435615675
+      }
+    ]
+  },
+  "spawn_check": {
+    "tas_start_live_camera": [
+      -44.24407701894397,
+      -2.869288063975792
+    ],
+    "tas_start_terrain_fit": [
+      -44.00293418808623,
+      -2.92167410149555
+    ],
+    "live_detected_pot": [
+      -44.244247310418714,
+      -2.8564833628013204
+    ],
+    "dist_new_to_live_pot_m": 0.012805833489229842,
+    "dist_old_to_live_pot_m": 0.2499637082085165
+  }
+}
