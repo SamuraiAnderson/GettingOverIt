@@ -13,6 +13,7 @@ from .anchor_projection import (
     project_unity_local,
 )
 from .reference_anchor import ANCHOR_POT_CALIBRATED, PROFILE_STATUS_UNVERIFIED
+from .tas_pot_detector import DETECTOR_VERSION
 
 CANDIDATE_P95_M = 0.15
 
@@ -110,7 +111,14 @@ def split_fit_holdout(samples: list[dict], holdout_fraction: float = 0.3, seed: 
     return fit, hold
 
 
-def build_unverified_profile(fit_result: dict, holdout: dict, source_path: str | Path) -> dict:
+def build_unverified_profile(
+    fit_result: dict,
+    holdout: dict,
+    source_path: str | Path,
+    *,
+    detector_version: str | None = None,
+    note: str | None = None,
+) -> dict:
     raw = Path(source_path).read_bytes() if Path(source_path).is_file() else b""
     return {
         "anchor_id": ANCHOR_POT_CALIBRATED,
@@ -118,10 +126,10 @@ def build_unverified_profile(fit_result: dict, holdout: dict, source_path: str |
         "body_frame": "Player",
         "units": "game_world_m",
         "status": PROFILE_STATUS_UNVERIFIED,
-        "detector_version": "tas_color_track_v1",
+        "detector_version": detector_version or DETECTOR_VERSION,
         "game_asset": "GettingOverIt/Player",
         "source_sha256": hashlib.sha256(raw).hexdigest() if raw else None,
         "independent_validation": holdout,
         "acceptance_target_p95_m": CANDIDATE_P95_M,
-        "note": "Not verified. Do not enable official pot-anchor training until holdout passes.",
+        "note": note or "Not verified. Do not enable official pot-anchor training until holdout passes.",
     }

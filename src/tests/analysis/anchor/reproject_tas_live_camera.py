@@ -16,7 +16,6 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from ..reference.extract_video_reference import DEFAULT_OUT, load_map
 from ..reference.video_path_completion import TerrainPenetration, complete_short_gaps, interpolation_holdout

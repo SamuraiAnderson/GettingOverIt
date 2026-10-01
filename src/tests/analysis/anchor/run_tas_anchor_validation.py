@@ -6,7 +6,6 @@ measurement, not an authorization for official 35D training.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import shutil
 import sys
@@ -21,13 +20,18 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from env.goi_env import GoiEnv
 from start import GameLauncher, GameModeController
-from training.anchor_fit import CANDIDATE_P95_M, evaluate_fit, fit_local_anchor
+from training.anchor_fit import (
+    CANDIDATE_P95_M,
+    build_unverified_profile,
+    evaluate_fit,
+    fit_local_anchor,
+)
+from training.config import TrainConfig
 from training.anchor_projection import (
     metres_per_pixel,
     project_orthographic,
     unity_screen_axes_to_image,
 )
-from training.reference_anchor import ANCHOR_POT_CALIBRATED, PROFILE_STATUS_UNVERIFIED
 from training.rollout import _warmup_and_snapshot, _write_num_duplicates
 from training.tas_pot_detector import LIVE_DETECTOR_VERSION, detect_live_pot_centre
 
@@ -248,20 +252,13 @@ def redetect_samples(samples: list[dict]) -> list[dict]:
 
 
 def write_profile(fit_result, holdout, samples_path: Path) -> dict:
-    raw = samples_path.read_bytes()
-    return {
-        "anchor_id": ANCHOR_POT_CALIBRATED,
-        "local_xy": fit_result["local_xy"],
-        "body_frame": "Player",
-        "units": "game_world_m",
-        "status": PROFILE_STATUS_UNVERIFIED,
-        "detector_version": LIVE_DETECTOR_VERSION,
-        "game_asset": "GettingOverIt/Player",
-        "source_sha256": hashlib.sha256(raw).hexdigest(),
-        "independent_validation": holdout,
-        "acceptance_target_p95_m": CANDIDATE_P95_M,
-        "note": "Measured holdout is reported separately. status stays unverified until a reviewer accepts the overlays.",
-    }
+    return build_unverified_profile(
+        fit_result,
+        holdout,
+        samples_path,
+        detector_version=LIVE_DETECTOR_VERSION,
+        note="Measured holdout is reported separately. status stays unverified until a reviewer accepts the overlays.",
+    )
 
 
 def write_report(samples: list[dict], dest: Path) -> dict:
@@ -342,7 +339,7 @@ def write_report(samples: list[dict], dest: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=ROOT / "runs/tas_anchor_calib_20260926")
-    parser.add_argument("--port", type=int, default=9000)
+    parser.add_argument("--port", type=int, default=None)
     parser.add_argument("--warmup", type=int, default=80)
     parser.add_argument("--no-launch", action="store_true")
     parser.add_argument("--reprocess", action="store_true", help="Re-detect existing samples.json images")
@@ -354,7 +351,6 @@ def main() -> None:
         payload = json.loads((dest / "samples.json").read_text(encoding="utf-8"))
         samples = redetect_samples(payload["samples"])
     else:
-        from training.config import TrainConfig
         game_root = Path(TrainConfig().game_root)
         process = None
         env = None
@@ -367,7 +363,8 @@ def main() -> None:
                 _write_num_duplicates(game_root, 1)
                 GameModeController(str(game_root)).set_game_runtime_mode()
                 process = GameLauncher().launch(wait=False)
-            env = GoiEnv(port=args.port, num_agents=1, protocol="legacy33", startup_settle_s=8.0)
+            port = TrainConfig().port if args.port is None else args.port
+            env = GoiEnv(port=port, num_agents=1, protocol="legacy33", startup_settle_s=8.0)
             env.connect()
             env.reset()
             _warmup_and_snapshot(env, 1, args.warmup)

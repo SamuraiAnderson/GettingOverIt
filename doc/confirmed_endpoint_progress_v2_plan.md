@@ -108,7 +108,7 @@
 
 **8. 历史数据、指纹、checkpoint 和恢复**
 
-主要文件：`reference_fingerprint.py`、`main_ppo.py`、`run_logging.py`、`src/tests/analysis/migrate_reference_archive.py`。
+主要文件：`reference_fingerprint.py`、`main_ppo.py`、`run_logging.py`、`src/tests/analysis/anchor/migrate_reference_archive.py`。
 
 - 指纹纳入 progress_mode、cap 规则、奖励规则和数据 schema 版本，继续包含路线、锚点、宽度、置信等已有配置。新增语义必须写入 checkpoint，恢复检查不能只比较路线 SHA256。
 - 修正种子加载入口对“带 corridor_progress 的校准轨迹”一概拒绝的判断，改成依据指纹和 schema 校验；既能拒绝旧口径，也能接收合法 v2 重放数据。
