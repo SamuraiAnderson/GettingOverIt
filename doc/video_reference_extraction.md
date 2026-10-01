@@ -1,6 +1,6 @@
 # 速通视频的 CV 地形配准与角色轨迹草稿
 
-入口：`src/tests/analysis/extract_video_reference.py`。
+入口：`python -m src.tests.analysis.reference.extract_video_reference`。
 
 这条流程已实现离线视频读取、静态地形边缘匹配、角色候选检测和轨迹绘制。当前结果是**不完整、未经真实坐标标注验证的候选轨迹**，不是全程追踪成功，也不能作为精确的监督真值。显式启用的 [PPO 走廊奖励](reference_corridor_reward.md) 可将其连续段作为粗略路线做实验，保留缺口和来源标记。完整性与筛选覆盖率见输出目录的 `quality_report.json`。
 
@@ -42,14 +42,14 @@
 从项目根目录执行：
 
 ```powershell
-conda run --no-capture-output -n getting-over-it-analysis python src/tests/analysis/extract_video_reference.py --run
-conda run --no-capture-output -n getting-over-it-analysis python src/tests/analysis/test_video_reference.py
+conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.reference.extract_video_reference --run
+conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.reference.test_video_reference
 ```
 
 仅重绘已有中间结果：
 
 ```powershell
-conda run --no-capture-output -n getting-over-it-analysis python src/tests/analysis/extract_video_reference.py --export
+conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.reference.extract_video_reference --export
 ```
 
 依赖为当前分析环境已有的 OpenCV、NumPy、SciPy、pandas、matplotlib，以及放在 `src/Data/video_reference/models/nanotrack_v2/` 的两个本地 ONNX 文件。模型来自 [OpenCV TrackerNano 文档指定的仓库](https://docs.opencv.org/4.x/d8/d69/classcv_1_1TrackerNano.html)，当前机器已下载，运行脚本本身不会联网或下载模型。

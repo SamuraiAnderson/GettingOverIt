@@ -4,6 +4,7 @@
 
 竖直落差 `teleport_y - settled_y` 与「不超过 `settle_drop_threshold`」的判定在 `training/deploy_sampling.py`。`drop_point_physics.py`、训练投放和 L8 都调用它。
 
+- `env_geometry.py` — 从 `environment.json` 抽出可着陆台面和上升点间距。
 - `analyze_effectiveness.py` — 用地形和训练配置检查效率图与奖励的数值行为。
 - `diagnose_native_contacts.py` — 汇总原生接触审计，并量接触代理的姿态误差。
 - `plot_contact_alignment.py` — 用已归档的动作前接触对动作画时序。

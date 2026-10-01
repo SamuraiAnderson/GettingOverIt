@@ -45,7 +45,7 @@ from src.training.reward import (
     step_reward,
 )
 
-from ..reference.env_geometry import (
+from .env_geometry import (
     ColliderStats,
     LedgeGeometry,
     build_ledge_geometry,

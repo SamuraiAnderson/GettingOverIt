@@ -44,8 +44,8 @@ python -m src.tests.run_unit_tests -k patch # 只跑名字含 patch 的
 
 | 脚本 | 用途 |
 |---|---|
-| `env_geometry.py` | 环境几何的公共工具，被其余分析脚本复用 |
-| `analyze_effectiveness.py` | 效率图与可达性分析 |
+| `geometry/env_geometry.py` | 从 `environment.json` 抽出可着陆台面，供效率图使用 |
+| `geometry/analyze_effectiveness.py` | 效率图与可达性分析 |
 | `reference/analyze_reference_fling.py` | 人工参考轨迹的挥杆分析（读 `src/Data/reference/`） |
 | `reference/calibrate_progress_wx.py` | 用参考轨迹标定 `progress_metric` 的横向权重 |
 | `viz_exploration_noise.py` | 探索噪声的时序结构可视化 |
@@ -66,7 +66,7 @@ L 系列按能力分层递进，全部需要游戏进程。
 | `test_l9_water_reset.py` | 落水复位行为 |
 | `test_planb_premise.py` | Plan B 前提验证 |
 | `test_fakecursor_state.py` / `test_mouse_detect.py` | fakeCursor 状态与鼠标注入 |
-| `record_reference_trajectory.py` | 人工录制参考轨迹 → `src/Data/reference/` |
+| `analysis/reference/record_reference_trajectory.py` | 人工录制参考轨迹 → `src/Data/reference/` |
 | `verify_body_reconstruction.py` / `verify_tip_reconstruction.py` | 从 33D 状态重建 body / tip 轮廓的正确性 |
 | `visualize_trajectory.py` / `visualize_cached_drops.py` / `deploy_exclusion_editor.py` | 可视化与投放禁区编辑 |
 

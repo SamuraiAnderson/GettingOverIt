@@ -98,12 +98,12 @@ def run_pipeline():
     prepare()
     if not (DEFAULT_OUT/'initial_pose.json').exists():calibrate()
     from .video_translation_track import run as motion
-    from video_global_registration import run as global_match
+    from .video_global_registration import run as global_match
     from .video_camera_register import run as register
-    from video_player_color import run as color
+    from .video_player_color import run as color
     from .video_follow_camera import run as motion_proposal
-    from video_player_track import run as appearance
-    from video_player_rigid import run as rigid
+    from .video_player_track import run as appearance
+    from .video_player_rigid import run as rigid
     from .video_player_fusion import run as fuse
     from .video_reference_export import run as export
     for name,operation in [('camera motion',motion),('global edge candidates',global_match),('camera registration',register),

@@ -17,8 +17,8 @@ inputs 每帧行按 '|' 分段，每段首字符标识设备：
 mouseInput(dx,dy)。本工具把鼠标轨迹拆出来、算逐帧位移，便于后续换算成我们的动作空间。
 
 用法:
-  python src/tests/control_interaction/ltm_inspect.py <path/to/movie.ltm>
-  python src/tests/control_interaction/ltm_inspect.py <movie.ltm> --head 20 --dump-mouse logs/tas_mouse.csv
+  python -m src.tests.analysis.reference.ltm_inspect <path/to/movie.ltm>
+  python -m src.tests.analysis.reference.ltm_inspect <movie.ltm> --head 20 --dump-mouse logs/tas_mouse.csv
 """
 
 from __future__ import annotations

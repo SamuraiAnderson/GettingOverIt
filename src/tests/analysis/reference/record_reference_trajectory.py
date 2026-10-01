@@ -13,9 +13,9 @@ Windows 专用：ctypes 读取全局光标。
 按 ESC 结束录制（也可 Ctrl+C）。
 
 用法:
-  python src/tests/control_interaction/record_reference_trajectory.py                      # 默认
-  python src/tests/control_interaction/record_reference_trajectory.py --fps 20 --sensitivity 1.5 --smooth 0.5
-  python src/tests/control_interaction/record_reference_trajectory.py --no-launch          # 游戏已在运行
+  python -m src.tests.analysis.reference.record_reference_trajectory
+  python -m src.tests.analysis.reference.record_reference_trajectory --fps 20 --sensitivity 1.5 --smooth 0.5
+  python -m src.tests.analysis.reference.record_reference_trajectory --no-launch
 
 输出（落在 src/Data/reference/，随仓库入库：人工示范无法重新生成，不能放进 gitignore 的目录）:
   src/Data/reference/reference_trajectory.json    可读轨迹(states/actions/报告)，便于检查
