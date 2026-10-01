@@ -18,7 +18,7 @@
 
 ## 连续执行和预算
 
-有限脚本 `src/tests/analysis/run_corridor_credit.py` 一次完成所有阶段，不依赖对话继续派发，也不创建周期任务。
+有限脚本一次完成所有阶段，不依赖对话继续派发，也不创建周期任务。该控制器在训练结束后已从仓库删除。
 
 1. 按 C7、D7、T7、C17、D17、T17 的预定次序，各做 3 轮预检、真实训练前评估、训练至 48k、中期评估。
 2. 所有六组到达中期后，仅按耗时决定共同终点：默认 96k；预算不足时统一降至 72k，再不足则保留 48k 并完成保留集评估。决策写入 `budget_decision.json`，不按中期表现筛除候选，不读取保留集后调整终点。
@@ -38,8 +38,6 @@
 
 ## 启动命令
 
-```powershell
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.run_corridor_credit --deadline 2026-09-20T01:05:10+08:00
-```
+该控制器在训练结束后已从仓库删除。当时的截止时间是 2026-09-20T01:05:10+08:00。
 
-运行状态和结果分别为 `runs/corridor_credit_20260919/status.json`、`RESULT.md`、`summary.json`。`STOP` 文件用于在下一任务边界请求停止；硬截止由控制进程持续检查。
+运行状态和结果分别为 `runs/corridor_credit_20260919/status.json`、`RESULT.md`、`summary.json`。

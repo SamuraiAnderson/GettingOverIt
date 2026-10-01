@@ -38,10 +38,4 @@
 
 ## 执行
 
-控制器：`src/tests/analysis/run_corridor_formal.py`。单次启动命令：
-
-```powershell
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.run_corridor_formal --output runs/corridor_formal_20260922 --hours 6
-```
-
-脚本拒绝覆盖既有目录。状态见 `status.json`，实际参数和截止时间见 `manifest.json`，各阶段自动生成 `RESULT.md` 与 `summary.json`。该进程独立在后台执行，不创建周期任务。
+控制器在训练结束后已从仓库删除。当次参数、截止时间和结果见 `manifest.json`、`status.json`、`RESULT.md` 与 `summary.json`。
