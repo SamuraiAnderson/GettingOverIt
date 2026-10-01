@@ -1,6 +1,6 @@
 # SIL 采样对照（不自动开训）
 
-三组实验从同一份冻结起点继续，只改变 SIL 采样。`launch.ps1` 默认是 `--dry-run`，真正训练必须显式加 `-Train`。
+三组实验从同一份冻结起点继续，只改变 SIL 采样。启动脚本已删除，配方留在下面。
 
 - 起点：`runs/confirmed_endpoint_v2_formal_20260928_S_s47/checkpoints/ppo_iter_0123.pt`
 - 精英池：同目录 `elites/elites_iter_0123.npz`
