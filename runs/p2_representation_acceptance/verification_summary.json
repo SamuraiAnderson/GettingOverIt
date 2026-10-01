@@ -1,0 +1,603 @@
+{
+  "scope": "Engineering verification only; no multi-seed learning comparison",
+  "evaluations": {
+    "gru_segments_v1": {
+      "geometry_hash_verified": "ec119f9b5c94ba0a3a4e3ce6dc467f834408739d0642bfd625c76ef579b80dfa",
+      "summary": {
+        "deterministic": {
+          "episodes": 2,
+          "success_rate": 0.0,
+          "success_wilson95": [
+            0.0,
+            0.6576280471103807
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.0,
+          "leave_corridor_rate": 0.0,
+          "mean_credited_progress_m": 0.3198321584493583,
+          "mean_arrival_steps": null
+        },
+        "exploration": {
+          "episodes": 2,
+          "success_rate": 0.0,
+          "success_wilson95": [
+            0.0,
+            0.6576280471103807
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.0,
+          "leave_corridor_rate": 0.0,
+          "mean_credited_progress_m": 0.0,
+          "mean_arrival_steps": null
+        }
+      },
+      "runs": [
+        {
+          "mode": "deterministic",
+          "frames_including_reset": 194,
+          "max_feature_error": 0.0,
+          "max_segment_action_error": 0.0,
+          "scale_fields": 75,
+          "legacy_report_rebuilt": true,
+          "clipped_features": {},
+          "largest_abs_p99": [
+            [
+              "relations.velocity_across",
+              {
+                "rms": 1.786001443862915,
+                "abs_p99": 3.4483070373535156,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "relations.relative_vx",
+              {
+                "rms": 1.4113075733184814,
+                "abs_p99": 3.416085958480835,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "geometry.tip_tangent_velocity",
+              {
+                "rms": 1.2330427169799805,
+                "abs_p99": 3.357766628265381,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "trends.lag4_tip_relative_dy",
+              {
+                "rms": 1.2843152284622192,
+                "abs_p99": 3.302341938018799,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "geometry.tip_normal_velocity",
+              {
+                "rms": 1.255463719367981,
+                "abs_p99": 3.2095448970794678,
+                "at_clip_fraction": 0.0
+              }
+            ]
+          ],
+          "known_fraction": {
+            "relations.rod_known": 1.0,
+            "relations.angle_known": 1.0,
+            "events.tip_known": 1.0,
+            "events.body_known": 1.0,
+            "events.pot_known": 1.0,
+            "geometry.tip_known": 0.8865979313850403,
+            "geometry.player_known": 1.0,
+            "geometry.margins_known": 1.0,
+            "trends.lag4_rod_turn_known": 0.9587628841400146,
+            "trends.lag4_known": 0.9587628841400146,
+            "trends.lag16_rod_turn_known": 0.8350515365600586,
+            "trends.lag16_known": 0.8350515365600586
+          },
+          "rollout": {
+            "mode": "deterministic",
+            "trial": 0,
+            "preupdate_ratio_max_error": 0.0,
+            "preupdate_kl": 0.0,
+            "action_saturation_fraction": 0.0,
+            "audit_samples": 56.0,
+            "rollout_patch_seconds": 0.2503179999621352,
+            "rollout_contact_seconds": 0.09183369996026158,
+            "rollout_features_seconds": 0.08372580018476583,
+            "rollout_inference_seconds": 0.7672151999431662,
+            "rollout_env_seconds": 0.9314632999739842,
+            "rollout_bootstrap_seconds": 0.02702280000085011,
+            "rollout_diagnostics_seconds": 1.3955344999703811,
+            "rollout_total_seconds": 3.5990750000055414,
+            "rollout_samples_per_second": 53.34704055895039,
+            "rollout_environment_steps": 192.0,
+            "rollout_decisions": 56.0,
+            "rollout_mean_segment_steps": 3.4285714285714284,
+            "rollout_contact_interruptions": 18.0,
+            "rollout_patch_storage_bytes": 3178496.0,
+            "observation_embedding_rms": 0.4606131911277771,
+            "action_embedding_rms": 0.4209563136100769,
+            "action_history_rms": 8.21300220489502,
+            "normalized_action_history_rms": 0.08213002234697342
+          }
+        },
+        {
+          "mode": "exploration",
+          "frames_including_reset": 194,
+          "max_feature_error": 0.0,
+          "max_segment_action_error": 0.0,
+          "scale_fields": 75,
+          "legacy_report_rebuilt": true,
+          "clipped_features": {},
+          "largest_abs_p99": [
+            [
+              "relations.relative_vy",
+              {
+                "rms": 1.546268105506897,
+                "abs_p99": 3.432652473449707,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "geometry.tip_normal_velocity",
+              {
+                "rms": 1.4715378284454346,
+                "abs_p99": 3.407515525817871,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "relations.velocity_across",
+              {
+                "rms": 1.7045320272445679,
+                "abs_p99": 3.406235694885254,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "trends.lag4_tip_relative_dy",
+              {
+                "rms": 1.3991663455963135,
+                "abs_p99": 3.1836800575256348,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "relations.relative_vx",
+              {
+                "rms": 1.1028276681900024,
+                "abs_p99": 2.564678907394409,
+                "at_clip_fraction": 0.0
+              }
+            ]
+          ],
+          "known_fraction": {
+            "relations.rod_known": 1.0,
+            "relations.angle_known": 1.0,
+            "events.tip_known": 1.0,
+            "events.body_known": 1.0,
+            "events.pot_known": 1.0,
+            "geometry.tip_known": 1.0,
+            "geometry.player_known": 1.0,
+            "geometry.margins_known": 1.0,
+            "trends.lag4_rod_turn_known": 0.9587628841400146,
+            "trends.lag4_known": 0.9587628841400146,
+            "trends.lag16_rod_turn_known": 0.8350515365600586,
+            "trends.lag16_known": 0.8350515365600586
+          },
+          "rollout": {
+            "mode": "exploration",
+            "trial": 0,
+            "preupdate_ratio_max_error": 3.433168603805825e-05,
+            "preupdate_kl": 5.035424634577736e-11,
+            "action_saturation_fraction": 0.0,
+            "audit_samples": 63.0,
+            "rollout_patch_seconds": 0.23697440001706127,
+            "rollout_contact_seconds": 0.11078340007225052,
+            "rollout_features_seconds": 0.095654100048705,
+            "rollout_inference_seconds": 0.49142320011742413,
+            "rollout_env_seconds": 0.8698109999240842,
+            "rollout_bootstrap_seconds": 0.008282900002086535,
+            "rollout_diagnostics_seconds": 1.4459231000510044,
+            "rollout_total_seconds": 3.324022700006026,
+            "rollout_samples_per_second": 57.761338392680635,
+            "rollout_environment_steps": 192.0,
+            "rollout_decisions": 63.0,
+            "rollout_mean_segment_steps": 3.0476190476190474,
+            "rollout_contact_interruptions": 32.0,
+            "rollout_patch_storage_bytes": 3178496.0,
+            "observation_embedding_rms": 0.39863765239715576,
+            "action_embedding_rms": 0.48231804370880127,
+            "action_history_rms": 46.49958801269531,
+            "normalized_action_history_rms": 0.4649958610534668
+          }
+        }
+      ],
+      "updates": [
+        {
+          "iteration": 1,
+          "policy_loss": -0.022660598158836365,
+          "value_loss": 0.11770877117911975,
+          "entropy": 3.0276708602905273,
+          "approx_kl": 0.018473185312289402,
+          "clip_fraction": 0.17777778704961142,
+          "total_loss": 0.0037389198939005532,
+          "n_updates": 3.0,
+          "target_kl": 0.03,
+          "max_grad_norm": 0.5,
+          "preupdate_ratio_max_error": 4.005512528237887e-05,
+          "preupdate_kl": 5.654783308273181e-11,
+          "action_saturation_fraction": 0.0,
+          "audit_samples": 60.0,
+          "rollout_patch_seconds": 0.24066750006750226,
+          "rollout_contact_seconds": 0.08867410005768761,
+          "rollout_features_seconds": 0.09671429988520686,
+          "rollout_inference_seconds": 0.44752920004248153,
+          "rollout_env_seconds": 0.8542947000096319,
+          "rollout_bootstrap_seconds": 0.023310500007937662,
+          "rollout_diagnostics_seconds": 1.4743959000043105,
+          "rollout_total_seconds": 3.283526699990034,
+          "rollout_samples_per_second": 58.47371364471705,
+          "rollout_environment_steps": 192.0,
+          "rollout_decisions": 60.0,
+          "rollout_mean_segment_steps": 3.2,
+          "rollout_contact_interruptions": 26.0,
+          "rollout_patch_storage_bytes": 3178496.0,
+          "observation_embedding_rms": 0.36336368322372437,
+          "action_embedding_rms": 0.4757048487663269,
+          "action_history_rms": 41.499481201171875,
+          "normalized_action_history_rms": 0.4149948060512543,
+          "parameter_delta_l2": 0.105478435754776,
+          "update_seconds": 1.2472857999964617
+        }
+      ]
+    },
+    "transformer_concat": {
+      "geometry_hash_verified": "ec119f9b5c94ba0a3a4e3ce6dc467f834408739d0642bfd625c76ef579b80dfa",
+      "summary": {
+        "deterministic": {
+          "episodes": 2,
+          "success_rate": 0.0,
+          "success_wilson95": [
+            0.0,
+            0.6576280471103807
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.0,
+          "leave_corridor_rate": 1.0,
+          "mean_credited_progress_m": 0.0755296232348783,
+          "mean_arrival_steps": null
+        },
+        "exploration": {
+          "episodes": 2,
+          "success_rate": 0.0,
+          "success_wilson95": [
+            0.0,
+            0.6576280471103807
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.0,
+          "leave_corridor_rate": 1.0,
+          "mean_credited_progress_m": 0.24934619395152513,
+          "mean_arrival_steps": null
+        }
+      },
+      "runs": [
+        {
+          "mode": "deterministic",
+          "frames_including_reset": 194,
+          "max_feature_error": 0.0,
+          "max_segment_action_error": 0.0,
+          "scale_fields": 75,
+          "legacy_report_rebuilt": true,
+          "clipped_features": {
+            "relations.relative_vy": {
+              "rms": 1.4088985919952393,
+              "abs_p99": 4.0,
+              "at_clip_fraction": 0.041237113402061855
+            },
+            "relations.velocity_across": {
+              "rms": 1.639985203742981,
+              "abs_p99": 4.0,
+              "at_clip_fraction": 0.05154639175257732
+            },
+            "geometry.tip_normal_velocity": {
+              "rms": 1.4140745401382446,
+              "abs_p99": 4.0,
+              "at_clip_fraction": 0.041237113402061855
+            },
+            "trends.lag4_tip_relative_dy": {
+              "rms": 1.3848093748092651,
+              "abs_p99": 4.0,
+              "at_clip_fraction": 0.030927835051546393
+            }
+          },
+          "largest_abs_p99": [
+            [
+              "relations.relative_vy",
+              {
+                "rms": 1.4088985919952393,
+                "abs_p99": 4.0,
+                "at_clip_fraction": 0.041237113402061855
+              }
+            ],
+            [
+              "relations.velocity_across",
+              {
+                "rms": 1.639985203742981,
+                "abs_p99": 4.0,
+                "at_clip_fraction": 0.05154639175257732
+              }
+            ],
+            [
+              "geometry.tip_normal_velocity",
+              {
+                "rms": 1.4140745401382446,
+                "abs_p99": 4.0,
+                "at_clip_fraction": 0.041237113402061855
+              }
+            ],
+            [
+              "trends.lag4_tip_relative_dy",
+              {
+                "rms": 1.3848093748092651,
+                "abs_p99": 4.0,
+                "at_clip_fraction": 0.030927835051546393
+              }
+            ],
+            [
+              "trends.lag4_tip_relative_dx",
+              {
+                "rms": 1.1294925212860107,
+                "abs_p99": 2.786238431930542,
+                "at_clip_fraction": 0.0
+              }
+            ]
+          ],
+          "known_fraction": {
+            "relations.rod_known": 1.0,
+            "relations.angle_known": 1.0,
+            "events.tip_known": 1.0,
+            "events.body_known": 1.0,
+            "events.pot_known": 1.0,
+            "geometry.tip_known": 0.8969072103500366,
+            "geometry.player_known": 1.0,
+            "geometry.margins_known": 1.0,
+            "trends.lag4_rod_turn_known": 0.9587628841400146,
+            "trends.lag4_known": 0.9587628841400146,
+            "trends.lag16_rod_turn_known": 0.8350515365600586,
+            "trends.lag16_known": 0.8350515365600586
+          },
+          "rollout": {
+            "mode": "deterministic",
+            "trial": 0,
+            "preupdate_ratio_max_error": 0.0,
+            "preupdate_kl": 0.0,
+            "action_saturation_fraction": 0.0,
+            "audit_samples": 192.0,
+            "rollout_patch_seconds": 0.24237050005467609,
+            "rollout_contact_seconds": 0.10530660006043036,
+            "rollout_features_seconds": 0.090103199967416,
+            "rollout_inference_seconds": 1.1778837999736425,
+            "rollout_env_seconds": 0.6791851000161842,
+            "rollout_bootstrap_seconds": 0.0267638000077568,
+            "rollout_diagnostics_seconds": 1.3756922999600647,
+            "rollout_total_seconds": 3.7510992000025,
+            "rollout_samples_per_second": 51.18499665374673,
+            "rollout_environment_steps": 192.0,
+            "rollout_decisions": 192.0,
+            "rollout_mean_segment_steps": 1.0,
+            "rollout_contact_interruptions": 0.0,
+            "rollout_patch_storage_bytes": 3178496.0,
+            "executed_action_saturation_fraction": 0.0,
+            "observation_embedding_rms": 0.4836682081222534,
+            "action_embedding_rms": 0.6286154389381409,
+            "action_history_rms": 80.46431732177734,
+            "normalized_action_history_rms": 0.8046431541442871
+          }
+        },
+        {
+          "mode": "exploration",
+          "frames_including_reset": 194,
+          "max_feature_error": 0.0,
+          "max_segment_action_error": 0.0,
+          "scale_fields": 75,
+          "legacy_report_rebuilt": true,
+          "clipped_features": {
+            "relations.relative_vx": {
+              "rms": 1.3327720165252686,
+              "abs_p99": 4.0,
+              "at_clip_fraction": 0.015463917525773196
+            },
+            "relations.velocity_across": {
+              "rms": 1.8202943801879883,
+              "abs_p99": 4.0,
+              "at_clip_fraction": 0.015463917525773196
+            },
+            "geometry.tip_tangent_velocity": {
+              "rms": 1.329974889755249,
+              "abs_p99": 4.0,
+              "at_clip_fraction": 0.015463917525773196
+            }
+          },
+          "largest_abs_p99": [
+            [
+              "relations.relative_vx",
+              {
+                "rms": 1.3327720165252686,
+                "abs_p99": 4.0,
+                "at_clip_fraction": 0.015463917525773196
+              }
+            ],
+            [
+              "relations.velocity_across",
+              {
+                "rms": 1.8202943801879883,
+                "abs_p99": 4.0,
+                "at_clip_fraction": 0.015463917525773196
+              }
+            ],
+            [
+              "geometry.tip_tangent_velocity",
+              {
+                "rms": 1.329974889755249,
+                "abs_p99": 4.0,
+                "at_clip_fraction": 0.015463917525773196
+              }
+            ],
+            [
+              "relations.relative_vy",
+              {
+                "rms": 1.5030407905578613,
+                "abs_p99": 3.5972723960876465,
+                "at_clip_fraction": 0.0
+              }
+            ],
+            [
+              "geometry.tip_normal_velocity",
+              {
+                "rms": 1.4791991710662842,
+                "abs_p99": 3.5408620834350586,
+                "at_clip_fraction": 0.0
+              }
+            ]
+          ],
+          "known_fraction": {
+            "relations.rod_known": 1.0,
+            "relations.angle_known": 1.0,
+            "events.tip_known": 1.0,
+            "events.body_known": 1.0,
+            "events.pot_known": 1.0,
+            "geometry.tip_known": 1.0,
+            "geometry.player_known": 1.0,
+            "geometry.margins_known": 1.0,
+            "trends.lag4_rod_turn_known": 0.9587628841400146,
+            "trends.lag4_known": 0.9587628841400146,
+            "trends.lag16_rod_turn_known": 0.8350515365600586,
+            "trends.lag16_known": 0.8350515365600586
+          },
+          "rollout": {
+            "mode": "exploration",
+            "trial": 0,
+            "preupdate_ratio_max_error": 2.288792165927589e-05,
+            "preupdate_kl": 1.2901087605617553e-11,
+            "action_saturation_fraction": 0.07291666666666667,
+            "audit_samples": 192.0,
+            "rollout_patch_seconds": 0.2328707999549806,
+            "rollout_contact_seconds": 0.10127359998296015,
+            "rollout_features_seconds": 0.09306349995313212,
+            "rollout_inference_seconds": 0.482529400032945,
+            "rollout_env_seconds": 0.8195423000724986,
+            "rollout_bootstrap_seconds": 0.01209049999306444,
+            "rollout_diagnostics_seconds": 1.464122900069924,
+            "rollout_total_seconds": 3.2503445000038482,
+            "rollout_samples_per_second": 59.07066158672494,
+            "rollout_environment_steps": 192.0,
+            "rollout_decisions": 192.0,
+            "rollout_mean_segment_steps": 1.0,
+            "rollout_contact_interruptions": 0.0,
+            "rollout_patch_storage_bytes": 3178496.0,
+            "executed_action_saturation_fraction": 0.07291666666666667,
+            "observation_embedding_rms": 0.5099126696586609,
+            "action_embedding_rms": 0.5593315362930298,
+            "action_history_rms": 75.11139678955078,
+            "normalized_action_history_rms": 0.7511139512062073
+          }
+        }
+      ],
+      "updates": [
+        {
+          "iteration": 1,
+          "policy_loss": -0.0998257976025343,
+          "value_loss": 1.9842721223831177,
+          "entropy": 1.5137509107589722,
+          "approx_kl": 0.02655785344541073,
+          "clip_fraction": 0.1796875,
+          "total_loss": 0.3947284668684006,
+          "n_updates": 2.0,
+          "target_kl": 0.03,
+          "max_grad_norm": 0.5,
+          "preupdate_ratio_max_error": 1.0490472959645558e-05,
+          "preupdate_kl": 4.073186232744774e-12,
+          "action_saturation_fraction": 0.1171875,
+          "audit_samples": 128.0,
+          "rollout_patch_seconds": 0.23278049992222805,
+          "rollout_contact_seconds": 0.09637029992882162,
+          "rollout_features_seconds": 0.08984689999488182,
+          "rollout_inference_seconds": 0.5427955999039114,
+          "rollout_env_seconds": 0.778307000087807,
+          "rollout_bootstrap_seconds": 0.011191300000064075,
+          "rollout_diagnostics_seconds": 1.4699854000209598,
+          "rollout_total_seconds": 3.2707417999918107,
+          "rollout_samples_per_second": 58.7022797092943,
+          "rollout_environment_steps": 192.0,
+          "rollout_decisions": 192.0,
+          "rollout_mean_segment_steps": 1.0,
+          "rollout_contact_interruptions": 0.0,
+          "rollout_patch_storage_bytes": 3178496.0,
+          "executed_action_saturation_fraction": 0.11458333333333333,
+          "observation_embedding_rms": 0.47824981808662415,
+          "action_embedding_rms": 0.5904736518859863,
+          "action_history_rms": 91.01536560058594,
+          "normalized_action_history_rms": 0.9101536273956299,
+          "parameter_delta_l2": 0.11192028969526291,
+          "update_seconds": 1.36551750000217
+        }
+      ]
+    }
+  },
+  "training": {
+    "warmup_changed_group_l2": {
+      "critic_head": 0.16071285117212258
+    },
+    "resume_changed_group_l2": {},
+    "resumed_ppo_changed_group_l2": {
+      "actor_log_std": 0.0009389027233872613,
+      "spatial_encoder": 0.09184490678999481,
+      "dynamics_proj": 0.026865512854305003,
+      "fusion": 0.06254553228302129,
+      "action_proj": 0.00623596640535578,
+      "actor_mean": 0.010611168290284606,
+      "critic_head": 0.05293252352147176,
+      "feature_projections": 0.030560497032617574,
+      "event_encoder": 0.00952617589627113,
+      "event_to_backbone": 0.019632009022982632,
+      "event_to_heads": 0.019921547918165652,
+      "gru": 0.15269367196029573
+    },
+    "replay": {
+      "preupdate_ratio_max_error": 4.95898348162882e-05,
+      "preupdate_kl": 5.48888030543662e-11,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 57.0
+    }
+  },
+  "benchmark": {
+    "scope": "Same archived inputs, single-step policy, no TCP/features/training; not learning performance",
+    "steps": 64,
+    "agents": 2,
+    "device": "cuda",
+    "repeats": 3,
+    "transformer": {
+      "seconds": [
+        0.1811708000022918,
+        0.17356629998539574,
+        0.18224220001138747
+      ],
+      "median_seconds": 0.1811708000022918,
+      "cnn_frame_evaluations": 4096
+    },
+    "gru": {
+      "seconds": [
+        0.09149629998137243,
+        0.10792330000549555,
+        0.1030054000148084
+      ],
+      "median_seconds": 0.1030054000148084,
+      "cnn_frame_evaluations": 128
+    }
+  },
+  "initial_rejected_run": "ValueError: feature_step_seconds must match native fixedDeltaTime * stepFrames"
+}

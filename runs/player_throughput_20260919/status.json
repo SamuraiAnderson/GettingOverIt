@@ -1,0 +1,26 @@
+{
+  "status": "completed",
+  "finished_at": "2026-09-19T21:29:53+08:00",
+  "completed": [
+    "n02_start",
+    "n04_main",
+    "n08_main",
+    "n16_main",
+    "n02_end",
+    "minibatches"
+  ],
+  "error": null,
+  "campaign_resume": {
+    "resumed": true,
+    "pid": 30832,
+    "time": "2026-09-19T21:29:53+08:00",
+    "command": [
+      "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+      "-m",
+      "src.tests.analysis.run_corridor_credit",
+      "--deadline",
+      "2026-09-20T01:05:10+08:00"
+    ],
+    "note": "Same two agents and original deadline; benchmark weights not used"
+  }
+}

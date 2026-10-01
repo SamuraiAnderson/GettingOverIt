@@ -1,0 +1,12 @@
+{
+  "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_formal_20260922_T_s31\\checkpoints\\eval_midpoint_096k\\exploration_001_agent0.json",
+  "arm": "T",
+  "seed": 31,
+  "mode": "exploration",
+  "trial": 1,
+  "agent": 0,
+  "credited_progress_m": 8.099079070818984,
+  "terminal_projection_m": 8.971960506690698,
+  "outside_fraction": 0.5458333333333333,
+  "steps": 1200
+}

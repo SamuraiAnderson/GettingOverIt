@@ -1,0 +1,6 @@
+{
+  "decided_at": "2026-09-19T21:59:12+08:00",
+  "target_samples": 96000,
+  "remaining_seconds_estimate": 10293.371702603697,
+  "basis": "time only; all arms retained"
+}

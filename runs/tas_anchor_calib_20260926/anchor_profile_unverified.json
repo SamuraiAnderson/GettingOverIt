@@ -1,0 +1,27 @@
+{
+  "anchor_id": "pot_visible_center_v1",
+  "local_xy": [
+    0.06601099305491878,
+    -0.43190114154448883
+  ],
+  "body_frame": "Player",
+  "units": "game_world_m",
+  "status": "unverified",
+  "detector_version": "live_dark_contour_v1",
+  "game_asset": "GettingOverIt/Player",
+  "source_sha256": "24bbd9206bff2096873b789091d60f121bbefcde1e6b03418950b7803d4d7c66",
+  "independent_validation": {
+    "local_xy": [
+      0.06601099305491878,
+      -0.43190114154448883
+    ],
+    "n": 15,
+    "pixel_error_median": 0.9286663447132095,
+    "pixel_error_p95": 1.801846659191136,
+    "world_error_median_m": 0.012898139782887478,
+    "world_error_p95_m": 0.025025649335017757,
+    "meets_candidate_p95_m": true
+  },
+  "acceptance_target_p95_m": 0.15,
+  "note": "Measured holdout is reported separately. status stays unverified until a reviewer accepts the overlays."
+}

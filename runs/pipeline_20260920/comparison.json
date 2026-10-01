@@ -1,0 +1,22 @@
+{
+  "pairs": [
+    {
+      "agents": 2,
+      "gradient_throughput_ratio": 1.2797584995846876,
+      "ratio_is_upper_bound": false,
+      "physical_throughput_ratio": 1.2797584995846876
+    },
+    {
+      "agents": 4,
+      "gradient_throughput_ratio": 1.0829835168501667,
+      "ratio_is_upper_bound": false,
+      "physical_throughput_ratio": 1.446192465675557
+    },
+    {
+      "agents": 8,
+      "gradient_throughput_ratio": 0.8934140164076444,
+      "ratio_is_upper_bound": true,
+      "physical_throughput_ratio": 1.333315554531225
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "status": "failed",
+  "updated_at": "2026-09-26T18:41:16+08:00",
+  "deadline": "2026-09-27T02:55:08.220434+08:00",
+  "controller_pid": 15304,
+  "controller_create_time": 1790407092.1622775,
+  "child_pid": null,
+  "job": {
+    "label": "S_s47_milestone_1056k",
+    "started_at": "2026-09-26T18:39:46+08:00",
+    "command": [
+      "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+      "-m",
+      "src.training.local_evaluation",
+      "--checkpoint",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\ppo_iter_0114.pt",
+      "--output",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_1056k",
+      "--steps",
+      "1200",
+      "--rounds",
+      "2",
+      "--num-agents",
+      "8",
+      "--seed",
+      "20260922",
+      "--jitter",
+      "0.01",
+      "--goal-progress",
+      "5",
+      "--dwell",
+      "10",
+      "--noise-phi",
+      "0.85",
+      "--native-diagnostics"
+    ]
+  },
+  "training": [
+    {
+      "arm": "S",
+      "seed": 47,
+      "iterations": 114,
+      "last_iteration": 114,
+      "physical_samples": 1061561,
+      "warmup_samples": 15009,
+      "ppo_updates": 11447,
+      "collection_seconds": 5670.806791599956,
+      "update_seconds": 3559.3730432999437,
+      "max_frozen_ratio_error": 7.629423635080457e-06,
+      "recent_samples_per_iteration": 9494.8,
+      "recent_iteration_seconds": 72.75374275998911
+    }
+  ],
+  "error": "ValueError('Frozen training source changed: src\\\\training\\\\anchor_fit.py')",
+  "runtime_restored": true
+}

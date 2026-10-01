@@ -1,0 +1,56 @@
+{
+  "updated_at": "2026-09-19T14:08:55.689394+08:00",
+  "note": "Descriptive training diagnostics; aggregate negative reward does not establish the cause of stationary deterministic behavior.",
+  "runs": [
+    {
+      "arm": "B0",
+      "last_iteration": 21,
+      "ppo_rollouts": 19,
+      "sum_reward": -84.40486925340511,
+      "corridor_progress_m": 111.86782252293824,
+      "corridor_deviation_penalty": 166.30269177634136,
+      "negative_reward_rollouts": 12,
+      "mean_inside_fraction": 0.5147850101852103
+    },
+    {
+      "arm": "B1",
+      "last_iteration": 23,
+      "ppo_rollouts": 21,
+      "sum_reward": -107.26500853896141,
+      "corridor_progress_m": 104.90990879576697,
+      "corridor_deviation_penalty": 142.24493080480613,
+      "negative_reward_rollouts": 14,
+      "mean_inside_fraction": 0.5769690744485908
+    },
+    {
+      "arm": "R",
+      "last_iteration": 31,
+      "ppo_rollouts": 29,
+      "sum_reward": -95.81491434574127,
+      "corridor_progress_m": 204.18024316887875,
+      "corridor_deviation_penalty": 280.0151916062485,
+      "negative_reward_rollouts": 23,
+      "mean_inside_fraction": 0.5062140242215666
+    },
+    {
+      "arm": "E",
+      "last_iteration": 26,
+      "ppo_rollouts": 24,
+      "sum_reward": -258.8039712905884,
+      "corridor_progress_m": 114.76363648570299,
+      "corridor_deviation_penalty": 183.75761839542218,
+      "negative_reward_rollouts": 21,
+      "mean_inside_fraction": 0.4507278602594081
+    },
+    {
+      "arm": "G",
+      "last_iteration": 21,
+      "ppo_rollouts": 19,
+      "sum_reward": -13.733879804611206,
+      "corridor_progress_m": 87.12118088839432,
+      "corridor_deviation_penalty": 70.88506908436693,
+      "negative_reward_rollouts": 6,
+      "mean_inside_fraction": 0.7418019292333831
+    }
+  ]
+}

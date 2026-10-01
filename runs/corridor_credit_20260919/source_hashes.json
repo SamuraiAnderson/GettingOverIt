@@ -1,0 +1,246 @@
+[
+  {
+    "path": "src/env\\__init__.py",
+    "sha256": "dc961fe31aad4e80fc9353001a7c7d6494e5a87ab20ab7b5eb5fb65b0817d7c5"
+  },
+  {
+    "path": "src/env\\goi_env.py",
+    "sha256": "f5fafc9bf06dbc0ebf2fe2d4690c173949e18079130452d069535716342a04df"
+  },
+  {
+    "path": "src/start\\__init__.py",
+    "sha256": "29f2ef9046bdc521c4dcdb662478615dbddd58d7e844b90174edd56b852d9bc6"
+  },
+  {
+    "path": "src/start\\game_mode_controller.py",
+    "sha256": "a08fdf3ddf3b49511ba319fea5010bb1a34739abf3ee94f7a6e07eacc89029d2"
+  },
+  {
+    "path": "src/start\\game_launcher.py",
+    "sha256": "44790675b63d6098f16a8bbee07dc54588ede26432830accc1134e05ea23e635"
+  },
+  {
+    "path": "src/training\\geometry_profile.py",
+    "sha256": "6d23f16c0e960892c6032bb74743750fc6a09d1304c09848968364afedf8f543"
+  },
+  {
+    "path": "src/training\\experiment_options.py",
+    "sha256": "a77938fa5ef9a764c52e5fb47268de9633c42b2a071412aed3fda04deef1f35f"
+  },
+  {
+    "path": "src/training\\experimental_rollout.py",
+    "sha256": "a6f6007026cefde3a0590f51d602f7b5a0e8711f61eee6551d573d2085a52bb6"
+  },
+  {
+    "path": "src/training\\experimental_policy.py",
+    "sha256": "c918edebf06ca7bddbfccac715702816267c78c9c1d17e5a898322efb0e71657"
+  },
+  {
+    "path": "src/training\\deploy_sampling.py",
+    "sha256": "82b7b66c9d1fae173ae411970f252de569416a450de299b7a3568a31ac220ad1"
+  },
+  {
+    "path": "src/training\\ppo_buffer.py",
+    "sha256": "bf798978bc21a4c228f2e27b04b0683f316c159433506f3fce000abed9c64e73"
+  },
+  {
+    "path": "src/training\\decision_buffer.py",
+    "sha256": "5c966a0fedb886c83d31466fa1f15c96afee7f766d33601a5bad5cf9e3ca4b7c"
+  },
+  {
+    "path": "src/training\\dataset.py",
+    "sha256": "615ec655a27e3194e01d7c2e29b78b0608a253e31f9d3f20cbc778c81a693e81"
+  },
+  {
+    "path": "src/training\\policy_features.py",
+    "sha256": "995427557cf6cfcd6a2c35fc5ce1b32008238bbbabec74875f56f29b3f759e0d"
+  },
+  {
+    "path": "src/training\\contact_features.py",
+    "sha256": "fa2805020c09268903f97157f7014a3414d8bf2e41dec7f449b2a911f74baeba"
+  },
+  {
+    "path": "src/training\\policy_audit.py",
+    "sha256": "9f12e7d2c990ff90da8d6cd1ad227138236f525e0a91ce297ed39b7a46cdf5f8"
+  },
+  {
+    "path": "src/training\\config.py",
+    "sha256": "06fd3ab7960f5a7066e1d6e4ef9bd7e8197f63f3267c4c362c0839eb828e7a1d"
+  },
+  {
+    "path": "src/training\\model.py",
+    "sha256": "81462369a521a4dd47273154a292e9daf0e0407fe0ebf3986737501e58a01e41"
+  },
+  {
+    "path": "src/training\\archive_evals.py",
+    "sha256": "4545b92525401b7a62bccd76a0f738acb125fef5b362c68d48b4a53293fe5b65"
+  },
+  {
+    "path": "src/training\\migrate_legacy_runs.py",
+    "sha256": "524014cb813c101d08ddb33f4dc398e9cd4c8deea8755130861d99807cf6af43"
+  },
+  {
+    "path": "src/training\\actor_critic.py",
+    "sha256": "cc8d0293112bc5dfe516a13299c7226b7a4d8cd3c9ec02279012becfbc63fa56"
+  },
+  {
+    "path": "src/training\\main_train.py",
+    "sha256": "9821d3f7a8454e93ffb13bb17d5320b0ceb5f4b4607d62dd008d73be9e31264f"
+  },
+  {
+    "path": "src/training\\main_ppo.py",
+    "sha256": "095e464cbc95d1586faadd90ea09eb2fc798f758783f452ad80653bdba179a85"
+  },
+  {
+    "path": "src/training\\rollout.py",
+    "sha256": "e2b8f92afaeff049f7cb3da694dd03112f87f3233a6623fca4a1c43ebedf48cc"
+  },
+  {
+    "path": "src/training\\local_evaluation.py",
+    "sha256": "7cfc154ff5745bd9f47b5bae3832ab338eb6d253bf36a9b54506ce6d895d8e51"
+  },
+  {
+    "path": "src/training\\reward.py",
+    "sha256": "e6dc58e66833c8c3d1b8f762c4c122010a33c36f39cfe94a2e189bde9ba48d8b"
+  },
+  {
+    "path": "src/training\\reference_corridor.py",
+    "sha256": "e1793bacfdf48fbb925b31d225b4c0cb88cd468e4c6cd3e5e159e8aebdae45fe"
+  },
+  {
+    "path": "src/training\\ppo_trainer.py",
+    "sha256": "cd761e55eb0a08627cfb02e0f972c2898979f0747484e31972f9a7cfc24d0853"
+  },
+  {
+    "path": "src/training\\run_log_parser.py",
+    "sha256": "012b09cac541c9833d27916b5103f44849682df3a511042ff85496815732de64"
+  },
+  {
+    "path": "src/training\\run_logging.py",
+    "sha256": "c59b7510da2ec36a81e42052f627273190151d23d0acc4477b18c8e024fcb2f6"
+  },
+  {
+    "path": "src/training\\trainer.py",
+    "sha256": "1d2bcd8e6b45d8c20c63d0203e8ab94a266fcaf2cfdfa43de0fbb25684283df6"
+  },
+  {
+    "path": "src/training\\__init__.py",
+    "sha256": "ce652d3f9e127fe518935860800151f29a61aa9c9374ac5e9993c19788959f20"
+  },
+  {
+    "path": "src/GameRuntime_v2\\GameRuntime_v2.csproj",
+    "sha256": "8596a20119a3d0412ba9e256c9aaa24a06eb1139d0db3e6e9f859c1b7376fea5"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Communication\\TcpStepServer.cs",
+    "sha256": "7d272d291bd5b2355abe5e9784857992df58c209e0628d09a5631fa216d58e47"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Camera\\FreeCameraController.cs",
+    "sha256": "0b61cc934f0a926c8fd593d30b64ea3952afc8acecb6dfb87db5d848e63b0156"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Testing\\PlayerDebugTool.cs",
+    "sha256": "cc34b4cb631a0d18588e651ed51b0e5f66da33701c71ac4fef44cbf69a3859d7"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Testing\\ObservationDiagnostics.cs",
+    "sha256": "dc56331a6eaabe9f99ae83fd1b1282fbfa38c3936ea2c645af5a8bf50cf13678"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Testing\\InputCharacteristicsTest.cs",
+    "sha256": "b40cf7e315625f9a46b021878464156961383481ac7948712187286802ad6c30"
+  },
+  {
+    "path": "src/GameRuntime_v2\\ColliderCollection\\ColliderVisualizer.cs",
+    "sha256": "1f03052de844c4f01cce68f9ffe04d2d60b735247e025ada090fa8d806e76800"
+  },
+  {
+    "path": "src/GameRuntime_v2\\ColliderCollection\\ColliderExporter.cs",
+    "sha256": "6355f3ff8864ac91053c8c4e4e735ce80d5ef0b631747386a57321e6f483cd00"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\GameRuntimeManager.cs",
+    "sha256": "87430072a191f719f8f1e57817ef1242d758a91251a281fef945e9b1a7f84548"
+  },
+  {
+    "path": "src/GameRuntime_v2\\PlayerControl\\PlayerStateService.cs",
+    "sha256": "7ce54b4164fd9a2dd313db0abb01d1ecce7da248c177d9f28471d67661acd6f8"
+  },
+  {
+    "path": "src/GameRuntime_v2\\PlayerControl\\PlayerInputService.cs",
+    "sha256": "63ed571401c3b8a463da3741432d3a83cbed3bfddf74a649639d761841b07d94"
+  },
+  {
+    "path": "src/GameRuntime_v2\\PlayerControl\\PlayerDuplicateManager.cs",
+    "sha256": "4a6aa93af22e8a590bc608f20444032887545b02ba2d02cf8675c5beb72f1470"
+  },
+  {
+    "path": "src/GameRuntime_v2\\PlayerControl\\MouseInputOverride.cs",
+    "sha256": "5accfd4a59e7f6aed2f3771a1ad56b098765890e4b8297e9bfb700ed780042c7"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Events\\GameEvents.cs",
+    "sha256": "8248549858046a3e2851d1d25a7103ae282ebac6bf987cefdde06e16d838b363"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Events\\EventBus.cs",
+    "sha256": "db9aa18bab2d28757f982f18c978f69ddb962aecc77d402effeae6b68bc3bd1e"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\ModeManager.cs",
+    "sha256": "b6606e8c17eb2f2b49e803ece0c1b12822ee82d60a54864901ebf229736d2248"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Utilities\\SignalFileHelper.cs",
+    "sha256": "ffe228599d9589fba130914b682993c7ef97028f38cdee3878eda0fac1f1553b"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Utilities\\PathManager.cs",
+    "sha256": "4195f22e889a207fd06afaeb67bc5228f073a1d1e9a24fff4f89a26ad89a749b"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\StepController.cs",
+    "sha256": "5d4542f4fbc2c9e273c17053dc41fd654e64016f61be7245b5a04ba0d51dc206"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Configuration\\RuntimeConfig.cs",
+    "sha256": "a932aa7df4ee469a2d66212cbbe39d4ec3c8311ab7ec433b94081bba3e56dced"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Interfaces\\ITesting.cs",
+    "sha256": "17bd2b57b53260d0c39cc87d443488949d687f6d338f25ccb4c5bfeb9bbdf92f"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Interfaces\\IStepServer.cs",
+    "sha256": "b0e93941a442c5df656e62a192a21ae5729fcde4ed494b0349967ea10f0163dc"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Interfaces\\IPlayerServices.cs",
+    "sha256": "f596b61ddb8057d98e174f5b8f9b030b6dc5acc635fcaf9097de2913869f71d8"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Interfaces\\IGameControl.cs",
+    "sha256": "71894aae157ba4ca3fce35893400f968b304382916165c4afadfe451f7592ade"
+  },
+  {
+    "path": "src/GameRuntime_v2\\Core\\Services\\GameControlService.cs",
+    "sha256": "ca696f405f398f731ac22f96aef5b69c8e668f2ce45635b1302d0fdd6b4bfeb3"
+  },
+  {
+    "path": "src/tests/analysis/run_corridor_screen.py",
+    "sha256": "3e2ddc8db72cbaa7a2fb4fa04e900e81bb9179d361896fd899661fdb84c37e59"
+  },
+  {
+    "path": "src/tests/analysis/run_corridor_credit.py",
+    "sha256": "bf232072b3f966d68c08168655e1d1741ffc8a68318b7d3ff93ce7500886e3c6"
+  },
+  {
+    "path": "runs/p2_contact/checkpoints/ppo_iter_0335.pt",
+    "sha256": "5fc8081dadd6045960f5d45c0ec29ac289de5718598032c0e5d5cd34f9b17e2b"
+  },
+  {
+    "path": "src/Data/video_reference/37258923076-1-192/reference_trajectory.json",
+    "sha256": "e5ead0489d047fc69dae8ebf68c9973ef7af42cc7a76850264aff88370cb0f5e"
+  }
+]

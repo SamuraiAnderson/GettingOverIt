@@ -1,0 +1,605 @@
+{
+  "directory": "runs\\corridor_credit_20260919_C_s7\\checkpoints\\eval_initial",
+  "failure": null,
+  "physical_samples": 4808,
+  "summary": {
+    "deterministic": {
+      "episodes": 4,
+      "success_rate": 0.0,
+      "success_wilson95": [
+        0.0,
+        0.48990002040399916
+      ],
+      "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+      "fall_rate": 1.0,
+      "leave_corridor_rate": 1.0,
+      "mean_credited_progress_m": 0.34722407820882634,
+      "mean_arrival_steps": null,
+      "successes": 0,
+      "success_hold_120_count": 0,
+      "falls_after_success": 0,
+      "credited_progress_median_m": 0.1554532373917205,
+      "credited_progress_q25_m": 0.07776051146619854,
+      "mean_outside_fraction": 0.8297404852432801,
+      "mean_arrival_game_seconds": null,
+      "rounds": 2
+    },
+    "exploration": {
+      "episodes": 4,
+      "success_rate": 0.0,
+      "success_wilson95": [
+        0.0,
+        0.48990002040399916
+      ],
+      "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+      "fall_rate": 1.0,
+      "leave_corridor_rate": 1.0,
+      "mean_credited_progress_m": 1.3556690203801751,
+      "mean_arrival_steps": null,
+      "successes": 0,
+      "success_hold_120_count": 0,
+      "falls_after_success": 0,
+      "credited_progress_median_m": 0.7867719448278263,
+      "credited_progress_q25_m": 0.35638823243821843,
+      "mean_outside_fraction": 0.5433846320887176,
+      "mean_arrival_game_seconds": null,
+      "rounds": 2
+    }
+  },
+  "episodes": [
+    {
+      "mode": "deterministic",
+      "trial": 0,
+      "agent": 0,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.7905236907730673,
+      "credited_progress_m": 0.07936906945824107,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 401,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 402,
+          "total_frames": 402,
+          "native_positive": 76,
+          "proxy_positive": 75,
+          "false_positive": 4,
+          "false_negative": 5,
+          "mismatch_fraction": 0.022388059701492536
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 402,
+          "total_frames": 402,
+          "native_positive": 56,
+          "proxy_positive": 16,
+          "false_positive": 1,
+          "false_negative": 41,
+          "mismatch_fraction": 0.1044776119402985
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 402,
+          "total_frames": 402,
+          "native_positive": 39,
+          "proxy_positive": 43,
+          "false_positive": 4,
+          "false_negative": 0,
+          "mismatch_fraction": 0.009950248756218905
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 402,
+          "total_frames": 402,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 402,
+          "total_frames": 402,
+          "native_positive": 39,
+          "proxy_positive": 43,
+          "false_positive": 4,
+          "false_negative": 0,
+          "mismatch_fraction": 0.009950248756218905
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 0.0
+    },
+    {
+      "mode": "deterministic",
+      "trial": 0,
+      "agent": 1,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.8282208588957055,
+      "credited_progress_m": 0.07293483749007094,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 489,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 490,
+          "total_frames": 490,
+          "native_positive": 108,
+          "proxy_positive": 106,
+          "false_positive": 8,
+          "false_negative": 10,
+          "mismatch_fraction": 0.036734693877551024
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 490,
+          "total_frames": 490,
+          "native_positive": 91,
+          "proxy_positive": 34,
+          "false_positive": 1,
+          "false_negative": 58,
+          "mismatch_fraction": 0.12040816326530612
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 490,
+          "total_frames": 490,
+          "native_positive": 123,
+          "proxy_positive": 151,
+          "false_positive": 28,
+          "false_negative": 0,
+          "mismatch_fraction": 0.05714285714285714
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 490,
+          "total_frames": 490,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 490,
+          "total_frames": 490,
+          "native_positive": 123,
+          "proxy_positive": 151,
+          "false_positive": 28,
+          "false_negative": 0,
+          "mismatch_fraction": 0.05714285714285714
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 0.0
+    },
+    {
+      "mode": "deterministic",
+      "trial": 1,
+      "agent": 0,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.8016666666666666,
+      "credited_progress_m": 1.0050550005617933,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 1200,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 837,
+          "proxy_positive": 842,
+          "false_positive": 11,
+          "false_negative": 6,
+          "mismatch_fraction": 0.014154870940882597
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 806,
+          "proxy_positive": 749,
+          "false_positive": 1,
+          "false_negative": 58,
+          "mismatch_fraction": 0.049125728559533725
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 784,
+          "proxy_positive": 795,
+          "false_positive": 11,
+          "false_negative": 0,
+          "mismatch_fraction": 0.009159034138218152
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 784,
+          "proxy_positive": 795,
+          "false_positive": 11,
+          "false_negative": 0,
+          "mismatch_fraction": 0.009159034138218152
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 0.0
+    },
+    {
+      "mode": "deterministic",
+      "trial": 1,
+      "agent": 1,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.8985507246376812,
+      "credited_progress_m": 0.23153740532519998,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 483,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 484,
+          "total_frames": 484,
+          "native_positive": 121,
+          "proxy_positive": 117,
+          "false_positive": 7,
+          "false_negative": 11,
+          "mismatch_fraction": 0.0371900826446281
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 484,
+          "total_frames": 484,
+          "native_positive": 96,
+          "proxy_positive": 28,
+          "false_positive": 1,
+          "false_negative": 69,
+          "mismatch_fraction": 0.1446280991735537
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 484,
+          "total_frames": 484,
+          "native_positive": 51,
+          "proxy_positive": 65,
+          "false_positive": 14,
+          "false_negative": 0,
+          "mismatch_fraction": 0.028925619834710745
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 484,
+          "total_frames": 484,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 484,
+          "total_frames": 484,
+          "native_positive": 51,
+          "proxy_positive": 65,
+          "false_positive": 14,
+          "false_negative": 0,
+          "mismatch_fraction": 0.028925619834710745
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 0.0
+    },
+    {
+      "mode": "exploration",
+      "trial": 0,
+      "agent": 0,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.6354679802955665,
+      "credited_progress_m": 0.47518430991762456,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 406,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 407,
+          "total_frames": 407,
+          "native_positive": 68,
+          "proxy_positive": 68,
+          "false_positive": 6,
+          "false_negative": 6,
+          "mismatch_fraction": 0.029484029484029485
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 407,
+          "total_frames": 407,
+          "native_positive": 52,
+          "proxy_positive": 19,
+          "false_positive": 0,
+          "false_negative": 33,
+          "mismatch_fraction": 0.08108108108108109
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 407,
+          "total_frames": 407,
+          "native_positive": 56,
+          "proxy_positive": 68,
+          "false_positive": 12,
+          "false_negative": 0,
+          "mismatch_fraction": 0.029484029484029485
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 407,
+          "total_frames": 407,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 407,
+          "total_frames": 407,
+          "native_positive": 56,
+          "proxy_positive": 68,
+          "false_positive": 12,
+          "false_negative": 0,
+          "mismatch_fraction": 0.029484029484029485
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 0.0
+    },
+    {
+      "mode": "exploration",
+      "trial": 0,
+      "agent": 1,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.6704980842911877,
+      "credited_progress_m": 0.0,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 261,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 262,
+          "total_frames": 262,
+          "native_positive": 48,
+          "proxy_positive": 53,
+          "false_positive": 8,
+          "false_negative": 3,
+          "mismatch_fraction": 0.04198473282442748
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 262,
+          "total_frames": 262,
+          "native_positive": 33,
+          "proxy_positive": 2,
+          "false_positive": 0,
+          "false_negative": 31,
+          "mismatch_fraction": 0.1183206106870229
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 262,
+          "total_frames": 262,
+          "native_positive": 49,
+          "proxy_positive": 58,
+          "false_positive": 9,
+          "false_negative": 0,
+          "mismatch_fraction": 0.03435114503816794
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 262,
+          "total_frames": 262,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 262,
+          "total_frames": 262,
+          "native_positive": 49,
+          "proxy_positive": 58,
+          "false_positive": 9,
+          "false_negative": 0,
+          "mismatch_fraction": 0.03435114503816794
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 0.0
+    },
+    {
+      "mode": "exploration",
+      "trial": 1,
+      "agent": 0,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.2833333333333333,
+      "credited_progress_m": 3.8491321918650474,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 1200,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 294,
+          "proxy_positive": 272,
+          "false_positive": 10,
+          "false_negative": 32,
+          "mismatch_fraction": 0.034970857618651124
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 250,
+          "proxy_positive": 85,
+          "false_positive": 1,
+          "false_negative": 166,
+          "mismatch_fraction": 0.13905079100749376
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 267,
+          "proxy_positive": 339,
+          "false_positive": 72,
+          "false_negative": 0,
+          "mismatch_fraction": 0.05995004163197336
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 1201,
+          "total_frames": 1201,
+          "native_positive": 249,
+          "proxy_positive": 339,
+          "false_positive": 90,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0749375520399667
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 7.6766543692506986
+    },
+    {
+      "mode": "exploration",
+      "trial": 1,
+      "agent": 1,
+      "success": false,
+      "arrival_steps": null,
+      "fell": true,
+      "left_corridor": true,
+      "outside_fraction": 0.5842391304347826,
+      "credited_progress_m": 1.0983595797380281,
+      "start_segment": 0,
+      "start_progress_m": 0.0,
+      "steps": 368,
+      "native_comparison": {
+        "tip_contact": {
+          "aligned": true,
+          "known_frames": 369,
+          "total_frames": 369,
+          "native_positive": 74,
+          "proxy_positive": 76,
+          "false_positive": 7,
+          "false_negative": 5,
+          "mismatch_fraction": 0.032520325203252036
+        },
+        "tip_grip": {
+          "aligned": true,
+          "known_frames": 369,
+          "total_frames": 369,
+          "native_positive": 56,
+          "proxy_positive": 24,
+          "false_positive": 1,
+          "false_negative": 33,
+          "mismatch_fraction": 0.0921409214092141
+        },
+        "player_contact_union": {
+          "aligned": true,
+          "known_frames": 369,
+          "total_frames": 369,
+          "native_positive": 13,
+          "proxy_positive": 15,
+          "false_positive": 2,
+          "false_negative": 0,
+          "mismatch_fraction": 0.005420054200542005
+        },
+        "body_contact": {
+          "aligned": true,
+          "known_frames": 369,
+          "total_frames": 369,
+          "native_positive": 0,
+          "proxy_positive": 0,
+          "false_positive": 0,
+          "false_negative": 0,
+          "mismatch_fraction": 0.0
+        },
+        "pot_contact": {
+          "aligned": true,
+          "known_frames": 369,
+          "total_frames": 369,
+          "native_positive": 13,
+          "proxy_positive": 15,
+          "false_positive": 2,
+          "false_negative": 0,
+          "mismatch_fraction": 0.005420054200542005
+        }
+      },
+      "success_hold_120": false,
+      "fall_after_success": null,
+      "terminal_same_segment_progress_m": 0.0
+    }
+  ],
+  "checkpoint_iteration": 0,
+  "training_samples_at_checkpoint": 0
+}

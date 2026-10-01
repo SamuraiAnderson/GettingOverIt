@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "rows": [],
+  "error": "PermissionError(13, 'Permission denied')",
+  "summary": null,
+  "evaluation": []
+}

@@ -1,0 +1,19 @@
+{
+  "decided_at": "2026-09-19T13:58:17.5312546+08:00",
+  "arms": [
+    "R",
+    "B1"
+  ],
+  "train_seeds": [
+    7,
+    17
+  ],
+  "target_physical_samples": 72000,
+  "holdout_seed": 20261019,
+  "holdout_rounds": 5,
+  "holdout_agents": 2,
+  "hard_deadline": "2026-09-19T15:22:09+08:00",
+  "reason": "R has the highest deterministic screening success/progress; retain its direct B1 control. Small-n screening is inconclusive. Reduce both arms and seeds to 72k to preserve holdout evaluation within the original deadline.",
+  "screen_finished_at": "2026-09-19T11:24:00+08:00",
+  "replica_dispatch_delay_note": "Screen completed while the supervising turn was inactive. No replication ran during the gap; original six-hour deadline is retained."
+}

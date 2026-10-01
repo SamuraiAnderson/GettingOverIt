@@ -1,0 +1,21 @@
+{
+    "mode": 0,
+    "tcpPort": 9000,
+    "stateDimension": 29,
+    "actionDimension": 2,
+    "stepFrames": 1,
+    "numDuplicates": 2,
+    "playerObjectName": "Player",
+    "minInput": 10.0,
+    "maxInput": 100.0,
+    "autoClampInput": true,
+    "normalizeInitialPose": true,
+    "initPoseSettleFrames": 120,
+    "startAnimatorInRlMode": true,
+    "initCursorUpScale": 1.0,
+    "initCursorOffsetX": 0.0,
+    "initPoseGain": 15.0,
+    "dataRoot": "GoiData",
+    "initializeDirectoriesOnStart": true,
+    "enableDebugLogs": true
+}

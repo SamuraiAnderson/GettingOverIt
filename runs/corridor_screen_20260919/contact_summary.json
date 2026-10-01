@@ -1,0 +1,35 @@
+{
+  "cohort": "Five seed-7 screening endpoints only; descriptive correlated physical-frame counts.",
+  "contacts": {
+    "tip_contact": {
+      "aligned": true,
+      "known_frames": 94967,
+      "total_frames": 94967,
+      "native_positive": 27365,
+      "proxy_positive": 26908,
+      "false_positive": 1028,
+      "false_negative": 1485,
+      "mismatch_fraction": 0.026461823580822812
+    },
+    "body_contact": {
+      "aligned": true,
+      "known_frames": 94967,
+      "total_frames": 94967,
+      "native_positive": 3074,
+      "proxy_positive": 3384,
+      "false_positive": 347,
+      "false_negative": 37,
+      "mismatch_fraction": 0.004043509850790275
+    },
+    "pot_contact": {
+      "aligned": true,
+      "known_frames": 94967,
+      "total_frames": 94967,
+      "native_positive": 28557,
+      "proxy_positive": 31846,
+      "false_positive": 3391,
+      "false_negative": 102,
+      "mismatch_fraction": 0.03678119767919383
+    }
+  }
+}

@@ -1,0 +1,1620 @@
+diff --git a/doc/entrypoints.md b/doc/entrypoints.md
+index 4035b03..ef349fd 100644
+--- a/doc/entrypoints.md
++++ b/doc/entrypoints.md
+@@ -4,6 +4,19 @@
+ 
+ 交互的根本形态：**Python 作为训练侧（TCP 客户端）**，**C# `GameRuntime_v2`（BepInEx 插件，运行在游戏进程内）作为服务端（`TcpStepServer`）**。每个 RL step 对应一次阻塞式请求-响应，实现帧级同步。端口从 `src/config/project.json` 的 `tcp_port` 读取（默认 9000），禁止硬编码。
+ 
++### 可选观测诊断（2026-09-19，v2）
++
++`GoiEnv.observation_diagnostics()` 发送单字节 `D`，响应为 `[255:1B][JSON字节数:uint32小端][UTF-8 JSON]`。这是独立诊断包，普通 RESET/STEP/TELEPORT 的 33D 包不变。首次 D 启用本会话的诊断缓存；在 RESET 前启用，之后每次采集原始状态时在同一主线程、物理步边界同时捕获诊断。D 返回缓存，不额外推进物理或更新几何接触历史。首次未对齐快照标记 `aligned=false`，不得用于状态对照；客户端检查 `aligned` 与递增 `sequence`。正常训练不发送 D，诊断采样默认关闭；一旦启用会保持到游戏重启。
++
++包含 `version=2`、`fixedDeltaTime`、`stepFrames`、`aligned`、`sequence` 和每 agent 的以下字段：
++
++- `control[6]`：oldMouse.x/y、mouseVelocityAverage、mouseSnap、inputsToSkip、pauseInputTimer；`controlKnown[6]` 分开标记读取有效性。
++- `contact[3]`：HammerCollisions 的 Terrain 回调接触、该接触且非 slide、PlayerSounds.isTouching；配套 `contactKnown[3]`。回调信号语义与引擎瞬时接触不同。
++- `physicsContact[4]`：Tip、root body、PotCollider、Sides 对 Terrain 的 `Collider2D.IsTouchingLayers`，同部件多个非 trigger collider 按 OR 聚合；配套 `physicsKnown[4]`。
++- `partPose[20]`：上述四部件各自的世界 x/y、Z 角度（度）、世界 scale x/y；缺失部件通过 `physicsKnown` 判断，不能把补零当真实姿态。
++
++这些字段当前用于校验接触代理和控制链可观测性，尚未加入模型的 39D 动力学输入。`local_evaluation --native-diagnostics` 会将对齐包和原始轨迹保存，额外通信开销单独计时。插件需重新编译部署；旧插件不支持本命令。实测与限制见[执行记录](optimization_execution_2026-09-19.md)。
++
+ ---
+ 
+ ## 一、总览：两个进程、三种模式、一条 TCP 通道
+diff --git a/doc/main_ppo_usage.md b/doc/main_ppo_usage.md
+index bd36993..100327b 100644
+--- a/doc/main_ppo_usage.md
++++ b/doc/main_ppo_usage.md
+@@ -11,9 +11,54 @@
+ 
+ ---
+ 
+-## 一、当前推荐配方（P0.1 最小任务）
++## 一、当前主线：固定起点的轨迹走廊
+ 
+-目标：固定起点、短 episode，只考核是否翻过 Deadtree。**先不要开 random deploy。**
++用户已选择轨迹走廊引导。新实验使用固定配方，隔离 OU 与其他候选机制：
++
++```powershell
++conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --reference-trajectory --recipe ppo-ou --seed 7 --geometry-profile native-pose-v1 --no-random-deploy --num-agents 2 --steps-per-rollout 400 --max-iterations 40 --run-dir corridor_seed7 --persist-game
++```
++
++这是新训练命令，不代表 40 轮保证学会任务。`--recipe ppo` 关闭 OU，`ppo-ou` 保留 OU；两者均关闭 SIL、停滞加噪、接触分头、阶段权重及 SIL 优势权重。`ppo-ou-sil` 仅用于原奖励实验，走廊模式会拒绝它，因为当前精英池按高度筛选。
++
++`--seed` 固定 Python、NumPy、Torch 和投放采样 RNG；Unity 复位仍有物理差异，应重复评估。`--geometry-profile native-pose-v1` 使用原生姿态标定（锤头 −180°、身体约 −84.498°）；`legacy` 为原来的 −90°/−90°。不传时，新模型使用新标定，旧 checkpoint 恢复其配置，缺少配置的旧权重回退 legacy。BC 入口继续使用 legacy。
++
++`--resume` 先恢复保存的配置，再应用显式 CLI 覆盖（本机 game_root/port 除外）。更换参考奖励或几何标定会从当前迭代重新预热 critic。`--max-iterations` 是累计迭代上限：从 335 恢复并传 337，只执行两轮。`--value-warmup-iters 0` 仅在明确需要跳过预热时使用。
++
++`--save-rollout-inputs` 将每轮采样权重和完整输入保存到 `checkpoints/rollouts/`，便于冻结重放；体积较大，通常用于验收或短诊断。采集自动批推理，`TrainConfig.ppo_inference_batch_size=1` 可用于串行对照，`0` 批处理全部活跃 agent。patch 按帧共享，minibatch 才组装窗口，CNN 更新仍重新计算。
++
++固定评估与离线重放：
++
++```powershell
++conda run --no-capture-output -n getting-over-it-analysis python -m src.training.local_evaluation --checkpoint runs/corridor_seed7/checkpoints/ppo_iter_0040.pt --output runs/corridor_seed7/checkpoints/eval --rounds 5 --steps 400 --num-agents 2
++conda run --no-capture-output -n getting-over-it-analysis python -m src.training.local_evaluation --checkpoint runs/p0_corridor_training_smoke/checkpoints/rollouts/behavior_0337.pt --replay runs/p0_corridor_training_smoke/checkpoints/rollouts/iter_0337.npz --output runs/p0_corridor_training_smoke/checkpoints/replay
++```
++
++评估分别执行无噪声与指定 OU 探索，默认要求同段有效前进 5 米、当前位置前进 5 米并在走廊内保持 10 步。`--goal-progress`、`--dwell` 可调整；`--jitter` 默认 ±0.01 米，第一轮无扰动。记录成功、跌落、离开走廊、到达步数、输入和接触/动作事件，详情见[执行记录](optimization_execution_2026-09-19.md)。加 `--native-diagnostics` 需要新版插件，会增加诊断通信开销。
++
++### P1.3 / P2 表示候选
++
++候选已实现并通过工程 smoke，默认保持原 Transformer/39D/逐步动作。开关、单位、序列与段概率契约及验证边界见[表示实验](policy_representation_experiments.md)。
++
++- `--features relations events geometry trends`：选择关系、事件、局部几何和多尺度趋势；可只选一组，`none` 清空这些组。
++- `--event-branch`：小事件 MLP，同时送入 backbone 和 actor/critic，并自动启用事件输入；`--event-source native|geometry` 指定事件来源，默认 native。
++- `--policy-backbone transformer|gru`：单帧 CNN+GRU 对照；`--recurrent-seq-len 16` 控制训练块的决策数。
++- `--normalize-action-history`：动作历史除以 100，执行动作不变。
++- `--action-segment-steps 4`：两端点线性插值短段；默认接触边缘中断，`--no-segment-interrupt-contacts` 可关闭。
++- `--feature-step-seconds`：特征计时所用物理步长，默认 1/120 秒；native 模式与游戏不一致时报错。
++- `--init-from PATH`：只迁移兼容 PPO 权重，新优化器和新迭代；与 `--resume`/`--resume-bc` 互斥。结构或输入语义变化使用它，`--resume` 用于原契约续训。
++
++例如只验证关系特征：
++
++```powershell
++conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --init-from runs/p2_contact/checkpoints/ppo_iter_0335.pt --features relations --normalize-action-history --reference-trajectory --geometry-profile native-pose-v1 --recipe ppo-ou --seed 7 --no-random-deploy --num-agents 2 --steps-per-rollout 96 --max-iterations 2 --value-warmup-iters 1 --run-dir relations_smoke --persist-game --save-rollout-inputs
++```
++
++这些开关同样适用于 `local_evaluation`。候选当前使用单头并停用旧 SIL；原生事件或原生接触中断会自动启用 D v2 诊断，不需要额外传 `--native-diagnostics`。段策略的 `buffer_size` 是决策数，比较样本预算应读 `rollout_environment_steps`。
++
++### 原奖励最小任务（历史配方）
++
++以下仅描述原高度奖励的历史实验。目标：固定起点、短 episode，观察是否翻过 Deadtree。**先不要开 random deploy。** 当前走廊实验使用上面的命令和成功判据。
+ 
+ ```bash
+ conda run -n getting-over-it-analysis python -m src.training.main_ppo \
+@@ -42,7 +87,7 @@ CLI 未暴露的 OU / MAP-Elites 默认已开（`TrainConfig.ou_enabled=True`，
+ 
+ ## 二、CLI 速查
+ 
+-未传的参数一律保持 `TrainConfig` 默认值（`src/training/config.py`）。  
++新模型未传的参数保持 `TrainConfig` 默认值（`src/training/config.py`）；恢复模型时优先保存的配置，显式 CLI 最后覆盖。
+ `default=None` 的数值/路径类 flag =「不覆盖 config」。
+ 
+ | Flag | 作用 | 覆盖的 config 字段 | 备注 |
+@@ -85,9 +130,9 @@ CLI 未暴露的 OU / MAP-Elites 默认已开（`TrainConfig.ou_enabled=True`，
+ 
+ ## 三、常用配方
+ 
+-### A. 最小任务（当前主线）
++### A. 轨迹走廊（当前主线）
+ 
+-见第一节。关 deploy、短 rollout。
++见第一节的新命令。关闭 deploy、固定配方、配套局部评估。
+ 
+ ### B. 从 BC 冷启 PPO
+ 
+@@ -138,7 +183,7 @@ python -m src.training.main_ppo \
+ | 训练侧重算表面线段投放（`set_surface_segments` / `compute_landable_surfaces`） | **train 路径已移除** | 现为 L7 候选池 pool-only。`_sample_positions` 内线段采样仅作「无候选池」历史回退，新实验勿依赖 |
+ | SIL `add_trajectories(..., keep_ratio=)` top-K% 准入 | **PPO 侧降级为回退** | 默认走 `add_trajectories_map_elites`。仅当 `sil_map_elites_enabled=False` 时回到 top-K%。BC `main_train` 仍用 top-K%，不受影响 |
+ | `sil_keep_ratio` | **PPO 默认路径无效** | MAP-Elites 开启时不读该字段；改它不会改变入池行为 |
+-| OU 关回 iid（`ou_enabled=False`） | **仅 ablation** | 诊断已表明 50Hz iid 几乎撞不到勾—拉；日常训练保持默认开 |
++| OU 关回 iid（`--recipe ppo`） | **受控对照** | 原奖励下的结论不能代替轨迹走廊下的效果比较，保留相同 seed 和样本预算 |
+ | `pbrs_gamma=gamma(0.99)` | **勿当默认** | 会引入 `−(1−γ)Φ` 负漂移，实测压制攀爬；保持 `1.0` |
+ | `--resume` 与 `--resume-bc` 同时传 | **勿混用** | 代码优先 `--resume`；同时传等于忽略 BC |
+ 
+diff --git a/doc/optimization_priorities_2026-09-16.md b/doc/optimization_priorities_2026-09-16.md
+index 24a3772..1f26426 100644
+--- a/doc/optimization_priorities_2026-09-16.md
++++ b/doc/optimization_priorities_2026-09-16.md
+@@ -1,6 +1,21 @@
+ # 模型、输入与输出优化优先级
+ 
+-整理日期：2026-09-16。依据本次讨论、当前代码和已有训练归档。本文是实施与实验建议，不是新增实验结果；没有改动模型、游戏插件或训练权重。
++整理日期：2026-09-16；执行状态更新：2026-09-19。以下保留原优先级，实测结果见 [P0/P1.4 执行记录](optimization_execution_2026-09-19.md)及 [P1.3/P2 表示实验](policy_representation_experiments.md)。
++
++下一轮采用用户确认的[六小时训练筛选计划](training_plan_2026-09-19.md)：先筛选表示和主干，再复验入选候选；计划已制定，尚未开始执行。
++
++## 本次执行状态
++
++依据用户确认，局部任务已经改为轨迹走廊引导。P0.2 的默认判据为：同一连续段内获得至少 5 米有效进度，同时实际投影前进至少 5 米，走廊内连续保持 10 步；缺口不能算成功。此门槛可配置，不再另设未经定义的“第一段过障”坐标。
++
++- P0.1 已实现并通过合成边界、真实 rollout、完整输入重放及实际权重更新验证；没有放宽 PPO 的 KL 早停阈值。
++- P0.2 已实现同管线固定评估、初态扰动、接触/动作事件归档、分阶段计时及原生物理状态对照。发现并修正了姿态标定偏移，旧 checkpoint 默认保留原输入。接触代理仍有误差，身体接触缺少正样本；当前旧模型的短评估成功率仍为 0，不能称为稳定局部控制。
++- P1.4 已实现批推理、逐帧 patch 共享及静态地形包围盒缓存，并完成前向/概率一致性和实机吞吐验证。
++- P1.3 已完成 16D 控制关系特征、可选动作历史归一化和各通道/嵌入尺度报告，并通过实机输入重建。仍需用更长训练确认速度通道裁剪比例和学习收益。
++- P1.1 的 24D 接触事件/计时/known 已作为 P2.1 的前置输入实现，支持原生接触和几何代理，尚未完成效果消融。P1.2 的六个控制内部字段与已知标记可对齐采集，尚未加入模型输入。
++- P1.5 已提供固定 PPO / PPO+OU 配方和 seed，尚未执行 3 seeds × 20 万样本的效果比较。原 SIL 按高度筛选，与当前走廊目标冲突，走廊模式显式拒绝 PPO+OU+SIL。
++- P2.1–P2.4 已按用户要求完成可选实现：事件 MLP 分支、CNN+GRU、局部几何/趋势、接触可中断动作段。35 项测试、真实游戏短跑、PPO 更新、恢复续训和完整输入重放通过；同输入纯推理计时已完成，学习效果消融未完成。原基线仍为默认。
++- P3 未实施；未据短 smoke 宣布稳定局部控制或学习收益。本文不是“全项完成”的清单。
+ 
+ 总体顺序：训练正确性与评估 → 输入可观测性和吞吐 → 网络与动作表示对照 → 长程课程与规划。P0 必须先完成；P1 在可信基线上逐组验证；P2 依据诊断选择；P3 为后续研究。
+ 
+@@ -9,10 +24,10 @@
+ - `ActionPredictor`：双尺度 CNN + Transformer，直接预测 2D 鼠标动作，用 BC/MSE 训练。
+ - `ActorCritic`：同类双尺度 CNN + Transformer backbone，actor 输出 raw Gaussian 的参数，再经 `100*tanh` 得到动作；critic 输出状态价值。当前配置 d_model=128、3 层、4 heads、32 帧上下文，约 112 万参数。
+ - 原始观测 33D，经构建得到 39D 动力学特征：34D 基础特征 + 5D 接触相关特征。另有每帧 4×32×32 双尺度空间图、历史动作与有效性 mask。
+-- 已有：相对角色的位置、角度 sin/cos、观测归一化、局部空间表示、速度和 fakeCursor 位置/速度、接触/抓持等几何近似信号。接触发生/结束和距事件时间尚未显式编码。
++- 已有：相对角色的位置、角度 sin/cos、观测归一化、局部空间表示、速度和 fakeCursor 位置/速度、接触/抓持等几何近似信号。新增可选关系 16D、事件 24D、几何 15D、趋势 20D；全开时为 114D，原始 33D 协议不变。
+ - 输出是逐步 `(dx,dy)∈[-100,100]`。已有 OU 探索与精英轨迹 MSE 自模仿（SIL）；这不意味着策略已经学到段内连续、接触边缘突变。
+ - 当前网络能够表示一帧内大幅切换。tanh 限幅不限制相邻帧动作差；OU 相关的是探索噪声，不强制确定性动作平滑。
+-- GRU、独立事件分支、事件 token、参数化动作段均是候选，尚未落地。
++- GRU、独立事件分支和参数化动作段已提供独立开关，支持明确的 checkpoint 迁移与序列/段概率契约；事件 token 尚未实施。
+ 
+ ## P0：先让更新与比较可信
+ 
+diff --git a/doc/reference_corridor_reward.md b/doc/reference_corridor_reward.md
+index f5db127..15e8933 100644
+--- a/doc/reference_corridor_reward.md
++++ b/doc/reference_corridor_reward.md
+@@ -9,7 +9,7 @@ PPO 可读取 `src/Data/video_reference/37258923076-1-192/reference_trajectory.j
+ 在项目根目录的 PowerShell 中：
+ 
+ ```powershell
+-conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --reference-trajectory --reference-corridor-radius 1.5 --no-random-deploy --steps-per-rollout 400 --max-iterations 40 --run-dir ppo_reference_corridor --persist-game
++conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --reference-trajectory --reference-corridor-radius 1.5 --recipe ppo-ou --seed 7 --geometry-profile native-pose-v1 --no-random-deploy --steps-per-rollout 400 --max-iterations 40 --run-dir ppo_reference_corridor --persist-game
+ ```
+ 
+ `--reference-trajectory` 不带路径时使用当前视频的 JSON；也可传另一个同格式文件。
+@@ -54,7 +54,7 @@ SIL 和依赖其精英池的停滞加噪；基础 OU 探索保留。BC 评分函
+ 
+ 当前连续段预先栅格化为路线引导场，复用现有 wide 通道；缺口中显示下一段。
+ 沿线值随进度增加，离线逐渐衰减。其余地形/身体/锤头通道保持原构建方式，
+-张量仍为 `(4,32,32)`。每个 PPO 样本保存当时的完整输入窗口，更新直接复用；
++张量仍为 `(4,32,32)`。每个 PPO 样本保存当时的输入，patch 按帧共享并按索引重建窗口；更新使用相同数值并重新计算 CNN；
+ bootstrap 也调用同一构建函数。走廊模式只支持这一 PPO 流程，旧 BC/SIL 数据集不承担
+ 动态参考段的重建。无需改变状态协议和模型层尺寸，但引导通道语义已经改变，需要训练适应。
+ 
+@@ -63,6 +63,10 @@ checkpoint 保存走廊配置、文件 SHA256 和 critic 预热结束迭代。
+ `--reference-trajectory PATH` 可切换参考。`--no-reference-trajectory` 可切回原奖励。
+ 从旧奖励切到路线奖励或改变路线配置时，恢复训练会重新预热 critic。
+ 
++2026-09-19 起，PPO 保存 tanh 前 raw action、OU 条件及采样配置；更新前检查冻结策略概率一致性。新训练采用经过原生姿态对照的几何偏移，旧 checkpoint 保留旧值；显式 `--geometry-profile native-pose-v1` 才迁移已保存的策略，并重新预热 critic。形状兼容不代表输入语义相同。
++
++局部评估入口为 `python -m src.training.local_evaluation`，与训练共用采集、接触及 patch 管线；默认考核连续段内 5 米有效进度和 10 步保持，不把参考缺口当作成功。完整命令、归档及实测限制见[运行手册](main_ppo_usage.md)和[执行记录](optimization_execution_2026-09-19.md)。
++
+ ## 验证和观察
+ 
+ ```powershell
+diff --git a/src/GameRuntime_v2/Communication/TcpStepServer.cs b/src/GameRuntime_v2/Communication/TcpStepServer.cs
+index 8e7b17c..ec4b7b1 100644
+--- a/src/GameRuntime_v2/Communication/TcpStepServer.cs
++++ b/src/GameRuntime_v2/Communication/TcpStepServer.cs
+@@ -112,6 +112,19 @@ namespace GoiRuntime.Communication
+ 		public void SendResponse(StepResponse response)
+ 		{
+ 			if (!_connected) return;
++            if (response.DiagnosticJson != null)
++            {
++                byte[] json = System.Text.Encoding.UTF8.GetBytes(response.DiagnosticJson);
++                byte[] packet = new byte[5 + json.Length];
++                packet[0] = 255; // diagnostic marker, followed by little-endian byte length
++                byte[] length = BitConverter.GetBytes(json.Length);
++                if (!BitConverter.IsLittleEndian) Array.Reverse(length);
++                Buffer.BlockCopy(length, 0, packet, 1, 4);
++                Buffer.BlockCopy(json, 0, packet, 5, json.Length);
++                _responseBytes = packet;
++                _responseReady.Set();
++                return;
++            }
+ 
+ 		// 编码：[n:1B][states: n×stateDim×4B][dones: n×1B]
+ 		int n = response.Dones?.Length ?? 0;
+diff --git a/src/GameRuntime_v2/Core/GameRuntimeManager.cs b/src/GameRuntime_v2/Core/GameRuntimeManager.cs
+index 471d93e..c6ec379 100644
+--- a/src/GameRuntime_v2/Core/GameRuntimeManager.cs
++++ b/src/GameRuntime_v2/Core/GameRuntimeManager.cs
+@@ -466,8 +466,13 @@ namespace GoiRuntime.Core
+ 
+ 				try
+ 				{
+-					switch (cmd.Type)
+-					{
++						switch (cmd.Type)
++						{
++                        case CommandType.ObservationDiagnostics:
++                            tcpStepServer.SendResponse(new StepResponse {
++                                DiagnosticJson = stepController.CollectObservationDiagnostics()
++                            });
++                            break;
+ 						case CommandType.Reset:
+ 							stepController.Reset();
+ 							resp = new StepResponse
+@@ -762,4 +767,3 @@ namespace GoiRuntime.Core
+ 		#endregion
+ 	}
+ }
+-
+diff --git a/src/GameRuntime_v2/Core/Interfaces/IStepServer.cs b/src/GameRuntime_v2/Core/Interfaces/IStepServer.cs
+index 9a28797..f5117a8 100644
+--- a/src/GameRuntime_v2/Core/Interfaces/IStepServer.cs
++++ b/src/GameRuntime_v2/Core/Interfaces/IStepServer.cs
+@@ -69,6 +69,7 @@ namespace GoiRuntime.Core.Interfaces
+ 
+ 		/// <summary>关闭连接，退出训练</summary>
+ 		Close = (byte)'X',
++        ObservationDiagnostics = (byte)'D',
+ 	}
+ 
+ 	/// <summary>
+@@ -115,6 +116,7 @@ namespace GoiRuntime.Core.Interfaces
+ 	/// </summary>
+ 	public struct StepResponse
+ 	{
++        public string DiagnosticJson;
+ 		/// <summary>
+ 		/// 状态数组，长度 = numAgents × stateDim(29)
+ 		/// 布局：[agent0_s0..s28, agent1_s0..s28, ...]
+diff --git a/src/GameRuntime_v2/Core/StepController.cs b/src/GameRuntime_v2/Core/StepController.cs
+index 037a482..b03bee8 100644
+--- a/src/GameRuntime_v2/Core/StepController.cs
++++ b/src/GameRuntime_v2/Core/StepController.cs
+@@ -32,6 +32,9 @@ namespace GoiRuntime.Core
+ 		private readonly int stepFrames;
+ 		private readonly int stateDim;
+ 		private readonly int actionDim;
++        private bool observationDiagnosticsEnabled;
++        private int observationSequence;
++        private GoiRuntime.Testing.ObservationDiagnosticPacket observationDiagnostics;
+ 
+ 		// 各 agent 的 Input 和 State 服务（索引 0 = 原始 Player）
+ 		private readonly List<PlayerInputService> inputServices = new List<PlayerInputService>();
+@@ -410,9 +413,32 @@ namespace GoiRuntime.Core
+ 				result[baseOffset + BASE_STATE_DIM + 2] = cvx;
+ 				result[baseOffset + BASE_STATE_DIM + 3] = cvy;
+ 			}
++            if (observationDiagnosticsEnabled) CaptureObservationDiagnostics(true);
+ 			return result;
+ 		}
+ 
++        private void CaptureObservationDiagnostics(bool aligned)
++        {
++            var packet = new GoiRuntime.Testing.ObservationDiagnosticPacket
++            {
++                aligned = aligned,
++                sequence = ++observationSequence,
++                fixedDeltaTime = Time.fixedDeltaTime,
++                stepFrames = stepFrames,
++                agents = new GoiRuntime.Testing.ObservationDiagnosticAgent[numAgents]
++            };
++            for (int i = 0; i < numAgents; i++)
++                packet.agents[i] = GoiRuntime.Testing.ObservationDiagnostics.Capture(inputServices[i]);
++            observationDiagnostics = packet;
++        }
++
++        public string CollectObservationDiagnostics()
++        {
++            observationDiagnosticsEnabled = true;
++            if (observationDiagnostics == null) CaptureObservationDiagnostics(false);
++            return GoiRuntime.Testing.ObservationDiagnostics.ToJson(observationDiagnostics);
++        }
++
+ 	// ── 初始姿态归一化 ──────────────────────────────────────────
+ 
+ 	// ── 游戏原生静止姿态（反编译 Saviour.ResetPlayerButNotDialogue 提取）──────
+diff --git a/src/GameRuntime_v2/GameRuntime_v2.csproj b/src/GameRuntime_v2/GameRuntime_v2.csproj
+index 24e6f64..dc5c4d2 100644
+--- a/src/GameRuntime_v2/GameRuntime_v2.csproj
++++ b/src/GameRuntime_v2/GameRuntime_v2.csproj
+@@ -47,6 +47,7 @@
+ 
+     <!-- Core: RL 步进控制器 -->
+     <Compile Include="Core\StepController.cs" />
++    <Compile Include="Testing\ObservationDiagnostics.cs" />
+ 
+     <!-- Communication: TCP 步进服务器 -->
+     <Compile Include="Communication\TcpStepServer.cs" />
+@@ -117,4 +118,3 @@
+   <!-- Import the C# targets -->
+   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+ </Project>
+-
+diff --git a/src/env/goi_env.py b/src/env/goi_env.py
+index 4230f99..4d6e9ec 100644
+--- a/src/env/goi_env.py
++++ b/src/env/goi_env.py
+@@ -217,6 +217,28 @@ class GoiEnv:
+         logger.info("[GoiEnv] teleport agent %d → (%.2f, %.2f)", agent_index, x, y)
+         return states
+ 
++    def observation_diagnostics(self) -> dict:
++        """Versioned optional read-only packet; requires the diagnostic-capable plugin.
++
++        No Simulate or contact-history advancement. Missing readings carry explicit
++        known flags; values never silently become observed zeros.
++        """
++        import json
++        self._send_all(b"D")
++        marker = self._recv_exact(1)[0]
++        if marker != 255:
++            # Consume an ordinary error response so the socket remains aligned.
++            if marker:
++                self._recv_exact(marker * (STATE_DIM * 4 + 1))
++            raise RuntimeError("Diagnostic response unavailable; rebuild GameRuntime_v2")
++        length = struct.unpack("<I", self._recv_exact(4))[0]
++        if not 0 < length <= 8 * 1024 * 1024:
++            raise ValueError("Invalid diagnostic packet length")
++        packet = json.loads(self._recv_exact(length))
++        if packet.get("version") not in (1, 2) or len(packet.get("agents", [])) != self.num_agents:
++            raise ValueError(f"Incompatible diagnostic packet: {packet}")
++        return packet
++
+     def set_camera_free(self, enabled: bool = True) -> None:
+         """
+         启用/禁用自由相机模式。
+diff --git a/src/tests/training/test_reference_corridor.py b/src/tests/training/test_reference_corridor.py
+index 8642324..b66153f 100644
+--- a/src/tests/training/test_reference_corridor.py
++++ b/src/tests/training/test_reference_corridor.py
+@@ -226,10 +226,14 @@ class PPOCollectionTests(unittest.TestCase):
+             def __init__(self):
+                 super().__init__()
+                 self.dummy = torch.nn.Parameter(torch.zeros(1))
++                self.config = TrainConfig()
++                self.exploration_boost = 0.0
+ 
+             def get_action_and_value(self, *args, **kwargs):
+-                return SimpleNamespace(action=torch.zeros(1, 2), log_prob=torch.zeros(1),
+-                                       value=torch.zeros(1), noise=torch.zeros(1, 2))
++                n = len(args[0])
++                return SimpleNamespace(action=torch.zeros(n, 2), log_prob=torch.zeros(n),
++                                       value=torch.zeros(n), noise=torch.zeros(n, 2),
++                                       raw_action=torch.zeros(n, 2))
+ 
+             def forward(self, *args, **kwargs):
+                 return torch.zeros(1, 2), torch.zeros(1)
+@@ -243,7 +247,7 @@ class PPOCollectionTests(unittest.TestCase):
+             env = Env()
+             worker.env = env
+             worker._reset_and_deploy = env.reset
+-            worker._get_stable_agents = lambda obs: [0, 1]
++            worker._get_stable_agents = lambda obs: {0, 1}
+             worker._compute_contact_batch = lambda obs, prev: (np.zeros((2, 5), dtype=np.float32), prev)
+             worker.set_terrain_info(np.ones((50, 50), dtype=bool), -20, -20)
+             buffer, trajs = worker.collect_ppo(Model(), 3)
+diff --git a/src/training/actor_critic.py b/src/training/actor_critic.py
+index b8205f9..420ca46 100644
+--- a/src/training/actor_critic.py
++++ b/src/training/actor_critic.py
+@@ -11,15 +11,18 @@ backbone 结构与 ActionPredictor 完全一致，便于对比和迁移。
+ from __future__ import annotations
+ 
+ import logging
++import math
+ from typing import TYPE_CHECKING, NamedTuple
+ 
+ import numpy as np
+ import torch
+ import torch.nn as nn
++import torch.nn.functional as F
+ from torch.distributions import Normal
+ 
+-from .dataset import DYNAMICS_DIM
+-from .model import DualScaleSpatialEncoder, _DynamicsNormMixin, build_attn_mask
++from .dataset import BASE_DYNAMICS_DIM, DYNAMICS_DIM
++from .model import (DualScaleSpatialEncoder, _DynamicsNormMixin, build_attn_mask,
++                    expand_state_dict_for_dynamics_dim)
+ 
+ if TYPE_CHECKING:
+     from .config import TrainConfig
+@@ -34,6 +37,7 @@ class ActionValue(NamedTuple):
+     # 采样使用的 OU 归一化噪声 z_t（raw = mean + std·z_t）。iid 路径返回该步的 η_t（marginal
+     # 相同 N(0,1)），供 buffer 存 noise_prev 用于下一步条件式 log_prob（PPO ratio 自洽）。
+     noise: torch.Tensor | None = None
++    raw_action: torch.Tensor | None = None
+ 
+ 
+ class ActorCritic(_DynamicsNormMixin, nn.Module):
+@@ -81,6 +85,11 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         # ── Actor head ──
+         self.actor_mean = nn.Linear(d, config.action_dim)
+         self.actor_log_std = nn.Parameter(torch.zeros(config.action_dim))
++        if config.contact_heads_enabled:
++            self.actor_mean_contact = nn.Linear(d, config.action_dim)
++            self.actor_log_std_contact = nn.Parameter(torch.full(
++                (config.action_dim,), config.contact_log_std_offset,
++            ))
+ 
+         # 运行时探索 boost：非可学习标量，仅在 forward 里叠加到 log_std（采集+更新一致），
+         # 不入 state_dict/梯度。停滞探测器按轮设置（见 main_ppo Phase 2.6）。
+@@ -95,6 +104,19 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+ 
+         self._action_scale = config.action_scale
+         self._init_weights()
++        if config.contact_heads_enabled:
++            self.actor_mean_contact.load_state_dict(self.actor_mean.state_dict())
++
++    def load_state_dict(self, state_dict, strict=True, assign=False):
++        """34D / 单头旧权重迁移：两头复制旧均值，接触头降低初始探索方差。"""
++        state = expand_state_dict_for_dynamics_dim(state_dict, self.state_dict())
++        if self.config.contact_heads_enabled and "actor_mean_contact.weight" not in state:
++            for suffix in ("weight", "bias"):
++                state[f"actor_mean_contact.{suffix}"] = state[f"actor_mean.{suffix}"].clone()
++            state["actor_log_std_contact"] = (
++                state["actor_log_std"].clone() + self.config.contact_log_std_offset
++            )
++        return super().load_state_dict(state, strict=strict, assign=assign)
+ 
+     def _init_weights(self) -> None:
+         nn.init.orthogonal_(self.actor_mean.weight, gain=0.01)
+@@ -115,6 +137,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         my_state = self.state_dict()
+         loaded, skipped = 0, 0
+ 
++        bc_state_dict = expand_state_dict_for_dynamics_dim(bc_state_dict, my_state)
+         for key, param in bc_state_dict.items():
+             target_key = key
+             if key.startswith("action_head."):
+@@ -144,6 +167,9 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+             calibrated = min(torch.log(output_scale).item(), self.config.ppo_init_log_std)
+             calibrated = max(calibrated, self.config.ppo_log_std_min)
+         self.actor_log_std.data.fill_(calibrated)
++        if self.config.contact_heads_enabled:
++            self.actor_mean_contact.load_state_dict(self.actor_mean.state_dict())
++            self.actor_log_std_contact.data.fill_(calibrated + self.config.contact_log_std_offset)
+ 
+         logger.info(
+             "BC→PPO 权重迁移完成: %d 层已加载, %d 层跳过 "
+@@ -204,16 +230,33 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         """raw → tanh(raw) * scale"""
+         return torch.tanh(raw) * self._action_scale
+ 
+-    @staticmethod
+     def _log_prob_squash(
+-        log_prob_raw: torch.Tensor, raw_action: torch.Tensor
++        self, log_prob_raw: torch.Tensor, raw_action: torch.Tensor
+     ) -> torch.Tensor:
+         """修正 tanh 变换的 log_prob: log π(a) = log π_raw(u) - Σ log(1 - tanh²(u))"""
+-        correction = torch.log(1.0 - torch.tanh(raw_action).pow(2) + 1e-6)
++        # log(1-tanh(u)^2) = 2*(log(2)-u-softplus(-2u)); finite even at saturation.
++        correction = 2.0 * (math.log(2.0) - raw_action - F.softplus(-2.0 * raw_action))
++        correction = correction + math.log(self._action_scale)
+         return log_prob_raw - correction.sum(dim=-1)
+ 
+     # ── public API ──
+ 
++    def contact_mask(self, dynamics: torch.Tensor) -> torch.Tensor:
++        # gate 必须读原始 0/1，不能读经 dyn_mean/std 归一化后的数值。
++        return dynamics[:, -1, BASE_DYNAMICS_DIM] >= self.config.contact_gate_threshold
++
++    def _actor_parameters(self, feat, dynamics):
++        mean = self.actor_mean(feat)
++        log_std = self.actor_log_std.expand_as(mean)
++        if self.config.contact_heads_enabled:
++            gate = self.contact_mask(dynamics).unsqueeze(-1)
++            mean = torch.where(gate, self.actor_mean_contact(feat), mean)
++            log_std = torch.where(gate, self.actor_log_std_contact.expand_as(mean), log_std)
++        std = (log_std + self.exploration_boost).clamp(
++            self.config.ppo_log_std_min, self.config.ppo_log_std_max,
++        ).exp()
++        return mean, std
++
+     def forward(
+         self,
+         dynamics: torch.Tensor,
+@@ -228,15 +271,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         调用方需通过 get_action_and_value / evaluate_actions 获取修正后的量。
+         """
+         feat = self._backbone(dynamics, patches, actions, valid_mask)
+-        mean = self.actor_mean(feat)
+-        _LOG_STD_MIN = self.config.ppo_log_std_min
+-        _LOG_STD_MAX = self.config.ppo_log_std_max
+-        std = (
+-            (self.actor_log_std + self.exploration_boost)
+-            .clamp(_LOG_STD_MIN, _LOG_STD_MAX)
+-            .exp()
+-            .expand_as(mean)
+-        )
++        mean, std = self._actor_parameters(feat, dynamics)
+         dist = Normal(mean, std)
+         value = self.critic_head(feat).squeeze(-1)
+         return dist, value
+@@ -250,6 +285,8 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+ 
+         noise_phi==0.0 或 noise_prev is None 时退化为 iid 高斯（μ_cond=mean, σ_cond=std）。
+         """
++        if not 0.0 <= noise_phi < 1.0:
++            raise ValueError("noise_phi must be in [0, 1)")
+         if noise_phi == 0.0 or noise_prev is None:
+             return mean, std
+         # 允许 noise_prev broadcast 到 mean 的 shape：采集 (1, action_dim)、评估 (B, action_dim)
+@@ -268,6 +305,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         valid_mask: torch.Tensor | None = None,
+         noise_prev: torch.Tensor | None = None,
+         noise_phi: float = 0.0,
++        deterministic: bool = False,
+     ) -> ActionValue:
+         """
+         采集用：从策略中采样动作，返回 (squashed_action, log_prob, value, noise=z_t)。
+@@ -286,7 +324,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         mu_cond, sigma_cond = self._ou_conditional(mean, std, noise_prev, noise_phi)
+         cond_dist = Normal(mu_cond, sigma_cond)
+ 
+-        raw_action = cond_dist.rsample()
++        raw_action = mean if deterministic else cond_dist.rsample()
+         # 归一化噪声 z_t = (raw - mean) / std（iid 路径下 = η_t，仍是 N(0,1)），
+         # 交回调用方作为下一步 noise_prev；det 化以脱离计算图。
+         with torch.no_grad():
+@@ -295,7 +333,8 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         log_prob_raw = cond_dist.log_prob(raw_action).sum(dim=-1)
+         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
+         action = self._squash_action(raw_action)
+-        return ActionValue(action=action, log_prob=log_prob, value=value, noise=z_t)
++        return ActionValue(action=action, log_prob=log_prob, value=value, noise=z_t,
++                           raw_action=raw_action.detach())
+ 
+     def evaluate_actions(
+         self,
+@@ -306,6 +345,7 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         valid_mask: torch.Tensor | None = None,
+         noise_prev: torch.Tensor | None = None,
+         noise_phi: float = 0.0,
++        raw_actions: torch.Tensor | None = None,
+     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+         """
+         训练用：对已执行的动作重新计算 log_prob、entropy、value。
+@@ -324,10 +364,12 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+         cond_dist = Normal(mu_cond, sigma_cond)
+ 
+         # 反 squash: squashed → raw
+-        clamped = taken_actions.clamp(
+-            -self._action_scale * 0.999, self._action_scale * 0.999
+-        )
+-        raw_action = torch.atanh(clamped / self._action_scale)
++        # tanh 饱和后无法反演原采样。在线 buffer 保留 raw，避免未更新时 ratio 已偏离 1。
++        if raw_actions is None:
++            eps = torch.finfo(taken_actions.dtype).eps
++            raw_action = torch.atanh((taken_actions / self._action_scale).clamp(-1 + eps, 1 - eps))
++        else:
++            raw_action = raw_actions
+ 
+         log_prob_raw = cond_dist.log_prob(raw_action).sum(dim=-1)
+         log_prob = self._log_prob_squash(log_prob_raw, raw_action)
+@@ -372,6 +414,6 @@ class ActorCritic(_DynamicsNormMixin, nn.Module):
+             vm_t = torch.from_numpy(vm.astype(np.float32)).to(device)
+ 
+         feat = self._backbone(dyn_t, pat_t, act_t, vm_t)
+-        mean = self.actor_mean(feat)
++        mean, _ = self._actor_parameters(feat, dyn_t)
+         action = self._squash_action(mean)
+         return action.cpu().numpy().squeeze(0)
+diff --git a/src/training/config.py b/src/training/config.py
+index de76e23..0b7308f 100644
+--- a/src/training/config.py
++++ b/src/training/config.py
+@@ -35,6 +35,7 @@ class TrainConfig:
+     warmup_steps: int = 100
+     settle_steps: int = 30
+     steps_per_rollout: int = 500
++    ppo_inference_batch_size: int = 0  # 0 = all active agents; 1 = serial profiling baseline
+ 
+     # ── 模型 ──
+     # 原始状态 33 维 = 基础 29 + fakeCursor 4（cursorX/Y, cursorVelX/Y，索引 29-32）。
+@@ -60,6 +61,25 @@ class TrainConfig:
+     patch_resolution: float = 0.5    # 仅 legacy 单尺度使用
+     dropout: float = 0.1
+ 
++    # Independent PPO representation experiments; legacy baseline stays unchanged.
++    policy_backbone: str = "transformer"  # transformer | gru
++    relation_features: bool = False
++    event_features: bool = False
++    event_branch: bool = False
++    geometry_features: bool = False
++    trend_features: bool = False
++    event_source: str = "native"  # native physics contacts | explicitly labelled geometry proxy
++    normalize_action_history: bool = False
++    feature_position_scale: float = 3.5
++    feature_velocity_scale: float = 10.0
++    feature_angular_scale: float = 10.0  # radians / second
++    feature_clip: float = 4.0
++    feature_step_seconds: float = 1.0 / 120.0  # verified against native fixedDeltaTime * stepFrames
++    geometry_query_radius: float = 3.0
++    recurrent_seq_len: int = 16  # decisions per TBPTT chunk; full prefix burn-in, no gradient
++    action_segment_steps: int = 1  # >1 samples two endpoints, linearly interpolated per STEP
++    segment_interrupt_contacts: bool = True
++
+     # ── patch 尺度模式 ──
+     # legacy: 原单尺度 4ch（player 中心 0.5m/px）；dualscale: 双分支（见 doc/training.md）
+     #   wide  : player 中心，大范围低精度（攀爬效率图，全局引导）
+@@ -78,16 +98,16 @@ class TrainConfig:
+     # wide 分支不受影响（否则 64m 窗口会被迫跟着变）、CNN 的 Linear(2048) 无需迁移。
+     # 分辨率变粗的代价已被 PART_RASTER_SUBSAMPLES 的面积覆盖率栅格化抵消（见 dataset.py）：
+     # 部件轮廓不再因亚像素宽而漏采，0.27m/px 下 ch3 平均非零像素反而比旧 0.2m/px 二值高约 7×。
+-    # 精确接触判定另由 P2.1 的向量接触信号承担（走精确几何，不受栅格分辨率限制）。
++    # 接触向量来自几何距离代理，不受栅格分辨率限制；仍需与原生物理接触对照。
+     # 核验：python -m src.tests.analysis.check_tip_patch_coverage
+     #      python -m src.tests.analysis.diagnose_tip_rasterization
+     contact_patch_resolution: float = 0.27  # m/px，contact 分支（8.64m 窗口，半径 4.32m）
+     wide_channels: int = 1                # [0] eff
+     contact_channels: int = 3             # [1] 高精度地形, [2] 锅/body 轮廓, [3] 锤头轮廓
+     # 锅/body 轮廓世界朝向：player→hub 方向 + offset（body 局部 +y=躯干朝上）。
+-    # NOTE: offset=-90 为几何推断的粗标定，精确值待 verify_body_reconstruction sweep / C# 真值。
++    # 2026-09-19 原生 Transform 对照标定；旧 checkpoint 的显式配置仍按原值恢复。
+     body_angle_source: str = "hub"        # hub: player→hub 方向
+-    body_angle_offset: float = -90.0
++    body_angle_offset: float = -84.49833
+     body_scale: float = 1.0
+ 
+     # ── 训练 ──
+@@ -162,7 +182,7 @@ class TrainConfig:
+     # settle 后锤头嵌进障碍物的 agent 视为无效投放并跳过（与 L7 离线筛选同一判据）
+     deploy_tip_obstacle_check: bool = True
+     tip_angle_source: str = "pole"      # pole: pole→tip；hub: hammerAngle
+-    tip_angle_offset: float = -90.0     # 锤杆朝向到锤头局部系的偏移（度）
++    tip_angle_offset: float = -180.0    # 原生 Tip Transform 相对 pole→tip 的标定偏移
+     tip_scale: float = 1.0              # 锤头局部多边形缩放
+     # 人工涂抹排除区：落点若落入 deploy_exclusion_zones.json 的圆内则剔除（离线+运行时同判据）
+     deploy_exclusion_check: bool = True
+@@ -211,6 +231,20 @@ class TrainConfig:
+     ou_enabled: bool = True
+     ou_phi: float = 0.85
+ 
++    # P2.2：tip_contact 硬 gate；原 actor_mean / actor_log_std 是空中头。
++    contact_heads_enabled: bool = True
++    contact_gate_threshold: float = 0.5
++    contact_log_std_offset: float = -0.5
++
++    # P3.1：接触前后 K 帧保留完整进度奖励，纯空中弱化；PBRS / 落水惩罚不变。
++    phase_weighting_enabled: bool = True
++    phase_window: int = 7
++    phase_airborne_weight: float = 0.25
++    # P3.2：正 GAE 优势强化 SIL 子段；非正优势保留弱权重，不删除动作。
++    sil_advantage_weighting_enabled: bool = True
++    sil_advantage_floor: float = 0.1
++    sil_advantage_cap: float = 5.0
++
+     # ── 精英池停滞 → 自适应提方差（打破"贴地到树根"局部最优的发现瓶颈）──
+     # 当 SIL 精英池"守得住的竖直高度"峰值连续 patience 轮无提升，临时给采样 log_std 叠 boost
+     # （同时软化 SIL），制造额外探索；一旦 pool 峰值有实质提升就回落 boost，交回利用。boost 只在
+diff --git a/src/training/contact_features.py b/src/training/contact_features.py
+index 6b2b59e..96b20bd 100644
+--- a/src/training/contact_features.py
++++ b/src/training/contact_features.py
+@@ -1,4 +1,7 @@
+-"""接触信号复刻——精确对齐游戏原生 HammerCollisions + PlayerSounds 判断（IL 反编译）。
++"""接触几何近似——参考游戏原生 HammerCollisions + PlayerSounds 的语义。
++
++这些是帧边界几何代理，不是原生碰撞回调真值。CONTACT_EPSILON 把原生接触点
++移动阈值借作距离阈值，body/pot 轮廓也不等价于原生接触点分层；必须另做原生对照。
+ 
+ ## 复刻的 5 个物理量
+ 
+@@ -37,10 +40,7 @@
+   确保 patch 与派生接触信号语义一致）。
+ - 环境多边形与 `traversable_mask.npz` 同源（`load_colliders` → `extract_polygons`）。
+ 
+-## 性能
+-
+-- 单帧单 agent：~50-200 μs（tip 16 顶点 × 局部相关地形 ~10 个 × 平均 20 顶点）
+-- 与 rollout 主循环相比可忽略；不做空间索引（bbox 预筛已足够）。
++静态地形可用 TerrainContactIndex 缓存包围盒；性能以 rollout 分阶段计时为准。
+ """
+ 
+ from __future__ import annotations
+@@ -74,6 +74,30 @@ FALL_MAX_DISTANCE = 20.0
+ CONTACT_DIM = 5  # [tip_contact, tip_grip, body_contact, pot_contact, fall_distance_norm]
+ 
+ 
++class TerrainContactIndex(Sequence):
++    """Immutable polygon/bounds cache; rebuilt whenever terrain geometry is replaced."""
++    def __init__(self, polygons):
++        self.polygons = tuple(np.asarray(p, dtype=np.float64).copy() for p in polygons if len(p) >= 3)
++        self.bounds = np.array([[*p.min(axis=0), *p.max(axis=0)] for p in self.polygons]).reshape(-1, 4)
++
++    def __len__(self):
++        return len(self.polygons)
++
++    def __getitem__(self, index):
++        return self.polygons[index]
++
++    def nearby(self, low, high, margin):
++        b = self.bounds
++        mask = ((b[:, 2] >= low[0] - margin) & (b[:, 0] <= high[0] + margin)
++                & (b[:, 3] >= low[1] - margin) & (b[:, 1] <= high[1] + margin))
++        return [self.polygons[i] for i in np.flatnonzero(mask)]
++
++    def below(self, ox, oy):
++        b = self.bounds
++        return [self.polygons[i] for i in np.flatnonzero(
++            (b[:, 0] <= ox) & (b[:, 2] >= ox) & (b[:, 1] <= oy))]
++
++
+ # ═══════════════════════════════════════════════════════════════════════
+ # 从 player_contour.json 分离 body 与 pot 局部多边形
+ # ═══════════════════════════════════════════════════════════════════════
+@@ -194,6 +218,8 @@ def raycast_down_to_polygons(
+     捕捉，此处只表征"离地多高"）。
+     """
+     best_y = -float("inf")
++    if isinstance(polygons, TerrainContactIndex):
++        polygons = polygons.below(ox, oy)
+     for poly in polygons:
+         p = np.asarray(poly, dtype=np.float64)
+         n = len(p)
+@@ -240,9 +266,9 @@ class ContactPrevState:
+ class ContactConfig:
+     """接触信号计算的几何参数，值默认与 `dataset.build_patch` 的 contact 通道一致。"""
+     tip_angle_source: str = "pole"
+-    tip_angle_offset_deg: float = -90.0
++    tip_angle_offset_deg: float = -180.0
+     tip_scale: float = 1.0
+-    body_angle_offset_deg: float = -90.0
++    body_angle_offset_deg: float = -84.49833
+     body_scale: float = 1.0
+ 
+ 
+@@ -343,6 +369,8 @@ def _min_distance_to_env(
+     q_max_x, q_max_y = q[:, 0].max(), q[:, 1].max()
+     margin = max(CONTACT_EPSILON * 4, 0.2)  # 至少留 0.2m 预筛半径
+     best = float("inf")
++    if isinstance(env_polygons, TerrainContactIndex):
++        env_polygons = env_polygons.nearby((q_min_x, q_min_y), (q_max_x, q_max_y), margin)
+     for poly in env_polygons:
+         p = np.asarray(poly, dtype=np.float64)
+         if len(p) < 3:
+diff --git a/src/training/deploy_sampling.py b/src/training/deploy_sampling.py
+index 3148d7a..5ae0d4b 100644
+--- a/src/training/deploy_sampling.py
++++ b/src/training/deploy_sampling.py
+@@ -23,7 +23,7 @@ HAMMER_ANGLE_INDEX = 27
+ # 锤头世界多边形重建的标定参数（近似）：
+ #   world_poly = tip_center + scale * R(rod_dir + offset) @ local_poly
+ #   rod_dir: angle_source="pole" 用 pole→tip；"hub" 用 hammerAngle(hub→tip)
+-# 经 verify_tip_reconstruction 采样校验，pole / -90° / 1.0 使锤头颈部指向 pole、贴合地形。
++# 2026-09-19 原生 Transform 对照：pole / -180° / 1.0；旧 -90° 仅为视觉粗估。
+ TipReconConfig = namedtuple(
+     "TipReconConfig", ["local_poly", "angle_source", "angle_offset_deg", "scale"]
+ )
+@@ -32,7 +32,7 @@ TipReconConfig = namedtuple(
+ def make_tip_recon_config(
+     local_poly,
+     angle_source: str = "pole",
+-    angle_offset_deg: float = -90.0,
++    angle_offset_deg: float = -180.0,
+     scale: float = 1.0,
+ ) -> "TipReconConfig":
+     """构造锤头重建配置；local_poly 为 tip 局部多边形 (N,2)。"""
+diff --git a/src/training/main_ppo.py b/src/training/main_ppo.py
+index 3e6fa1f..83fe3c1 100644
+--- a/src/training/main_ppo.py
++++ b/src/training/main_ppo.py
+@@ -20,6 +20,8 @@ import argparse
+ import json
+ import logging
+ import sys
++import random
++import time
+ from dataclasses import asdict, fields
+ from pathlib import Path
+ 
+@@ -32,6 +34,9 @@ if str(_REPO_ROOT / "src") not in sys.path:
+ 
+ from training.actor_critic import ActorCritic
+ from training.config import TrainConfig
++from training.geometry_profile import configure_geometry
++from training.experimental_policy import create_actor_critic
++from training.experiment_options import add_experiment_arguments, apply_experiment_arguments, restore_initialization_shape
+ from training.dataset import TrajectoryDataset, compute_dynamics_stats
+ from training.model import (
+     expand_optimizer_state_for_dynamics_dim,
+@@ -183,7 +188,15 @@ def save_efficiency_map(
+ 
+ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+     parser = argparse.ArgumentParser(description="PPO 训练 — 策略梯度迭代循环")
++    add_experiment_arguments(parser)
+     parser.add_argument("--num-agents", type=int, default=None)
++    parser.add_argument("--seed", type=int, default=0)
++    parser.add_argument("--geometry-profile", choices=("native-pose-v1", "legacy"), default=None,
++                        help="Explicitly select contact/patch pose calibration; resume otherwise preserves checkpoint geometry")
++    parser.add_argument("--save-rollout-inputs", action="store_true",
++                        help="Archive complete PPO inputs under checkpoint_dir for exact replay")
++    parser.add_argument("--recipe", choices=("ppo", "ppo-ou", "ppo-ou-sil"), default=None,
++                        help="Fixed ablation; disables adaptive exploration and experimental contact heads")
+     parser.add_argument("--max-iterations", type=int, default=None)
+     parser.add_argument("--steps-per-rollout", type=int, default=None)
+     parser.add_argument(
+@@ -286,6 +299,30 @@ def main() -> None:
+ 
+     config = TrainConfig()
+     resume_state = torch.load(args.resume, weights_only=False) if args.resume else {}
++    if args.init_from and (args.resume or args.resume_bc):
++        raise ValueError("--init-from is mutually exclusive with --resume / --resume-bc")
++    init_state = torch.load(args.init_from, map_location="cpu", weights_only=False) if args.init_from else {}
++    restore_initialization_shape(config, init_state)
++    # Restore the actual network/input contract, not today's defaults.
++    for field in fields(config):
++        if field.name in resume_state.get("config", {}) and field.name not in ("game_root", "port"):
++            setattr(config, field.name, resume_state["config"][field.name])
++    if args.resume and "actor_mean_contact.weight" not in resume_state["model"]:
++        config.contact_heads_enabled = False
++    geometry_changed = configure_geometry(config, resume_state or init_state or ({"bc": True} if args.resume_bc else None),
++                                           args.geometry_profile)
++    random.seed(args.seed)
++    np.random.seed(args.seed)
++    torch.manual_seed(args.seed)
++    if args.recipe:
++        if args.resume and "actor_mean_contact.weight" in resume_state["model"]:
++            raise ValueError("Fixed single-head baseline requires a single-head checkpoint")
++        config.ou_enabled = args.recipe != "ppo"
++        config.sil_enabled = args.recipe == "ppo-ou-sil"
++        config.explore_boost_enabled = False
++        config.contact_heads_enabled = False
++        config.phase_weighting_enabled = False
++        config.sil_advantage_weighting_enabled = False
+     if args.num_agents is not None:
+         config.num_agents = args.num_agents
+     if args.max_iterations is not None:
+@@ -311,6 +348,12 @@ def main() -> None:
+     if args.random_deploy is not None:
+         config.random_deploy = args.random_deploy
+     configure_reference(config, args, resume_state)
++    apply_experiment_arguments(config, args, resume_state)
++    from training.policy_features import experimental_enabled
++    if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
++        raise ValueError("Representation experiments support PPO --init-from/--resume and disable legacy BC/SIL")
++    if args.recipe == "ppo-ou-sil" and config.reference_trajectory:
++        raise ValueError("Height-ranked SIL is incompatible with corridor progress; use ppo or ppo-ou")
+ 
+     # ── 运行归档 ──
+     # --run-dir 把产物收敛到 runs/<tag>/ 并开启元数据/指标/控制台/精英池落盘；
+@@ -326,9 +369,10 @@ def main() -> None:
+ 
+     logger.info("PPO Config: %s", config)
+     # ── 初始化 ──
+-    model = ActorCritic(config)
++    model = create_actor_critic(config)
+     ppo_trainer = PPOTrainer(config)
+     rollout_worker = RolloutWorker(config)
++    rollout_worker._rng = np.random.default_rng(args.seed)
+     reference = rollout_worker.reference_corridor
+     reference_meta = reference.metadata if reference is not None else None
+     if reference is not None:
+@@ -345,7 +389,7 @@ def main() -> None:
+             raise ValueError("Checkpoint reference file has changed; select --reference-trajectory explicitly to switch")
+     if recorder is not None:
+         recorder.write_meta(config, argv=sys.argv, extra={
+-            "resume": args.resume, "resume_bc": args.resume_bc, "reference_corridor": reference_meta,
++            "resume": args.resume, "resume_bc": args.resume_bc, "init_from": args.init_from, "reference_corridor": reference_meta,
+         })
+     start_iteration = 0
+ 
+@@ -363,6 +407,12 @@ def main() -> None:
+                 expand_optimizer_state_for_dynamics_dim(ckpt["optimizer"], model)
+             )
+         logger.info("从 PPO checkpoint 恢复 (iteration=%d): %s", start_iteration, args.resume)
++    elif args.init_from:
++        if hasattr(model, "initialize_from"):
++            loaded = model.initialize_from(init_state["model"])
++            logger.info("显式暖启动：加载 %d 个兼容张量；新模块初始化，不恢复 optimizer/iteration", len(loaded))
++        else:
++            model.load_state_dict(init_state["model"])
+     elif args.resume_bc:
+         bc_state = torch.load(args.resume_bc, weights_only=True)
+         model.load_from_bc(bc_state)
+@@ -371,6 +421,8 @@ def main() -> None:
+     old_reference_config = {
+         k: v for k, v in resume_state.get("config", {}).items() if k.startswith("reference_")
+     }
++    # Collection and update must use the same device from the first rollout.
++    model = model.to(ppo_trainer.device)
+     reference_changed = bool(args.resume) and (
+         bool(old_reference_config.get("reference_trajectory")) != bool(config.reference_trajectory)
+         or (bool(config.reference_trajectory) and (
+@@ -378,11 +430,14 @@ def main() -> None:
+             or resume_state.get("reference_corridor", {}).get("sha256") != reference_meta["sha256"]
+         ))
+     )
+-    warmup_end = start_iteration + config.value_warmup_iters if reference_changed else config.value_warmup_iters
+-    if not reference_changed and args.value_warmup_iters is None:
++    semantics_changed = reference_changed or geometry_changed
++    warmup_end = start_iteration + config.value_warmup_iters if semantics_changed else config.value_warmup_iters
++    if not semantics_changed and args.value_warmup_iters is None:
+         warmup_end = max(warmup_end, int(resume_state.get("value_warmup_end", 0)))
+     if reference_changed:
+         logger.info("奖励目标改变：从当前迭代重新预热 critic %d 轮", config.value_warmup_iters)
++    if geometry_changed:
++        logger.info("几何输入标定改变：从当前迭代重新预热 critic %d 轮", config.value_warmup_iters)
+ 
+     # ── 加载地形数据 ──
+     game_root = Path(config.game_root)
+@@ -520,6 +575,21 @@ def main() -> None:
+             )
+             logger.info("  采集完成: buffer size=%d, trajectories=%d",
+                         buffer.size, len(trajectories))
++            if hasattr(rollout_worker, "last_feature_scales"):
++                diagnostics_dir = Path(config.checkpoint_dir) / "feature_diagnostics"
++                diagnostics_dir.mkdir(parents=True, exist_ok=True)
++                (diagnostics_dir / f"iter_{iteration + 1:04d}.json").write_text(json.dumps({
++                    "feature_scales": rollout_worker.last_feature_scales,
++                    "segments": rollout_worker.last_segment_trace,
++                    "profile": rollout_worker.last_profile}, indent=2), encoding="utf-8")
++            if args.save_rollout_inputs and buffer.size:
++                archive_dir = Path(config.checkpoint_dir) / "rollouts"
++                archive_dir.mkdir(parents=True, exist_ok=True)
++                buffer.save(archive_dir / f"iter_{iteration + 1:04d}.npz")
++                torch.save({"model": model.state_dict(), "config": asdict(config),
++                            "reference_corridor": reference_meta or {},
++                            "policy_context": buffer.policy_context},
++                           archive_dir / f"behavior_{iteration + 1:04d}.pt")
+             if reward_normalizer is not None and reward_normalizer.is_active:
+                 logger.info(
+                     "  RewardNormalizer active: σ_h=%.4f, σ_e=%.4f, α=%.2f",
+@@ -582,6 +652,7 @@ def main() -> None:
+                     sil_dataset.set_trajectories(top)
+ 
+             # Phase 2: PPO 更新（前 value_warmup_iters 轮只预热 critic，冻结策略防灾难性遗忘）
++            update_started = time.perf_counter()
+             value_only = iteration < warmup_end
+             if value_only:
+                 logger.info(
+@@ -610,6 +681,7 @@ def main() -> None:
+                     loss_coef=config.sil_loss_coef * _sil_scale,
+                 ))
+ 
++            update_seconds = time.perf_counter() - update_started
+             # Phase 2.6: 停滞探测器 — 按精英池 max secured_dy(竖直)判断是否停滞，
+             # 停滞则抬 boost、有进展则回落；设 model.exploration_boost 供【下一轮】采集+更新一致生效。
+             if (config.explore_boost_enabled and sil_dataset is not None
+@@ -655,6 +727,8 @@ def main() -> None:
+                 "buffer_size": float(buffer.size),
+             }
+             extras.update(rollout_worker.last_corridor_metrics)
++            extras.update(rollout_worker.last_profile)
++            extras["update_and_sil_seconds"] = update_seconds
+             log_metrics(iteration + 1, metrics, extras)
+             if recorder is not None:
+                 recorder.append_metrics(iteration + 1, metrics, extras)
+diff --git a/src/training/main_train.py b/src/training/main_train.py
+index 6d7afe0..e6797ea 100644
+--- a/src/training/main_train.py
++++ b/src/training/main_train.py
+@@ -267,7 +267,9 @@ def main() -> None:
+     _setup_logging()
+     args = parse_args()
+ 
+-    config = TrainConfig()
++    # BC archives contain bare weights/trajectories without geometry metadata.
++    # Preserve that historical contract; calibrated inputs are opt-in via main_ppo.
++    config = TrainConfig(tip_angle_offset=-90., body_angle_offset=-90.)
+     if args.num_agents is not None:
+         config.num_agents = args.num_agents
+     if args.max_iterations is not None:
+diff --git a/src/training/ppo_buffer.py b/src/training/ppo_buffer.py
+index 241b6aa..b938981 100644
+--- a/src/training/ppo_buffer.py
++++ b/src/training/ppo_buffer.py
+@@ -9,6 +9,7 @@ PPO Rollout Buffer — 存储采集数据 + GAE 优势计算 + minibatch 迭代
+ from __future__ import annotations
+ 
+ import logging
++import json
+ from dataclasses import dataclass
+ from typing import Generator
+ 
+@@ -18,6 +19,21 @@ import torch
+ logger = logging.getLogger(__name__)
+ 
+ 
++@dataclass(frozen=True)
++class PatchWindow:
++    """References to immutable per-frame patches; materialize only a minibatch."""
++    frames: tuple[np.ndarray, ...]
++    context_len: int
++
++    def __array__(self, dtype=None, copy=None):
++        out = np.zeros((self.context_len, *self.frames[-1].shape), dtype=dtype or np.float32)
++        out[-len(self.frames):] = self.frames
++        return out
++
++    def __getitem__(self, index):
++        return np.asarray(self)[index]
++
++
+ @dataclass
+ class PPOBatch:
+     """PPO 训练用的一个 minibatch。"""
+@@ -33,6 +49,7 @@ class PPOBatch:
+     # 采集时该步的 OU 前一步归一化噪声 z_{t-1}，供条件式 log_prob 复算（PPO ratio 自洽）；
+     # iid 模式恒为零向量，evaluate_actions 会在 noise_phi=0 时忽略。
+     noise_prev: torch.Tensor     # (B, 2)
++    raw_actions: torch.Tensor    # (B, 2), before tanh; never reconstruct saturated samples
+ 
+ 
+ class PPORolloutBuffer:
+@@ -56,6 +73,8 @@ class PPORolloutBuffer:
+         self._dones: list[bool] = []
+         # 每步 OU 前一步归一化噪声 z_{t-1}，iid 模式下存零向量（无条件效应）
+         self._noise_prev: list[np.ndarray] = []
++        self._raw_actions: list[np.ndarray] = []
++        self.policy_context: dict = {}
+ 
+         self._advantages: np.ndarray | None = None
+         self._returns: np.ndarray | None = None
+@@ -76,14 +95,19 @@ class PPORolloutBuffer:
+         reward: float,
+         done: bool,
+         noise_prev: np.ndarray | None = None,
++        *,
++        raw_action: np.ndarray,
++        patch_frames: tuple[np.ndarray, ...] | None = None,
+     ) -> None:
+-        """添加一个 timestep 的数据（单 agent）。包含 NaN/Inf 的数据会被丢弃。
++        """添加一个 timestep；NaN/Inf 中止本轮，避免跨缺失步骤计算 GAE。
+ 
+         noise_prev: OU 采集时的 z_{t-1}；未提供时按 iid 模式补零向量（evaluate_actions 侧
+         用 noise_phi=0 时自然忽略，两种口径一致）。
+         """
+         if noise_prev is None:
+             noise_prev = np.zeros(action.shape, dtype=np.float32)
++        if patch_frames is not None and (not patch_frames or len(patch_frames) > len(valid_mask_window)):
++            raise ValueError("Patch frame history must fit the observation window")
+ 
+         if not (
+             np.isfinite(dynamics_window).all()
+@@ -93,9 +117,12 @@ class PPORolloutBuffer:
+             and np.isfinite(value)
+             and np.isfinite(reward)
+             and np.isfinite(noise_prev).all()
++            and np.isfinite(raw_action).all()
++            and np.isfinite(act_history_window).all()
++            and np.isfinite(valid_mask_window).all()
+         ):
+             logger.warning(
+-                "Dropping timestep with NaN/Inf: "
++                "Invalid timestep with NaN/Inf: "
+                 "dyn=%s patch=%s action=%s lp=%.4g v=%.4g r=%.4g noise=%s",
+                 np.isfinite(dynamics_window).all(),
+                 np.isfinite(patch_window).all(),
+@@ -103,10 +130,11 @@ class PPORolloutBuffer:
+                 log_prob, value, reward,
+                 np.isfinite(noise_prev).all(),
+             )
+-            return
++            raise ValueError("Non-finite PPO transition; refusing to join discontinuous GAE history")
+ 
+         self._dynamics.append(dynamics_window)
+-        self._patches.append(patch_window)
++        self._patches.append(patch_window if patch_frames is None else
++                             PatchWindow(patch_frames, len(valid_mask_window)))
+         self._act_histories.append(act_history_window)
+         self._valid_masks.append(valid_mask_window)
+         self._actions.append(action)
+@@ -115,6 +143,7 @@ class PPORolloutBuffer:
+         self._rewards.append(reward)
+         self._dones.append(done)
+         self._noise_prev.append(noise_prev.astype(np.float32))
++        self._raw_actions.append(np.asarray(raw_action, dtype=np.float32).copy())
+ 
+     def compute_gae(
+         self,
+@@ -156,14 +185,11 @@ class PPORolloutBuffer:
+         n = self.size
+         indices = np.random.permutation(n)
+ 
+-        dynamics_arr = np.array(self._dynamics)
+-        patches_arr = np.array(self._patches)
+-        act_hist_arr = np.array(self._act_histories)
+-        valid_mask_arr = np.array(self._valid_masks)
+         actions_arr = np.array(self._actions)
+         log_probs_arr = np.array(self._log_probs, dtype=np.float32)
+         values_arr = np.array(self._values, dtype=np.float32)
+         noise_prev_arr = np.array(self._noise_prev, dtype=np.float32)
++        raw_actions_arr = np.array(self._raw_actions, dtype=np.float32)
+ 
+         adv = self._advantages.copy()
+         if normalize_advantages and len(adv) > 1:
+@@ -172,16 +198,17 @@ class PPORolloutBuffer:
+         for start in range(0, n, batch_size):
+             idx = indices[start : start + batch_size]
+             yield PPOBatch(
+-                dynamics=torch.from_numpy(dynamics_arr[idx]).to(self.device),
+-                patches=torch.from_numpy(patches_arr[idx]).to(self.device),
+-                act_history=torch.from_numpy(act_hist_arr[idx]).to(self.device),
+-                valid_mask=torch.from_numpy(valid_mask_arr[idx]).to(self.device),
++                dynamics=torch.from_numpy(np.stack([self._dynamics[i] for i in idx])).to(self.device),
++                patches=torch.from_numpy(np.stack([self._patches[i] for i in idx])).to(self.device),
++                act_history=torch.from_numpy(np.stack([self._act_histories[i] for i in idx])).to(self.device),
++                valid_mask=torch.from_numpy(np.stack([self._valid_masks[i] for i in idx])).to(self.device),
+                 actions=torch.from_numpy(actions_arr[idx]).to(self.device),
+                 old_log_probs=torch.from_numpy(log_probs_arr[idx]).to(self.device),
+                 advantages=torch.from_numpy(adv[idx]).to(self.device),
+                 returns=torch.from_numpy(self._returns[idx]).to(self.device),
+                 old_values=torch.from_numpy(values_arr[idx]).to(self.device),
+                 noise_prev=torch.from_numpy(noise_prev_arr[idx]).to(self.device),
++                raw_actions=torch.from_numpy(raw_actions_arr[idx]).to(self.device),
+             )
+ 
+     @classmethod
+@@ -194,6 +221,8 @@ class PPORolloutBuffer:
+             return merged
+         for b in buffers:
+             assert b._advantages is not None, "merge 前需先 compute_gae"
++            if b.policy_context != buffers[0].policy_context:
++                raise ValueError("Cannot merge different behavior-policy contexts")
+             merged._dynamics.extend(b._dynamics)
+             merged._patches.extend(b._patches)
+             merged._act_histories.extend(b._act_histories)
+@@ -204,6 +233,8 @@ class PPORolloutBuffer:
+             merged._rewards.extend(b._rewards)
+             merged._dones.extend(b._dones)
+             merged._noise_prev.extend(b._noise_prev)
++            merged._raw_actions.extend(b._raw_actions)
++        merged.policy_context = dict(buffers[0].policy_context)
+         merged._advantages = np.concatenate([b._advantages for b in buffers])
+         merged._returns = np.concatenate([b._returns for b in buffers])
+         return merged
+@@ -220,5 +251,62 @@ class PPORolloutBuffer:
+         self._rewards.clear()
+         self._dones.clear()
+         self._noise_prev.clear()
++        self._raw_actions.clear()
++        self.policy_context.clear()
+         self._advantages = None
+         self._returns = None
++
++    def save(self, path) -> None:
++        """Versioned exact model inputs; does not rebuild patches from a changed map."""
++        if self._advantages is None or not self.size:
++            raise ValueError("Only nonempty, finalized rollouts can be archived")
++        names = ("dynamics", "act_histories", "valid_masks", "actions",
++                 "raw_actions", "log_probs", "values", "rewards", "dones", "noise_prev")
++        arrays = {name: np.asarray(getattr(self, "_" + name)) for name in names}
++        frames, ids, windows = [], {}, []
++        for window in self._patches:
++            source = window.frames if isinstance(window, PatchWindow) else tuple(window)
++            ctx = window.context_len if isinstance(window, PatchWindow) else len(window)
++            index = [-1] * (ctx - len(source))
++            for frame in source:
++                if id(frame) not in ids:
++                    ids[id(frame)] = len(frames)
++                    frames.append(frame)
++                index.append(ids[id(frame)])
++            windows.append(index)
++        arrays["patch_frames"] = np.stack(frames)
++        arrays["patch_indices"] = np.array(windows, dtype=np.int32)
++        np.savez_compressed(path, **arrays, advantages=self._advantages, returns=self._returns,
++                            metadata=json.dumps({"version": 2, "policy_context": self.policy_context}))
++
++    def patch_storage_bytes(self) -> int:
++        """Physical frame bytes, counting shared history references only once."""
++        arrays = {}
++        for window in self._patches:
++            for frame in window.frames if isinstance(window, PatchWindow) else (window,):
++                arrays[id(frame)] = frame
++        return sum(a.nbytes for a in arrays.values())
++
++    @classmethod
++    def load(cls, path, device="cpu") -> PPORolloutBuffer:
++        buffer = cls(device)
++        with np.load(path, allow_pickle=False) as data:
++            metadata = json.loads(str(data["metadata"]))
++            if metadata["version"] == 3:
++                from .decision_buffer import DecisionRolloutBuffer
++                return DecisionRolloutBuffer.load(path, device)
++            if metadata["version"] not in (1, 2):
++                raise ValueError("Unsupported PPO input archive version")
++            buffer.policy_context = metadata["policy_context"]
++            for name in ("dynamics", "act_histories", "valid_masks", "actions",
++                         "raw_actions", "log_probs", "values", "rewards", "dones", "noise_prev"):
++                setattr(buffer, "_" + name, list(data[name]))
++            if metadata["version"] == 1:
++                buffer._patches = list(data["patches"])
++            else:
++                frames = list(data["patch_frames"])
++                buffer._patches = [PatchWindow(tuple(frames[i] for i in ids if i >= 0), len(ids))
++                                   for ids in data["patch_indices"]]
++            buffer._advantages = data["advantages"]
++            buffer._returns = data["returns"]
++        return buffer
+diff --git a/src/training/ppo_trainer.py b/src/training/ppo_trainer.py
+index 293c3c8..c3d2931 100644
+--- a/src/training/ppo_trainer.py
++++ b/src/training/ppo_trainer.py
+@@ -120,20 +120,18 @@ class PPOTrainer:
+                 weight_decay=self.config.weight_decay,
+             )
+ 
++        from .policy_audit import audit_policy
++        if buffer.policy_context.get("deterministic"):
++            raise ValueError("Evaluation rollouts cannot be used for PPO training")
++        audit = audit_policy(model, buffer, max_samples=128)
+         cfg = self.config
+         total_value_loss = 0.0
+         n_updates = 0
+         for _epoch in range(cfg.value_warmup_epochs):
+-            for batch in buffer.get_batches(
+-                cfg.ppo_batch_size, normalize_advantages=False,
++            from .decision_buffer import evaluated_batches
++            for batch, _, _, new_value in evaluated_batches(
++                model, buffer, cfg.ppo_batch_size, normalize_advantages=False,
+             ):
+-                _, _, new_value = model.evaluate_actions(
+-                    batch.dynamics,
+-                    batch.patches,
+-                    batch.act_history,
+-                    batch.actions,
+-                    valid_mask=batch.valid_mask,
+-                )
+                 value_loss = 0.5 * (new_value - batch.returns).pow(2).mean()
+                 if not torch.isfinite(value_loss):
+                     model.zero_grad(set_to_none=True)
+@@ -159,6 +157,7 @@ class PPOTrainer:
+             "target_kl": float(self._kl_adapter.target or 0),
+             "max_grad_norm": self._grad_norm_adapter.max_grad_norm,
+             "value_only": 1.0,
++            **audit,
+         }
+ 
+     def update(
+@@ -189,10 +188,14 @@ class PPOTrainer:
+                 logger.info("已恢复 optimizer state")
+                 self._pending_optim_state = None
+ 
++        from .policy_audit import audit_policy
++        if buffer.policy_context.get("deterministic"):
++            raise ValueError("Evaluation rollouts cannot be used for PPO training")
++        audit = audit_policy(model, buffer, max_samples=128)
+         cfg = self.config
+         # OU 探索：ratio 数学自洽要求 new/old log_prob 用同一条件式（见 actor_critic.evaluate_actions），
+         # 即 raw|z_{t-1} ~ N(mean+std·φ·z_{t-1}, std²·(1-φ²))。ou_enabled=False → phi=0 退化 iid。
+-        ou_phi = cfg.ou_phi if cfg.ou_enabled else 0.0
++        # evaluated_batches reads the archived OU condition for every decision.
+ 
+         total_policy_loss = 0.0
+         total_value_loss = 0.0
+@@ -207,20 +210,11 @@ class PPOTrainer:
+             if early_stopped:
+                 break
+ 
+-            for batch in buffer.get_batches(
+-                cfg.ppo_batch_size,
++            from .decision_buffer import evaluated_batches
++            for batch, new_log_prob, entropy, new_value in evaluated_batches(
++                model, buffer, cfg.ppo_batch_size,
+                 normalize_advantages=cfg.normalize_advantages,
+             ):
+-                new_log_prob, entropy, new_value = model.evaluate_actions(
+-                    batch.dynamics,
+-                    batch.patches,
+-                    batch.act_history,
+-                    batch.actions,
+-                    valid_mask=batch.valid_mask,
+-                    noise_prev=batch.noise_prev,
+-                    noise_phi=ou_phi,
+-                )
+-
+                 # ── 策略损失 (clipped surrogate) ──
+                 log_ratio = new_log_prob - batch.old_log_probs
+                 ratio = log_ratio.exp()
+@@ -321,6 +315,7 @@ class PPOTrainer:
+             "n_updates": float(n_updates),
+             "target_kl": float(self._kl_adapter.target or 0),
+             "max_grad_norm": self._grad_norm_adapter.max_grad_norm,
++            **audit,
+         }
+         return metrics
+ 
+diff --git a/src/training/rollout.py b/src/training/rollout.py
+index 1d7e922..83e8e7a 100644
+--- a/src/training/rollout.py
++++ b/src/training/rollout.py
+@@ -32,6 +32,7 @@ from .contact_features import (
+     CONTACT_DIM,
+     ContactConfig,
+     ContactPrevState,
++    TerrainContactIndex,
+     compute_contact_row,
+     split_body_pot_local,
+ )
+@@ -236,6 +237,7 @@ class RolloutWorker:
+ 
+         # 运行时锤头卡障碍过滤（与 L7 离线筛选同一判据）
+         self._solid_polygons: list[np.ndarray] | None = None
++        self._contact_polygons: TerrainContactIndex | None = None
+         self._tip_cfg = None
+         # dualscale patch 接触分支几何 & 接触信号
+         # （tip_contact/tip_grip/body_contact/pot_contact/fall_distance）
+@@ -255,6 +257,7 @@ class RolloutWorker:
+             body_angle_offset_deg=self.config.body_angle_offset,
+             body_scale=self.config.body_scale,
+         )
++        self._feature_surface_index = None
+ 
+     def set_terrain_info(
+         self,
+@@ -299,6 +302,8 @@ class RolloutWorker:
+         """
+         # patch dualscale 接触分支几何（与 deploy 过滤开关无关）
+         self._solid_polygons = polygons
++        self._feature_surface_index = None  # New geometry invalidates candidate-surface features.
++        self._contact_polygons = TerrainContactIndex(polygons)
+         self._tip_local = extract_tip_local(player_data)
+         self._body_local = extract_body_local(player_data)
+         # 按名称拆分：body_contact / pot_contact 需分别对独立多边形做距离查询
+@@ -517,7 +522,7 @@ class RolloutWorker:
+                 tip_local=self._tip_local,
+                 body_local=self._body_only_local,
+                 pot_local=self._pot_only_local,
+-                env_polygons=self._solid_polygons,
++                env_polygons=self._contact_polygons if self._contact_polygons is not None else self._solid_polygons,
+                 cfg=self._contact_cfg,
+             )
+             contact[i] = row
+@@ -585,6 +590,7 @@ class RolloutWorker:
+         contact_prev: dict[int, ContactPrevState] = {}
+ 
+         c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
++        contact_now = c0
+         for i in range(num_agents):
+             all_states[i].append(obs[i].copy())
+             all_contacts[i].append(c0[i].copy())
+@@ -596,7 +602,6 @@ class RolloutWorker:
+                 solid_polygons=self._solid_polygons,
+                 tip_local=self._tip_local, body_local=self._body_local,
+             )
+-            contact_now, contact_prev = self._compute_contact_batch(obs, contact_prev)
+             dynamics = build_dynamics(obs, contact_now)
+ 
+             actions = np.zeros((num_agents, 2), dtype=np.float32)
+@@ -617,6 +622,7 @@ class RolloutWorker:
+ 
+             obs, _ = self.env.step(actions)
+             c_next, contact_prev = self._compute_contact_batch(obs, contact_prev)
++            contact_now = c_next
+             for i in range(num_agents):
+                 all_states[i].append(obs[i].copy())
+                 all_actions[i].append(actions[i].copy())
+@@ -658,6 +664,10 @@ class RolloutWorker:
+         n_steps: int,
+         eff_map: ClimbingEfficiencyMap | None = None,
+         normalizer: RewardNormalizer | None = None,
++        *,
++        deterministic: bool = False,
++        initial_offsets: np.ndarray | None = None,
++        native_diagnostics: bool = False,
+     ) -> tuple[PPORolloutBuffer, list[Trajectory]]:
+         """
+         PPO 采集：每步记录 (action, log_prob, value, reward)。
+@@ -668,8 +678,19 @@ class RolloutWorker:
+         """
+         from .ppo_buffer import PPORolloutBuffer as _Buffer
+         from .reward import NewHighConfirmer, RewardNormalizer, is_water, step_reward
++        from .policy_audit import policy_context
++        from .policy_features import experimental_enabled
++        if experimental_enabled(self.config):
++            from .experimental_rollout import collect_decisions
++            return collect_decisions(self, model, n_steps, eff_map, normalizer,
++                deterministic=deterministic, initial_offsets=initial_offsets, native_diagnostics=native_diagnostics)
++
++        started = time.perf_counter()
++        timings = {name: 0.0 for name in ("patch", "contact", "inference", "env", "bootstrap", "diagnostics")}
+ 
+         assert self.env is not None, "请先调用 setup() 或 launch_game()"
++        if n_steps < 1 or self.config.ppo_inference_batch_size < 0:
++            raise ValueError("Positive rollout length and nonnegative inference batch size required")
+         num_agents = self.config.num_agents
+         ctx = self.config.context_len
+         device = next(model.parameters()).device
+@@ -678,7 +699,17 @@ class RolloutWorker:
+         # new_log_prob 对不上 → 重要性采样比 ratio 系统性偏离 1 → approx_kl 虚高、策略被污染。
+         model.eval()
+ 
++        if native_diagnostics:
++            # Enable before RESET so the first retained packet is sampled beside the state.
++            self.env.observation_diagnostics()
+         obs = self._reset_and_deploy()
++        if initial_offsets is not None:
++            if self.config.random_deploy or np.shape(initial_offsets) != (num_agents, 2):
++                raise ValueError("Fixed evaluation offsets require fixed deployment and shape (N, 2)")
++            positions = obs[:, :2].copy() + initial_offsets
++            for i, position in enumerate(positions):
++                if np.any(initial_offsets[i]):
++                    obs = self.env.teleport(float(position[0]), float(position[1]), agent_index=i)
+ 
+         stable_agents = self._get_stable_agents(obs)
+         n_skipped = num_agents - len(stable_agents)
+@@ -700,6 +731,12 @@ class RolloutWorker:
+         # 接触信号跨帧状态与历史缓冲（与 raw_states 一样：首帧存进 all_contacts）
+         contact_prev: dict[int, ContactPrevState] = {}
+         c0, contact_prev = self._compute_contact_batch(obs, contact_prev)
++        contact_now = c0
++        self.last_native_diagnostics = []
++        if native_diagnostics:
++            self.last_native_diagnostics.append(self.env.observation_diagnostics())
++            if not self.last_native_diagnostics[-1].get("aligned", False):
++                raise ValueError("Native diagnostics must be captured at the physics-step boundary (plugin v2)")
+         all_contacts: dict[int, list[np.ndarray]] = {
+             i: [c0[i].copy()] for i in stable_agents
+         }
+@@ -713,7 +750,9 @@ class RolloutWorker:
+         # （若起手 z_{-1}=0，则 σ_cond=std·√(1-φ²) 会系统性压低首步探索方差）。
+         # φ=0 或 ou_enabled=False → 条件退化 iid，z_t 即当步 η_t。
+         # 每步存 z_prev 到 buffer，PPO 更新用条件式 log_prob → ratio 数学自洽。
+-        ou_phi = self.config.ou_phi if self.config.ou_enabled else 0.0
++        ou_phi = self.config.ou_phi if self.config.ou_enabled and not deterministic else 0.0
++        for b in agent_buffers.values():
++            b.policy_context = policy_context(model, ou_phi, deterministic)
+         ou_state: dict[int, np.ndarray] = {
+             i: np.random.randn(self.config.action_dim).astype(np.float32)
+             for i in stable_agents
+@@ -736,77 +775,67 @@ class RolloutWorker:
+         self.last_corridor_metrics = {}
+ 
+         for step in range(n_steps):
++            phase_start = time.perf_counter()
+             patches = self._ppo_patches(obs, eff_map, trackers)
+-            contact_now, contact_prev = self._compute_contact_batch(obs, contact_prev)
++            timings["patch"] += time.perf_counter() - phase_start
+             dynamics = build_dynamics(obs, contact_now)
+ 
+             actions_batch = np.zeros((num_agents, 2), dtype=np.float32)
+             step_data: dict[int, tuple] = {}
+-
+-            for i in stable_agents:
+-                if i in finished:
+-                    continue
++            phase_start = time.perf_counter()
++            active = sorted(stable_agents - finished)
++            windows = {}
++            for i in active:
+                 dyn_history[i].append(dynamics[i].copy())
+                 patch_history[i].append(patches[i].copy())
+-
+-                dyn_window, pat_window, act_window, valid_mask = _build_history_window(
++                windows[i] = _build_history_window(
+                     dyn_history[i], patch_history[i], act_history[i],
+                     ctx,
+                 )
+-
+-                dyn_t = torch.from_numpy(dyn_window[np.newaxis].astype(np.float32)).to(device)
+-                pat_t = torch.from_numpy(pat_window[np.newaxis].astype(np.float32)).to(device)
+-                act_t = torch.from_numpy(act_window[np.newaxis].astype(np.float32)).to(device)
+-                vm_t = torch.from_numpy(valid_mask[np.newaxis].astype(np.float32)).to(device)
+-
+-                z_prev = ou_state[i]
+-                z_prev_t = torch.from_numpy(z_prev[np.newaxis]).to(device)
+-
++            inference_batch = self.config.ppo_inference_batch_size or max(1, len(active))
++            for start in range(0, len(active), inference_batch):
++                ids = active[start:start + inference_batch]
++                dyn_t, pat_t, act_t, vm_t = (
++                    torch.from_numpy(np.stack([windows[i][k] for i in ids])).to(device)
++                    for k in range(4)
++                )
++                z_prev_t = torch.from_numpy(np.stack([ou_state[i] for i in ids])).to(device)
+                 with torch.no_grad():
+                     av = model.get_action_and_value(
+                         dyn_t, pat_t, act_t, valid_mask=vm_t,
+                         noise_prev=z_prev_t, noise_phi=ou_phi,
++                        deterministic=deterministic,
+                     )
+-
+-                action_np = av.action.cpu().numpy().squeeze(0)
+-                z_t = av.noise.cpu().numpy().squeeze(0) if av.noise is not None else None
+-
+-                if not (np.isfinite(action_np).all()
+-                        and np.isfinite(av.log_prob.item())
+-                        and np.isfinite(av.value.item())
+-                        and (z_t is None or np.isfinite(z_t).all())):
+-                    logger.warning(
+-                        "NaN/Inf model output at step=%d agent=%d, "
+-                        "falling back to zero action",
+-                        step, i,
+-                    )
+-                    action_np = np.zeros(2, dtype=np.float32)
+-                    step_data[i] = (
+-                        dyn_window.copy(), pat_window.copy(), act_window.copy(),
+-                        valid_mask.copy(), 0.0, 0.0, z_prev.copy(),
+-                    )
+-                    # 零动作 fallback：不推进 OU 状态，避免异常噪声影响后续步
++                output = [tensor.detach().cpu().numpy() for tensor in
++                          (av.action, av.raw_action, av.log_prob, av.value, av.noise)]
++                if not all(np.isfinite(array).all() for array in output):
++                    raise FloatingPointError(f"Invalid policy output at step={step}, agents={ids}")
++                for j, i in enumerate(ids):
++                    action_np, latent_np, lp, val, z_t = (array[j] for array in output)
++                    z_prev = ou_state[i]
++                    ou_state[i] = z_t.copy()
+                     actions_batch[i] = action_np
+-                    continue
+-
+-                # 推进 OU 状态：z_t 已就绪，作为下一步的 z_prev
+-                if z_t is not None:
+-                    ou_state[i] = z_t.astype(np.float32)
+-
+-                actions_batch[i] = action_np
+-                step_data[i] = (
+-                    dyn_window.copy(), pat_window.copy(), act_window.copy(),
+-                    valid_mask.copy(), av.log_prob.item(), av.value.item(),
+-                    z_prev.copy(),
+-                )
++                    step_data[i] = (*windows[i], float(lp), float(val), z_prev.copy(), latent_np.copy())
++            timings["inference"] += time.perf_counter() - phase_start
+ 
++            phase_start = time.perf_counter()
+             new_obs, dones = self.env.step(actions_batch)
++            timings["env"] += time.perf_counter() - phase_start
++            phase_start = time.perf_counter()
+             contact_next, contact_prev = self._compute_contact_batch(new_obs, contact_prev)
++            timings["contact"] += time.perf_counter() - phase_start
++            if native_diagnostics:
++                phase_start = time.perf_counter()
++                self.last_native_diagnostics.append(self.env.observation_diagnostics())
++                if (not self.last_native_diagnostics[-1].get("aligned", False)
++                        or self.last_native_diagnostics[-1]["sequence"] <= self.last_native_diagnostics[-2]["sequence"]):
++                    raise ValueError("Native diagnostic snapshot did not advance with the environment")
++                timings["diagnostics"] += time.perf_counter() - phase_start
+ 
+             for i in stable_agents:
+                 if i not in step_data:
+                     continue
+-                dw, pw, aw, vm, lp, val, np_prev = step_data[i]
++                dw, pw, aw, vm, lp, val, np_prev, latent = step_data[i]
+                 reward, running_max_y[i] = step_reward(
+                     prev_obs[i], new_obs[i], eff_map, self.config,
+                     running_max_y=running_max_y[i],
+@@ -815,6 +844,8 @@ class RolloutWorker:
+                     corridor=trackers.get(i),
+                 )
+                 done = bool(dones[i]) or is_water(new_obs[i, 1], self.config)
++                if done:
++                    finished.add(i)
+                 if trackers:
+                     result = trackers[i].last_step
+                     corridor_steps += 1
+@@ -835,6 +866,8 @@ class RolloutWorker:
+                     reward=reward,
+                     done=done,
+                     noise_prev=np_prev,
++                    raw_action=latent,
++                    patch_frames=tuple(patch_history[i][-ctx:]),
+                 )
+                 act_history[i].append(actions_batch[i].copy())
+                 raw_states[i].append(new_obs[i].copy())
+@@ -843,15 +876,19 @@ class RolloutWorker:
+ 
+             prev_obs = new_obs.copy()
+             obs = new_obs
+-            if trackers and len(finished) == len(stable_agents):
++            contact_now = contact_next
++            if len(finished) == len(stable_agents):
+                 break
+ 
+         # per-agent bootstrap value + GAE
++        phase_start = time.perf_counter()
+         patches = self._ppo_patches(obs, eff_map, trackers)
+         # bootstrap 帧的 contact：接续 rollout 末尾 prev 状态，保证 grip 判定连续
+-        contact_boot, contact_prev = self._compute_contact_batch(obs, contact_prev)
+-        dynamics = build_dynamics(obs, contact_boot)
++        dynamics = build_dynamics(obs, contact_now)
+         for i in stable_agents:
++            if i in finished:
++                agent_buffers[i].compute_gae(0.0, self.config.gamma, self.config.gae_lambda)
++                continue
+             dyn_history[i].append(dynamics[i].copy())
+             patch_history[i].append(patches[i].copy())
+             dyn_window, pat_window, act_window, valid_mask = _build_history_window(
+@@ -871,6 +908,13 @@ class RolloutWorker:
+             )
+ 
+         buffer = _Buffer.merge(list(agent_buffers.values()))
++        timings["bootstrap"] = time.perf_counter() - phase_start
++        timings["total"] = time.perf_counter() - started
++        self.last_profile = {f"rollout_{k}_seconds": v for k, v in timings.items()}
++        self.last_profile["rollout_samples_per_second"] = buffer.size / timings["total"]
++        self.last_profile["rollout_patch_storage_bytes"] = float(buffer.patch_storage_bytes())
++        self.last_profile["rollout_patch_window_bytes"] = float(
++            buffer.size * ctx * self.config.patch_channels * self.config.patch_size**2 * 4)
+ 
+         if trackers:
+             self.last_corridor_metrics = {

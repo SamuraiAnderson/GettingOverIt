@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "finished": "2026-09-22T18:30:56+08:00",
+  "live_configurations": 6,
+  "fixed_weight_configurations": 6,
+  "report": "RESULT.md",
+  "live_status": "live/pipeline_status.json",
+  "frozen_status": "frozen/pipeline_status.json",
+  "validation": "artifact_validation.json",
+  "initial_attempt": "initial_attempt_status.json",
+  "note": "Live 8-player pipeline timing is a lower bound and throughput an upper bound after interrupted evaluation recovery. No new long training run launched."
+}

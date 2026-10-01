@@ -1,0 +1,12 @@
+{
+  "status": "failed",
+  "finished": "2026-09-20T00:51:10+08:00",
+  "failures": [
+    {
+      "job": "n02_serial",
+      "error": "PermissionError(13, 'Permission denied')"
+    }
+  ],
+  "changed_sources": [],
+  "completed": 0
+}

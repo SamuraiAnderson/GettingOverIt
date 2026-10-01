@@ -1,0 +1,28 @@
+[
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_864k\\deterministic_001_agent5.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 238,
+        "seconds": 1.9833333333333334,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b\\best_renders\\compare_grid\\p256\\rank01\\window_credited.png"
+      },
+      {
+        "frame": "arrival",
+        "state_index": 206,
+        "seconds": 1.7166666666666666,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b\\best_renders\\compare_grid\\p256\\rank01\\window_arrival.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 253,
+        "seconds": 2.1083333333333334,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b\\best_renders\\compare_grid\\p256\\rank01\\window_prune.png"
+      }
+    ]
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\imitation\\lr_control_20260927\\frozen_epoch69.pt",
+  "windows": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\imitation\\windows.pt",
+  "epochs": 60,
+  "batch": 64,
+  "seeds": [
+    47,
+    48,
+    49
+  ],
+  "groups": {
+    "A": "lr 1e-4 for 60 epochs",
+    "B": "lr 3e-5 for 30 epochs, then 1e-5 for 30 epochs"
+  },
+  "weight_decay": 0.0,
+  "dropout": "eval mode, disabled",
+  "optimizer": "fresh AdamW each run",
+  "selection": "minimum full-window eval MSE after each epoch",
+  "before_endpoint": {
+    "rank1": "actions 0-799",
+    "rank2": "actions 0-475"
+  },
+  "device": "cuda"
+}

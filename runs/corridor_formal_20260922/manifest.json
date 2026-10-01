@@ -1,0 +1,74 @@
+{
+  "status": "completed",
+  "started_at": "2026-09-22T18:52:32.959033+08:00",
+  "deadline": "2026-09-23T00:52:32.959033+08:00",
+  "budget_hours": 6.0,
+  "parameters": {
+    "C": {
+      "gamma": 0.99,
+      "gae_lambda": 0.95
+    },
+    "T": {
+      "gamma": 0.998,
+      "gae_lambda": 0.995
+    }
+  },
+  "order": [
+    [
+      "C",
+      31
+    ],
+    [
+      "T",
+      31
+    ],
+    [
+      "C",
+      47
+    ],
+    [
+      "T",
+      47
+    ],
+    [
+      "C",
+      61
+    ],
+    [
+      "T",
+      61
+    ]
+  ],
+  "initial_checkpoint": "runs/p2_contact/checkpoints/ppo_iter_0335.pt",
+  "agents": 8,
+  "batch_size": 128,
+  "lr": 3e-05,
+  "torch_threads": 4,
+  "mode": "serial",
+  "midpoint": 96000,
+  "endpoint_candidates": [
+    384000,
+    288000,
+    240000,
+    192000,
+    144000,
+    96000
+  ],
+  "training_seeds": [
+    31,
+    47,
+    61
+  ],
+  "midpoint_evaluation_seed": 20260922,
+  "holdout_seed": 20261022,
+  "evaluation_rounds": {
+    "shared_initial": 2,
+    "midpoint": 2,
+    "holdout": 3
+  },
+  "controller_pid": 4676,
+  "controller_create_time": 1790074352.617748,
+  "finished_at": "2026-09-22T23:14:37+08:00",
+  "error": null,
+  "runtime_restored": true
+}

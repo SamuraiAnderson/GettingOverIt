@@ -1,0 +1,120 @@
+{
+  "source": "runs\\p0_corridor_acceptance\\checkpoints\\calibrated_native",
+  "contact_comparison": {
+    "tip_contact": {
+      "known_frames": 2056,
+      "native_positive": 391,
+      "proxy_positive": 376,
+      "false_positive": 28,
+      "false_negative": 43,
+      "mismatch_fraction": 0.03453307392996109
+    },
+    "tip_grip": {
+      "known_frames": 2056,
+      "native_positive": 310,
+      "proxy_positive": 126,
+      "false_positive": 6,
+      "false_negative": 190,
+      "mismatch_fraction": 0.09533073929961089
+    },
+    "player_contact_union": {
+      "known_frames": 2056,
+      "native_positive": 353,
+      "proxy_positive": 436,
+      "false_positive": 85,
+      "false_negative": 2,
+      "mismatch_fraction": 0.04231517509727627
+    },
+    "body_contact": {
+      "known_frames": 2056,
+      "native_positive": 0,
+      "proxy_positive": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "mismatch_fraction": 0.0
+    },
+    "pot_contact": {
+      "known_frames": 2056,
+      "native_positive": 353,
+      "proxy_positive": 436,
+      "false_positive": 85,
+      "false_negative": 2,
+      "mismatch_fraction": 0.04231517509727627
+    }
+  },
+  "control_names": [
+    "oldMouse_x",
+    "oldMouse_y",
+    "mouseVelocityAverage",
+    "mouseSnap",
+    "inputsToSkip",
+    "pauseInputTimer"
+  ],
+  "control_known_fraction": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "control_min": [
+    -99.99872,
+    -99.99977,
+    0.100999981,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "control_max": [
+    99.99879,
+    99.99,
+    9.569741,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "pose_offset_percentiles": {
+    "tip": {
+      "p0": -179.99999994710458,
+      "p10": -179.99998436100432,
+      "p50": 179.99972156223825,
+      "p90": 179.9999854976862,
+      "p100": 179.99999993980913
+    },
+    "body": {
+      "p0": -86.79901255468519,
+      "p10": -84.49872839443611,
+      "p50": -84.49832494874889,
+      "p90": -84.4979312231364,
+      "p100": -82.49842820583854
+    }
+  },
+  "pose_offset_circular_mean": {
+    "tip": 179.9534557532296,
+    "body": -84.49759115972425
+  },
+  "calibrated_pose_only_comparison": {
+    "tip_contact": {
+      "frames": 2056,
+      "false_positive": 28,
+      "false_negative": 43
+    },
+    "body_contact": {
+      "frames": 2056,
+      "false_positive": 0,
+      "false_negative": 0
+    },
+    "pot_contact": {
+      "frames": 2056,
+      "false_positive": 85,
+      "false_negative": 2
+    }
+  },
+  "calibrated_offsets": {
+    "tip_angle_offset": -180.0,
+    "body_angle_offset": -84.49833
+  },
+  "pot_to_body_position_max_m": 0.0,
+  "coverage_note": "Frame agreement on these episodes only; no body-positive examples is not body-contact validation."
+}

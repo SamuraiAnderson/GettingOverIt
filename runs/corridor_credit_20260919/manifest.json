@@ -1,0 +1,43 @@
+{
+  "started_at": "2026-09-19T19:05:10+08:00",
+  "deadline": "2026-09-20T01:05:10+08:00",
+  "status": "completed",
+  "plan": "doc/training_credit_plan_2026-09-19.md",
+  "budget_hours": 6,
+  "parameters": {
+    "C": {
+      "gamma": 0.99,
+      "gae_lambda": 0.95,
+      "reference_deviation_weight": 0.01
+    },
+    "D": {
+      "gamma": 0.99,
+      "gae_lambda": 0.95,
+      "reference_deviation_weight": 0.001
+    },
+    "T": {
+      "gamma": 0.998,
+      "gae_lambda": 0.995,
+      "reference_deviation_weight": 0.01
+    }
+  },
+  "train_seeds": [
+    7,
+    17
+  ],
+  "horizon": 1200,
+  "agents": 2,
+  "target_samples": 96000,
+  "initial_checkpoint": "runs/p2_contact/checkpoints/ppo_iter_0335.pt",
+  "initial_checkpoint_sha256": "5fc8081dadd6045960f5d45c0ec29ac289de5718598032c0e5d5cd34f9b17e2b",
+  "reference_sha256": "E5EAD0489D047FC69DAE8EBF68C9973EF7AF42CC7A76850264AFF88370CB0F5E",
+  "screen_evaluation_seed": 20260920,
+  "holdout_evaluation_seed": 20261020,
+  "primary_success_dwell": 120,
+  "legacy_success_dwell": 10,
+  "controller_started_at": "2026-09-19T21:29:53+08:00",
+  "finished_at": "2026-09-20T00:31:04+08:00",
+  "error": null,
+  "training_physical_samples": 582605,
+  "evaluation_physical_samples": 276836
+}

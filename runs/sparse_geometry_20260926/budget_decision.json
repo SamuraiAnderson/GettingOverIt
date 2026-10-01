@@ -1,0 +1,7 @@
+{
+  "decided_at": "2026-09-27T20:19:39+08:00",
+  "target_samples": 1152000,
+  "estimated_seconds": 5039.630662550044,
+  "per_eval_seconds": 1115.5348876501084,
+  "basis": "timing only; next 96k milestone; evaluation not consulted"
+}

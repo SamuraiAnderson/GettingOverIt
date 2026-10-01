@@ -1,0 +1,86 @@
+{
+  "launches": 5,
+  "resets_per_launch": 2,
+  "agents": 16,
+  "agents_per_group": 4,
+  "groups": [
+    "original",
+    "predicted",
+    "closed_69",
+    "closed_best"
+  ],
+  "rotation": "block shift (launch * 2 + reset) mod 4",
+  "ranks": [
+    {
+      "name": "rank1",
+      "steps": 815,
+      "elite": 17
+    },
+    {
+      "name": "rank2",
+      "steps": 491,
+      "elite": 16
+    }
+  ],
+  "closed_69": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\imitation\\lr_control_20260927\\frozen_epoch69.pt",
+  "closed_best": {
+    "group": "A",
+    "seed": 47,
+    "epoch": 54,
+    "eval_mse": 16.459794998168945,
+    "p95": 11.057317733764648,
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\imitation\\lr_control_20260927\\A_s47\\best.pt",
+    "ranking": [
+      {
+        "eval_mse": 16.459794998168945,
+        "p95": 11.057317733764648,
+        "seed": 47,
+        "group": "A",
+        "epoch": 54
+      },
+      {
+        "eval_mse": 18.577713012695312,
+        "p95": 12.025782585144043,
+        "seed": 49,
+        "group": "A",
+        "epoch": 50
+      },
+      {
+        "eval_mse": 19.012197494506836,
+        "p95": 11.897723197937012,
+        "seed": 48,
+        "group": "B",
+        "epoch": 58
+      },
+      {
+        "eval_mse": 19.107463836669922,
+        "p95": 12.019454002380371,
+        "seed": 49,
+        "group": "B",
+        "epoch": 58
+      },
+      {
+        "eval_mse": 19.116235733032227,
+        "p95": 12.157796859741211,
+        "seed": 47,
+        "group": "B",
+        "epoch": 58
+      },
+      {
+        "eval_mse": 19.803743362426758,
+        "p95": 12.42556381225586,
+        "seed": 48,
+        "group": "A",
+        "epoch": 48
+      }
+    ]
+  },
+  "predicted_source": "epoch 69 deterministic mean on the stored demonstration windows",
+  "random_deploy": false,
+  "exploration": false,
+  "snapshot": "one canonical snapshot per launch, shared by both resets",
+  "D": "confirmed_endpoint_v2 confirmed_d",
+  "endpoint_progress": "route arc at the final frame",
+  "max_retreat": "max drop of route arc from its running peak",
+  "device": "cuda"
+}

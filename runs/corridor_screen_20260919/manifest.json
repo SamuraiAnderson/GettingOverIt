@@ -1,0 +1,27 @@
+{
+  "started_at": "2026-09-19T09:22:09+08:00",
+  "deadline": "2026-09-19T15:22:09+08:00",
+  "status": "completed",
+  "plan": "doc/training_plan_2026-09-19.md",
+  "train_seeds": [
+    7,
+    17
+  ],
+  "horizon": 1200,
+  "agents": 2,
+  "initial_checkpoint": "runs/p2_contact/checkpoints/ppo_iter_0335.pt",
+  "initial_checkpoint_sha256": "5FC8081DADD6045960F5D45C0EC29AC289DE5718598032C0E5D5CD34F9B17E2B",
+  "reference_sha256": "E5EAD0489D047FC69DAE8EBF68C9973EF7AF42CC7A76850264AFF88370CB0F5E",
+  "git_head": "69643d2bc187be0cff6658101c2cb62ca505f218",
+  "budget_hours": 6,
+  "finished_at": "2026-09-19T15:11:43+08:00",
+  "training_physical_samples": 440191,
+  "evaluation_physical_samples": 247032,
+  "replication_target_samples": 72000,
+  "replication_arms": [
+    "R",
+    "B1"
+  ],
+  "replication_decision": "replication_decision.json",
+  "result": "RESULT.md"
+}

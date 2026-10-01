@@ -1,0 +1,124 @@
+{
+  "runs": [
+    {
+      "run": "corridor_credit_20260919_C_s17",
+      "iterations": 44,
+      "policy_samples": 93598,
+      "collect_update_seconds": 1344.4967318999115,
+      "samples_per_second": 69.61563965108077,
+      "unique_gradient_sample_upper_bound": 24960,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_credit_20260919_C_s7",
+      "iterations": 43,
+      "policy_samples": 91705,
+      "collect_update_seconds": 1633.4454114000837,
+      "samples_per_second": 56.14206594231784,
+      "unique_gradient_sample_upper_bound": 22587,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_credit_20260919_D_s17",
+      "iterations": 49,
+      "policy_samples": 94910,
+      "collect_update_seconds": 1702.418413699983,
+      "samples_per_second": 55.75010187638042,
+      "unique_gradient_sample_upper_bound": 29696,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_credit_20260919_D_s7",
+      "iterations": 54,
+      "policy_samples": 93129,
+      "collect_update_seconds": 1410.6253590997949,
+      "samples_per_second": 66.01965532466483,
+      "unique_gradient_sample_upper_bound": 29569,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_credit_20260919_T_s17",
+      "iterations": 44,
+      "policy_samples": 95706,
+      "collect_update_seconds": 1697.600390899781,
+      "samples_per_second": 56.37722547252292,
+      "unique_gradient_sample_upper_bound": 24448,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_credit_20260919_T_s7",
+      "iterations": 45,
+      "policy_samples": 93318,
+      "collect_update_seconds": 1325.0819477999466,
+      "samples_per_second": 70.42432368423498,
+      "unique_gradient_sample_upper_bound": 30920,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_screen_20260919_B0_s7",
+      "iterations": 21,
+      "policy_samples": 44176,
+      "collect_update_seconds": 400.62382790009724,
+      "samples_per_second": 110.2680293170582,
+      "unique_gradient_sample_upper_bound": 6784,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_screen_20260919_B1_s17",
+      "iterations": 38,
+      "policy_samples": 70879,
+      "collect_update_seconds": 731.642653100047,
+      "samples_per_second": 96.87652804231438,
+      "unique_gradient_sample_upper_bound": 20864,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_screen_20260919_B1_s7",
+      "iterations": 33,
+      "policy_samples": 69666,
+      "collect_update_seconds": 650.3160840001074,
+      "samples_per_second": 107.1263677986911,
+      "unique_gradient_sample_upper_bound": 17792,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_screen_20260919_E_s7",
+      "iterations": 26,
+      "policy_samples": 46607,
+      "collect_update_seconds": 982.1108651001123,
+      "samples_per_second": 47.45594581651337,
+      "unique_gradient_sample_upper_bound": 13705,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_screen_20260919_G_s7",
+      "iterations": 21,
+      "policy_samples": 44071,
+      "collect_update_seconds": 759.9300825999817,
+      "samples_per_second": 57.99349309770444,
+      "unique_gradient_sample_upper_bound": 29607,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_screen_20260919_R_s17",
+      "iterations": 35,
+      "policy_samples": 70969,
+      "collect_update_seconds": 679.0593961999402,
+      "samples_per_second": 104.51073999880873,
+      "unique_gradient_sample_upper_bound": 19904,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    },
+    {
+      "run": "corridor_screen_20260919_R_s7",
+      "iterations": 31,
+      "policy_samples": 68669,
+      "collect_update_seconds": 618.5701192000415,
+      "samples_per_second": 111.01247517226562,
+      "unique_gradient_sample_upper_bound": 16256,
+      "scope": "64 minibatch upper bound; GRU chunking differs"
+    }
+  ],
+  "critic_warmup_seconds_per_sample_q75": 0.03293030399384118,
+  "evaluation_seconds_per_sample_q75": 0.02677245769249027,
+  "completed_evaluation_jobs": 34
+}

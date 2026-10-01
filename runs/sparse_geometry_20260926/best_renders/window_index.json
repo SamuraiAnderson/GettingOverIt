@@ -1,0 +1,80 @@
+[
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926_S_s47\\checkpoints\\eval_milestone_864k\\exploration_001_agent7.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 699,
+        "seconds": 5.825,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank01\\window_credited.png"
+      },
+      {
+        "frame": "arrival",
+        "state_index": 484,
+        "seconds": 4.033333333333333,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank01\\window_arrival.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 714,
+        "seconds": 5.95,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank01\\window_prune.png"
+      }
+    ]
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926_S_s47\\checkpoints\\eval_milestone_288k\\exploration_000_agent6.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 979,
+        "seconds": 8.158333333333333,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank02\\window_credited.png"
+      },
+      {
+        "frame": "arrival",
+        "state_index": 842,
+        "seconds": 7.016666666666667,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank02\\window_arrival.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 994,
+        "seconds": 8.283333333333333,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank02\\window_prune.png"
+      }
+    ]
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926_S_s47\\checkpoints\\eval_milestone_768k\\exploration_000_agent3.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 1028,
+        "seconds": 8.566666666666666,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank03\\window_credited.png"
+      },
+      {
+        "frame": "arrival",
+        "state_index": 532,
+        "seconds": 4.433333333333334,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank03\\window_arrival.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 1043,
+        "seconds": 8.691666666666666,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\best_renders\\rank03\\window_prune.png"
+      }
+    ]
+  }
+]

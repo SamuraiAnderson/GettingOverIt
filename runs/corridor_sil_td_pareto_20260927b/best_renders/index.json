@@ -1,0 +1,58 @@
+[
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_864k\\deterministic_001_agent5.json",
+    "physical_steps": 1200,
+    "physical_seconds": 10.0,
+    "rendered_frames": 301,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 7.145389871949455,
+    "credited_state_index": 238,
+    "credited_seconds": 1.9833333333333334,
+    "prune_state_index": 253,
+    "prune_seconds": 2.1083333333333334
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_864k\\deterministic_001_agent3.json",
+    "physical_steps": 1200,
+    "physical_seconds": 10.0,
+    "rendered_frames": 301,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 5.75504664183427,
+    "credited_state_index": 238,
+    "credited_seconds": 1.9833333333333334,
+    "prune_state_index": 253,
+    "prune_seconds": 2.1083333333333334
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_672k\\deterministic_001_agent0.json",
+    "physical_steps": 1200,
+    "physical_seconds": 10.0,
+    "rendered_frames": 301,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 5.224592313815246,
+    "credited_state_index": 233,
+    "credited_seconds": 1.9416666666666667,
+    "prune_state_index": 248,
+    "prune_seconds": 2.0666666666666664
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_576k\\deterministic_000_agent0.json",
+    "physical_steps": 1200,
+    "physical_seconds": 10.0,
+    "rendered_frames": 301,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 5.2106421042607005,
+    "credited_state_index": 292,
+    "credited_seconds": 2.433333333333333,
+    "prune_state_index": 307,
+    "prune_seconds": 2.558333333333333
+  }
+]

@@ -137,6 +137,23 @@ runs/**/logs/
 runs/**/elites/
 runs/**/console.log
 runs/_eval/*.json
+# 二进制产物（权重、轨迹归档、评估视频、原始校准截图）散落在 checkpoints/ 以外的
+# 子路径（best_renders/、ranks/、test_8p_iter*/、td_v2_rerank/、tas 校准 images/ 等），
+# 统一按扩展名拦截；sil_seed_590.npz 是延迟探索/td_pareto/sil_comparison 的硬依赖。
+runs/**/*.pt
+runs/**/*.pkl
+runs/**/*.npz
+runs/**/*.mp4
+runs/tas_anchor_calib_20260926/images/
+# 评估/采样逐帧 JSON 归档（每条约 1-2 MB，148 个 deterministic 加 12 个 exploration ≈ 220 MB）：
+# 结论留在 metrics.csv / summary.json / RESULT.md，底层证据按需从外部存档重算。
+# 显式白名单：sil_td_sampling_plan_2026-09-28 严格依赖 test_8p_iter0123_desktop 下的那组。
+runs/**/deterministic_*.json
+runs/**/exploration_*.json
+runs/**/original_episode.json
+runs/**/episode.json
+!runs/best_motion_20260923/sil_seed_590.npz
+!runs/confirmed_endpoint_v2_formal_20260928/test_8p_iter0123_desktop/deterministic_*.json
 !runs/**/run_meta.json
 !runs/**/metrics.csv
 !runs/**/RESULT.md

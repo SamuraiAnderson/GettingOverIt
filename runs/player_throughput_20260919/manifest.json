@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-09-19T21:05:26+08:00",
+  "deadline": "2026-09-19T21:35:26.368747+08:00",
+  "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_credit_20260919_C_s7\\checkpoints\\ppo_iter_0022.pt",
+  "checkpoint_sha256": "abd1755874df49f7a216b51435da3f2227b458e532b44e52f27ff2a855291042",
+  "hardware": {
+    "logical_cores": 20,
+    "physical_cores": 14,
+    "ram_gb": 31.843002319335938,
+    "available_ram_gb": 15.457412719726562,
+    "torch_threads": 14,
+    "torch_version": "2.10.0+cu126",
+    "gpu": "NVIDIA GeForce RTX 4070",
+    "gpu_total_gb": 11.99365234375
+  },
+  "groups": [
+    2,
+    4,
+    8,
+    16,
+    2
+  ],
+  "repeats": 3,
+  "steps": 1200,
+  "scope": "frozen policy collection; discard real PPO updates; repeated baseline controls time drift"
+}

@@ -1,0 +1,218 @@
+[
+  {
+    "path": "src\\training\\actor_critic.py",
+    "sha256": "3c4bbe3392211654493cf606e0b4ee53239e1de3fabae54e93cc8b73ce531374"
+  },
+  {
+    "path": "src\\training\\anchor_fit.py",
+    "sha256": "b360dc86d552e1e15b189ad08699a38fd110dc462038d805e48a54b071714d75"
+  },
+  {
+    "path": "src\\training\\anchor_projection.py",
+    "sha256": "5380b2189323e3b6eadaecfb1b24f01c6b774ef0030e55577bf4e29adef0f6a4"
+  },
+  {
+    "path": "src\\training\\archive_evals.py",
+    "sha256": "4545b92525401b7a62bccd76a0f738acb125fef5b362c68d48b4a53293fe5b65"
+  },
+  {
+    "path": "src\\training\\config.py",
+    "sha256": "bf97130d98c9a5a80d521e418938ece477a83a2fb1dd8a8d7467636a9624cefe"
+  },
+  {
+    "path": "src\\training\\contact_features.py",
+    "sha256": "fa2805020c09268903f97157f7014a3414d8bf2e41dec7f449b2a911f74baeba"
+  },
+  {
+    "path": "src\\training\\dataset.py",
+    "sha256": "01a89d0bf0b41a7c9cd5ddd4d278147dfe4170464d4b9ae1dd371aab5a7a8a96"
+  },
+  {
+    "path": "src\\training\\decision_buffer.py",
+    "sha256": "fa2a2e304c87a41a88008102ab715baf3eb8316b93c97f7a310735df6c2451aa"
+  },
+  {
+    "path": "src\\training\\deploy_sampling.py",
+    "sha256": "82b7b66c9d1fae173ae411970f252de569416a450de299b7a3568a31ac220ad1"
+  },
+  {
+    "path": "src\\training\\experimental_policy.py",
+    "sha256": "59cbecc0f6ed36eafbb9035bb5e57542ae2c0de9be450df469d71b4a2650b6d1"
+  },
+  {
+    "path": "src\\training\\experimental_rollout.py",
+    "sha256": "ab605b22c1e4795916e85d011932e5781dbeca80816291e928dd54ee60388e8c"
+  },
+  {
+    "path": "src\\training\\experiment_options.py",
+    "sha256": "fe25a226f7fa8fe8b1664b6b2fa9156392939b2714b7dc4917c31d36cb850f31"
+  },
+  {
+    "path": "src\\training\\geometry_profile.py",
+    "sha256": "6d23f16c0e960892c6032bb74743750fc6a09d1304c09848968364afedf8f543"
+  },
+  {
+    "path": "src\\training\\local_evaluation.py",
+    "sha256": "0912c1667e57b5f2a33ac2dded38c13eacfb70f6b5eb51861229dc9a8400ea99"
+  },
+  {
+    "path": "src\\training\\main_ppo.py",
+    "sha256": "b3e20d00271fccd1fd3eec180ac0fa0c50e759baf77f4bb8cfa11b77e4d4faed"
+  },
+  {
+    "path": "src\\training\\main_train.py",
+    "sha256": "9821d3f7a8454e93ffb13bb17d5320b0ceb5f4b4607d62dd008d73be9e31264f"
+  },
+  {
+    "path": "src\\training\\migrate_legacy_runs.py",
+    "sha256": "524014cb813c101d08ddb33f4dc398e9cd4c8deea8755130861d99807cf6af43"
+  },
+  {
+    "path": "src\\training\\model.py",
+    "sha256": "ac2b4cc12ab9b32c2a3f3cb6d5ac5f5d7a857764747424fbfc8a257fcda95164"
+  },
+  {
+    "path": "src\\training\\policy_audit.py",
+    "sha256": "c0c99e8a3c0bc81dcb2eb5c536933faff4576169c25279626793f14d8b875964"
+  },
+  {
+    "path": "src\\training\\policy_features.py",
+    "sha256": "2a2800bb2a95a3104ffc58c88d14c2b92cd3b9195f569781db525d9d0e6f7ad1"
+  },
+  {
+    "path": "src\\training\\ppo_buffer.py",
+    "sha256": "28e3f8578c3fed2c406f8a3855c864f6b4e5e38bcb27996b6f89bf23761d8af4"
+  },
+  {
+    "path": "src\\training\\ppo_trainer.py",
+    "sha256": "81a53b1b1cf3dfc182adf1af79b00be0f41bef53ee387b30ed9327b35083632f"
+  },
+  {
+    "path": "src\\training\\reference_anchor.py",
+    "sha256": "0f71570eac73c2ca206a4ea210a8792b83cd7f529c56736f98e053867b3b5b73"
+  },
+  {
+    "path": "src\\training\\reference_corridor.py",
+    "sha256": "570292284b3c57ed2566d6cd0a9dc00647f67360e870a5006e5a7e9ac3f1426e"
+  },
+  {
+    "path": "src\\training\\reference_fingerprint.py",
+    "sha256": "4172eb554c2d1cabc4147a94f5ad5aa9c46afb93a7c3d2354341de82e43669ff"
+  },
+  {
+    "path": "src\\training\\reward.py",
+    "sha256": "87f1e63b6cdde6783b0b2a79022e28d3a90ac84cfb04fbde8c4ae67a72901de8"
+  },
+  {
+    "path": "src\\training\\rollout.py",
+    "sha256": "001dcbdf2f3068f1c91d68309e4b282f24db930500e6bcf7d3a7e6bb31648c87"
+  },
+  {
+    "path": "src\\training\\rollout_pipeline.py",
+    "sha256": "3a7b7419d45ab822b8fc39242056564a54aad54ab8f4af6791031548c1694a20"
+  },
+  {
+    "path": "src\\training\\run_logging.py",
+    "sha256": "98429c01afdb04671fbbc83e1a94ebbcf4249b55bd4c55639350d167c1823db7"
+  },
+  {
+    "path": "src\\training\\run_log_parser.py",
+    "sha256": "012b09cac541c9833d27916b5103f44849682df3a511042ff85496815732de64"
+  },
+  {
+    "path": "src\\training\\sil_archive.py",
+    "sha256": "d1562e87f0ed1fb8818b7f98ca5cde34afc06ecc83dbb87a43af5d8016afdcfc"
+  },
+  {
+    "path": "src\\training\\sparse_geometry.py",
+    "sha256": "be97f7b5a32999bd95338bc9e53b4e11157f15b80a9fbfac1b1aeea52d037f94"
+  },
+  {
+    "path": "src\\training\\state_schema.py",
+    "sha256": "c7f7b8a1edb5a394abbea009896375f7177e718916597a7d6ef13114d6fd33c7"
+  },
+  {
+    "path": "src\\training\\tas_pot_detector.py",
+    "sha256": "44867a25b5ae3987a08949ba3dfcbe5477abd45c627043cab20644e286463be1"
+  },
+  {
+    "path": "src\\training\\trainer.py",
+    "sha256": "a722515d988cdfe10df6def406a6b01de5caa65d166bfcefce04b2eb46a14691"
+  },
+  {
+    "path": "src\\training\\__init__.py",
+    "sha256": "ce652d3f9e127fe518935860800151f29a61aa9c9374ac5e9993c19788959f20"
+  },
+  {
+    "path": "src\\env\\goi_env.py",
+    "sha256": "3d6adc69e0acfd0c7889c46b5f0d66447f64eab7c3a3cc8d5ed72fb41b5f638f"
+  },
+  {
+    "path": "src\\env\\protocol.py",
+    "sha256": "e74fdae20bf426558451da2cfd242dcc6db329c1ee309b126700f96b6d37e949"
+  },
+  {
+    "path": "src\\env\\__init__.py",
+    "sha256": "f85d65310a4dc14abf69b85c0be6c105e98492636d25302954ae99ec20e45a57"
+  },
+  {
+    "path": "src\\start\\game_launcher.py",
+    "sha256": "de09aefb84676f75f49282d58b3fd356363b38b1c5246bbb8f8cbb3a93733210"
+  },
+  {
+    "path": "src\\start\\game_mode_controller.py",
+    "sha256": "a08fdf3ddf3b49511ba319fea5010bb1a34739abf3ee94f7a6e07eacc89029d2"
+  },
+  {
+    "path": "src\\start\\__init__.py",
+    "sha256": "29f2ef9046bdc521c4dcdb662478615dbddd58d7e844b90174edd56b852d9bc6"
+  },
+  {
+    "path": "src\\tests\\analysis\\run_v2_formal.py",
+    "sha256": "ac5cf91f86998eb913c8d6781786efd161c5a15be4bc69b6ab20bf8d9b833ed0"
+  },
+  {
+    "path": "src\\tests\\analysis\\prepare_v2_formal.py",
+    "sha256": "c1872a63d4f01dc644e597239df9cd58ec285b38f14ce592e0e8bdb2dd992d13"
+  },
+  {
+    "path": "src\\tests\\analysis\\run_corridor_formal.py",
+    "sha256": "ad1349d835ea3982db9b2ab0f434987d98acd8dd4100f0e7b7b589059d69b92a"
+  },
+  {
+    "path": "src\\tests\\analysis\\run_corridor_screen.py",
+    "sha256": "270743a926220ee2529818f1b5ca6988e7885c113435910662ebc724919776ed"
+  },
+  {
+    "path": "src\\tests\\analysis\\run_corridor_sil_td_pareto.py",
+    "sha256": "ffd40d5a6179e677fd0a63e95451c8785b6b8dd1a59696d153e9c215f795d373"
+  },
+  {
+    "path": "src\\training\\local_evaluation.py",
+    "sha256": "0912c1667e57b5f2a33ac2dded38c13eacfb70f6b5eb51861229dc9a8400ea99"
+  },
+  {
+    "path": "runs\\sparse_geometry_20260926_S_s47\\checkpoints\\ppo_iter_0118.pt",
+    "sha256": "72da5d4347932bad3df44f52e4c0728903e9aa6d6cf90aad314660296b9720d0"
+  },
+  {
+    "path": "runs\\sparse_geometry_20260926\\td_v2_rerank\\elites_v2.npz",
+    "sha256": "902067c6bd912a3a774cbaf9ebec3709236933094b74a56dd7ea703d3debcb37"
+  },
+  {
+    "path": "runs\\sparse_geometry_20260926\\td_v2_rerank\\elites_v2.npz.fingerprint.json",
+    "sha256": "b2cd867193efba33dfe94f0b8967513e1c876a91ce4e4f4acd2fa29d238af95b"
+  },
+  {
+    "path": "src\\config\\project.json",
+    "sha256": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+  },
+  {
+    "path": "src\\Data\\video_reference\\37258923076-1-192\\reference_trajectory_game_world.json",
+    "sha256": "8d8a278f72432949c9a3b4a10be11ea58c859fabbc9d0d02f6e54cb79daeb066"
+  },
+  {
+    "path": "..\\..\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll",
+    "sha256": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f"
+  }
+]

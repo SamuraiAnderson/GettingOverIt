@@ -1,0 +1,97 @@
+[
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank01.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 800,
+        "seconds": 6.666666666666667,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank01\\window_credited.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 815,
+        "seconds": 6.791666666666667,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank01\\window_prune.png"
+      }
+    ]
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank02.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 476,
+        "seconds": 3.966666666666667,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank02\\window_credited.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 491,
+        "seconds": 4.091666666666667,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank02\\window_prune.png"
+      }
+    ]
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank03.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 521,
+        "seconds": 4.341666666666667,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank03\\window_credited.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 536,
+        "seconds": 4.466666666666667,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank03\\window_prune.png"
+      }
+    ]
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank04.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 340,
+        "seconds": 2.8333333333333335,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank04\\window_credited.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 355,
+        "seconds": 2.9583333333333335,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank04\\window_prune.png"
+      }
+    ]
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank05.json",
+    "frames": [
+      {
+        "frame": "credited",
+        "state_index": 321,
+        "seconds": 2.675,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank05\\window_credited.png"
+      },
+      {
+        "frame": "prune",
+        "state_index": 336,
+        "seconds": 2.8,
+        "guidance_index": 0,
+        "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\rank05\\window_prune.png"
+      }
+    ]
+  }
+]

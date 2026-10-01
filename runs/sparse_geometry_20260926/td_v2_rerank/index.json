@@ -1,0 +1,72 @@
+[
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank01.json",
+    "physical_steps": 815,
+    "physical_seconds": 6.791666666666667,
+    "rendered_frames": 205,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 24.35653339051011,
+    "credited_state_index": 800,
+    "credited_seconds": 6.666666666666667,
+    "prune_state_index": 815,
+    "prune_seconds": 6.791666666666667
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank02.json",
+    "physical_steps": 491,
+    "physical_seconds": 4.091666666666667,
+    "rendered_frames": 124,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 20.174841762436383,
+    "credited_state_index": 476,
+    "credited_seconds": 3.966666666666667,
+    "prune_state_index": 491,
+    "prune_seconds": 4.091666666666667
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank03.json",
+    "physical_steps": 536,
+    "physical_seconds": 4.466666666666667,
+    "rendered_frames": 135,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 17.35623184682477,
+    "credited_state_index": 521,
+    "credited_seconds": 4.341666666666667,
+    "prune_state_index": 536,
+    "prune_seconds": 4.466666666666667
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank04.json",
+    "physical_steps": 355,
+    "physical_seconds": 2.9583333333333335,
+    "rendered_frames": 90,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 13.102108004865217,
+    "credited_state_index": 340,
+    "credited_seconds": 2.8333333333333335,
+    "prune_state_index": 355,
+    "prune_seconds": 2.9583333333333335
+  },
+  {
+    "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank05.json",
+    "physical_steps": 336,
+    "physical_seconds": 2.8,
+    "rendered_frames": 85,
+    "fps": 30,
+    "type": "archived_state_reconstruction_not_game_recording",
+    "trail": "pot_transform_point_b",
+    "credited_progress_m": 12.797921706970994,
+    "credited_state_index": 321,
+    "credited_seconds": 2.675,
+    "prune_state_index": 336,
+    "prune_seconds": 2.8
+  }
+]

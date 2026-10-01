@@ -1,0 +1,25 @@
+{
+  "scope": "Same archived inputs, single-step policy, no TCP/features/training; not learning performance",
+  "steps": 64,
+  "agents": 2,
+  "device": "cuda",
+  "repeats": 3,
+  "transformer": {
+    "seconds": [
+      0.1811708000022918,
+      0.17356629998539574,
+      0.18224220001138747
+    ],
+    "median_seconds": 0.1811708000022918,
+    "cnn_frame_evaluations": 4096
+  },
+  "gru": {
+    "seconds": [
+      0.09149629998137243,
+      0.10792330000549555,
+      0.1030054000148084
+    ],
+    "median_seconds": 0.1030054000148084,
+    "cnn_frame_evaluations": 128
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "reference_progress_mode": "confirmed_endpoint_v2",
+  "sil_archive_mode": "td_pareto",
+  "sil_eligible_iterations": 118,
+  "sil_fired_iterations": 118,
+  "sil_skipped_iterations": 0,
+  "iterations": 123,
+  "last_iteration": 123,
+  "physical_samples": 1153217,
+  "warmup_samples": 19200,
+  "ppo_updates": 12167,
+  "collection_seconds": 25083.17878569849,
+  "update_seconds": 3359.0556567998137,
+  "max_frozen_ratio_error": 0.0003146630187984556,
+  "recent_samples_per_iteration": 9359.2,
+  "recent_iteration_seconds": 221.6362438599812
+}

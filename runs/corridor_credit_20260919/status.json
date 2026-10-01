@@ -1,0 +1,36 @@
+{
+  "status": "completed",
+  "updated_at": "2026-09-20T00:31:04+08:00",
+  "deadline": "2026-09-20T01:05:10+08:00",
+  "error": null,
+  "last_job": {
+    "label": "T_s17_holdout_096k",
+    "started_at": "2026-09-20T00:22:20+08:00",
+    "command": [
+      "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+      "-m",
+      "src.training.local_evaluation",
+      "--checkpoint",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_credit_20260919_T_s17\\checkpoints\\ppo_iter_0044.pt",
+      "--output",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_credit_20260919_T_s17\\checkpoints\\eval_holdout_096k",
+      "--steps",
+      "1200",
+      "--rounds",
+      "5",
+      "--num-agents",
+      "2",
+      "--seed",
+      "20261020",
+      "--jitter",
+      "0.01",
+      "--goal-progress",
+      "5",
+      "--dwell",
+      "10",
+      "--noise-phi",
+      "0.85",
+      "--native-diagnostics"
+    ]
+  }
+}

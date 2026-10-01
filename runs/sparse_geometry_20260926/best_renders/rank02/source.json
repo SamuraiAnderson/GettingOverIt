@@ -1,0 +1,14 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926_S_s47\\checkpoints\\eval_milestone_288k\\exploration_000_agent6.json",
+  "physical_steps": 1200,
+  "physical_seconds": 10.0,
+  "rendered_frames": 301,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording",
+  "trail": "pot_transform_point_b",
+  "credited_progress_m": 9.610355451084471,
+  "credited_state_index": 979,
+  "credited_seconds": 8.158333333333333,
+  "prune_state_index": 994,
+  "prune_seconds": 8.283333333333333
+}

@@ -1,0 +1,22 @@
+{
+  "run": "runs\\corridor_credit_20260919_C_s7",
+  "stats": {
+    "iterations": 3,
+    "last_iteration": 3,
+    "physical_samples": 7003,
+    "warmup_samples": 4603,
+    "ppo_updates": 2,
+    "collection_seconds": 80.91762419999577,
+    "update_seconds": 47.890222899994114,
+    "max_frozen_ratio_error": 1.6689160474925302e-05,
+    "recent_samples_per_iteration": 2334.3333333333335,
+    "recent_iteration_seconds": 42.93594903332996
+  },
+  "saved_parameters": {
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "reference_deviation_weight": 0.01,
+    "normalize_action_history": true
+  },
+  "offline_tests_passed": 37
+}

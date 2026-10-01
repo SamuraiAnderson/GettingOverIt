@@ -1,0 +1,8 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_formal_20260922_T_s31\\checkpoints\\eval_midpoint_096k\\exploration_001_agent0.json",
+  "physical_steps": 1200,
+  "physical_seconds": 10.0,
+  "rendered_frames": 301,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording"
+}

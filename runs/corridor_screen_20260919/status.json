@@ -1,0 +1,36 @@
+{
+  "status": "completed",
+  "phase": "replicate",
+  "updated_at": "2026-09-19T15:11:43+08:00",
+  "error": null,
+  "last_job": {
+    "label": "B1_s17_holdout_072k",
+    "started_at": "2026-09-19T15:04:01+08:00",
+    "command": [
+      "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+      "-m",
+      "src.training.local_evaluation",
+      "--checkpoint",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_screen_20260919_B1_s17\\checkpoints\\ppo_iter_0038.pt",
+      "--output",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_screen_20260919_B1_s17\\checkpoints\\eval_holdout_072k",
+      "--steps",
+      "1200",
+      "--rounds",
+      "5",
+      "--num-agents",
+      "2",
+      "--seed",
+      "20261019",
+      "--jitter",
+      "0.01",
+      "--goal-progress",
+      "5",
+      "--dwell",
+      "10",
+      "--noise-phi",
+      "0.85",
+      "--native-diagnostics"
+    ]
+  }
+}

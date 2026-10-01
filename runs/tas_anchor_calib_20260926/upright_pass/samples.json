@@ -1,0 +1,804 @@
+{
+  "collected_at": 1790389046.3921766,
+  "pixel_origin": "image_top_left",
+  "unity_screen_origin": "bottom_left",
+  "conversion": "training.anchor_projection.unity_screen_to_image_xy",
+  "detector_version": "live_dark_contour_v1",
+  "samples": [
+    {
+      "pose_id": "spawn_upright",
+      "split": "fit",
+      "sequence": 84,
+      "agent_id": 0,
+      "position_xy": [
+        -44.3090134,
+        -2.4202
+      ],
+      "rotation_z_deg": 0.233529821,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -42.3520851,
+        -1.319137
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        499.100952,
+        439.27652
+      ],
+      "unity_axis_x_img": [
+        571.100464,
+        438.983063
+      ],
+      "unity_axis_y_img": [
+        498.807678,
+        367.277161
+      ],
+      "detected_px": [
+        503.807546548031,
+        470.6330532212885
+      ],
+      "detection": {
+        "detected_px": [
+          503.807546548031,
+          470.6330532212885
+        ],
+        "confidence": 0.8360914617664681,
+        "area_small": 1011.5,
+        "vmax": 62,
+        "circularity": 0.7169108890911376,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\spawn_upright_seq000084.ppm",
+      "camera_registration_px": 0.000211007487916814,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "spawn_tilt_left",
+      "split": "fit",
+      "sequence": 113,
+      "agent_id": 0,
+      "position_xy": [
+        -44.17585,
+        -2.19650269
+      ],
+      "rotation_z_deg": 357.9274,
+      "scale_xy": [
+        0.99999994,
+        0.99999994
+      ],
+      "camera_xy": [
+        -42.29225,
+        -1.31925809
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        504.3811,
+        423.1616
+      ],
+      "unity_axis_x_img": [
+        576.3336,
+        425.765564
+      ],
+      "unity_axis_y_img": [
+        506.985168,
+        351.2087
+      ],
+      "detected_px": [
+        507.8935574229692,
+        453.937441643324
+      ],
+      "detection": {
+        "detected_px": [
+          507.8935574229692,
+          453.937441643324
+        ],
+        "confidence": 0.8460421475974212,
+        "area_small": 1071.0,
+        "vmax": 62,
+        "circularity": 0.7216024408113254,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\spawn_tilt_left_seq000113.ppm",
+      "camera_registration_px": 0.0003002089934517151,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "spawn_tilt_right",
+      "split": "fit",
+      "sequence": 143,
+      "agent_id": 0,
+      "position_xy": [
+        -44.31509,
+        -2.425634
+      ],
+      "rotation_z_deg": 359.65918,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -42.35748,
+        -1.31908691
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        499.052124,
+        439.6714
+      ],
+      "unity_axis_x_img": [
+        571.0507,
+        440.0997
+      ],
+      "unity_axis_y_img": [
+        499.4803,
+        367.672668
+      ],
+      "detected_px": [
+        503.6235849056604,
+        470.2512578616352
+      ],
+      "detection": {
+        "detected_px": [
+          503.6235849056604,
+          470.2512578616352
+        ],
+        "confidence": 0.8460005983014115,
+        "area_small": 1060.0,
+        "vmax": 62,
+        "circularity": 0.7229350947107462,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\spawn_tilt_right_seq000143.ppm",
+      "camera_registration_px": 4.5018111633684516e-05,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "spawn_large_rotate",
+      "split": "fit",
+      "sequence": 185,
+      "agent_id": 0,
+      "position_xy": [
+        -45.930542,
+        -0.5267545
+      ],
+      "rotation_z_deg": 5.30394125,
+      "scale_xy": [
+        1.00000012,
+        1.00000012
+      ],
+      "camera_xy": [
+        -43.340168,
+        -0.787710965
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        453.493042,
+        341.211151
+      ],
+      "unity_axis_x_img": [
+        525.184937,
+        334.555542
+      ],
+      "unity_axis_y_img": [
+        446.837463,
+        269.51944
+      ],
+      "detected_px": [
+        461.22179974651453,
+        373.96514575411913
+      ],
+      "detection": {
+        "detected_px": [
+          461.22179974651453,
+          373.96514575411913
+        ],
+        "confidence": 0.8157112356564817,
+        "area_small": 1052.0,
+        "vmax": 62,
+        "circularity": 0.6690357541747316,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\spawn_large_rotate_seq000185.ppm",
+      "camera_registration_px": 3.422850244923111e-05,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "spawn_lean_up",
+      "split": "fit",
+      "sequence": 209,
+      "agent_id": 0,
+      "position_xy": [
+        -44.2001,
+        -2.23714638
+      ],
+      "rotation_z_deg": 0.557272434,
+      "scale_xy": [
+        0.99999994,
+        0.99999994
+      ],
+      "camera_xy": [
+        -42.51462,
+        -1.18056977
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        518.6453,
+        436.073517
+      ],
+      "unity_axis_x_img": [
+        590.6421,
+        435.37326
+      ],
+      "unity_axis_y_img": [
+        517.944946,
+        364.0769
+      ],
+      "detected_px": [
+        523.3775270333804,
+        466.7092932142297
+      ],
+      "detection": {
+        "detected_px": [
+          523.3775270333804,
+          466.7092932142297
+        ],
+        "confidence": 0.8581025114616131,
+        "area_small": 1063.5,
+        "vmax": 62,
+        "circularity": 0.7444740251756301,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\spawn_lean_up_seq000209.ppm",
+      "camera_registration_px": 0.00014000416575318334,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_00",
+      "split": "holdout",
+      "sequence": 222,
+      "agent_id": 0,
+      "position_xy": [
+        -44.29121,
+        -2.42214
+      ],
+      "rotation_z_deg": 359.760742,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -42.32692,
+        -1.29802084
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        498.571167,
+        440.936584
+      ],
+      "unity_axis_x_img": [
+        570.5707,
+        441.237244
+      ],
+      "unity_axis_y_img": [
+        498.871765,
+        368.9372
+      ],
+      "detected_px": [
+        502.72152710940003,
+        472.0327237728585
+      ],
+      "detection": {
+        "detected_px": [
+          502.72152710940003,
+          472.0327237728585
+        ],
+        "confidence": 0.8202724222115377,
+        "area_small": 1039.0,
+        "vmax": 62,
+        "circularity": 0.6799799696137547,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_00_seq000222.ppm",
+      "camera_registration_px": 4.72130319219004e-05,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_00_tilt",
+      "split": "holdout",
+      "sequence": 249,
+      "agent_id": 0,
+      "position_xy": [
+        -44.2254028,
+        -2.14755321
+      ],
+      "rotation_z_deg": 0.6704289,
+      "scale_xy": [
+        0.99999994,
+        0.99999994
+      ],
+      "camera_xy": [
+        -42.301796,
+        -1.31728673
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        501.500549,
+        419.779175
+      ],
+      "unity_axis_x_img": [
+        573.4955,
+        418.9367
+      ],
+      "unity_axis_y_img": [
+        500.657959,
+        347.784119
+      ],
+      "detected_px": [
+        506.1963190184049,
+        450.95642598710083
+      ],
+      "detection": {
+        "detected_px": [
+          506.1963190184049,
+          450.95642598710083
+        ],
+        "confidence": 0.8159272241174867,
+        "area_small": 1059.5,
+        "vmax": 62,
+        "circularity": 0.6682245516537573,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_00_tilt_seq000249.ppm",
+      "camera_registration_px": 0.00023887987232890423,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_01",
+      "split": "holdout",
+      "sequence": 262,
+      "agent_id": 0,
+      "position_xy": [
+        -42.499054,
+        -1.7373271
+      ],
+      "rotation_z_deg": 359.6021,
+      "scale_xy": [
+        0.99999994,
+        0.99999994
+      ],
+      "camera_xy": [
+        -41.4924622,
+        -1.310465
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        567.5253,
+        390.73407
+      ],
+      "unity_axis_x_img": [
+        639.5239,
+        391.234039
+      ],
+      "unity_axis_y_img": [
+        568.0252,
+        318.7358
+      ],
+      "detected_px": [
+        571.1402895656515,
+        421.32867365618233
+      ],
+      "detection": {
+        "detected_px": [
+          571.1402895656515,
+          421.32867365618233
+        ],
+        "confidence": 0.8282130136550853,
+        "area_small": 1001.5,
+        "vmax": 52,
+        "circularity": 0.7061788785565717,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_01_seq000262.ppm",
+      "camera_registration_px": 9.040796400055423e-05,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_01_tilt",
+      "split": "holdout",
+      "sequence": 289,
+      "agent_id": 0,
+      "position_xy": [
+        -42.5458755,
+        -2.39510155
+      ],
+      "rotation_z_deg": 0.7000124,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -40.6373,
+        -1.31687438
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        502.5824,
+        437.632355
+      ],
+      "unity_axis_x_img": [
+        574.5767,
+        436.752716
+      ],
+      "unity_axis_y_img": [
+        501.702576,
+        365.637726
+      ],
+      "detected_px": [
+        507.41271377863825,
+        468.84511132623425
+      ],
+      "detection": {
+        "detected_px": [
+          507.41271377863825,
+          468.84511132623425
+        ],
+        "confidence": 0.8199376304707706,
+        "area_small": 1033.0,
+        "vmax": 62,
+        "circularity": 0.680813440560641,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_01_tilt_seq000289.ppm",
+      "camera_registration_px": 0.00016400468789238206,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_02",
+      "split": "holdout",
+      "sequence": 302,
+      "agent_id": 0,
+      "position_xy": [
+        -45.9962769,
+        -2.04789829
+      ],
+      "rotation_z_deg": 359.2014,
+      "scale_xy": [
+        0.99999994,
+        0.99999994
+      ],
+      "camera_xy": [
+        -42.22933,
+        -1.31733751
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        368.7796,
+        412.600372
+      ],
+      "unity_axis_x_img": [
+        440.7727,
+        413.6039
+      ],
+      "unity_axis_y_img": [
+        369.783325,
+        340.607361
+      ],
+      "detected_px": [
+        374.0475715236194,
+        444.1390552228875
+      ],
+      "detection": {
+        "detected_px": [
+          374.0475715236194,
+          444.1390552228875
+        ],
+        "confidence": 0.8438283544587772,
+        "area_small": 1002.0,
+        "vmax": 52,
+        "circularity": 0.7347181114942801,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_02_seq000302.ppm",
+      "camera_registration_px": 0.00022323876365260185,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_02_tilt",
+      "split": "holdout",
+      "sequence": 329,
+      "agent_id": 0,
+      "position_xy": [
+        -45.74605,
+        -2.48779488
+      ],
+      "rotation_z_deg": 344.997467,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -43.8786964,
+        -1.31770313
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        505.550537,
+        444.246582
+      ],
+      "unity_axis_x_img": [
+        575.096436,
+        462.884644
+      ],
+      "unity_axis_y_img": [
+        524.188538,
+        374.700775
+      ],
+      "detected_px": [
+        501.7251082251082,
+        475.7421150278293
+      ],
+      "detection": {
+        "detected_px": [
+          501.7251082251082,
+          475.7421150278293
+        ],
+        "confidence": 0.86605967752956,
+        "area_small": 1078.0,
+        "vmax": 62,
+        "circularity": 0.7573650246288633,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_02_tilt_seq000329.ppm",
+      "camera_registration_px": 2.429897128657929e-05,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_03",
+      "split": "holdout",
+      "sequence": 342,
+      "agent_id": 0,
+      "position_xy": [
+        -43.1956024,
+        -0.5320297
+      ],
+      "rotation_z_deg": 359.6765,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -42.5876122,
+        -0.8561881
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        596.2247,
+        336.660583
+      ],
+      "unity_axis_x_img": [
+        668.2236,
+        337.067078
+      ],
+      "unity_axis_y_img": [
+        596.631165,
+        264.661774
+      ],
+      "detected_px": [
+        599.4225746268656,
+        369.19869402985074
+      ],
+      "detection": {
+        "detected_px": [
+          599.4225746268656,
+          369.19869402985074
+        ],
+        "confidence": 0.8305273904640077,
+        "area_small": 1072.0,
+        "vmax": 62,
+        "circularity": 0.6932629493171761,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_03_seq000342.ppm",
+      "camera_registration_px": 1.3423859519075881e-05,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "near_03_tilt",
+      "split": "holdout",
+      "sequence": 369,
+      "agent_id": 0,
+      "position_xy": [
+        -43.34178,
+        -1.94240081
+      ],
+      "rotation_z_deg": 4.568872,
+      "scale_xy": [
+        0.99999994,
+        0.99999994
+      ],
+      "camera_xy": [
+        -41.3445473,
+        -0.9176865
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        496.199036,
+        433.779419
+      ],
+      "unity_axis_x_img": [
+        567.9703,
+        428.044067
+      ],
+      "unity_axis_y_img": [
+        490.463562,
+        362.0082
+      ],
+      "detected_px": [
+        503.34868105515585,
+        464.91414868105517
+      ],
+      "detection": {
+        "detected_px": [
+          503.34868105515585,
+          464.91414868105517
+        ],
+        "confidence": 0.8479738624219088,
+        "area_small": 1042.5,
+        "vmax": 62,
+        "circularity": 0.7297735533688214,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\near_03_tilt_seq000369.ppm",
+      "camera_registration_px": 0.00020990546079988304,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "spawn_downswing",
+      "split": "holdout",
+      "sequence": 406,
+      "agent_id": 0,
+      "position_xy": [
+        -43.8374443,
+        -0.5793198
+      ],
+      "rotation_z_deg": 345.025574,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -42.11474,
+        -1.05801058
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        515.9653,
+        325.534271
+      ],
+      "unity_axis_x_img": [
+        585.52,
+        344.138184
+      ],
+      "unity_axis_y_img": [
+        534.5691,
+        255.97930000000002
+      ],
+      "detected_px": [
+        512.4116475095785,
+        357.09793103448277
+      ],
+      "detection": {
+        "detected_px": [
+          512.4116475095785,
+          357.09793103448277
+        ],
+        "confidence": 0.8737686385496767,
+        "area_small": 1087.5,
+        "vmax": 62,
+        "circularity": 0.77077666029324,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\spawn_downswing_seq000406.ppm",
+      "camera_registration_px": 1.197604289651904e-05,
+      "metres_per_pixel": 0.013888888888888888
+    },
+    {
+      "pose_id": "spawn_hard_left",
+      "split": "holdout",
+      "sequence": 440,
+      "agent_id": 0,
+      "position_xy": [
+        -44.06598,
+        -2.39486265
+      ],
+      "rotation_z_deg": 352.190552,
+      "scale_xy": [
+        1,
+        1
+      ],
+      "camera_xy": [
+        -42.18341,
+        -1.28484523
+      ],
+      "orthographic_size": 5,
+      "pixel_width": 1280.0,
+      "pixel_height": 720.0,
+      "unity_body_img": [
+        504.454956,
+        439.921234
+      ],
+      "unity_axis_x_img": [
+        575.787354,
+        449.704529
+      ],
+      "unity_axis_y_img": [
+        514.2383,
+        368.58902
+      ],
+      "detected_px": [
+        504.80983916745504,
+        470.6644591611479
+      ],
+      "detection": {
+        "detected_px": [
+          504.80983916745504,
+          470.6644591611479
+        ],
+        "confidence": 0.8515401862159886,
+        "area_small": 1057.0,
+        "vmax": 62,
+        "circularity": 0.7334960216660062,
+        "detector_version": "live_dark_contour_v1",
+        "reason": "ok"
+      },
+      "image_path": "runs\\tas_anchor_calib_20260926\\images\\spawn_hard_left_seq000440.ppm",
+      "camera_registration_px": 2.0631471063020594e-05,
+      "metres_per_pixel": 0.013888888888888888
+    }
+  ]
+}

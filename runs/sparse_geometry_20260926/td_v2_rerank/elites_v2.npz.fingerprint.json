@@ -1,0 +1,21 @@
+{
+  "state_schema": "anchor35",
+  "raw_dim": 35,
+  "anchor_id": "pot_visible_center_v1",
+  "calibration_sha256": "94426ea3c49b32ff1b508a1026ba555ba7b2221174fa36da7b251c98dce72459",
+  "calibration_verified": true,
+  "source_kind": "native",
+  "route_sha256": "8d8a278f72432949c9a3b4a10be11ea58c859fabbc9d0d02f6e54cb79daeb066",
+  "reference_simplify_tolerance": 0.15,
+  "reference_corridor_radius": 1.5,
+  "reference_progress_weight": 1.0,
+  "reference_deviation_weight": 0.01,
+  "reference_projection_window": 4.0,
+  "reference_max_step": 4.0,
+  "reference_interpolated_weight": 0.5,
+  "credited_algorithm": "confirmed_endpoint_v2",
+  "reference_progress_mode": "confirmed_endpoint_v2",
+  "cap_rule": "last_credit_event",
+  "reward_rule": "delta_confirmed_distance",
+  "fingerprint": "f883caa4debee9d068b307a310caf9b048dd2e03778ca38d8166702fbe4127de"
+}

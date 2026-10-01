@@ -1,0 +1,14 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\imitation\\closed_loop\\deterministic_000_agent0.json",
+  "physical_steps": 816,
+  "physical_seconds": 6.8,
+  "rendered_frames": 205,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording",
+  "trail": "pot_transform_point_b",
+  "credited_progress_m": 4.063205073120242,
+  "credited_state_index": 174,
+  "credited_seconds": 1.45,
+  "prune_state_index": 189,
+  "prune_seconds": 1.575
+}

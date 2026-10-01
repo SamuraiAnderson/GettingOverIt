@@ -1,0 +1,14 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank03.json",
+  "physical_steps": 1041,
+  "physical_seconds": 8.675,
+  "rendered_frames": 262,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording",
+  "trail": "pot_transform_point_b",
+  "credited_progress_m": 17.119964976341162,
+  "credited_state_index": 1026,
+  "credited_seconds": 8.55,
+  "prune_state_index": 1041,
+  "prune_seconds": 8.675
+}

@@ -1,0 +1,11 @@
+{
+  "full_rollouts": 15,
+  "physical_samples": 108131,
+  "checkpoint_unchanged": true,
+  "all_full_input_audits_passed": true,
+  "max_full_audit_error": 7.725060277152807E-05,
+  "script_hashes": {
+    "src/tests/analysis/benchmark_player_throughput.py": "2e4e0dd9030e17bfbc886ab55193505e9fd58f11ca3bc6322a83822749428cff",
+    "src/tests/analysis/optimize_training_budget.py": "be2132cd5880dc7d06e1adf1fba578a5bf7e19015afb0be17ec452df4ef4face"
+  }
+}

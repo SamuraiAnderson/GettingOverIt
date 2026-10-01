@@ -1,0 +1,5 @@
+{
+  "pid": 26600,
+  "launched_at": "2026-09-19T19:12:18.9500976+08:00",
+  "command": "conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.run_corridor_credit --deadline 2026-09-20T01:05:10+08:00"
+}

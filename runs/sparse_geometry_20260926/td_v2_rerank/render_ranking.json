@@ -1,0 +1,24 @@
+{
+  "episodes": [
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank01.json",
+      "label": "elite D 24.357 t 800"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank02.json",
+      "label": "elite D 20.175 t 476"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank03.json",
+      "label": "elite D 17.356 t 521"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank04.json",
+      "label": "elite D 13.102 t 340"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank05.json",
+      "label": "elite D 12.798 t 321"
+    }
+  ]
+}

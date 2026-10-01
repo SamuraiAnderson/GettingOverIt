@@ -1,0 +1,106 @@
+{
+  "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\elites\\elites_iter_0123.npz",
+  "criterion": "confirmed D descending, then smaller t",
+  "episodes": [
+    {
+      "rank": 1,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank01.json",
+      "source_index": 16,
+      "iteration": 110,
+      "t": 800,
+      "D": 24.35653339051011,
+      "cap": 799,
+      "on_front": true
+    },
+    {
+      "rank": 2,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank02.json",
+      "source_index": 15,
+      "iteration": 110,
+      "t": 476,
+      "D": 20.174841762436383,
+      "cap": 475,
+      "on_front": true
+    },
+    {
+      "rank": 3,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank03.json",
+      "source_index": 17,
+      "iteration": 110,
+      "t": 1026,
+      "D": 17.119964976341162,
+      "cap": 1025,
+      "on_front": false
+    },
+    {
+      "rank": 4,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank04.json",
+      "source_index": 14,
+      "iteration": 110,
+      "t": 191,
+      "D": 13.892033446450862,
+      "cap": 190,
+      "on_front": true
+    },
+    {
+      "rank": 5,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank05.json",
+      "source_index": 13,
+      "iteration": 110,
+      "t": 175,
+      "D": 12.711719022826218,
+      "cap": 174,
+      "on_front": true
+    },
+    {
+      "rank": 6,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank06.json",
+      "source_index": 12,
+      "iteration": 110,
+      "t": 164,
+      "D": 11.671441479833659,
+      "cap": 163,
+      "on_front": true
+    },
+    {
+      "rank": 7,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank07.json",
+      "source_index": 11,
+      "iteration": 110,
+      "t": 134,
+      "D": 10.616540169826122,
+      "cap": 133,
+      "on_front": true
+    },
+    {
+      "rank": 8,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank08.json",
+      "source_index": 18,
+      "iteration": 110,
+      "t": 194,
+      "D": 9.894295525331872,
+      "cap": 193,
+      "on_front": false
+    },
+    {
+      "rank": 9,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank09.json",
+      "source_index": 10,
+      "iteration": 110,
+      "t": 132,
+      "D": 9.888112305087073,
+      "cap": 131,
+      "on_front": true
+    },
+    {
+      "rank": 10,
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\ranks\\episodes\\rank10.json",
+      "source_index": 9,
+      "iteration": 110,
+      "t": 124,
+      "D": 9.660658808520052,
+      "cap": 123,
+      "on_front": true
+    }
+  ]
+}

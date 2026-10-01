@@ -1,0 +1,14 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926\\td_v2_rerank\\episodes\\rank03.json",
+  "physical_steps": 536,
+  "physical_seconds": 4.466666666666667,
+  "rendered_frames": 135,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording",
+  "trail": "pot_transform_point_b",
+  "credited_progress_m": 17.35623184682477,
+  "credited_state_index": 521,
+  "credited_seconds": 4.341666666666667,
+  "prune_state_index": 536,
+  "prune_seconds": 4.466666666666667
+}

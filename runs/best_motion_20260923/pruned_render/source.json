@@ -1,0 +1,8 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\best_motion_20260923\\pruned_T_s31\\checkpoints\\eval_midpoint_096k\\pruned_590_episode.json",
+  "physical_steps": 590,
+  "physical_seconds": 4.916666666666667,
+  "rendered_frames": 149,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording"
+}

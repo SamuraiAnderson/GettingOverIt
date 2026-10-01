@@ -1,0 +1,6 @@
+{
+  "six_arms_completed": true,
+  "all_behavior_audits_passed": true,
+  "version_lag_bounded": true,
+  "changed_sources_since_test": []
+}

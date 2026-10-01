@@ -1,0 +1,45 @@
+{
+  "completed_at": "2026-09-20T00:31:04+08:00",
+  "training_samples": 582605,
+  "evaluation_samples": 276836,
+  "frozen_artifacts_verified": 61,
+  "max_training_ratio_error": 0.0002460177056491375,
+  "holdouts": {
+    "C_deterministic": {
+      "episodes": 20,
+      "successes": 0,
+      "success_hold_120_count": 0,
+      "falls_after_success": 0
+    },
+    "C_exploration": {
+      "episodes": 20,
+      "successes": 3,
+      "success_hold_120_count": 0,
+      "falls_after_success": 3
+    },
+    "D_deterministic": {
+      "episodes": 20,
+      "successes": 1,
+      "success_hold_120_count": 0,
+      "falls_after_success": 1
+    },
+    "D_exploration": {
+      "episodes": 20,
+      "successes": 0,
+      "success_hold_120_count": 0,
+      "falls_after_success": 0
+    },
+    "T_deterministic": {
+      "episodes": 20,
+      "successes": 3,
+      "success_hold_120_count": 1,
+      "falls_after_success": 2
+    },
+    "T_exploration": {
+      "episodes": 20,
+      "successes": 2,
+      "success_hold_120_count": 0,
+      "falls_after_success": 1
+    }
+  }
+}

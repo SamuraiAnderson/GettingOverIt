@@ -1,0 +1,14 @@
+{
+  "changed_tensors": [
+    "critic_head.0.weight",
+    "critic_head.0.bias",
+    "critic_head.2.weight",
+    "critic_head.2.bias"
+  ],
+  "noncritic_unchanged": true,
+  "value_warmup_end": 336,
+  "geometry": {
+    "tip_angle_offset": -180.0,
+    "body_angle_offset": -84.49833
+  }
+}

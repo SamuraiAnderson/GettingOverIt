@@ -1,0 +1,56 @@
+{
+  "status": "budget_stopped",
+  "updated_at": "2026-09-28T20:15:12+08:00",
+  "deadline": "2026-09-28T21:10:40.360135+08:00",
+  "controller_pid": 10760,
+  "controller_create_time": 1790557838.2724628,
+  "child_pid": null,
+  "job": {
+    "label": "S_s47_milestone_1152k",
+    "started_at": "2026-09-28T20:00:22+08:00",
+    "command": [
+      "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+      "-m",
+      "src.training.local_evaluation",
+      "--checkpoint",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\checkpoints\\ppo_iter_0123.pt",
+      "--output",
+      "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\confirmed_endpoint_v2_formal_20260928_S_s47\\checkpoints\\eval_milestone_1152k",
+      "--steps",
+      "1200",
+      "--rounds",
+      "2",
+      "--num-agents",
+      "8",
+      "--seed",
+      "20260922",
+      "--jitter",
+      "0.01",
+      "--goal-progress",
+      "5",
+      "--dwell",
+      "10",
+      "--noise-phi",
+      "0.85",
+      "--native-diagnostics"
+    ]
+  },
+  "training": [
+    {
+      "arm": "S",
+      "seed": 47,
+      "iterations": 123,
+      "last_iteration": 123,
+      "physical_samples": 1153217,
+      "warmup_samples": 19200,
+      "ppo_updates": 12167,
+      "collection_seconds": 25083.17878569849,
+      "update_seconds": 3359.0556567998137,
+      "max_frozen_ratio_error": 0.0003146630187984556,
+      "recent_samples_per_iteration": 9359.2,
+      "recent_iteration_seconds": 221.6362438599812
+    }
+  ],
+  "error": "Insufficient time for the next 96k milestone and evaluation",
+  "runtime_restored": true
+}

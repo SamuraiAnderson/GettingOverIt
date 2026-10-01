@@ -1,0 +1,24 @@
+[
+  {
+    "rank": 1,
+    "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926_S_s47\\checkpoints\\ppo_iter_0109.pt",
+    "samples": 12,
+    "mean_abs_executed_minus_policy_mean": 52.19825142621994,
+    "mean_abs_action_change": {
+      "terrain_5cm": 0.11365851488274832,
+      "terrain_30cm": 0.45291099371388555,
+      "body_vs_cursor_5cm": 0.13372180152994892
+    }
+  },
+  {
+    "rank": 2,
+    "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\sparse_geometry_20260926_S_s47\\checkpoints\\ppo_iter_0109.pt",
+    "samples": 12,
+    "mean_abs_executed_minus_policy_mean": 23.994595777243376,
+    "mean_abs_action_change": {
+      "terrain_5cm": 0.04672561455906058,
+      "terrain_30cm": 0.4129846374659489,
+      "body_vs_cursor_5cm": 0.05127986906639611
+    }
+  }
+]

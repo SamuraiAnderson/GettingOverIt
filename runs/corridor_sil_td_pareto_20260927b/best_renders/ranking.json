@@ -1,0 +1,20 @@
+{
+  "episodes": [
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_864k\\deterministic_001_agent5.json",
+      "label": "864k det t1a5 credited 7.145"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_864k\\deterministic_001_agent3.json",
+      "label": "864k det t1a3 credited 5.755"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_672k\\deterministic_001_agent0.json",
+      "label": "672k det t1a0 credited 5.225"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_td_pareto_20260927b_S_s47\\checkpoints\\eval_milestone_576k\\deterministic_000_agent0.json",
+      "label": "576k det t0a0 credited 5.211"
+    }
+  ]
+}

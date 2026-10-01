@@ -1,0 +1,117 @@
+{
+  "passed": true,
+  "runs": [
+    {
+      "phase": "live",
+      "agents": 2,
+      "mode": "serial",
+      "weights_unchanged": false,
+      "physical_samples": 6319,
+      "eval_episodes": 2,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "live",
+      "agents": 2,
+      "mode": "pipeline",
+      "weights_unchanged": false,
+      "physical_samples": 6324,
+      "eval_episodes": 2,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "live",
+      "agents": 4,
+      "mode": "serial",
+      "weights_unchanged": false,
+      "physical_samples": 13018,
+      "eval_episodes": 4,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "live",
+      "agents": 4,
+      "mode": "pipeline",
+      "weights_unchanged": false,
+      "physical_samples": 11973,
+      "eval_episodes": 4,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "live",
+      "agents": 8,
+      "mode": "serial",
+      "weights_unchanged": false,
+      "physical_samples": 27097,
+      "eval_episodes": 8,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "live",
+      "agents": 8,
+      "mode": "pipeline",
+      "weights_unchanged": false,
+      "physical_samples": 26351,
+      "eval_episodes": 8,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "frozen",
+      "agents": 2,
+      "mode": "serial",
+      "weights_unchanged": true,
+      "physical_samples": 3866,
+      "eval_episodes": 2,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "frozen",
+      "agents": 2,
+      "mode": "pipeline",
+      "weights_unchanged": true,
+      "physical_samples": 4800,
+      "eval_episodes": 2,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "frozen",
+      "agents": 4,
+      "mode": "serial",
+      "weights_unchanged": true,
+      "physical_samples": 9042,
+      "eval_episodes": 4,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "frozen",
+      "agents": 4,
+      "mode": "pipeline",
+      "weights_unchanged": true,
+      "physical_samples": 9600,
+      "eval_episodes": 4,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "frozen",
+      "agents": 8,
+      "mode": "serial",
+      "weights_unchanged": true,
+      "physical_samples": 17333,
+      "eval_episodes": 8,
+      "trace_counts_verified": true
+    },
+    {
+      "phase": "frozen",
+      "agents": 8,
+      "mode": "pipeline",
+      "weights_unchanged": true,
+      "physical_samples": 16838,
+      "eval_episodes": 8,
+      "trace_counts_verified": true
+    }
+  ],
+  "runtime_restored": true,
+  "environment_hashes_unchanged": true,
+  "regression_test_count": 42,
+  "regression_command": "python -m unittest src.tests.training.test_rollout_pipeline src.tests.training.test_ppo_contract src.tests.training.test_policy_experiments src.tests.training.test_reference_corridor"
+}

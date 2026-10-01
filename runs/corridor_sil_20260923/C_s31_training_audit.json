@@ -1,0 +1,36 @@
+{
+  "configuration_differences": {
+    "sil_advantage_weighting_enabled": {
+      "baseline": false,
+      "current": true
+    },
+    "sil_enabled": {
+      "baseline": false,
+      "current": true
+    },
+    "max_iterations": {
+      "baseline": 12,
+      "current": 20
+    },
+    "log_dir": {
+      "baseline": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_formal_20260922_C_s31\\logs",
+      "current": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_20260923_C_s31\\logs"
+    },
+    "checkpoint_dir": {
+      "baseline": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_formal_20260922_C_s31\\checkpoints",
+      "current": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\corridor_sil_20260923_C_s31\\checkpoints"
+    }
+  },
+  "sil_iterations": 8,
+  "sil_updates": 297.0,
+  "iterations": 13,
+  "last_iteration": 13,
+  "physical_samples": 97939,
+  "warmup_samples": 14840,
+  "ppo_updates": 552,
+  "collection_seconds": 541.3588396000268,
+  "update_seconds": 766.2256620000117,
+  "max_frozen_ratio_error": 1.78815535036847e-05,
+  "recent_samples_per_iteration": 7481.0,
+  "recent_iteration_seconds": 111.00705510000117
+}

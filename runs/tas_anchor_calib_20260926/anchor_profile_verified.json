@@ -1,0 +1,29 @@
+{
+  "anchor_id": "pot_visible_center_v1",
+  "local_xy": [
+    0.06601099305491878,
+    -0.43190114154448883
+  ],
+  "body_frame": "Player",
+  "units": "game_world_m",
+  "status": "verified",
+  "sha256": "94426ea3c49b32ff1b508a1026ba555ba7b2221174fa36da7b251c98dce72459",
+  "detector_version": "live_dark_contour_v1",
+  "game_asset": "GettingOverIt/Player",
+  "source_sha256": "24bbd9206bff2096873b789091d60f121bbefcde1e6b03418950b7803d4d7c66",
+  "independent_validation": {
+    "local_xy": [
+      0.06601099305491878,
+      -0.43190114154448883
+    ],
+    "n": 15,
+    "pixel_error_median": 0.9286663447132095,
+    "pixel_error_p95": 1.801846659191136,
+    "world_error_median_m": 0.012898139782887478,
+    "world_error_p95_m": 0.025025649335017757,
+    "meets_candidate_p95_m": true
+  },
+  "acceptance_target_p95_m": 0.15,
+  "rotation_coverage_deg": [-15.0, 15.0],
+  "note": "Authorized for HELLO anchor35 and pot-center scoring after reviewer acceptance of live_dark_contour_v1 overlays. Holdout P95 0.025 m is a measurement against the 0.15 m candidate gate, not a claimed TAS-video accuracy. TAS gold transfer, large tumble, occlusion, and zoom are unmeasured. Residual vs TAS video start after upright b is about 0.23 m."
+}

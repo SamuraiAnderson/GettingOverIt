@@ -1,0 +1,1145 @@
+{
+  "iteration": 235,
+  "epoch": 0,
+  "mode": "balanced_stratified",
+  "H": 1200,
+  "K": 32,
+  "seed": 47,
+  "rule_version": "coverage_v1",
+  "pool_id": "c3dd69677ccee38b",
+  "total_area": 21554.509098696282,
+  "skip": false,
+  "skip_reason": "",
+  "sampled_index": [
+    [
+      11,
+      12
+    ],
+    [
+      9,
+      56
+    ],
+    [
+      18,
+      29
+    ],
+    [
+      3,
+      13
+    ],
+    [
+      6,
+      22
+    ],
+    [
+      9,
+      19
+    ],
+    [
+      4,
+      28
+    ],
+    [
+      19,
+      207
+    ],
+    [
+      16,
+      264
+    ],
+    [
+      14,
+      99
+    ],
+    [
+      14,
+      4
+    ],
+    [
+      8,
+      101
+    ],
+    [
+      19,
+      704
+    ],
+    [
+      7,
+      66
+    ],
+    [
+      6,
+      36
+    ],
+    [
+      10,
+      137
+    ],
+    [
+      18,
+      143
+    ],
+    [
+      7,
+      85
+    ],
+    [
+      1,
+      34
+    ],
+    [
+      2,
+      36
+    ],
+    [
+      17,
+      102
+    ],
+    [
+      5,
+      83
+    ],
+    [
+      15,
+      315
+    ],
+    [
+      4,
+      37
+    ],
+    [
+      3,
+      57
+    ],
+    [
+      6,
+      13
+    ],
+    [
+      1,
+      7
+    ],
+    [
+      8,
+      7
+    ],
+    [
+      8,
+      9
+    ],
+    [
+      16,
+      101
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      8,
+      96
+    ],
+    [
+      3,
+      68
+    ],
+    [
+      13,
+      90
+    ],
+    [
+      12,
+      28
+    ],
+    [
+      14,
+      117
+    ],
+    [
+      2,
+      58
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      7,
+      5
+    ],
+    [
+      18,
+      383
+    ],
+    [
+      18,
+      104
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      6,
+      49
+    ],
+    [
+      11,
+      123
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      1,
+      12
+    ],
+    [
+      7,
+      35
+    ],
+    [
+      10,
+      2
+    ],
+    [
+      7,
+      38
+    ],
+    [
+      7,
+      24
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      16,
+      146
+    ],
+    [
+      1,
+      21
+    ],
+    [
+      8,
+      75
+    ],
+    [
+      13,
+      134
+    ],
+    [
+      5,
+      10
+    ],
+    [
+      11,
+      89
+    ],
+    [
+      2,
+      23
+    ],
+    [
+      18,
+      35
+    ],
+    [
+      13,
+      38
+    ],
+    [
+      14,
+      147
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      9,
+      125
+    ],
+    [
+      6,
+      2
+    ],
+    [
+      17,
+      281
+    ],
+    [
+      8,
+      87
+    ],
+    [
+      19,
+      677
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      9,
+      96
+    ],
+    [
+      16,
+      344
+    ],
+    [
+      13,
+      25
+    ],
+    [
+      11,
+      102
+    ],
+    [
+      4,
+      44
+    ],
+    [
+      10,
+      97
+    ],
+    [
+      16,
+      77
+    ],
+    [
+      12,
+      42
+    ],
+    [
+      15,
+      141
+    ],
+    [
+      4,
+      9
+    ],
+    [
+      12,
+      103
+    ],
+    [
+      14,
+      128
+    ],
+    [
+      12,
+      127
+    ],
+    [
+      15,
+      298
+    ],
+    [
+      14,
+      88
+    ],
+    [
+      19,
+      314
+    ],
+    [
+      10,
+      34
+    ],
+    [
+      13,
+      108
+    ],
+    [
+      6,
+      31
+    ],
+    [
+      16,
+      387
+    ],
+    [
+      11,
+      2
+    ],
+    [
+      17,
+      329
+    ],
+    [
+      19,
+      602
+    ],
+    [
+      9,
+      27
+    ],
+    [
+      7,
+      15
+    ],
+    [
+      11,
+      94
+    ],
+    [
+      1,
+      32
+    ],
+    [
+      11,
+      132
+    ],
+    [
+      3,
+      24
+    ],
+    [
+      10,
+      120
+    ],
+    [
+      17,
+      221
+    ],
+    [
+      11,
+      112
+    ],
+    [
+      13,
+      141
+    ],
+    [
+      14,
+      25
+    ],
+    [
+      5,
+      42
+    ],
+    [
+      13,
+      152
+    ],
+    [
+      9,
+      109
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      13,
+      76
+    ],
+    [
+      2,
+      34
+    ],
+    [
+      6,
+      76
+    ],
+    [
+      17,
+      177
+    ],
+    [
+      15,
+      2
+    ],
+    [
+      6,
+      69
+    ],
+    [
+      5,
+      34
+    ],
+    [
+      4,
+      72
+    ],
+    [
+      19,
+      451
+    ],
+    [
+      8,
+      70
+    ],
+    [
+      9,
+      4
+    ],
+    [
+      1,
+      13
+    ],
+    [
+      12,
+      91
+    ],
+    [
+      9,
+      77
+    ],
+    [
+      5,
+      27
+    ],
+    [
+      15,
+      220
+    ],
+    [
+      19,
+      508
+    ],
+    [
+      12,
+      111
+    ],
+    [
+      3,
+      38
+    ],
+    [
+      6,
+      6
+    ],
+    [
+      9,
+      113
+    ],
+    [
+      18,
+      240
+    ],
+    [
+      2,
+      17
+    ],
+    [
+      19,
+      336
+    ],
+    [
+      15,
+      105
+    ],
+    [
+      15,
+      358
+    ],
+    [
+      11,
+      25
+    ],
+    [
+      5,
+      70
+    ],
+    [
+      5,
+      22
+    ],
+    [
+      12,
+      13
+    ],
+    [
+      1,
+      39
+    ],
+    [
+      19,
+      162
+    ],
+    [
+      10,
+      108
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      4,
+      57
+    ],
+    [
+      18,
+      196
+    ],
+    [
+      18,
+      295
+    ],
+    [
+      8,
+      56
+    ],
+    [
+      5,
+      79
+    ],
+    [
+      16,
+      314
+    ],
+    [
+      12,
+      15
+    ],
+    [
+      1,
+      25
+    ],
+    [
+      1,
+      18
+    ],
+    [
+      17,
+      123
+    ],
+    [
+      4,
+      80
+    ],
+    [
+      6,
+      17
+    ],
+    [
+      9,
+      11
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      17,
+      22
+    ],
+    [
+      3,
+      62
+    ],
+    [
+      3,
+      14
+    ],
+    [
+      15,
+      77
+    ],
+    [
+      17,
+      379
+    ],
+    [
+      7,
+      93
+    ],
+    [
+      19,
+      52
+    ],
+    [
+      18,
+      324
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      8,
+      24
+    ],
+    [
+      2,
+      53
+    ],
+    [
+      14,
+      143
+    ],
+    [
+      3,
+      34
+    ],
+    [
+      15,
+      257
+    ],
+    [
+      7,
+      12
+    ],
+    [
+      4,
+      52
+    ],
+    [
+      3,
+      27
+    ],
+    [
+      4,
+      18
+    ],
+    [
+      12,
+      172
+    ],
+    [
+      16,
+      9
+    ],
+    [
+      10,
+      17
+    ],
+    [
+      17,
+      295
+    ],
+    [
+      11,
+      46
+    ],
+    [
+      14,
+      12
+    ],
+    [
+      8,
+      47
+    ],
+    [
+      16,
+      201
+    ],
+    [
+      10,
+      29
+    ],
+    [
+      2,
+      8
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      10,
+      55
+    ],
+    [
+      18,
+      370
+    ],
+    [
+      13,
+      112
+    ],
+    [
+      13,
+      7
+    ],
+    [
+      5,
+      2
+    ],
+    [
+      16,
+      245
+    ],
+    [
+      14,
+      36
+    ],
+    [
+      2,
+      46
+    ]
+  ],
+  "trajectories": [
+    {
+      "idx": 0,
+      "t": 1,
+      "D": 0.0007781496428031637,
+      "cap": 0,
+      "is_frontier": true,
+      "area": 0.09576732657334841,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 1,
+      "min_tau": 0,
+      "max_tau": 0,
+      "n_first_third": 9,
+      "n_middle_third": 0,
+      "n_last_third": 0,
+      "reason": null
+    },
+    {
+      "idx": 1,
+      "t": 41,
+      "D": 1.0813606115897054,
+      "cap": 40,
+      "is_frontier": true,
+      "area": 108.76441210870506,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 1,
+      "max_tau": 39,
+      "n_first_third": 4,
+      "n_middle_third": 3,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 2,
+      "t": 61,
+      "D": 1.4327315426333644,
+      "cap": 60,
+      "is_frontier": true,
+      "area": 120.10566195451295,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 9,
+      "min_tau": 0,
+      "max_tau": 58,
+      "n_first_third": 3,
+      "n_middle_third": 3,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 3,
+      "t": 73,
+      "D": 2.9162358650493796,
+      "cap": 72,
+      "is_frontier": true,
+      "area": 247.9056621996583,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 4,
+      "max_tau": 68,
+      "n_first_third": 4,
+      "n_middle_third": 3,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 4,
+      "t": 81,
+      "D": 4.447571662122884,
+      "cap": 80,
+      "is_frontier": true,
+      "area": 380.1655316644283,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 0,
+      "max_tau": 80,
+      "n_first_third": 3,
+      "n_middle_third": 4,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 5,
+      "t": 88,
+      "D": 5.739360548012305,
+      "cap": 87,
+      "is_frontier": true,
+      "area": 492.19044271597613,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 9,
+      "min_tau": 2,
+      "max_tau": 83,
+      "n_first_third": 4,
+      "n_middle_third": 2,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 6,
+      "t": 90,
+      "D": 8.292405756103769,
+      "cap": 89,
+      "is_frontier": true,
+      "area": 779.6614847992189,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 2,
+      "max_tau": 76,
+      "n_first_third": 5,
+      "n_middle_third": 3,
+      "n_last_third": 2,
+      "reason": null
+    },
+    {
+      "idx": 7,
+      "t": 94,
+      "D": 9.246062733405148,
+      "cap": 93,
+      "is_frontier": true,
+      "area": 893.131409059908,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 9,
+      "min_tau": 5,
+      "max_tau": 93,
+      "n_first_third": 4,
+      "n_middle_third": 2,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 8,
+      "t": 124,
+      "D": 9.660658808520052,
+      "cap": 123,
+      "is_frontier": true,
+      "area": 837.9196836196902,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 7,
+      "max_tau": 101,
+      "n_first_third": 3,
+      "n_middle_third": 4,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 9,
+      "t": 130,
+      "D": 10.428242892689754,
+      "cap": 129,
+      "is_frontier": true,
+      "area": 928.1938690883005,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 4,
+      "max_tau": 125,
+      "n_first_third": 4,
+      "n_middle_third": 2,
+      "n_last_third": 4,
+      "reason": null
+    },
+    {
+      "idx": 10,
+      "t": 139,
+      "D": 11.590622623891464,
+      "cap": 138,
+      "is_frontier": true,
+      "area": 1088.423883506318,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 9,
+      "min_tau": 2,
+      "max_tau": 137,
+      "n_first_third": 4,
+      "n_middle_third": 1,
+      "n_last_third": 4,
+      "reason": null
+    },
+    {
+      "idx": 11,
+      "t": 160,
+      "D": 11.920348139931571,
+      "cap": 159,
+      "is_frontier": true,
+      "area": 1076.8820720802303,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 2,
+      "max_tau": 132,
+      "n_first_third": 4,
+      "n_middle_third": 3,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 12,
+      "t": 175,
+      "D": 12.711719022826218,
+      "cap": 174,
+      "is_frontier": true,
+      "area": 1189.2069233493307,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 9,
+      "min_tau": 13,
+      "max_tau": 172,
+      "n_first_third": 4,
+      "n_middle_third": 3,
+      "n_last_third": 2,
+      "reason": null
+    },
+    {
+      "idx": 13,
+      "t": 189,
+      "D": 13.344298544909257,
+      "cap": 188,
+      "is_frontier": true,
+      "area": 1294.2270916488874,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 7,
+      "max_tau": 152,
+      "n_first_third": 3,
+      "n_middle_third": 4,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 14,
+      "t": 191,
+      "D": 13.892033446450862,
+      "cap": 190,
+      "is_frontier": true,
+      "area": 1476.4152687370824,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 4,
+      "max_tau": 147,
+      "n_first_third": 4,
+      "n_middle_third": 3,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 15,
+      "t": 370,
+      "D": 14.000580940478812,
+      "cap": 369,
+      "is_frontier": true,
+      "area": 1046.533568078812,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 9,
+      "min_tau": 2,
+      "max_tau": 358,
+      "n_first_third": 3,
+      "n_middle_third": 2,
+      "n_last_third": 4,
+      "reason": null
+    },
+    {
+      "idx": 16,
+      "t": 390,
+      "D": 14.419259694335965,
+      "cap": 389,
+      "is_frontier": true,
+      "area": 1111.5475612203388,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 9,
+      "max_tau": 387,
+      "n_first_third": 3,
+      "n_middle_third": 3,
+      "n_last_third": 4,
+      "reason": null
+    },
+    {
+      "idx": 17,
+      "t": 392,
+      "D": 15.0159883578217,
+      "cap": 391,
+      "is_frontier": true,
+      "area": 1333.9358458865793,
+      "prob": 0.05,
+      "target_quota": 9,
+      "actual_quota": 9,
+      "unique_windows": 9,
+      "min_tau": 22,
+      "max_tau": 379,
+      "n_first_third": 3,
+      "n_middle_third": 2,
+      "n_last_third": 4,
+      "reason": null
+    },
+    {
+      "idx": 18,
+      "t": 476,
+      "D": 20.174841762436383,
+      "cap": 475,
+      "is_frontier": true,
+      "area": 3850.8039837290376,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 29,
+      "max_tau": 383,
+      "n_first_third": 4,
+      "n_middle_third": 3,
+      "n_last_third": 3,
+      "reason": null
+    },
+    {
+      "idx": 19,
+      "t": 800,
+      "D": 24.35653339051011,
+      "cap": 799,
+      "is_frontier": true,
+      "area": 3298.3989759226934,
+      "prob": 0.05,
+      "target_quota": 10,
+      "actual_quota": 10,
+      "unique_windows": 10,
+      "min_tau": 52,
+      "max_tau": 704,
+      "n_first_third": 3,
+      "n_middle_third": 4,
+      "n_last_third": 3,
+      "reason": null
+    }
+  ]
+}

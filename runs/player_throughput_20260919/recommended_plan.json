@@ -1,0 +1,280 @@
+{
+  "generated_at": "2026-09-20T00:33:59.503069+08:00",
+  "budget_hours": 6.0,
+  "planning_constraints": {
+    "gpu_reserve_fraction": 0.1,
+    "min_available_ram_gb": 3,
+    "note": "planning assumptions, not user-specified hardware limits; all completed configurations passed actual execution"
+  },
+  "memory_reserve_sensitivity": [
+    {
+      "gpu_reserve_fraction": 0.0,
+      "agents": 2,
+      "batch_size": 256,
+      "gradient_rate_q25": 11.880117452556542,
+      "gpu_peak_reserved_gb": 10.044921875
+    },
+    {
+      "gpu_reserve_fraction": 0.1,
+      "agents": 2,
+      "batch_size": 256,
+      "gradient_rate_q25": 11.880117452556542,
+      "gpu_peak_reserved_gb": 10.044921875
+    },
+    {
+      "gpu_reserve_fraction": 0.2,
+      "agents": 2,
+      "batch_size": 128,
+      "gradient_rate_q25": 6.141224471996687,
+      "gpu_peak_reserved_gb": 5.423828125
+    }
+  ],
+  "objective": "maximize q25 unique samples entering gradient updates per measured pipeline second; 5% tie favors fewer agents",
+  "selected": {
+    "agents": 2,
+    "batch_size": 256,
+    "trials": 6,
+    "physical_rate_median": 55.7853787682361,
+    "physical_rate_q25": 52.42393113092824,
+    "gradient_rate_median": 11.96129028642084,
+    "gradient_rate_q25": 11.880117452556542,
+    "gradient_coverage_median": 0.21333333333333335,
+    "updates_median": 2.0,
+    "gpu_peak_reserved_gb": 10.044921875,
+    "min_available_ram_gb": 10.945236206054688,
+    "ratio_max_error": 6.961580220377073e-05,
+    "active_fraction_median": 1.0,
+    "feasible": true
+  },
+  "fastest_raw_collection_pipeline": {
+    "agents": 16,
+    "batch_size": 64,
+    "trials": 3,
+    "physical_rate_median": 132.14206718350016,
+    "physical_rate_q25": 129.68218665371847,
+    "gradient_rate_median": 0.9363187203233617,
+    "gradient_rate_q25": 0.9086329174400147,
+    "gradient_coverage_median": 0.0069531207561518826,
+    "updates_median": 2.0,
+    "gpu_peak_reserved_gb": 2.728515625,
+    "min_available_ram_gb": 10.555953979492188,
+    "ratio_max_error": 6.198902156029362e-06,
+    "active_fraction_median": 0.9588020833333334,
+    "feasible": true
+  },
+  "baseline": {
+    "agents": 2,
+    "batch_size": 64,
+    "trials": 6,
+    "physical_rate_median": 57.71252457378367,
+    "physical_rate_q25": 56.58117252897256,
+    "gradient_rate_median": 3.139072286576994,
+    "gradient_rate_q25": 3.0588019667162785,
+    "gradient_coverage_median": 0.05333333333333334,
+    "updates_median": 2.0,
+    "gpu_peak_reserved_gb": 2.759765625,
+    "min_available_ram_gb": 10.945236206054688,
+    "ratio_max_error": 6.961580220377073e-05,
+    "active_fraction_median": 1.0,
+    "feasible": true
+  },
+  "gradient_rate_speedup_vs_2x64": 3.883911930823762,
+  "raw_rate_speedup_vs_2x64": 0.9265260649040882,
+  "baseline_end_vs_start_collection_drift": -0.0021250092447065994,
+  "factorial_candidates": [
+    {
+      "agents": 2,
+      "ppo_batch_size": 64
+    },
+    {
+      "agents": 2,
+      "ppo_batch_size": 256
+    }
+  ],
+  "excluded_resource_failures": [],
+  "proposed_learning_validation": {
+    "seeds": 3,
+    "samples_per_run": 96000,
+    "run_count": 6,
+    "training_samples": 576000,
+    "evaluation_samples_cap": 201600,
+    "training_seconds": 10054.521284207734,
+    "evaluation_seconds": 5397.327470806038,
+    "warmup_seconds": 948.3927550226259,
+    "launch_seconds": 203.95289279997814,
+    "reserve_seconds": 2160.0,
+    "total_seconds": 18764.194402836376,
+    "fits_budget": true
+  },
+  "budget_alternatives": [
+    {
+      "seeds": 2,
+      "samples_per_run": 48000,
+      "run_count": 4,
+      "training_samples": 192000,
+      "evaluation_samples_cap": 134400,
+      "training_seconds": 3175.1119844866535,
+      "evaluation_seconds": 3598.2183138706923,
+      "warmup_seconds": 632.2618366817507,
+      "launch_seconds": 135.96859519998543,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 9701.560730239082,
+      "fits_budget": true
+    },
+    {
+      "seeds": 2,
+      "samples_per_run": 72000,
+      "run_count": 4,
+      "training_samples": 288000,
+      "evaluation_samples_cap": 134400,
+      "training_seconds": 4939.0630869792385,
+      "evaluation_seconds": 3598.2183138706923,
+      "warmup_seconds": 632.2618366817507,
+      "launch_seconds": 135.96859519998543,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 11465.511832731667,
+      "fits_budget": true
+    },
+    {
+      "seeds": 2,
+      "samples_per_run": 96000,
+      "run_count": 4,
+      "training_samples": 384000,
+      "evaluation_samples_cap": 134400,
+      "training_seconds": 6703.014189471824,
+      "evaluation_seconds": 3598.2183138706923,
+      "warmup_seconds": 632.2618366817507,
+      "launch_seconds": 135.96859519998543,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 13229.462935224252,
+      "fits_budget": true
+    },
+    {
+      "seeds": 2,
+      "samples_per_run": 144000,
+      "run_count": 4,
+      "training_samples": 576000,
+      "evaluation_samples_cap": 134400,
+      "training_seconds": 10230.916394456995,
+      "evaluation_seconds": 3598.2183138706923,
+      "warmup_seconds": 632.2618366817507,
+      "launch_seconds": 135.96859519998543,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 16757.365140209426,
+      "fits_budget": true
+    },
+    {
+      "seeds": 2,
+      "samples_per_run": 192000,
+      "run_count": 4,
+      "training_samples": 768000,
+      "evaluation_samples_cap": 134400,
+      "training_seconds": 13758.818599442166,
+      "evaluation_seconds": 3598.2183138706923,
+      "warmup_seconds": 632.2618366817507,
+      "launch_seconds": 135.96859519998543,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 20285.267345194596,
+      "fits_budget": true
+    },
+    {
+      "seeds": 3,
+      "samples_per_run": 48000,
+      "run_count": 6,
+      "training_samples": 288000,
+      "evaluation_samples_cap": 201600,
+      "training_seconds": 4762.66797672998,
+      "evaluation_seconds": 5397.327470806038,
+      "warmup_seconds": 948.3927550226259,
+      "launch_seconds": 203.95289279997814,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 13472.341095358623,
+      "fits_budget": true
+    },
+    {
+      "seeds": 3,
+      "samples_per_run": 72000,
+      "run_count": 6,
+      "training_samples": 432000,
+      "evaluation_samples_cap": 201600,
+      "training_seconds": 7408.594630468858,
+      "evaluation_seconds": 5397.327470806038,
+      "warmup_seconds": 948.3927550226259,
+      "launch_seconds": 203.95289279997814,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 16118.2677490975,
+      "fits_budget": true
+    },
+    {
+      "seeds": 3,
+      "samples_per_run": 96000,
+      "run_count": 6,
+      "training_samples": 576000,
+      "evaluation_samples_cap": 201600,
+      "training_seconds": 10054.521284207734,
+      "evaluation_seconds": 5397.327470806038,
+      "warmup_seconds": 948.3927550226259,
+      "launch_seconds": 203.95289279997814,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 18764.194402836376,
+      "fits_budget": true
+    },
+    {
+      "seeds": 3,
+      "samples_per_run": 144000,
+      "run_count": 6,
+      "training_samples": 864000,
+      "evaluation_samples_cap": 201600,
+      "training_seconds": 15346.374591685493,
+      "evaluation_seconds": 5397.327470806038,
+      "warmup_seconds": 948.3927550226259,
+      "launch_seconds": 203.95289279997814,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 24056.047710314135,
+      "fits_budget": false
+    },
+    {
+      "seeds": 3,
+      "samples_per_run": 192000,
+      "run_count": 6,
+      "training_samples": 1152000,
+      "evaluation_samples_cap": 201600,
+      "training_seconds": 20638.22789916325,
+      "evaluation_seconds": 5397.327470806038,
+      "warmup_seconds": 948.3927550226259,
+      "launch_seconds": 203.95289279997814,
+      "reserve_seconds": 2160.0,
+      "total_seconds": 29347.90101779189,
+      "fits_budget": false
+    }
+  ],
+  "critic_warmup": {
+    "agents": 2,
+    "iterations": 2,
+    "sample_cap": 4800,
+    "note": "warm up at two agents, then resume with the tested collection count; retain 1200 physical steps"
+  },
+  "learning_parameters": {
+    "steps_per_rollout": 1200,
+    "learning_rate": 0.0001,
+    "ppo_epochs": 4,
+    "target_kl": 0.03,
+    "training_seeds": [
+      31,
+      47,
+      61
+    ],
+    "reward_recipe": "T: candidate for follow-up, not proven superior",
+    "gamma": 0.998,
+    "gae_lambda": 0.995,
+    "reference_deviation_weight": 0.01,
+    "note": "keep this recipe fixed across minibatch controls; timing was measured on a C checkpoint"
+  },
+  "limitations": [
+    "single frozen policy and machine session, three trials per candidate; not a global learning optimum",
+    "unique gradient samples are exposure counts, not independent observations or a success metric",
+    "changing agents changes rollout size/update frequency; validate with common physical samples and held-out success",
+    "batch-size timing uses fresh optimizer; warmed optimizer and changed policy may shift KL stopping",
+    "budget assumes benchmark throughput persists; q25 is a planning statistic, not a confidence bound"
+  ]
+}
