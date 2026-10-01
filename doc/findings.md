@@ -95,4 +95,4 @@ iid 高斯噪声：相邻帧几乎不相关，能量摊平到全频段（快、�
 
 > 依据与落地（OU 噪声如何保证 PPO 数学正确、笔画重参数化设想）见 [optimization_roadmap.md](optimization_roadmap.md) 的 P1.1 与 P4.1。
 >
-> 注：目标动作侧频谱分析的原始脚本（`ideal_action.py`）当前不在仓库内；`src/tests/analysis/viz_exploration_noise.py` 只覆盖噪声侧的时序结构可视化。若要让这条结论可从仓库完整复现，需把目标动作侧的频谱分析补进 `src/tests/analysis/`。
+> 注：噪声对比图脚本已删除。目标动作侧频谱分析的原始脚本（`ideal_action.py`）未曾入库。本节文字是保留下来的结论。

@@ -59,8 +59,6 @@ conda run --no-capture-output -n getting-over-it-analysis python -m src.training
 
 ```powershell
 conda run --no-capture-output -n getting-over-it-analysis python -m unittest src.tests.training.test_ppo_contract src.tests.training.test_reference_corridor src.tests.training.test_policy_experiments -v
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.verify_policy_experiments
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.benchmark_policy_backbones --checkpoint runs/p2_representation_acceptance/checkpoints/gru_segments_v1/behavior.pt --archive runs/p2_representation_acceptance/checkpoints/gru_segments_v1/exploration_000.npz --output runs/p2_representation_acceptance/backbone_benchmark.json
 ```
 
-特征重建脚本需要原始归档和与 manifest hash 一致的游戏碰撞导出文件；大型权重、NPZ、逐帧 JSON 按仓库惯例保存在忽略的 `checkpoints/` 中。轻量汇总和命令记录可随代码保存。
+对着那次归档重算特征和推理耗时的脚本已删除。数字留在验收记录和 `verification_summary.json`。大型权重、NPZ、逐帧 JSON 按仓库惯例保存在忽略的 `checkpoints/` 中。

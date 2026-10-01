@@ -10,9 +10,9 @@
 conda run --no-capture-output -n getting-over-it-analysis python -m src.training.local_evaluation --init-from runs/p2_contact/checkpoints/ppo_iter_0335.pt --geometry-profile native-pose-v1 --features relations geometry trends --event-branch --policy-backbone gru --normalize-action-history --action-segment-steps 4 --output runs/p2_representation_acceptance/checkpoints/gru_segments_v1 --steps 96 --rounds 1 --num-agents 2 --native-diagnostics --train-smoke 1
 conda run --no-capture-output -n getting-over-it-analysis python -m src.training.local_evaluation --init-from runs/p2_contact/checkpoints/ppo_iter_0335.pt --geometry-profile native-pose-v1 --features relations events geometry trends --normalize-action-history --output runs/p2_representation_acceptance/checkpoints/transformer_concat --steps 96 --rounds 1 --num-agents 2 --native-diagnostics --train-smoke 1
 conda run --no-capture-output -n getting-over-it-analysis python -m src.training.local_evaluation --checkpoint runs/p2_representation_acceptance/checkpoints/gru_segments_v1/behavior.pt --replay runs/p2_representation_acceptance/checkpoints/gru_segments_v1/exploration_000.npz --output runs/p2_representation_acceptance/checkpoints/gru_segments_v1/replay
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.benchmark_policy_backbones --checkpoint runs/p2_representation_acceptance/checkpoints/gru_segments_v1/behavior.pt --archive runs/p2_representation_acceptance/checkpoints/gru_segments_v1/exploration_000.npz --output runs/p2_representation_acceptance/backbone_benchmark.json
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.verify_policy_experiments
 ```
+
+上面当时还跑过 `benchmark_policy_backbones` 和 `verify_policy_experiments`。这两个复查脚本已删除，测得的耗时和重建误差留在本节与 `verification_summary.json`。
 
 首次 `gru_segments` 用旧默认步长 0.02 秒，和本机 1/120 秒不符，被对齐检查正确拒绝。失败记录保留；修正默认步长后使用新目录 `gru_segments_v1`。
 

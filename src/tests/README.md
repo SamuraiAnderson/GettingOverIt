@@ -33,10 +33,8 @@ python -m src.tests.run_unit_tests -k patch # 只跑名字含 patch 的
 | `test_p1_ou_map_elites.py` | P1.1 OU 噪声的条件高斯与 `log_prob` 自洽、AR(1) lag-1 自相关；P1.2 MAP-Elites 的行为多样性准入与冷启动 |
 | `test_p2_contact_integration.py` | P2.1 接触信号端到端：老 34D checkpoint 扩维加载、前向、向后兼容 |
 | `test_patch_tip_coverage.py` | contact patch 窗口在锤子 360° 全伸时必须装得下锤头轮廓且不被边界截断 |
+| `test_patch_modes.py` | `dualscale` / `legacy` 的通道装配，以及两种网络在这两种模式下的前向 |
 | `test_raster_area_coverage.py` | 面积覆盖率光栅化的数值正确性，以及亚像素轮廓不会被漏采成空通道 |
-
-同目录下的 `diagnose_nan.py` / `repro_nan_mask.py` / `sanity_dualscale_patch.py` /
-`smoke_sil.py` 是排障脚本而非回归测试，按需单独运行，不进批量运行器。
 
 ## 2. 离线分析与基准 `analysis/`
 
@@ -48,7 +46,6 @@ python -m src.tests.run_unit_tests -k patch # 只跑名字含 patch 的
 | `geometry/analyze_effectiveness.py` | 效率图与可达性分析 |
 | `reference/analyze_reference_fling.py` | 人工参考轨迹的挥杆分析（读 `src/Data/reference/`） |
 | `reference/calibrate_progress_wx.py` | 用参考轨迹标定 `progress_metric` 的横向权重 |
-| `viz_exploration_noise.py` | 探索噪声的时序结构可视化 |
 
 ## 3. 在环集成测试 `control_interaction/`
 
