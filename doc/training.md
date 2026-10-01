@@ -61,7 +61,7 @@
     - **窗口半径由锤子几何硬上界反推（已修复出窗，勿缩小窗口）**：contact 半径需 ≥ **3.78 m**，来自 `|hub−player| = 0.3546`（刚性偏移）+ slider 全伸 `|tip−hub| = 2.955`（关节硬限位）= tip 原点上界 **3.31 m**，取 `PlayerControl` IL 里硬编码的 `|cursor−player| ≤ 3.5f` 作设计上界（与求解器软性超调实测极值 ≈3.49 m 吻合），再加 tip 轮廓半径 **0.279 m**；另留约 0.5 m 地形上下文（锤头全伸时也要看得到它接触的那块地形）→ ≈**4.28 m**。旧配置 `32 × 0.2` = 半径 3.2 m 不足。默认 `32 × 0.27` = 半径 **4.32 m**，格子保持 32。细交互用同窗连续轮廓，不把 CNN 加到 256²。
       - **注意**：`|tip−player|` 有几何硬上界，其分布在上界处**截断而非高斯**。早期用 `dyn_mean/dyn_std` 正态外推得出的「2.9% 的帧 tip 中心出窗」是严重高估（正态尾延伸到无穷）——15.2 万真实帧里 tip 中心从未出过 3.2 m 窗口，真正的问题只是贴边裁掉周围地形。故核验一律走几何判据，勿用统计外推。
       - **格子数与窗口解耦**：窗口米数由 `patch_size × resolution` 固定，不要缩小窗口。细交互走稀疏轮廓，不把 CNN `patch_size` 加到 256。
-      - 核验：`python -m src.tests.analysis.check_tip_patch_coverage`（几何硬上界 + 360° 最坏姿态扫描）；回归单测 `src/tests/training/test_patch_tip_coverage.py`（走真实 `build_patch`，断言 360° 全伸姿态下 ch3 既非空也不贴窗边，并反向确认旧 0.2 m/px 确实会裁）。
+      - 核验：回归单测 `src/tests/training/test_patch_tip_coverage.py`（走真实 `build_patch`，断言 360° 全伸姿态下 ch3 既非空也不贴窗边）。几何上界与栅格走样的一次性扫描已经结束，结论写在本节。
     - **ch2 仍是 `body∪pot` 合并**（与向量端 P2.1 把 `body_contact`/`pot_contact` 拆开**有意不对称**）：patch 是空间图，body 与 pot 本就空间分居上下，CNN 从形状上能区分上半团/下半团；而向量端若合并成单个标量 0/1 则是真正的信息丢失（两者语义相反会抵消）。故只拆向量端。
     - **TODO（轮廓朝向为粗标定）**：锤头 `tip_angle_offset=-90°`（`pole/-90/scale=1`，经 `verify_tip_reconstruction` 粗扫描）与 body `body_angle_offset=-90°`（`player→hub / -90 / scale=1`，经 `verify_body_reconstruction` 粗扫描确认躯干朝上、锅贴地）均已在 90° 粒度确认，但仍为近似；精确值待细粒度扫描或 C# 回传部件世界顶点真值。
   - **`legacy`（旧单尺度 4ch，A/B baseline）**：以 player 为中心 0.5 m/px 的 4 通道 — ch0 地形可通行 mask、ch1 攀爬效率图、ch2 身体部件（player/hub/slider）高斯 blob、ch3 锤子部件（handle/pole/tip）高斯 blob。
@@ -223,8 +223,8 @@ BC 与 PPO 的进度信号**故意分化，且已锁定对应关系，勿误合�
   - 归一化：`RewardNormalizer`（Welford 在线 σ，约若干轮后冻结）；进度通道（纵向+横向）与 PBRS 塑形通道各自归一。σ 冻结后 `α`、`σ_h/σ_e` 皆常数 → 等价「主奖励 + 常数·PBRS」再乘全局正标量，**策略不变性在冻结后严格成立**（常数倍势场仍合法、全局缩放不改 argmax）。
   - 落水：`is_water(curr_y)` 命中则覆盖为 `config.water_penalty`（默认 -10.0，与坐标阈值 `water_y_threshold` 语义解耦，勿混用）。
 - **攀爬效率图** `ClimbingEfficiencyMap`：网格分辨率 1.0m，从碰撞多边形构建 traversable mask；跨迭代沿轨迹路径传播 secured-progress 的价值（`waypoint_weight` 为传播系数，后缀 O(T)），每轮内做地形感知邻域扩散（不穿墙，静态邻域结构预计算复用），构成 value-to-go 势场 `Φ`。两处消费：① 作为 patch wide 通道输入模型；② 对 PPO 以 **PBRS 势场塑形** `γΦ'−Φ` 生效（不改最优解）。BC 排序默认不消费效率图（`bc_waypoint_weight=0`）。`height_prior_weight` 默认 0.0：格值完全由 secured-progress 沿轨迹回传决定（死路因未来无处可去而贬值），远距连通靠轨迹价值回传 + random_deploy 分层课程。
-  - **mask 走样核验**：`python -m src.tests.analysis.verify_mask_aliasing`（1m 中心采样漏判薄墙约 1.57%，路线拓扑保留；如需可加 3×3 子格采样，无须降到 0.5m）。
-  - **contact patch 覆盖核验**：`python -m src.tests.analysis.check_tip_patch_coverage`（锤子几何硬上界 vs 窗口半径 + 360° 最坏姿态扫描）；`diagnose_tip_rasterization`（部件轮廓栅格化命中率/空通道率）；`bench_patch_raster`（栅格化开销）。见第二节 contact 分支说明。
+  - **mask 走样**：1 m 中心采样漏判薄墙约 1.57%，路线拓扑保留；维持 1 m，不降到 0.5 m。一次性扫描脚本已删除。
+  - **contact patch**：窗口半径由锤子几何硬上界决定，部件轮廓用面积覆盖率栅格。回归单测是 `test_patch_tip_coverage.py` 与 `test_raster_area_coverage.py`。
   - **progress_wx 标定**：`python -m src.tests.analysis.reference.calibrate_progress_wx <过树轨迹.json>`（从 reach/secured_dy 反推，默认 0.5）。
 
 ## 八、TCP 通信协议（`GoiEnv` ↔ `TcpStepServer`）

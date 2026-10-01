@@ -206,4 +206,4 @@ n_trap_ledges_reach16: 12
 7. [够用] 创新高正奖励仅占 8.5%，信号极稀疏；确认 eff_delta 在扩散覆盖区内能提供稠密替代
 
 ---
-*本报告由 `python -m src.tests.analysis.analyze_effectiveness` 生成，不修改训练代码。*
+*本报告由 `python -m src.tests.analysis.geometry.analyze_effectiveness` 生成，不修改训练代码。*

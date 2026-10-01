@@ -1,7 +1,7 @@
 r"""回归测试：contact patch 窗口必须装得下任意伸展姿态的锤头。
 
 背景见 `config.contact_patch_resolution` 注释与
-`src/tests/analysis/check_tip_patch_coverage.py`：锤子几何硬上界（tip 原点 3.31m，
+`src/tests/training/test_patch_tip_coverage.py`：锤子几何硬上界（tip 原点 3.31m，
 设计上界取 PlayerControl IL 里的 cursor 钳制常数 3.5m）+ tip 轮廓半径 0.279m
 → 需半窗 ≥ 3.78m。旧配置 0.2 m/px（半径 3.2m）会在锤子全伸时裁掉锤头接触的地形。
 
@@ -21,7 +21,7 @@ sys.path.insert(0, str(_REPO_ROOT / "src"))
 from training.config import TrainConfig
 from training.dataset import build_patch
 
-# 锤子几何链（见 check_tip_patch_coverage.py docstring）
+# 锤子几何链（见 doc/training.md）
 HUB_OFFSET = 0.3546
 TIP_ORIGIN_HARD_BOUND = 3.310
 CURSOR_CLAMP_RADIUS = 3.5
@@ -79,7 +79,7 @@ def test_window_radius_covers_geometric_bound() -> None:
     assert half_window >= need_contour, (
         f"contact 窗口半径 {half_window:.2f}m < 轮廓所需 {need_contour:.3f}m "
         f"(patch_size={cfg.patch_size}, res={cfg.contact_patch_resolution})；"
-        f"锤子全伸时锤头会被裁掉，见 check_tip_patch_coverage.py"
+        f"锤子全伸时锤头会被裁掉，见 doc/training.md"
     )
     assert half_window >= need_context, (
         f"contact 窗口半径 {half_window:.2f}m 装得下轮廓但无地形上下文余量"
@@ -168,7 +168,7 @@ def test_old_resolution_would_have_failed() -> None:
     bbox = _tip_channel_bbox_px(patch)
     assert bbox is None or bbox[3] == cfg.patch_size - 1, (
         "旧 0.2m/px 配置下锤头本应出窗或贴边，若此断言失败说明几何常量或"
-        "build_patch 语义已变，请重新核对 check_tip_patch_coverage.py"
+        "build_patch 语义已变，请重新核对 doc/training.md 里的窗口半径"
     )
 
 

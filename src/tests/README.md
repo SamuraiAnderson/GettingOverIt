@@ -45,10 +45,6 @@ python -m src.tests.run_unit_tests -k patch # 只跑名字含 patch 的
 | 脚本 | 用途 |
 |---|---|
 | `env_geometry.py` | 环境几何的公共工具，被其余分析脚本复用 |
-| `check_tip_patch_coverage.py` | 按锤子几何硬上界校验 patch 窗口半径是否够用 |
-| `diagnose_tip_rasterization.py` | 扫描朝向与亚像素偏移，量化轮廓漏采率（空通道率） |
-| `bench_patch_raster.py` | 面积覆盖率光栅化的性能开销基准 |
-| `verify_mask_aliasing.py` | 地形 mask 栅格混叠检查 |
 | `analyze_effectiveness.py` | 效率图与可达性分析 |
 | `reference/analyze_reference_fling.py` | 人工参考轨迹的挥杆分析（读 `src/Data/reference/`） |
 | `reference/calibrate_progress_wx.py` | 用参考轨迹标定 `progress_metric` 的横向权重 |

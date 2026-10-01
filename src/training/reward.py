@@ -406,7 +406,7 @@ class ClimbingEfficiencyMap:
         self.diffusion_iters = diffusion_iterations
         self.diffusion_alpha = diffusion_alpha
         # 掩码子采样：每格 k×k 采样，任一子点在多边形内即判固体。k>1 修复 1m 中心采样
-        # 漏判薄墙/薄树（薄特征中心落空 → 误判可通行 → 扩散穿墙，见 verify_mask_aliasing）。
+        # 漏判薄墙/薄树（薄特征中心落空 → 误判可通行 → 扩散穿墙）。1 m 网格已核对，维持该分辨率。
         self._mask_subsample = max(1, int(mask_subsample))
 
         cached = self._load_cache(cache_path) if cache_path else None

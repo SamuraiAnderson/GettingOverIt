@@ -5,8 +5,8 @@
 复用 ClimbingEfficiencyMap / build_dynamics / climb_score / step_reward 等训练原语。
 
 用法:
-  python -m src.tests.analysis.analyze_effectiveness
-  python -m src.tests.analysis.analyze_effectiveness --dt 0.02 --speed-min 1 --speed-max 5
+  python -m src.tests.analysis.geometry.analyze_effectiveness
+  python -m src.tests.analysis.geometry.analyze_effectiveness --dt 0.02 --speed-min 1 --speed-max 5
 """
 
 from __future__ import annotations
@@ -1310,7 +1310,7 @@ def write_report(
     for i, (_, v, s) in enumerate(prio, 1):
         lines.append(f"{i}. [{v}] {s}")
     lines.append("")
-    lines.append("---\n*本报告由 `python -m src.tests.analysis.analyze_effectiveness` 生成，不修改训练代码。*\n")
+    lines.append("---\n*本报告由 `python -m src.tests.analysis.geometry.analyze_effectiveness` 生成，不修改训练代码。*\n")
 
     path.write_text("\n".join(lines), encoding="utf-8")
     logger.info("报告已写: %s", path)

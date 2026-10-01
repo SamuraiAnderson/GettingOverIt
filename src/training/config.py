@@ -90,7 +90,7 @@ class TrainConfig:
     wide_patch_resolution: float = 2.0    # m/px，wide 分支（32×2.0 = 64 m 窗口）
     # contact 粗图 8.64m 窗口（32×0.27，半径 4.32m）。半径由锤子几何硬上界反推，**勿缩小窗口**。
     # 细交互不靠把 CNN 加到 256²，而走 sparse_geometry（同窗连续轮廓 + 多候选接触关系）。
-    # 核验：python -m src.tests.analysis.check_tip_patch_coverage
+    # 核验：src/tests/training/test_patch_tip_coverage.py
     contact_patch_resolution: float = 0.27  # m/px，粗 contact 图（8.64m 窗口）
     wide_channels: int = 1                # [0] eff
     contact_channels: int = 3             # [1] 高精度地形, [2] 锅/body 轮廓, [3] 锤头轮廓

@@ -58,11 +58,11 @@ python -m src.tests.run_unit_tests -k patch   # 只跑名字含 patch 的
 | 你改动了… | 最小验证 | 说明 |
 |---|---|---|
 | 训练侧纯 Python 逻辑（观测构建、奖励、模型、数据集、噪声、精英池） | 离线单元测试 `run_unit_tests` | 秒级，不需要游戏，改完就应该跑一遍 |
-| 接触信号 / 几何 / 光栅化 | 离线单测 + 对应离线分析（`check_tip_patch_coverage`、`diagnose_tip_rasterization`、`verify_mask_aliasing`） | 几何正确性除单测外还有专门的分析脚本 |
+| 接触信号 / 几何 / 光栅化 | 离线单测 `test_patch_tip_coverage`、`test_raster_area_coverage` | 窗口半径和面积覆盖率的结论已写入训练文档，一次性扫描脚本已删除 |
 | C# 插件（`src/GameRuntime_v2/`）| 先编译（见 [toolchain.md](toolchain.md)），再跑相关在环测试 | 改协议/状态维度 → L1–L3；改输入注入 → L4；改复制体 → L5；改碰撞收集 → L6 |
 | TCP 协议 / 状态维度 | L1–L3（连通、因果、可复现） | 协议是所有交互的契约，动它必须重跑底层 L 系列 |
-| 空投 / 落点筛选 | L7 → L8 | L7 出候选点，L8 验证批量投放 |
-| 模型推理 / checkpoint 格式 | L9 模型评估 | 无噪声推理，结果落到 `runs/_eval/` |
+| 空投 / 落点筛选 | L7 → L8 | L7 出候选点，L8 验证批量投放。竖直落差判据在 `training/deploy_sampling.py` |
+| 模型推理 / checkpoint 格式 | `python -m src.training.local_evaluation` | 固定走廊评估，不更新权重 |
 | 快照 / 重置 / 确定性相关 | `test_planb_premise.py`（在环） | 验证跨 reset 可复现性，见 [findings.md](findings.md) 与 [planb_premise_verification.md](planb_premise_verification.md) |
 
 > 经验法则：**只动 Python 训练侧就跑离线单测；动了 C# 或协议就要重编译 + 重跑在环 L 系列。** 在环测试慢且要占用游戏，按上表挑对应层跑，不必每次全套。

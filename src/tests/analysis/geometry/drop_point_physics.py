@@ -1,5 +1,5 @@
 """
-游戏内物理探测：空投点 settle 后竖直落差，与 training.rollout._get_stable_agents 一致。
+游戏内物理探测：空投点 settle 后竖直落差。落差和阈值比较调用 `training.deploy_sampling`。
 
 drop = teleport_y - settled_y（settled_y = obs[agent, 1]），stable 当且仅当 drop <= settle_drop_threshold。
 
@@ -19,6 +19,8 @@ from training.deploy_sampling import (
     TipReconConfig,
     make_tip_recon_config,
     tip_in_obstacle as _tip_in_obstacle,
+    vertical_settle_drop,
+    within_settle_drop,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,9 +67,9 @@ def try_drop_stable(
     for _ in range(max(settle_steps, 1)):
         obs, _ = env.step(zero)
     settled_y = float(obs[agent_index, 1])
-    drop = teleport_y - settled_y
+    drop = vertical_settle_drop(teleport_y, settled_y)
     tip_bad = _tip_in_obstacle(obs[agent_index], solid_polygons, tip_cfg)
-    return (drop <= threshold and not tip_bad), drop, tip_bad
+    return (within_settle_drop(drop, threshold) and not tip_bad), drop, tip_bad
 
 
 def _warmup_and_snapshot(env, num_agents: int, warmup_steps: int) -> None:
@@ -122,9 +124,9 @@ def _chunk_drops_and_stable(
     for i in range(len(chunk)):
         ty = float(chunk[i, 1])
         sy = float(obs[i + 1, 1])
-        dr = ty - sy
+        dr = vertical_settle_drop(ty, sy)
         tip_bad = _tip_in_obstacle(obs[i + 1], solid_polygons, tip_cfg)
-        out_ok.append(dr <= threshold and not tip_bad)
+        out_ok.append(within_settle_drop(dr, threshold) and not tip_bad)
         out_drop.append(dr)
         out_tip_bad.append(tip_bad)
     return out_ok, out_drop, out_tip_bad

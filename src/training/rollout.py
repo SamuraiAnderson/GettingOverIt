@@ -57,6 +57,8 @@ from .deploy_sampling import (
     sample_from_fixed_pool,
     sample_from_segments,
     tip_in_obstacle,
+    vertical_settle_drop,
+    within_settle_drop,
 )
 
 logger = logging.getLogger(__name__)
@@ -484,8 +486,8 @@ class RolloutWorker:
         stable = {0}
         for agent_idx, teleport_y in self._last_deploy_positions.items():
             settled_y = float(obs[agent_idx, 1])
-            drop = teleport_y - settled_y
-            if drop > threshold:
+            drop = vertical_settle_drop(teleport_y, settled_y)
+            if not within_settle_drop(drop, threshold):
                 logger.info(
                     "Agent %d 不稳定: teleport_y=%.1f settled_y=%.1f drop=%.1f > %.1f, 跳过",
                     agent_idx, teleport_y, settled_y, drop, threshold,

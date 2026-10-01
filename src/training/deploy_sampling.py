@@ -140,6 +140,16 @@ def point_in_any_polygon(
     return False
 
 
+def vertical_settle_drop(teleport_y: float, settled_y: float) -> float:
+    """传送目标 y 减去 settle 后的玩家根 y（obs[:, 1]）。"""
+    return float(teleport_y) - float(settled_y)
+
+
+def within_settle_drop(drop: float, threshold: float) -> bool:
+    """竖直落差不超过阈值则视为没有掉出落点。"""
+    return float(drop) <= float(threshold)
+
+
 def tip_in_obstacle(obs_row: np.ndarray, solid_polygons, tip_cfg=None) -> bool:
     """settle 后锤头是否嵌进障碍物 → 该落点无效。
 

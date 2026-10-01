@@ -31,6 +31,7 @@ if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
 from training.config import TrainConfig
+from training.deploy_sampling import vertical_settle_drop, within_settle_drop
 
 logger = logging.getLogger(__name__)
 
@@ -172,11 +173,11 @@ def report_settle_drop_vs_threshold(
     for i, (_tx, teleport_y) in enumerate(drop_points):
         agent_idx = i + 1
         settled_y = float(obs[agent_idx, 1])
-        drop = float(teleport_y) - settled_y
+        drop = vertical_settle_drop(teleport_y, settled_y)
         drops.append(drop)
         if drop < 0:
             n_negative += 1
-        stable = drop <= threshold
+        stable = within_settle_drop(drop, threshold)
         logger.info(
             "Agent %-3d  %10.2f  %10.2f  %10.3f  %s",
             agent_idx,
