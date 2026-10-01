@@ -1,6 +1,6 @@
 # 归档动作回放
 
-入口：`src/tests/control_interaction/replay_evaluation_actions.py`。
+入口：`src/tests/evaluation/replay/replay_evaluation_actions.py`。
 
 它读取真实评估回合中保存的动作，启动游戏后逐帧发送。不会调用策略生成新动作，也不会重新训练。当前支持正式训练控制器生成的固定起点评估归档。
 
@@ -25,7 +25,7 @@
 输出目录必须是新的，防止覆盖之前的回放证据。
 
 ```powershell
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.control_interaction.replay_evaluation_actions --campaign runs/corridor_formal_20260922 --output runs/best_action_replay_20260923 --fps 30
+conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.evaluation.replay.replay_evaluation_actions --campaign runs/corridor_formal_20260922 --output runs/best_action_replay_20260923 --fps 30
 ```
 
 添加 `--select-only` 只生成排名和选中回合信息，不启动游戏。

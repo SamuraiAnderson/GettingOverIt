@@ -1,12 +1,8 @@
 """归档模型评估结果到 `runs/_eval/`，并维护一张可入库的汇总表。
 
-`test_l9_model_eval` 每次评估会写出一个几百 KB 的 JSON，里面 `records` 是每回合的
-统计（这是结论），`states`/`actions` 是全量轨迹（这是原始数据，占了 99% 的体积）。
-以前这些文件全落在 `logs/` 下，而 `.gitignore` 的 `[Ll]ogs/` 把整个目录吞掉了——
-于是"哪个 checkpoint 评出来多少米"这种关键结论从来没进过版本库。
-
 这里把两者分开：原始 JSON 留在 `runs/_eval/`（gitignore），逐回合统计聚合成
 `runs/_eval/summary.csv`（入库）。这样即便原始文件被清掉，评估结论仍然可查、可 diff。
+当前走廊评估的入口是 `local_evaluation.py`。下面的字段来自早期单人评估 JSON。
 
 用法:
   python -m src.training.archive_evals --collect logs      # 归档 logs/eval_*.json
@@ -32,7 +28,7 @@ from training.run_logging import RUNS_ROOT
 EVAL_DIR = "_eval"
 SUMMARY_NAME = "summary.csv"
 
-# records 里每回合的字段，取自 test_l9_model_eval
+# records 里每回合的字段，来自早期单人评估 JSON
 _RECORD_KEYS = ("start_y", "final_y", "max_y", "secured_dy", "reach")
 
 

@@ -53,7 +53,6 @@ python -m src.tests.run_unit_tests -k patch # 只跑名字含 patch 的
 | `reference/analyze_reference_fling.py` | 人工参考轨迹的挥杆分析（读 `src/Data/reference/`） |
 | `reference/calibrate_progress_wx.py` | 用参考轨迹标定 `progress_metric` 的横向权重 |
 | `viz_exploration_noise.py` | 探索噪声的时序结构可视化 |
-| `view_elite_trajectories.py` | **需要游戏**：精英轨迹可视化（精英池不落盘时靠现采样重建） |
 
 ## 3. 在环集成测试 `control_interaction/`
 
@@ -68,7 +67,6 @@ L 系列按能力分层递进，全部需要游戏进程。
 | `test_l6_collider_visual.py` | 碰撞体收集与可视化对齐 |
 | `test_l7_surface_airdrop.py` | 可着陆表面提取与空投候选点 |
 | `test_l8_airdrop_deploy.py` | 批量投放与 settle 落差统计 |
-| `test_l9_model_eval.py` | 模型评估（无噪声推理），结果落到 `runs/_eval/` |
 | `test_l9_water_reset.py` | 落水复位行为 |
 | `test_planb_premise.py` | Plan B 前提验证 |
 | `test_fakecursor_state.py` / `test_mouse_detect.py` | fakeCursor 状态与鼠标注入 |

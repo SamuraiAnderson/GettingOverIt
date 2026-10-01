@@ -265,5 +265,5 @@ python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-filter
 python src/tests/control_interaction/test_l8_airdrop_deploy.py
 
 # 模型评估
-python src/tests/control_interaction/test_l9_model_eval.py --checkpoint checkpoints/ppo_iter_0050.pt
+python -m src.training.local_evaluation --checkpoint checkpoints/ppo_iter_0050.pt --output runs/_eval/ppo_iter_0050
 ```

@@ -3,7 +3,7 @@
 Frames match the motion-render marks: credited cap (required), arrival, prune.
 Wide channel uses the corridor guidance map for that state's guidance_index.
 
-    conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.render_policy_window --ranking runs/corridor_sil_td_pareto_20260927b/best_renders/ranking.json --output runs/corridor_sil_td_pareto_20260927b/best_renders
+    conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.evaluation.present.render_policy_window --ranking runs/corridor_sil_td_pareto_20260927b/best_renders/ranking.json --output runs/corridor_sil_td_pareto_20260927b/best_renders
 """
 from __future__ import annotations
 

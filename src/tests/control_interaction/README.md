@@ -11,7 +11,6 @@
 - `test_l7_surface_airdrop.py` — 从地形抽出可着陆表面并筛空投落点。
 - `test_l8_airdrop_deploy.py` — 检查空投投放是否把复制体放到选定落点。
 - `test_l9_water_reset.py` — 检查落水之后能否重置回起点。
-- `test_l9_model_eval.py` — 加载 checkpoint，用单人无噪声推理跑一段并保存轨迹。
 - `test_fakecursor_state.py` — 检查回包里的 fakeCursor 位置和速度是否有效。
 - `test_mouse_detect.py` — 零动作步进时，看状态会不会跟着真实鼠标变。
 - `test_background_run.py` — 比较游戏在前台和最小化时的步进耗时。

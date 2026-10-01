@@ -3,7 +3,7 @@
 Does not launch the game. Points come from `run_logging.load_elites`; the front
 is the same `sil_archive.pareto_front` used in training.
 
-    conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.plot_sil_td_envelope --elites-dir runs/corridor_sil_td_pareto_20260927_S_s47/elites --output runs/corridor_sil_td_pareto_20260927/td_envelope
+    conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.evaluation.present.plot_sil_td_envelope --elites-dir runs/corridor_sil_td_pareto_20260927_S_s47/elites --output runs/corridor_sil_td_pareto_20260927/td_envelope
 """
 from __future__ import annotations
 

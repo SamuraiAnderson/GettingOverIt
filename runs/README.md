@@ -57,7 +57,7 @@ python -m src.training.main_ppo --run-dir my_experiment --no-random-deploy --per
 | `python -m src.training.run_log_parser <console.log> -o metrics.csv` | 从控制台日志反解指标（崩溃后重建、或处理老日志） |
 | `python -m src.training.archive_evals --collect logs` | 归档评估结果并重建 `_eval/summary.csv` |
 | `python -m src.training.migrate_legacy_runs --refresh` | 按 `LEGACY_RUNS` 表重新渲染归档索引（保留手写结论） |
-| `python -m src.tests.analysis.view_elite_trajectories --checkpoint runs/<tag>/checkpoints/xxx.pt` | 可视化精英轨迹 |
+| `python -m src.tests.evaluation.present.plot_sil_td_envelope --elites-dir runs/<tag>/elites --output runs/<tag>/td_envelope` | 画精英池 (t, D) 包络 |
 
 ## 已归档实验
 
