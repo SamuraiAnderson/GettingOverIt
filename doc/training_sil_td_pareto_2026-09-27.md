@@ -12,4 +12,4 @@
 - 预算 12 小时；先到 96k 再按 96k 台阶续训
 - 游戏在隔离桌面 `GoiRuntime` 启动
 
-停止：创建 `runs/corridor_sil_td_pareto_20260927b/STOP`。训练过程中不要改 `src/training`、`src/env`、`src/start`。
+当次控制器已删除。停止方式不要再按 `STOP` 文件执行。

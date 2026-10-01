@@ -6,13 +6,7 @@ PPO 默认可读取 `src/Data/video_reference/37258923076-1-192/reference_trajec
 
 ## 启用
 
-在项目根目录的 PowerShell 中：
-
-```powershell
-conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --reference-trajectory --reference-corridor-radius 1.5 --recipe ppo-ou --seed 7 --geometry-profile native-pose-v1 --no-random-deploy --steps-per-rollout 400 --max-iterations 40 --run-dir ppo_reference_corridor --persist-game
-```
-
-`--reference-trajectory` 不带路径时使用当前视频的 JSON；也可传另一个同格式文件。
+`--reference-trajectory` 不带路径时使用游戏世界锅心那份 JSON；也可传另一个同格式文件。续训用 `main_ppo --resume`，见 [`training.md`](training.md) 第九节。
 半宽默认 1.5 世界米，可用 `--reference-corridor-radius` 调整。该宽度是起始实验参数，
 不是已由游戏实验确认的最优值。未指定参考轨迹的旧命令仍使用原奖励。
 
@@ -32,13 +26,10 @@ conda run --no-capture-output -n getting-over-it-analysis python -m src.training
 也不构成任意时长轨迹之间的严格字典序约束。长时间偏离仍会累计惩罚。
 
 启用时，旧的高度创新高、只奖励向右、学习到的效率图奖励不参与 PPO 奖励。
-效率图停止更新。SIL 精英池已迁移到走廊口径：rollout 逐帧记录 `corridor_progress`
-（逐步 credited）与 `guidance_index`（引导段索引），剪枝截到 credited 首次封顶
-（+dwell 观察窗），排序分 = credited 总量 + 速度项（`corridor_score`），行为描述子
-取封顶点位置，BC 窗口覆盖全部推进动作；patch wide 通道按 `guidance_index` 从
-预栅格化引导场重建，与在线采集逐点一致。停滞探测器改跟踪精英池 max credited。
-非走廊轨迹（无 `corridor_progress` 字段）仍走高度口径，两种口径在同一池内按字段
-自动分派。BC 评分函数本身不改动。
+效率图停止更新。新建走廊任务的精英池按下一节的 v2：距离是 D，剪枝和排序用 cap 与 D。
+旧 checkpoint 没有 `reference_progress_mode` 时仍按 legacy credited。
+patch wide 通道按 `guidance_index` 从预栅格化引导场重建，与在线采集逐点一致。
+非走廊轨迹仍走高度口径。BC 评分函数本身不改动。
 
 ## 几何和连续性
 
@@ -98,7 +89,6 @@ PPO 每步奖励是 `reference_progress_weight * delta_D - 偏离惩罚`。落�
 
 `corridor_progress_m` 在 v2 里是各合法 agent 的 D 之和，不是旧 credit 之和。评估主指标是 `cap_progress_m`；`credited_progress_m` 保留为旧账诊断。
 
-参考文件仍保留 `partial_unverified_draft` / `training_ready=false` 的来源标记：
-已有世界坐标覆盖约 57% 的分析帧；锅的视觉中心与 Player 原点存在未精确校准的偏差。
-宽走廊允许小误差，显式启用本模式即使用这些粗略连续段做实验，不会把缺口或来源标记
-自动改成已验证。训练效果和宽度仍需游戏内实验检验。
+训练默认读的 `reference_trajectory_game_world.json` 已把出生点锁到 `TransformPoint(b)`。
+旧地形拟合稿 `reference_trajectory.json` 仍带 `training_ready: false`，锅的可见中心没有标成 Player 原点。
+宽走廊允许小误差。训练效果和宽度仍需游戏内实验检验。

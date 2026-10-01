@@ -11,8 +11,7 @@
 
 - 训练曲线**全部丢失**（只有 2 组手工 `Tee-Object` 存了 txt）
 - 每组用了什么 CLI 参数、什么 commit，只能翻终端 scrollback
-- `doc/optimization_roadmap.md` 引用的核心证据图 `logs_treefix2/elite_trajectories.png`
-  已经不存在
+- 早期路线图曾引用的 `logs_treefix2/elite_trajectories.png` 已经不存在
 - 根目录堆了 2.9 GB 未入库文件，`git status` 被淹没
 
 归档时从终端记录里抢救回了 1030 轮训练指标，但这属于运气好。现在由

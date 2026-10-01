@@ -1,6 +1,6 @@
 # 最后有效入账位置：完整修改计划
 
-日期：2026-09-27。状态：设计计划，尚未修改训练实现或启动实验。
+日期：2026-09-27。v2 已进入后续训练。文中的实验控制器已删除。
 
 后续采样修订（2026-09-28）：见 [SIL 精英池采样修改计划](sil_td_sampling_plan_2026-09-28.md)，第 0 节记录实际首动作采样缺陷及评估证据。该计划的两个新采样模式替换本文件第 5 节的单一 D 池侧门控；旧采样模式继续保留原规则。t、D、cap 和 v2 奖励/回报定义不变。
 
@@ -96,7 +96,7 @@
 
 **7. 评估、可视化和日志**
 
-主要文件：`local_evaluation.py`、`run_logging.py`、实验控制器、`render_episode_motion.py`、`render_policy_window.py`、`plot_sil_td_envelope.py`。
+主要文件：`local_evaluation.py`、`run_logging.py`、`render_episode_motion.py`、`render_policy_window.py`、`plot_sil_td_envelope.py`。
 
 - 新主指标使用 `cap_progress_m`，汇总均值、中位数、Q25 和最大值。旧指标明确标成 legacy credited 诊断，历史文件不改名重写、不伪装成新结果。
 - 逐帧 trace 保存当前 D、delta_D、credit_event、实际路线投影、段索引和实际 reward，回合结束给出 cap 和 t_cap。

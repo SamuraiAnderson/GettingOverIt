@@ -2,7 +2,7 @@
 
 入口：`python -m src.tests.analysis.reference.extract_video_reference`。
 
-这条流程已实现离线视频读取、静态地形边缘匹配、角色候选检测和轨迹绘制。当前结果是**不完整、未经真实坐标标注验证的候选轨迹**，不是全程追踪成功，也不能作为精确的监督真值。显式启用的 [PPO 走廊奖励](reference_corridor_reward.md) 可将其连续段作为粗略路线做实验，保留缺口和来源标记。完整性与筛选覆盖率见输出目录的 `quality_report.json`。
+这条流程已实现离线视频读取、静态地形边缘匹配、角色候选检测和轨迹绘制。当前结果是**不完整、未经真实坐标标注验证的候选轨迹**，不是全程追踪成功，也不能作为精确的监督真值。训练默认读同目录的 `reference_trajectory_game_world.json`，不读这份 `training_ready: false` 的草稿。完整性与筛选覆盖率见输出目录的 `quality_report.json`。
 
 ## 输入与输出
 

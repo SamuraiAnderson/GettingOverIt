@@ -23,4 +23,4 @@
 - 每轮权重、输入和精英池：`runs/corridor_sil_20260923_C_s31/`、`runs/corridor_sil_20260923_C_s47/`
 - 启动记录：`runs/sil_launch_logs/`
 
-控制器 PID=35440。创建 `runs/corridor_sil_20260923/STOP` 文件后，控制器在下一次检查时结束其子进程树，保留已完成 checkpoint。正常结束或异常停止均恢复启动前 `GoiData/runtime_config.json`。训练过程中不要编辑冻结的训练、环境、评估源文件或种子文件。
+当次控制器已删除。不要再按当时的 PID 或 `STOP` 文件去停它。

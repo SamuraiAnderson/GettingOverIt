@@ -32,6 +32,10 @@
 | `ppo_trainer.py` | PPO 更新器（clipped surrogate + value clip + entropy + KL 早停） |
 | `ppo_buffer.py` | PPO on-policy buffer（GAE + minibatch，非持久 replay） |
 | `reward.py` | 攀升门控进度势 `progress_metric`（secured dwell + 门控横向 reach）、轨迹评分（`base_score`/`score_trajectory`，共享核心 `climb_score`）、逐步奖励 `step_reward` + 确认式创新高 `NewHighConfirmer`、落水判定单一入口 `is_water`/`is_water_trajectory`、攀爬效率图 `ClimbingEfficiencyMap` |
+| `reference_corridor.py` | 用参考折线做走廊进度和偏离计分；v2 的 D 与 cap 在这里 |
+| `reference_anchor.py` | 规定计分用的锅心点，不改观测特征 |
+| `sil_archive.py` | 维护 SIL 精英池，可选 MAP-Elites 或 (t, D) Pareto |
+| `delayed_exploration.py` | 按玩家档位推迟探索噪声的开启 |
 
 相关模块：
 - `src/env/goi_env.py` — `GoiEnv` TCP 客户端（reset/step/teleport/new_snapshot 等）
@@ -227,6 +231,15 @@ BC 与 PPO 的进度信号**故意分化，且已锁定对应关系，勿误合�
   - **contact patch**：窗口半径由锤子几何硬上界决定，部件轮廓用面积覆盖率栅格。回归单测是 `test_patch_tip_coverage.py` 与 `test_raster_area_coverage.py`。
   - **progress_wx 标定**：`python -m src.tests.analysis.reference.calibrate_progress_wx <过树轨迹.json>`（从 reach/secured_dy 反推，默认 0.5）。
 
+### 7.2 走廊 PPO 的距离、采样和探索
+
+7.0 与 7.1 是 BC 和非走廊 PPO 的进度势。走廊 PPO 的距离不是 `progress_metric`。
+
+- 参考点是标定后的锅心 `pot_visible_center_v1`，写在 35 维状态的后两维。见 [`tas_anchor_35d_2026-09-26.md`](tas_anchor_35d_2026-09-26.md)。
+- 距离 D 是最后一个有效入账之后的路线进度，cap 取最后一个入账动作。见 [`confirmed_endpoint_progress_v2_plan.md`](confirmed_endpoint_progress_v2_plan.md)。
+- SIL 采样采用 `balanced_stratified`。见 [`sil_td_sampling_plan_2026-09-28.md`](sil_td_sampling_plan_2026-09-28.md)。
+- 探索噪声按玩家档位 0/200/400/600 延迟开启。见 [`delayed_exploration_plan_2026-09-29.md`](delayed_exploration_plan_2026-09-29.md)。
+
 ## 八、TCP 通信协议（`GoiEnv` ↔ `TcpStepServer`）
 
 | 命令 | 含义 | 载荷 |
@@ -240,7 +253,7 @@ BC 与 PPO 的进度信号**故意分化，且已锁定对应关系，勿误合�
 | `C` | CONFIG | Rewired 鼠标 override |
 | `X` | CLOSE | 断开 |
 
-响应：`[n:1B]` → 对每个 agent `[state: 33×4B][done: 1B]`（按 agent 交错）。
+响应：`[n:1B]` → 对每个 agent `[state: 33×4B][done: 1B]`（按 agent 交错）。正式训练默认 `tcp_protocol=anchor35`，协商后每个 agent 的状态是 35 维。HELLO 与帧格式见 [`entrypoints.md`](entrypoints.md)。
 
 ## 九、运行入口速查
 
@@ -250,10 +263,8 @@ PPO 的 CLI 说明、推荐配方与废弃清单见 **[`main_ppo_usage.md`](main
 # BC 迭代训练
 python -m src.training.main_train
 
-# PPO：当前最小任务（关 deploy、短 episode；详见 main_ppo_usage.md）
-python -m src.training.main_ppo \
-  --no-random-deploy --steps-per-rollout 400 --persist-game \
-  --resume-bc checkpoints/model_iter_0010.pt
+# PPO 续训：配方在 checkpoint 里
+python -m src.training.main_ppo --resume runs/<tag>/checkpoints/ppo_iter_XXXX.pt --persist-game
 
 # PPO：基座过树后的低处课程投放（非当前默认）
 python -m src.training.main_ppo --random-deploy --y-max-cutoff 125 --steps-per-rollout 500
@@ -264,6 +275,6 @@ python src/tests/control_interaction/test_l7_surface_airdrop.py --physics-filter
 # L8 验证 deploy
 python src/tests/control_interaction/test_l8_airdrop_deploy.py
 
-# 模型评估
-python -m src.training.local_evaluation --checkpoint checkpoints/ppo_iter_0050.pt --output runs/_eval/ppo_iter_0050
+# 模型评估（不更新权重）
+python -m src.training.local_evaluation --checkpoint runs/<tag>/checkpoints/ppo_iter_XXXX.pt --output runs/<tag>/eval_view
 ```

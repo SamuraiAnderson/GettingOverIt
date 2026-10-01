@@ -295,8 +295,7 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 `contact_features.py` 复刻游戏原生 `HammerCollisions` + `PlayerSounds` 接触判断
 （多边形几何 + 向下射线）；`body_contact` 与 `pot_contact` 按游戏 IL 里
 `rb.GetPoint(contact).y > 0.4` 分层各自输出（body 触地 → 撞头 pain，pot 触地 →
-稳定支点，语义相反）。wire 协议不变（仍 33D）。详见 P2.1 落地说明
-（`doc/optimization_roadmap.md`）。
+稳定支点，语义相反）。这 5 维接触加在 Python 的动力学特征里，不增加 TCP 里那 33 维的宽度。正式训练的线路是 `anchor35`，在这 33 维之后另有两维锅心；模型动力学输入仍是 39 维。详见 [`training.md`](training.md) 与 [P2.1](optimization_roadmap.md)。
 
 ---
 

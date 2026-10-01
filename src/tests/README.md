@@ -7,7 +7,7 @@
 |---|---|---|---|
 | 离线单元测试 | `training/test_*.py` | 否 | `python -m src.tests.run_unit_tests` |
 | 离线分析 / 基准 | `analysis/` | 多数不需要 | 单独 `python -m src.tests.analysis.<name>` |
-| 在环集成测试 | `control_interaction/`、`environment_interaction/` | **是** | 单独运行，需游戏可启动 |
+| 在环集成测试 | `control_interaction/` | **是** | 单独运行，需游戏可启动 |
 | 历史标定 | `input_characteristics/` | 是（已完成） | 归档性质，一般不再运行 |
 
 改动训练侧代码后的最小验证是跑一遍离线单元测试：
@@ -67,8 +67,7 @@ L 系列按能力分层递进，全部需要游戏进程。
 | `verify_body_reconstruction.py` / `verify_tip_reconstruction.py` | 从 33D 状态重建 body / tip 轮廓的正确性 |
 | `visualize_trajectory.py` / `visualize_cached_drops.py` / `deploy_exclusion_editor.py` | 可视化与投放禁区编辑 |
 
-`environment_interaction/` 是更早的一批环境交互测试（完全重置、状态存取、一致性），
-详见该目录自带的 README。
+`environment_interaction/` 的集成指南已删除。目录里剩下的脚本对着旧的 `GoiHitboxLogger`，不是当前的 `GameRuntime_v2`。
 
 ## 4. 历史标定 `input_characteristics/`
 

@@ -1,26 +1,6 @@
 # 优化路线图
 
-本文记录当前项目待推进的优化项，按依赖关系与性价比排序。诊断与设计原则同步给出，
-所有优化项均经"缩搜索空间 vs 缩解空间"筛过，属于前者。
-
-## 一、当前瓶颈判断
-
-**证据链（详见 `doc/planb_premise_verification.md` 与训练产物）：**
-- 精英轨迹（`logs_treefix2/elite_trajectories.png`，top-10 by base_score）全部在起点
-  附近横向游走，峰值 `y ≈ 0~1`，**没有任何一条翻越第一个障碍（Deadtree, x≈-30）**。
-- 效率图（`logs_start_sil/ppo_effmap_iter_0190.png`、`logs_treefix2cont/ppo_effmap_iter_0260.png`）
-  的价值只在起点盆地。跑 190~260 轮 PPO 后仍未出现纵向价值传播。
-
-**直接死因：**
-- `stepFrames = 1` → 50Hz 控制；PPO 采样为逐帧 iid 高斯（`explore_noise_std ≈ 0.2`，
-  action ±20 单位）。翻越第一个台阶需要跨 ~25 帧的**时序连贯"勾—拉"动作**，
-  50 个独立高斯采样几乎不可能构造出来（呼应 `doc/hammer_physics.md` 的 hold 收敛 /
-  violent 混沌结论）。
-
-**系统性死因：**
-- 塑形 (效率图 PBRS)、模仿 (SIL)、评分 (secured 峰) 都在**探索的下游**。探索从未撞对
-  第一段真攀爬 → 上游无正样本 → 所有下游机制退化为强化"起点乱晃"。
-  这是稀疏奖励 + 硬探索的经典死锁。
+本文保留设计原则和各优化项的定义。早期「当前瓶颈」和「本周第一个 sprint」已删除。
 
 ## 二、设计原则
 
@@ -272,35 +252,9 @@ cap 后 credited≡0 故无截断偏差，无需 GAE 的 λ 折中）+ 末窗 V 
 
 ---
 
-## 五、建议的第一个 sprint（本周）
+## 六、进度记录
 
-按依赖与性价比：
-
-1. **P0.1**（不做 deploy 的最小任务锁定）——0 代码，规则性变化。
-2. **P1.1**（OU 或 pink 噪声）——最贴合诊断；先从 OU 起（`log_prob` 好推），再看 pink。
-3. **P1.2**（行为多样性 SIL 池）——极小改动，防止 P1.1 有一点点起色时被 SIL 拉回平台。
-
-跑 20-50 轮 iter，主观测：
-- `elite_trajectories.png` 里三角形（peak）分布——是否开始出现 y > 2 的样本？
-- SIL 池占据的 cell 数量——是否随迭代增长？
-
-**如果 peak 开始出现 y > 2** → 第一个信号灯亮，P2/P3 沿路开展。
-**如果 peak 依然全在 y ≈ 0** → 连贯探索本身不够，直接进 P4（重参数化或搜索引导）。
-这个信号本身就是有价值的答案。
-
-## 六、进度追踪（更新时补此表）
-
-| 项 | 状态 | 备注 |
-|---|---|---|
-| P0.1 | ⬜ 未开始 | CLI 侧改动，跑时 `--no-random-deploy --steps-per-rollout 400` |
-| P1.1 | ✅ 已实施 | OU AR(1)，`config.ou_enabled/ou_phi`；PPO ratio 数学自洽（buffer 存 `noise_prev`，new/old 用同一条件式）；episode 起手 `z_prev~N(0,1)` 保首步 marginal |
-| P1.2 | ✅ 已实施 | MAP-Elites，`config.sil_map_elites_enabled/sil_cell_size/sil_cold_start_min`；bd=secured peak (x,y)；冷启动用 extras 允同 cell 填池防塌缩；`main_ppo` 日志 `[SIL/MAP-Elites] cells=` |
-| P2.1 | ✅ 已实施 | Python 端复刻游戏 `HammerCollisions`+`PlayerSounds`，`DYNAMICS_DIM 34→39`；5 维派生：`tip_contact`/`tip_grip`/`body_contact`/`pot_contact`/`fall_distance_norm`（body / pot 按游戏 IL 里 `rb.GetPoint().y > 0.4` 分层各自输出，语义相反）；老 34D ckpt 自动 partial-load；wire 协议不变；见 `contact_features.py` + `test_p2_contact_integration.py` |
-| P2.2 | ⬜ 未开始 | 依赖 P2.1 |
-| P3.1 | ⬜ 未开始 | |
-| P3.2 | ⬜ 未开始 | |
-| P4.1 | ⬜ 未开始 | 等 P1.1 结果 |
-| P4.2 | ⬜ 未开始 | 兜底方案 |
+2026-10-02：先不把策略改成当前帧前馈网络。当前帧 39D 动力学已含速度、光标位置/速度和接触，地形补丁取当前帧即可。物理上不需要 32 帧历史，因此不需要 Transformer（GRU 同样是在编码这段历史）。行为克隆按序列预测 `a_{t+1}`，PPO 沿用了这套骨干。待把策略改成当前帧前馈网络，直接输出二维鼠标位移和价值。注意力与位置编码不能迁到新网络，动作头要重接。
 
 ### 6.1 已实施项的落地要点
 
@@ -315,17 +269,3 @@ cap 后 credited≡0 故无截断偏差，无需 GAE 的 λ 折中）+ 末窗 V 
 - 关键文件：`dataset.py` 新增 `add_trajectories_map_elites()` 与内部 `_behavior_cell_id()`；`main_ppo.py` 分支切换（旧 `add_trajectories(keep_ratio)` 仍留在 `main_train` BC 路径不受影响）。
 - 逻辑：is_water_trajectory 硬拒 → 计算 progress_metric 的 secured peak (x,y) → 网格化 cell_id → cell 空 or 新分数 > cell 内最优 → 入池；冷启动阶段 (|cells| < cold_start_min) 同 cell 落选轨迹进 extras 直接入池，防止塌缩到 1 条；cell 数达标后清空 extras。
 - 兜底：MAP-Elites 之后仍按分数 top-N 裁剪到 `sil_traj_cap`，防止 cell 数长期无界增长。
-
-**首个 sprint 建议命令**（对应第五节；完整 CLI 见 [`main_ppo_usage.md`](main_ppo_usage.md)）：
-```bash
-# P0.1（无代码）+ P1.1（默认开）+ P1.2（默认开）
-python -m src.training.main_ppo \
-  --no-random-deploy \
-  --steps-per-rollout 400 \
-  --max-iterations 40 \
-  --checkpoint-dir checkpoints_ou_me \
-  --log-dir logs_ou_me \
-  --persist-game \
-  --resume-bc <某 BC ckpt>
-```
-观察：`logs_*/ppo_effmap_iter_*.png` 精英三角形 y 分布 + 训练日志 `[SIL/MAP-Elites] cells=` 随迭代的增长。
