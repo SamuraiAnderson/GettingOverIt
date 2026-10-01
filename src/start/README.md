@@ -2,9 +2,13 @@
 
 ## 文件说明
 
-- `game_mode_controller.py` - 游戏模式控制器（设置数据采集/游戏运行/游戏测试模式）
-- `game_launcher.py` - 游戏启动器（启动 Getting Over It 游戏）
-- `__init__.py` - 包初始化文件
+- `game_mode_controller.py` — 写一次性信号文件，让插件以数据采集、游戏运行或游戏测试启动。
+- `game_launcher.py` — 按 `project.json` 启动游戏进程，并可放到另一个 Win32 桌面。
+
+同属启动、但放在 `src/` 根下的入口：
+
+- `main.py` — 设好数据采集模式、启动游戏并收集碰撞导出。
+- `explore_env.py` — 在游戏已经处于运行模式时，探测帧同步、延迟、一致性和 reset。
 
 ## 快速使用
 

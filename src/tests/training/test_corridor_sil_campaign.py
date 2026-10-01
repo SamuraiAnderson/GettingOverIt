@@ -9,7 +9,7 @@ import tempfile
 import numpy as np
 
 from src.training import main_ppo
-from src.tests.analysis.run_corridor_sil import training_arguments, validate_configuration
+from src.tests.analysis.campaign.run_corridor_sil import training_arguments, validate_configuration
 
 
 class CaptureConfig(Exception):
@@ -35,7 +35,7 @@ class SILCampaignTests(unittest.TestCase):
         self.assertEqual((restored.score, restored.iteration), (3.5, 8))
 
     def test_continuation_uses_remaining_samples_and_matching_pool(self):
-        from src.tests.analysis.extend_corridor_sil import resume_arguments
+        from src.tests.analysis.campaign.extend_corridor_sil import resume_arguments
         args = main_ppo.parse_args(resume_arguments(31, {"last_iteration": 13, "physical_samples": 97939}))
         self.assertEqual(args.additional_physical_samples, 190061)
         self.assertTrue(args.resume.endswith("ppo_iter_0013.pt"))

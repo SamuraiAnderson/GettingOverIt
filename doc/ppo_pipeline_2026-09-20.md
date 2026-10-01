@@ -10,7 +10,7 @@
 
 ## 实验流水线
 
-实现位于 `src/training/rollout_pipeline.py`，由 `src/tests/analysis/benchmark_rollout_pipeline.py` 提供 `--mode serial|pipeline` 开关。普通 `main_ppo` 保留串行默认；该原型只接受当前固定轨迹走廊、B1 Transformer、单步动作和固定探索配置，暂不接受 GRU、动作段、随机投放或 SIL。
+实现位于 `src/training/rollout_pipeline.py`。普通 `main_ppo` 保留串行默认。当时的短测驱动只接受固定轨迹走廊、B1 Transformer、单步动作和固定探索配置，不接受 GRU、动作段、随机投放或 SIL。驱动脚本已随那次测量删除；行为仍由 `src/tests/training/test_rollout_pipeline.py` 锁住。
 
 - 采集进程独占游戏、TCP 和冻结模型；训练进程独占 learner 与 optimizer。两者在同一块 GPU 上工作。
 - 每轮生成独立的 CPU 权重快照，记录策略版本。采集过程中不替换参数，快照、raw action、OU 前一时刻噪声和行为 log probability 随数据保留。
@@ -26,12 +26,6 @@
 
 固定权重组均已确认最终参数逐位不变，全部终评权重与最终保存一致；42 项相关回归测试通过，游戏运行配置已恢复。本次短测结束，未启动新一轮长期训练。最终结果和可复算数据见 [实测报告](../runs/pipeline_20260920/RESULT.md)、[KL 诊断原始记录](../runs/pipeline_20260920/kl_diagnosis.json)。旧的 [2 players / batch 256 建议](player_throughput_plan_2026-09-20.md) 基于旧更新覆盖率，不能沿用原串行排名或 5.2 小时预算。
 
-重新运行时使用新的输出目录：
-
-```powershell
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.benchmark_rollout_pipeline --minutes 35 --output runs/pipeline_new_trial
-```
-
-单个配置可添加 `--trial --mode pipeline --agents 4 --rounds 3 --batch 128 --lr 0.00003`。程序拒绝接管已运行的游戏；结束时关闭自身游戏进程并恢复 runtime 配置。测试期间不要更改训练源文件；manifest 会核验源文件和初始权重 hash。
+短测驱动和它依赖的信用训练权重已经删除。本次数字以 [实测报告](../runs/pipeline_20260920/RESULT.md) 和 [KL 诊断原始记录](../runs/pipeline_20260920/kl_diagnosis.json) 为准。
 
 正式训练配置的选择应综合 wall time、实际更新覆盖率、策略滞后拒绝率和跨 seed 保留集成功率。吞吐提升不是学习速度提升；终评的少量复制体也不是独立训练 seeds。

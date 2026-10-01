@@ -50,8 +50,8 @@ python -m src.tests.run_unit_tests -k patch # 只跑名字含 patch 的
 | `bench_patch_raster.py` | 面积覆盖率光栅化的性能开销基准 |
 | `verify_mask_aliasing.py` | 地形 mask 栅格混叠检查 |
 | `analyze_effectiveness.py` | 效率图与可达性分析 |
-| `analyze_reference_fling.py` | 人工参考轨迹的挥杆分析（读 `src/Data/reference/`） |
-| `calibrate_progress_wx.py` | 用参考轨迹标定 `progress_metric` 的横向权重 |
+| `reference/analyze_reference_fling.py` | 人工参考轨迹的挥杆分析（读 `src/Data/reference/`） |
+| `reference/calibrate_progress_wx.py` | 用参考轨迹标定 `progress_metric` 的横向权重 |
 | `viz_exploration_noise.py` | 探索噪声的时序结构可视化 |
 | `view_elite_trajectories.py` | **需要游戏**：精英轨迹可视化（精英池不落盘时靠现采样重建） |
 

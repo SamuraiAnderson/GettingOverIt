@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-from src.tests.analysis import plot_sil_td_envelope as plot
+from src.tests.evaluation.present import plot_sil_td_envelope as plot
 from src.tests.training.test_sil_archive import _traj
 from src.training.run_logging import save_elites
 from src.training.sil_archive import pareto_front

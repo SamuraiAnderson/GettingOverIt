@@ -23,8 +23,4 @@
 
 ## 复算
 
-```powershell
-conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.optimize_training_budget --budget-hours 6 --gpu-reserve-fraction 0.1
-```
-
-计算脚本从实测数据枚举并行数/minibatch，并按实际采集、更新、存档耗时计算处理率；预算使用吞吐下四分位、历史评估和预热每样本耗时上四分位。样本很少，这些量只用于排程，不是统计置信界。约束、备选预算和显存敏感性均写入 JSON/CSV，保留可复核的计算过程。
+排程当时从实测枚举并行数和 minibatch，按采集、更新、存档耗时计算处理率；预算使用吞吐下四分位、历史评估和预热每样本耗时上四分位。样本很少，这些量只用于排程，不是统计置信界。约束、备选预算和显存敏感性已写入 `recommended_plan.json` 与同目录 CSV。原始回合目录和排程脚本已删除，数字以这些归档为准。

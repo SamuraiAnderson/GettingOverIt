@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
-from src.tests.analysis.plot_sil_td_envelope import FONT, catalog_pool, load_trajectories
+from src.tests.evaluation.present.plot_sil_td_envelope import FONT, catalog_pool, load_trajectories
 
 START = ROOT / "runs/log_std_clamp_4h_20260929/elites/elites_iter_0163.npz"
 END = ROOT / "runs/delayed_exploration_8h_20260930/elites/elites_iter_0251.npz"

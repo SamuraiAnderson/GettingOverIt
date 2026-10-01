@@ -632,7 +632,7 @@ def main():
     if tip_polygons is not None and not args.tip_center_only:
         tip_paths = player_data.get("parts", {}).get("tip", {}).get("paths")
         if tip_paths:
-            from drop_point_physics import make_tip_recon_config
+            from tests.analysis.geometry.drop_point_physics import make_tip_recon_config
             tip_cfg = make_tip_recon_config(
                 tip_paths[0], args.tip_angle_source, args.tip_angle_offset, args.tip_scale,
             )
@@ -647,7 +647,7 @@ def main():
     if args.physics_filter_all:
         if args.physics_filter:
             logger.warning("同时指定 --physics-filter 与 --physics-filter-all，仅执行 all 模式")
-        from drop_point_physics import filter_all_drop_points_stable
+        from tests.analysis.geometry.drop_point_physics import filter_all_drop_points_stable
 
         physics_filter_mode = "all"
         max_k = args.physics_max_candidates if args.physics_max_candidates is not None else 800
@@ -730,7 +730,7 @@ def main():
             )
 
     elif args.physics_filter:
-        from drop_point_physics import filter_drop_points_stable
+        from tests.analysis.geometry.drop_point_physics import filter_drop_points_stable
 
         physics_filter_mode = "quick"
         oversample = max(1, args.physics_filter_oversample)

@@ -225,7 +225,7 @@ BC 与 PPO 的进度信号**故意分化，且已锁定对应关系，勿误合�
 - **攀爬效率图** `ClimbingEfficiencyMap`：网格分辨率 1.0m，从碰撞多边形构建 traversable mask；跨迭代沿轨迹路径传播 secured-progress 的价值（`waypoint_weight` 为传播系数，后缀 O(T)），每轮内做地形感知邻域扩散（不穿墙，静态邻域结构预计算复用），构成 value-to-go 势场 `Φ`。两处消费：① 作为 patch wide 通道输入模型；② 对 PPO 以 **PBRS 势场塑形** `γΦ'−Φ` 生效（不改最优解）。BC 排序默认不消费效率图（`bc_waypoint_weight=0`）。`height_prior_weight` 默认 0.0：格值完全由 secured-progress 沿轨迹回传决定（死路因未来无处可去而贬值），远距连通靠轨迹价值回传 + random_deploy 分层课程。
   - **mask 走样核验**：`python -m src.tests.analysis.verify_mask_aliasing`（1m 中心采样漏判薄墙约 1.57%，路线拓扑保留；如需可加 3×3 子格采样，无须降到 0.5m）。
   - **contact patch 覆盖核验**：`python -m src.tests.analysis.check_tip_patch_coverage`（锤子几何硬上界 vs 窗口半径 + 360° 最坏姿态扫描）；`diagnose_tip_rasterization`（部件轮廓栅格化命中率/空通道率）；`bench_patch_raster`（栅格化开销）。见第二节 contact 分支说明。
-  - **progress_wx 标定**：`python -m src.tests.analysis.calibrate_progress_wx <过树轨迹.json>`（从 reach/secured_dy 反推，默认 0.5）。
+  - **progress_wx 标定**：`python -m src.tests.analysis.reference.calibrate_progress_wx <过树轨迹.json>`（从 reach/secured_dy 反推，默认 0.5）。
 
 ## 八、TCP 通信协议（`GoiEnv` ↔ `TcpStepServer`）
 

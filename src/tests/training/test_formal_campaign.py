@@ -1,7 +1,7 @@
 """Budget and command-line safeguards for the bounded formal campaign."""
 import unittest
 
-from src.tests.analysis.run_corridor_formal import choose_endpoint, BudgetStop
+from src.tests.analysis.campaign.run_corridor_formal import choose_endpoint, BudgetStop
 from src.training.main_ppo import parse_args
 
 

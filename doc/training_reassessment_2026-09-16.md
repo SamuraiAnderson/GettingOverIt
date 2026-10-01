@@ -81,8 +81,6 @@ PPO 的概率比在同一策略、相同条件下应为 1；这个基本前提�
 
 ## 可复核材料
 
-- 统计与无游戏诊断：`src/tests/analysis/reassess_training_cost.py`。
 - 完整数值：`doc/training_reassessment_2026-09-16.json`。
-- 输入：`runs/*/metrics.csv`、`runs/p2_contact/console.log`、`runs/ou_me/console.log`、`runs/_eval/summary.csv`、`runs/p2_contact/elites/elites_iter_0335.npz`。
+- 输入：`runs/*/metrics.csv`、`runs/p2_contact/console.log`、`runs/p2_contact/elites/elites_iter_0335.npz`。`ou_me` 的控制台和当时的离线诊断脚本已删除。
 - 计时仅使用完整阶段边界，排除了日志拼接异常的 iter296；秒级日志不能支持亚秒精度的性能归因，所列小数是多轮平均。
-- 复现：`conda run -n getting-over-it-analysis python -m src.tests.analysis.reassess_training_cost --output doc/training_reassessment_2026-09-16.json`。

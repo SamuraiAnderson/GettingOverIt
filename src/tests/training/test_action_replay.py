@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from src.tests.control_interaction.replay_evaluation_actions import load_batch, batches_through, select_episode
+from src.tests.evaluation.replay.replay_evaluation_actions import load_batch, batches_through, select_episode
 
 
 def episode(agent, steps):

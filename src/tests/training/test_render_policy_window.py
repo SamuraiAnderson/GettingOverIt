@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from src.tests.analysis.render_policy_window import guidance_for_state, relative_xy
+from src.tests.evaluation.present.render_policy_window import guidance_for_state, relative_xy
 
 
 class PolicyWindowHelperTests(unittest.TestCase):

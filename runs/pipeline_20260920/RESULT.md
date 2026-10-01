@@ -53,7 +53,7 @@
 
 原‘2 players + batch 256’推荐来自旧学习率、旧 KL 检查位置、串行测试及不同 CPU 线程数，不能直接用于本轮。此次降低学习率与修正检查位置在两种模式中一致；串行/流水线对照才可用于估计并行收益。正式扩训仍需共同样本预算、独立训练 seeds 和保留集成功率。
 
-复算：`conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.summarize_rollout_pipeline`。运行：`conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.benchmark_rollout_pipeline --output runs/<new-name>`；单组用 `--trial --mode serial|pipeline --agents 2|4|8`。输出目录必须是新目录，避免覆盖旧数据。
+短测驱动、复算脚本和 `live/`、`frozen/` 原始目录已删除。本节数字即该次测量的归档。
 
 ## 固定权重的计算对照
 

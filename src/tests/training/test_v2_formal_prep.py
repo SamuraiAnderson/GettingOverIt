@@ -4,7 +4,7 @@ import io
 import unittest
 
 from src.training import main_ppo
-from src.tests.analysis import prepare_v2_formal as prep
+from src.tests.analysis.campaign import prepare_v2_formal as prep
 from training.reference_corridor import PROGRESS_MODE_V2
 
 

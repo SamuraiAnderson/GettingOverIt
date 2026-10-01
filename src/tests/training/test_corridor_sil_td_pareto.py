@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from src.training import main_ppo
-from src.tests.analysis import run_corridor_sil_td_pareto as campaign
+from src.tests.analysis.campaign import run_corridor_sil_td_pareto as campaign
 
 
 class CaptureConfig(Exception):
