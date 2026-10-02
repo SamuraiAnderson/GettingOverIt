@@ -1,0 +1,89 @@
+{
+  "baseline": "runs\\policy_0269_cold_8players_20261002_v2",
+  "candidate": "runs\\policy_0269_cold_8players_20261002_visual_fix",
+  "excluded_state_columns": {
+    "28": "Unity Time.time timestamp"
+  },
+  "agents": [
+    {
+      "agent": 0,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    },
+    {
+      "agent": 1,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    },
+    {
+      "agent": 2,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    },
+    {
+      "agent": 3,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    },
+    {
+      "agent": 4,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    },
+    {
+      "agent": 5,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    },
+    {
+      "agent": 6,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    },
+    {
+      "agent": 7,
+      "state_shape": [
+        1201,
+        34
+      ],
+      "state_bitwise_equal": true,
+      "max_state_abs_diff": 0.0,
+      "actions_bitwise_equal": true
+    }
+  ]
+}

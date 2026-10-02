@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from test_native_dynamics import PHASES, assess_native_input, assess_native_parameters, assess_native_start, body_error, comparison, read_trace
+from test_native_dynamics import PHASES, assess_native_input, assess_native_parameters, assess_native_start, assess_repeatability, body_error, comparison, read_trace
 
 
 def fixture():
@@ -18,12 +18,32 @@ def fixture():
                      "bodyConfig": [1.] * 63, "bodyNames": [str(n) for n in range(7)],
                      "controls": [0.] * 11, "motors": [0.] * 6, "axes": [40., 30., 0., 0.],
                      "motorParameters": [10000., 10000., 100., 10000., 10000.],
+                     "inputBeforeInjection": {"x": 0., "y": 0.},
                      "axisReads": [1, 1, 2, 2], "contacts": [], "fixedDeltaTime": 1 / 120,
                      "timeScale": 1})
     return rows
 
 
 class DynamicsChecks(unittest.TestCase):
+    def test_repeatability_requires_repeated_starts_for_every_fixture(self):
+        cases = [{"id": str(i), "mode": "native", "actions": "hold"} for i in range(2)]
+        traces = {c["id"]: fixture() for c in cases}
+        self.assertTrue(assess_repeatability(cases, traces)["passed"])
+        self.assertFalse(assess_repeatability(cases[:1], traces)["passed"])
+        self.assertFalse(assess_repeatability([], {})["passed"])
+        cases[1]["actions"] = "pulse"
+        self.assertFalse(assess_repeatability(cases, traces)["passed"])
+
+    def test_repeatability_rejects_single_bit_history_and_body_changes(self):
+        cases = [{"id": str(i), "mode": "native", "actions": "hold"} for i in range(2)]
+        for field, index in (("bodies", 41), ("controls", 4), ("inputBeforeInjection", "x")):
+            traces = {c["id"]: fixture() for c in cases}
+            traces["1"][2][field][index] = -0.  # numerically equal, but different float32 bits
+            self.assertFalse(assess_repeatability(cases, traces)["passed"])
+        traces = {c["id"]: fixture() for c in cases}
+        traces["1"][2]["controls"][0] = float("nan")
+        self.assertFalse(assess_repeatability(cases, traces)["passed"])
+
     def input_fixtures(self):
         cases = [{"id": f"{kind}_{mode}", "mode": mode, "actions": kind, "repeat": 0}
                  for kind in ("hold", "pulse", "reverse", "random") for mode in ("native", "candidate")]

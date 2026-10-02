@@ -1,0 +1,29 @@
+{
+  "task": "Two independent PhysicsScene2D worlds; native full scene and archived identical actions",
+  "experiment_plugin_removed": true,
+  "experiment_request_removed": true,
+  "production_dll_sha256": "73454E3B1002409CCCAE1E6FE1F6E4D8A326207EFCCDBA1B5F5897AF649AFB9F",
+  "production_config_sha256": "C5A9EAF99DCD88D7AB6BE9AC5385DD2ECBB975021F824AC475ACE6502DAA428C",
+  "files": [
+    {
+      "Path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\isolated_worlds_20261002\\experiment_code\\IsolatedWorldExperiment.cs",
+      "Hash": "ADF0DD2D3F36F533929B286AB956524CED2626A44A13C6E63F8541CC3678C0CA"
+    },
+    {
+      "Path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\isolated_worlds_20261002\\experiment_code\\IsolatedWorldExperiment.dll",
+      "Hash": "E72587362AEC96BA7E6C0203854DE502A1C7D96D880A48DE493BE621A68DB75F"
+    },
+    {
+      "Path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\isolated_worlds_20261002\\experiment_code\\run_isolated_worlds.py",
+      "Hash": "DAD77982F10DD4E8113245D098680425FD096C8EB98EA7EA1A433D8DE9317078"
+    },
+    {
+      "Path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\isolated_worlds_20261002\\experiment_code\\summarize_isolated_worlds.py",
+      "Hash": "9F5D239BA574153FA9DD1579CDEC3D1313A8D9C51C862429591E37ED35858A26"
+    },
+    {
+      "Path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\isolated_worlds_20261002\\experiment_code\\replay_clone_divergence.py",
+      "Hash": "2906FB3A48F3ACB5D0C2AEFFB4D7692A6D5C1E1B392ED7F8D0F307B359850B1D"
+    }
+  ]
+}

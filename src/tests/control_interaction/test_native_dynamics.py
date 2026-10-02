@@ -1,6 +1,7 @@
 """Opt-in native/candidate dynamics experiment; requires an isolated game copy.
 
-Native preserves automatic physics, lifecycle, hierarchy and controller state.
+Native preserves automatic physics, lifecycle, hierarchy and controller state;
+the Hub depth fix is disabled for that reference unless explicitly requested.
 native_dual changes only the pre-controller mouseInput write during the probe.
 Candidate is the fixed-start reset runtime. Initial-state mismatches prevent an
 equivalence verdict; repeatability alone is never interpreted as equivalence.
@@ -112,11 +113,42 @@ def summarize(cases, traces):
         pairs.append({"left": a["id"], "right": b["id"], "kind": "self_repeat" if a["mode"] == b["mode"] else "cross_mode",
                       **comparison(traces[a["id"]], traces[b["id"]])})
     return {"equivalence": "NOT_CERTIFIED", "comparisons": pairs,
+            "repeatability": assess_repeatability(cases, traces),
             "native_parameters": assess_native_parameters(cases, traces),
             "native_start": assess_native_start(cases, traces),
             "native_input": assess_native_input(cases, traces),
             "first_step": {case["id"]: {phase: {key: row[key] for key in ("controls", "motors", "axes", "inputBeforeInjection")}
                                          for phase, row in zip(PHASES, traces[case["id"]][:3])} for case in cases}}
+
+
+def assess_repeatability(cases, traces):
+    """Require repeated starts for every fixture; compare recorded float32 state."""
+    groups = {}
+    fields = ("bodies", "controls", "motors", "bodyConfig", "motorParameters", "axes", "inputBeforeInjection")
+    for case in cases:
+        groups.setdefault((case["mode"], case["actions"]), []).append(case)
+    results = []
+    for key, group in groups.items():
+        mismatches = []
+        for a, b in itertools.combinations(group, 2):
+            left, right = traces[a["id"]], traces[b["id"]]
+            if len(left) != len(right) or not left:
+                mismatches.append({"left": a["id"], "right": b["id"], "field": "trace_length"})
+                continue
+            identity = ("step", "phase", "bodyNames", "fixedDeltaTime")
+            if any(any(ar[f] != br[f] for f in identity) for ar, br in zip(left, right)):
+                mismatches.append({"left": a["id"], "right": b["id"], "field": "identity_or_timestep"})
+            for field in fields:
+                av, bv = (np.asarray([[r[field][axis] for axis in ("x", "y")]
+                                      if field == "inputBeforeInjection" else r[field] for r in trace],
+                                     dtype=np.float32) for trace in (left, right))
+                if (not np.isfinite(av).all() or not np.isfinite(bv).all()
+                        or not np.array_equal(av.view(np.uint32), bv.view(np.uint32))):
+                    mismatches.append({"left": a["id"], "right": b["id"], "field": field})
+        results.append({"mode": key[0], "actions": key[1], "repeats": len(group),
+                        "passed": len(group) >= 2 and not mismatches, "mismatches": mismatches})
+    return {"passed": bool(results) and all(r["passed"] for r in results), "fields": fields, "groups": results,
+            "scope": "Recorded body/controller/parameter state across starts; not all Unity hidden state"}
 
 
 def assess_native_input(cases, traces):
@@ -240,13 +272,15 @@ def run_case(args, launcher, mode, kind, repeat):
     fixture.write_text(json.dumps({"actions": actions.flatten().tolist(), "warmupFrames": args.native_warmup,
                                    "output": str(path.resolve())}), encoding="utf-8")
     overrides = {"dynamicsProbeMode": mode, "dynamicsProbeFile": str(fixture.resolve()),
+                 "suppressHubDepthWrite": (mode == "candidate" if getattr(args, "hub_depth_fix", None) is None else args.hub_depth_fix),
                  "experimentalControlledUpdates": mode == "candidate", "experimentalSceneReset": mode == "candidate",
                  "experimentalResetDiagnostics": False, "stepFrames": 1,
                  "experimentalNativeInputSmoothing": args.native_input_smoothing and mode == "candidate",
                  "experimentalNativeNewGame": args.native_new_game and mode == "candidate"}
     ensure_idle(args.port)
     proc, env = None, None
-    record = {"id": case_id, "mode": mode, "actions": kind, "repeat": repeat, "raw": path.name}
+    record = {"id": case_id, "mode": mode, "actions": kind, "repeat": repeat, "raw": path.name,
+              "hub_depth_fix": overrides["suppressHubDepthWrite"]}
     started = time.monotonic()
     try:
         with runtime_settings(launcher.game_root, 1, args.port, overrides) as config:
@@ -335,6 +369,8 @@ def run(args):
             report["status"] = "FAIL"
         if args.require_native_input and not report["analysis"]["native_input"]["passed"]:
             report["status"] = "FAIL"
+        if args.require_repeatable and not report["analysis"]["repeatability"]["passed"]:
+            report["status"] = "FAIL"
     except (Exception, KeyboardInterrupt) as exc:
         LOG.exception("Dynamics experiment failed")
         report["status"] = "ERROR"
@@ -363,6 +399,9 @@ def parse_args(argv=None):
     parser.add_argument("--native-warmup", type=int, default=240)
     parser.add_argument("--native-new-game", action="store_true", help="Use the experimental native new-game initialization")
     parser.add_argument("--native-input-smoothing", action="store_true", help="Inject axes only; preserve native input history")
+    parser.add_argument("--hub-depth-fix", action=argparse.BooleanOptionalAction, default=None,
+                        help="Override Hub depth fix; default off for native references, on for candidate")
+    parser.add_argument("--require-repeatable", action="store_true", help="Require bitwise repeated-start body/controller traces")
     parser.add_argument("--require-native-input", action="store_true", help="Require exact native input state across hold/pulse/reverse/random")
     parser.add_argument("--require-native-start", action="store_true", help="Require initial body/controller state within declared limits")
     parser.add_argument("--seed", type=int, default=20261002)
@@ -371,6 +410,8 @@ def parse_args(argv=None):
     parser.add_argument("--require-native-parameters", action="store_true",
                         help="Exit 1 if measured joint caps/caches, body config or fixed dt differ from native")
     args = parser.parse_args(argv)
+    if args.require_repeatable and args.repeats < 2:
+        parser.error("--require-repeatable requires at least two repeats")
     if args.require_native_input and (not args.native_input_smoothing
             or not {"native", "candidate"}.issubset(args.modes)
             or not {"hold", "pulse", "reverse", "random"}.issubset(args.actions) or args.steps < 4):

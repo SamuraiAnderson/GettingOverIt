@@ -68,6 +68,9 @@ namespace GoiRuntime.Core.Configuration
 		/// </summary>
 		public int stepFrames = 1;
 
+        // Runtime fix: prevent visual depth updates from moving the physics hub.
+        // Disable only for an unmodified native reference or explicit rollback.
+        public bool suppressHubDepthWrite = true;
         // Opt-in reset experiment. Existing training keeps the legacy path.
         public bool experimentalControlledUpdates = false;
         public bool experimentalResetDiagnostics = false;
@@ -202,7 +205,9 @@ namespace GoiRuntime.Core.Configuration
 				try
 				{
 					string json = File.ReadAllText(configPath);
-					RuntimeConfig config = JsonUtility.FromJson<RuntimeConfig>(json);
+					// Preserve defaults for newly added fields in existing config files.
+					RuntimeConfig config = new RuntimeConfig();
+					JsonUtility.FromJsonOverwrite(json, config);
 					Debug.Log($"配置已加载: {configPath}");
 					return config;
 				}

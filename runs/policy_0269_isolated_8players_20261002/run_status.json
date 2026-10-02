@@ -1,0 +1,50 @@
+{
+  "status": "COMPLETE",
+  "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\optimizer_momentum_fix_20261001\\checkpoints\\ppo_iter_0269.pt",
+  "checkpoint_sha256": "d29e3f764e1d3a0a506216fceac0912b5b88a5871ab793876cd7bac9bf9f37fe",
+  "agents": 8,
+  "physics_layout": "8 independent native Mian scenes; one original player per world",
+  "initialization": "live cold start; no reset, warmup, snapshot or teleport before policy",
+  "known_boundary": "Extra world initialization synchronization changes trajectory relative to old single-world reference",
+  "steps": 1200,
+  "runtime_overrides": {
+    "suppressHubDepthWrite": true,
+    "experimentalControlledUpdates": true,
+    "experimentalSceneReset": true,
+    "experimentalNativeNewGame": true,
+    "experimentalNativeInputSmoothing": true,
+    "experimentalResetDiagnostics": true,
+    "stepFrames": 1,
+    "dynamicsProbeMode": "",
+    "dynamicsProbeFile": ""
+  },
+  "plugin_sha256": "4608e828630f69a2536527fe5a22aa68e4d79fd40599cc055b2a5506ed4bbf59",
+  "experiment_sha256": "749f9f614f51eaaaba1a974b82729e6f2164dac273656120a56078a725389cbb",
+  "fps_limit": 30.0,
+  "game_pid": 22516,
+  "policy_start_seconds": 18.719158800086007,
+  "completed_steps": 1200,
+  "scene_handles": [
+    -17954,
+    -18334,
+    -18538,
+    -18746,
+    -18958,
+    -19174,
+    -19394,
+    -19618
+  ],
+  "player_y": [
+    -2.301875352859497,
+    -2.301875352859497,
+    -2.301875352859497,
+    -2.301875352859497,
+    -2.301875352859497,
+    -2.301875352859497,
+    -2.301875352859497,
+    -2.301875352859497
+  ],
+  "checkpoint_unchanged": true,
+  "game_left_open": true,
+  "wall_seconds": 314.2586232998874
+}

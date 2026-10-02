@@ -53,6 +53,20 @@ namespace GoiRuntime.Core
 		private readonly List<PlayerStateService> stateServices = new List<PlayerStateService>();
         private readonly Dictionary<GameObject, Rigidbody2D[]> controlledBodies =
             new Dictionary<GameObject, Rigidbody2D[]>();
+        private readonly Dictionary<GameObject, GameObject> visualizationRoots =
+            new Dictionary<GameObject, GameObject>();
+
+        public GameObject[] GetVisualizationRoots()
+        {
+            var roots = new List<GameObject>();
+            foreach (var service in stateServices)
+            {
+                var player = service != null ? service.GetPlayerObject() : null;
+                GameObject root;
+                roots.Add(player != null && visualizationRoots.TryGetValue(player, out root) ? root : player);
+            }
+            return roots.ToArray();
+        }
 
         private Rigidbody2D[] PlayerBodies(GameObject go)
         {
@@ -73,6 +87,7 @@ namespace GoiRuntime.Core
                 var container = new GameObject(go.name + "_PhysicsRoot");
                 SceneManager.MoveGameObjectToScene(container, go.scene);
                 foreach (var rb in bodies) rb.transform.SetParent(container.transform, true);
+                visualizationRoots.Add(go, container);
             }
         }
 

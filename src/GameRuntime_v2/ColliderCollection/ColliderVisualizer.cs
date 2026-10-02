@@ -12,6 +12,12 @@ namespace GoiRuntime.ColliderCollection
 	{
 		public GameObject[] playerRoots;
 
+        public void SetPlayerRoots(GameObject[] roots)
+        {
+            playerRoots = roots;
+            LogDetectedColliders();
+        }
+
 		private Material lineMaterial;
 		private Collider2D[] _envColliders;
 		private Color _originalBgColor;

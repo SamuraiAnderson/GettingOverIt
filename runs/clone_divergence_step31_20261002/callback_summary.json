@@ -1,0 +1,40 @@
+{
+  "status": "COMPLETE",
+  "patched_callback_methods": 22,
+  "patched_methods": [
+    "ReportContact.OnTriggerEnter2D",
+    "ReportContact.OnTriggerExit2D",
+    "BatGen.OnTriggerEnter2D",
+    "GiftSpawner.OnTriggerStay2D",
+    "GravityControl.OnTriggerStay2D",
+    "GravityControl.OnTriggerEnter2D",
+    "GravityControl.OnTriggerExit2D",
+    "HammerCollisions.OnCollisionEnter2D",
+    "HammerCollisions.OnCollisionStay2D",
+    "HammerCollisions.OnCollisionExit2D",
+    "OpenGift.OnCollisionEnter2D",
+    "PlayerSounds.OnCollisionEnter2D",
+    "PlayerSounds.OnCollisionStay2D",
+    "PotSounds.OnCollisionEnter2D",
+    "PotSounds.OnCollisionStay2D",
+    "PotSounds.OnCollisionExit2D",
+    "PropSound.OnCollisionEnter2D",
+    "RestartOnContact.OnCollisionEnter2D",
+    "SplashControl.OnTriggerEnter2D",
+    "Teleporter.OnTriggerEnter2D",
+    "Teleporter.OnTriggerExit2D",
+    "WellDone.OnTriggerEnter2D"
+  ],
+  "step31_callbacks_intercepted": 16,
+  "step31_all_callbacks_skipped": true,
+  "step31_invoked_methods": [
+    "HammerCollisions.OnCollisionEnter2D",
+    "HammerCollisions.OnCollisionStay2D"
+  ],
+  "observer_matches_baseline_bitwise_without_timestamp": true,
+  "skipping_callbacks_matches_baseline_bitwise_without_timestamp": true,
+  "compared_steps": 40,
+  "agents": 8,
+  "interpretation": "Skipping managed 2D collision/trigger callbacks from step31 does not change the divergence or any recorded state through step40. The immediate step31 split is in native physics rather than these callbacks.",
+  "limitation": "Does not identify native CCD internal scheduling; does not imply game collision callbacks never affect dynamics."
+}

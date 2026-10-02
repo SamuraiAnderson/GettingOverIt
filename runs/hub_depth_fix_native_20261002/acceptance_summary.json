@@ -1,0 +1,67 @@
+{
+  "status": "PASS",
+  "plugin_sha256": "9f9d0c3bdbb18ff57670846a2f62b2267c6c9a20cad37ca8ff63e2035dcb0c1f",
+  "reports": {
+    "native": "runs\\hub_depth_fix_native_20261002\\result.json",
+    "long": "runs\\hub_depth_fix_long_20261002\\result.json",
+    "reference": "runs\\hub_depth_fix_reference_20261002\\result.json",
+    "reset_2agents": "runs\\hub_depth_fix_reset_2agents_20261002\\result.json",
+    "reset_8agents": "runs\\hub_depth_fix_reset_8agents_20261002\\result.json"
+  },
+  "cold_start_repeatability": {
+    "native": {
+      "launches": 15,
+      "steps_per_launch": 40,
+      "all_recorded_fields_bitwise_equal": true
+    },
+    "long": {
+      "launches": 3,
+      "steps_per_launch": 1200,
+      "all_recorded_fields_bitwise_equal": true
+    }
+  },
+  "reset": {
+    "reset_2agents": {
+      "cases": 27,
+      "starts": 3,
+      "bitwise_frames_excluding_timestamp": 1107,
+      "default_enabled_for_old_config": true
+    },
+    "reset_8agents": {
+      "cases": 4,
+      "starts": 1,
+      "bitwise_frames_excluding_timestamp": 4804,
+      "default_enabled_for_old_config": true
+    }
+  },
+  "limitations": [
+    "Single machine and measured fixtures; not universal determinism or complete game equivalence.",
+    "Hub visual depth no longer follows hand animation after Awake.",
+    "Reset checks use the existing experimental controlled scene reset and native input options.",
+    "Native start acceptance is tolerance-based, not bitwise equivalence to the reset runtime."
+  ],
+  "native_reference": {
+    "original_reference_patch_disabled": true,
+    "parameters_passed": true,
+    "input_rows_bitwise_equal": 600,
+    "start_within_limits": true,
+    "max_start_position_component_error_m": 0.0005023479461669922,
+    "max_start_angle_error_deg": 0.015140533447265625
+  },
+  "production_before": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_after": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_unchanged": true,
+  "source_sha256": {
+    "src/GameRuntime_v2/PlayerControl/HubDepthWritePatch.cs": "8968d21a240c24115dd95c93a1d41df074fd66594d8683f1a88786cab9ee3aff",
+    "src/GameRuntime_v2/Core/GameRuntimeManager.cs": "6a630313ca5321d73bd54e1452ad49083cb9adcca94bb45acfd3cf3ae867b840",
+    "src/GameRuntime_v2/Core/Configuration/RuntimeConfig.cs": "206aa501a88b08e97225fe231c1307a12ec96d51ba05c6415df3335b33070f47",
+    "src/tests/control_interaction/test_native_dynamics.py": "7c68592b14b3964763f32c56c7b46c1fedb1ef472668a22ec572c1fba42f080a",
+    "src/tests/control_interaction/HubDepthPatchChecks.cs": "89eaf7082638c4e045ef331852d012a749999f629551f86ee2a04939b481dbd4"
+  }
+}

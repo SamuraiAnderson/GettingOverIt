@@ -1,0 +1,146 @@
+{
+  "status": "COMPLETE",
+  "steps": 40,
+  "finding": "The first clone split occurs inside step-31 physics, at continuous hammer-tip contacts with overlapping terrain contours.",
+  "scope": "Seven duplicates compared with one another; original agent0 has a separate cold-state discrepancy.",
+  "shared_actions_identical": true,
+  "read_only_probe_preserves_baseline_bitwise": true,
+  "original_action_replay_matches_archived_run_bitwise": true,
+  "cross_agent_collision_pairs_ignored": 1008,
+  "cross_agent_contacts_observed": 0,
+  "phases_at_step31": [
+    {
+      "phase": "before_control",
+      "all_clone_bodies_equal": true,
+      "all_clone_controls_equal": true,
+      "all_clone_joints_equal": true
+    },
+    {
+      "phase": "before_simulation",
+      "all_clone_bodies_equal": true,
+      "all_clone_controls_equal": true,
+      "all_clone_joints_equal": true
+    },
+    {
+      "phase": "after_simulation",
+      "all_clone_bodies_equal": false,
+      "all_clone_controls_equal": true,
+      "all_clone_joints_equal": true
+    }
+  ],
+  "max_tip_distance_between_clone1_and_other_clones_at_step31_m": 0.006175371818244457,
+  "overlapping_terrain": {
+    "names": [
+      "Intresto_rock055_252vert_500face_scale_1m_tex_sandstone1 (3)",
+      "Intresto_rock055_252vert_500face_scale_1m_tex_sandstone1 (2)"
+    ],
+    "vertices_each": 13,
+    "exactly_matching_corresponding_vertices": 11,
+    "remaining_vertices_differ": true
+  },
+  "interventions": [
+    {
+      "case": "ignore_rock2_shared8",
+      "same_actions": true,
+      "states_through_step30_unchanged": true,
+      "seven_clones_bitwise_equal_through_step40": true
+    },
+    {
+      "case": "ignore_rock3_shared8",
+      "same_actions": true,
+      "states_through_step30_unchanged": true,
+      "seven_clones_bitwise_equal_through_step40": true
+    },
+    {
+      "case": "discrete_shared8",
+      "same_actions": true,
+      "states_through_step30_unchanged": true,
+      "seven_clones_bitwise_equal_through_step40": true
+    }
+  ],
+  "agent_count_comparisons": [
+    {
+      "status": "COMPLETE",
+      "agents": 3,
+      "steps": 40,
+      "action_source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\policy_0269_cold_8players_20261002_visual_fix",
+      "action_mode": "shared_agent1",
+      "probe_mode": "observe",
+      "plugin_sha256": "4608e828630f69a2536527fe5a22aa68e4d79fd40599cc055b2a5506ed4bbf59",
+      "startup_seconds": 7.679954200051725,
+      "comparisons": [
+        {
+          "agent": 2,
+          "first_divergence_from_agent1": null
+        }
+      ]
+    },
+    {
+      "status": "COMPLETE",
+      "agents": 4,
+      "steps": 40,
+      "action_source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\policy_0269_cold_8players_20261002_visual_fix",
+      "action_mode": "shared_agent1",
+      "probe_mode": "observe",
+      "plugin_sha256": "4608e828630f69a2536527fe5a22aa68e4d79fd40599cc055b2a5506ed4bbf59",
+      "startup_seconds": 7.654219699790701,
+      "comparisons": [
+        {
+          "agent": 2,
+          "first_divergence_from_agent1": 31
+        },
+        {
+          "agent": 3,
+          "first_divergence_from_agent1": 32
+        }
+      ]
+    },
+    {
+      "status": "COMPLETE",
+      "agents": 8,
+      "steps": 40,
+      "action_source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\policy_0269_cold_8players_20261002_visual_fix",
+      "action_mode": "shared_agent1",
+      "probe_mode": "observe",
+      "plugin_sha256": "4608e828630f69a2536527fe5a22aa68e4d79fd40599cc055b2a5506ed4bbf59",
+      "startup_seconds": 8.190760800149292,
+      "comparisons": [
+        {
+          "agent": 2,
+          "first_divergence_from_agent1": 31
+        },
+        {
+          "agent": 3,
+          "first_divergence_from_agent1": 32
+        },
+        {
+          "agent": 4,
+          "first_divergence_from_agent1": 32
+        },
+        {
+          "agent": 5,
+          "first_divergence_from_agent1": 32
+        },
+        {
+          "agent": 6,
+          "first_divergence_from_agent1": 32
+        },
+        {
+          "agent": 7,
+          "first_divergence_from_agent1": 31
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Contact ordering and impulses are observed; internal native CCD/TOI scheduling and tie-breaking are not exposed.",
+    "Disabling a terrain contact or switching to discrete collision changes dynamics and is diagnostic only.",
+    "Passing intervention alignment covers these 40 steps, not all gameplay.",
+    "No production dynamics or terrain was changed. Temporary probe is removed after the experiment."
+  ],
+  "artifacts": {
+    "artifacts\\hub_depth_fix\\replay_clone_divergence.py": "0cd99c8d1d704107557cefce17ac2e43b672dc42e2679935963fb49293f424d4",
+    "artifacts\\hub_depth_fix\\CloneDivergenceProbe.cs": "3d2e80216837b13933f27f376f5cc30f72dc678f7c9ad45a94057865e5c548a6",
+    "artifacts\\hub_depth_fix\\CloneDivergenceProbe.dll": "e76ce07b1c997dcb5e2e62df18861f971111b8f8115ea0a4673b952542c5ce82"
+  }
+}

@@ -318,7 +318,7 @@ class GoiEnv:
     def set_camera_free(self, enabled: bool = True) -> None:
         """
         启用/禁用自由相机模式。
-        启用后解除原相机跟随锁定，允许滚轮缩放和鼠标中键拖动平移。
+        启用后解除原相机跟随锁定，允许滚轮缩放和鼠标左键拖动平移。
         """
         buf = CMD_CAMERA_FREE + struct.pack("B", 1 if enabled else 0)
         self._send_all(buf)

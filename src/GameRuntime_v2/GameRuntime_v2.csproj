@@ -68,6 +68,7 @@
     <Compile Include="PlayerControl\MouseInputOverride.cs" />
     <Compile Include="PlayerControl\PlayerInputService.cs" />
     <Compile Include="PlayerControl\NativePhysicsInitialization.cs" />
+    <Compile Include="PlayerControl\HubDepthWritePatch.cs" />
     <Compile Include="PlayerControl\PlayerStateService.cs" />
     <Compile Include="PlayerControl\PlayerDuplicateManager.cs" />
     

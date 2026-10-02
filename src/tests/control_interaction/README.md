@@ -20,6 +20,7 @@
 - `test_planb_premise.py` — 检查「多个复制体当作并行世界模型」所需的物理前提。
 - `test_reset_state.py` — 独立验证同一 agent 的 reset 与冷启动参考、静止性及动作探针；跨 agent 偏离仅记录，不走 PPO。
 - `test_native_dynamics.py` — 在独立游戏副本中采集原生、双路输入消融及修复模式的逐阶段动力学对照。
+- [`world_isolation/`](world_isolation/README.md) — 共享世界第 31 步分歧探针、独立世界/reset 对照，以及 8 世界实时策略测试；不接入生产采集流程。
 
 ## Reset 状态验收
 
@@ -357,3 +358,179 @@ reset 验收另外比较复位后与探针后的所有控制器内部态，避�
 和 `runs/native_input_agents_8_20261002`（复制体灵敏度遗漏导致失败）；后者不是验收证据。
 旧双路的恒定响应是 `(68,51)`，松开即归零，说明本次修复恢复了跨步历史。
 完整物理轨迹/光标目标的原生等价性仍未认证，不由输入处理一致性推断。
+
+### 原生 NewGame 的渲染/物理时序诊断
+
+本节及下一节为历史定位记录。定位完成后，当前插件已删除 `NativeTimingProbe`、
+`PoseWriteProbe`、相关钩子，以及采集脚本中的时钟/语句隔离开关。以下带
+`--timing-audit` 等参数的命令仅适用于归档实验版本，不能直接用于当前脚本。
+8 份相关源码及 SHA-256 清单保存在
+`runs/pose_isolation_20261002/diagnostic_source/manifest.json`；原始结果未删除。
+`analyze_native_timing.py` 及其校验测试仍可离线复查已有记录。原有 `DynamicsProbe`、
+reset 验证接口和已提交的 reset/输入修复保留。
+单独屏蔽 Hub 深度写回的正式实现与验收见末节；以下仍为历史诊断方法与结果。
+
+`test_native_dynamics.py --modes native --timing-audit` 启用独立诊断器
+`NativeTimingProbe`，记录 sceneLoaded 后的 Start、开场调用、Update/LateUpdate、
+控制器前后、Physics2D 前后事件。每条包含场景内控制/物理步号、渲染帧号、两种时钟、
+暂停状态、七刚体状态、Transform、插值和同步设置。Start 前 cursor 尚不存在，
+该槽位以 interpolation=-1 标记，不能把占位零值当成实测刚体。
+审计事件始终先缓存在内存；`--buffered-trace` 也延迟动作探针 JSON 写盘。
+完成标志在两份日志写完后生成。生产流程不开启这些钩子。
+
+```powershell
+conda run -n getting-over-it-analysis python src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/native_timing_new --modes native --actions random --repeats 3 --steps 40 --native-warmup 0 --timing-audit --buffered-trace
+conda run -n getting-over-it-analysis python src/tests/control_interaction/analyze_native_timing.py runs/native_timing_new --out runs/native_timing_new/timing_analysis.json
+```
+
+`analyze_native_timing.py` 按场景物理步号对齐跨启动记录，独立核对动作探针与审计
+日志的采样边界和逐位刚体值，检查事件完整性、阶段顺序与动作读取。
+报告包含起点、全轨迹、首次物理后差异，以及各回调前后的刚体变化。
+
+2026-10-02 的方法级定位证据：
+
+- `runs/native_timing_buffered_20261002`：3 次冷启动；载入时六刚体相同，首个
+  动作都在场景第 724 个控制步注入（已完成 723 个物理步）。00/01 逐位相同；
+  02 的首个动作前最大位置距离差为 0.008106 毫米。输入历史、增益和设置完全相同。
+- 00 与 02 的前 534 个物理后状态相同。00 在第 534/535 个物理步之间执行
+  `PoseControl.LateUpdate`，02 此时直接继续物理。00 的事件 3743→3744 中，
+  Tip 的 Rigidbody2D.y 从 -3.197927713394165 变为 -3.197927474975586，
+  约 2.38e-7 米；期间没有物理推进，Transform.xy 没变但 z 改变。
+  两次启动的刚体值在第 535 个物理后首次不同，因此不只是检测帧号不同。
+- 原生 `PoseControl.LateUpdate` 的 IL 包含多个层级 Transform.position 写入和
+  `Animator.Update(Time.deltaTime)`；实测 autoSyncTransforms=true。
+  这些事实支持“渲染姿态写入经层级/同步影响 2D 刚体”的解释；后续语句隔离见下节。
+- `runs/native_timing_nopose_20261002`：仅跳过 `PoseControl.LateUpdate`，保留
+  可变渲染时钟，3 次的起点和 40 步随机动作轨迹逐位一致；场景物理后记录也一致。
+- `runs/native_timing_capture60_20261002`：保留原生回调，只用
+  `--capture-fps 60` 固定渲染时间步为 1/60 秒，3 次同样逐位一致。
+  此干预改变 Unity 时钟语义，仅用于归因，不是已验收的生产修复。
+- `runs/native_timing_fps30_20261002` 的旧版仅设置 targetFrameRate=30，实测
+  render deltaTime 仍约 1/60 秒；这不是有效的 30 FPS 对照。新版 `--render-fps`
+  会同时关闭 VSync，仍须以日志中的实际 deltaTime 和物理/渲染分组核验生效。
+- `runs/native_timing_fps30_effective_20261002`：新版帧率干预后，40 个物理步
+  实际跨 10–11 个渲染帧；3 次仍不逐位一致，最大起点位置距离差 0.019880 毫米。
+  因此限制 FPS 不能代替固定时间步/更新次序。
+
+基线 40 步内最大位置距离差约 0.121 米，但这期间渲染回调也持续交错，不能将全部
+轨迹差异归因于起点的微小偏差。以上结论限定于已插桩的单机、单 agent、所测动作；
+尚不证明所有原生启动都确定，也没有证明 Box2D 本身存在随机求解。
+汇总及原始记录索引：`runs/native_timing_investigation_20261002/timing_analysis.json`。
+
+`runs/native_timing_disabled_regression_20261002` 关闭新增审计，原生/候选各跑
+一次 40 步随机动作，原有起点、参数及该动作的输入逐位检查均通过。生产 DLL/配置
+哈希保持不变。诊断 DLL 独立编译到 `bin/NativeTimingExperiment`，不部署到生产。
+
+### PoseControl 内部语句隔离
+
+`PoseWriteProbe` 只改写 `PoseControl.LateUpdate` 内的 22 个调用位置，不拦截全局
+Unity setter。`--pose-write-audit` 记录每次 Transform/Animator 调用前后的刚体值；
+`--skip-pose-operations hammerMeshHub.position` 只跳过该语句，其余计算与动画保留。
+两者都要求 `--timing-audit --modes native`，均默认关闭。只跳过语句时可关闭密集
+内部记录，保留方法级审计，以减少记录开销。调用位置清单保存为 `.pose_sites.json`。
+
+隔离严格从 sceneLoaded 后开始：`PoseControl.Awake()` 内两次 LateUpdate 原样执行。
+调用序列由 IL 的 9 次 position、4 次 localPosition、8 次 rotation 和 1 次 Animator.Update
+校验；首次实际执行时再核对目标字段身份。`center` 与 `hammerMeshHub` 是同一个
+Transform，必须按调用位置命名，不能根据对象反查时遇到的第一个字段命名。
+分析器核对被选语句确实执行且每次被跳过，同时禁止其他语句意外跳过，避免空操作假通过。
+
+定位到的原生语句是 `PoseControl.LateUpdate` 的 IL_0453（语义重写如下）：
+
+```csharp
+hammerMeshHub.position = new Vector3(
+    hammerMeshHub.position.x,
+    hammerMeshHub.position.y,
+    rightHandGripCenter.position.z);
+```
+
+实测目标是 `Player/Hub`，其下有 Hub、Slider、Handle、PoleMiddle、Tip 五个刚体。
+它把手部动画的深度写到物理层级。Transform 的 x/y 在这条语句前后不变，但后代刚体
+的 x/y 可发生微小变化，随后物理求解继续传播差异。Unity 内部具体舍入/同步实现尚未
+逐指令追踪；直接可确认的是这条 setter 调用前后发生了变化。
+
+2026-10-02 最终隔离数据（共同保留 Awake 初始化）：
+
+- `runs/pose_write_bound_20261002`：1 次完整原生调用审计。381 次锤子节点写入中
+  103 次改变了刚体值，最大位置分量变化 7.152557e-7 米；其他已执行的 Transform
+  写入及显式 Animator.Update 调用前后未直接改变刚体值。首次变化发生在场景已完成
+  2 个物理步时，事件 33→34，无物理推进，Handle/PoleMiddle/Tip 的 y 值变化。
+- `runs/pose_bound_hammerMeshHub_20261002`：仅跳过上述 setter，3 次冷启动的
+  起点及 40 步随机动作轨迹逐位相同；也逐位匹配此前跳过整个 LateUpdate 的三次
+  `native_timing_nopose_20261002` 记录。原生输入状态在所有比较阶段一致。
+- `runs/pose_bound_anim_20261002`：只跳过 LateUpdate 内的显式 Animator.Update，
+  保留 setter，3 次同样逐位一致。结合数据流，这支持动画求值为上游、Hub 深度写回
+  为直接作用于物理状态的路径；不应把 Animator 排除为无关因素。
+- 汇总、调用清单和逐次变化：`runs/pose_isolation_20261002/timing_analysis.json`。
+
+探索数据 `pose_write_audit_20261002` / `pose_write_final_20261002` 的早期语句计数
+包含 Awake 中尚未绑定审计器的两次调用；前者还使用了歧义字段名。早期
+`pose_skip_hammer_20261002` / `pose_skip_animator_20261002` 也干预了 Awake。
+这些保留为探索记录，最终结论使用上述带 `bound` 的边界一致数据。
+
+这些历史跳过操作用于归因，改变了视觉更新。后续用户确认不要求保留视觉效果，
+因此正式方案只屏蔽已定位的 Hub 深度 setter，保留其他动画调用和物理控制规则。
+
+编译和 44 项离线检查通过。`runs/pose_isolation_disabled_regression_20261002`
+关闭新增诊断后，原生/候选各一次 40 步随机动作通过起点、参数及该动作的输入检查。
+生产 DLL/配置哈希未变，实验副本已恢复为测试前的 `f5ce41e1…` 验收插件。
+本轮诊断 DLL 保留在 `bin/PoseIsolationExperiment`，需要复现实验时单独部署到副本。
+
+### 单独屏蔽 Hub 深度写回（正式实现）
+
+`HubDepthWritePatch` 独立于诊断器和 reset 实验开关，GameRuntime 模式默认启用
+`suppressHubDepthWrite=true`。它精确匹配并替换上述单条 setter，保留其他 LateUpdate
+指令、Animator 调用，以及每个角色/复制体 Awake 内的原生初始化写入。
+匹配为零或多处时初始化报错，不会扩大屏蔽范围。Awake 守卫用 finalizer 清理，
+支持嵌套调用并保留原生异常。旧 JSON 配置使用默认实例再覆写，缺失新字段仍启用修复。
+显式配置 false 并重启可回退；不支持运行中切换。锤子显示深度不再随手部动画更新。
+
+`test_native_dynamics.py` 默认对 native/native_dual 关闭此补丁，对 candidate 开启。
+`--hub-depth-fix` / `--no-hub-depth-fix` 可明确覆盖所有模式，并记录到每个 case。
+`--require-repeatable` 要求每种动作/模式至少两次独立启动，逐位核对所有阶段的刚体、
+控制器、输入历史、电机和参数；不比较渲染帧号/墙钟，也不宣称观测到完整求解器状态。
+原生输入与参数验收仍是独立判定，不能由可复现性推断完整动力学等价。
+
+```powershell
+conda run -n getting-over-it-analysis python src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/hub_depth_native_new --modes native --actions zero hold pulse reverse random --repeats 3 --steps 40 --native-warmup 0 --hub-depth-fix --require-repeatable
+conda run -n getting-over-it-analysis python src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/hub_depth_long_new --modes native --actions random --repeats 3 --steps 1200 --native-warmup 0 --hub-depth-fix --require-repeatable
+conda run -n getting-over-it-analysis python src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/hub_depth_reference_new --modes native candidate --actions zero hold pulse reverse random --repeats 1 --steps 40 --native-warmup 0 --native-new-game --native-input-smoothing --require-native-start --require-native-parameters --require-native-input
+```
+
+`HubDepthPatchChecks.cs` 是纯托管检查，不启动游戏。用编译好的插件验证精确 IL 替换、
+不相关 setter 保留、歧义拒绝、标签/异常块转移，以及嵌套/异常 Awake 的清理：
+
+```powershell
+$fixtureRoot = (Resolve-Path artifacts/reset_game).Path
+$pluginRoot = (Resolve-Path bin/HubDepthFix).Path
+$checkSource = (Resolve-Path src/tests/control_interaction/HubDepthPatchChecks.cs).Path
+$checkExe = Join-Path $pluginRoot 'HubDepthPatchChecks.exe'
+& C:/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe /nologo "/out:$checkExe" "/r:$pluginRoot\GameRuntime_v2.dll" "/r:$fixtureRoot\BepInEx\core\0Harmony.dll" "/r:$fixtureRoot\GettingOverIt_Data\Managed\UnityEngine.CoreModule.dll" $checkSource
+if ($LASTEXITCODE -ne 0) { throw 'Check compilation failed' }
+& $checkExe $fixtureRoot $pluginRoot
+```
+
+2026-10-02 正式实现的独立副本验收（DLL `9f9d0c3b…`）：
+
+- `runs/hub_depth_fix_native_20261002`：zero/hold/pulse/reverse/random，各 3 次
+  冷启动、40 步，15 次全部完成，各动作内所有记录阶段的状态逐位一致。
+- `runs/hub_depth_fix_long_20261002`：3 次冷启动、1200 步随机动作，记录的刚体、
+  控制器、输入和参数全程逐位一致。没有固定渲染时钟，也没有整段关闭 LateUpdate。
+- `runs/hub_depth_fix_reference_20261002`：每种动作原生/候选各 1 次，共 10 次启动。
+  原生参考明确关闭 Hub 补丁、候选开启，启动日志核对生效。参数验收通过，600 条
+  候选阶段记录的输入处理逐位匹配原生。起点仍为容差内一致：最大位置分量差
+  0.502348 毫米、角度差 0.015141°，不宣称候选与原生起点逐位相同。
+- `runs/hub_depth_fix_reset_2agents_20261002`：3 次进程启动，空/40 步恒定/200 和
+  1000 步随机历史，等待 0 或 0.25 秒，40 步随机探针；27 个工况、1107 帧全部
+  逐位匹配相应 agent 的冷启动参考，排除 timestamp。
+- `runs/hub_depth_fix_reset_8agents_20261002`：1 次启动，空/40 步恒定/1200 步
+  随机历史，1200 步随机探针；4 个工况、4804 帧全部逐位匹配。两组 reset 的内部
+  状态、原生起点容差及各复制体参数检查均通过；仍使用既有实验场景重建和输入开关。
+- 两组 reset 配置都未提供新字段，游戏保存的有效配置均为 true，验证旧配置默认启用。
+  编译、46 项 Python 离线检查及上述 C# 检查通过；生产 DLL/配置 SHA-256 未变。
+
+汇总与原始数据索引：`runs/hub_depth_fix_native_20261002/acceptance_summary.json`。
+复核脚本位于 `src/tests/control_interaction/summarize_hub_depth_acceptance.py`。结果限于本机与已测动作，
+不表示完整游戏动力学等价，也不表示单个 Hub 补丁取代了场景 reset 的求解器重建。
+首轮 `hub_depth_fix_pilot_20261002` 的采集完整，但旧汇总器未处理向量字典而报错；
+修正后离线复核三次一致且逐位匹配历史单语句隔离轨迹，正式验收使用上述完整新运行。

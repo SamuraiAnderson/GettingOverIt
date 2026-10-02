@@ -1,0 +1,130 @@
+{
+  "completed_steps": 1200,
+  "independent_world_count": 8,
+  "runtime_finished_record": {
+    "status": "ERROR",
+    "error": "System.InvalidOperationException: Cold live test does not implement Close\r\n  at IsolatedWorldExperiment+<RunLivePolicy>d__16.MoveNext () [0x00a6a] in <8c25c989dd544480a0da87210165afee>:0 ",
+    "worlds": 0,
+    "epochs": 0,
+    "steps": 0
+  },
+  "runtime_close_verified": false,
+  "checkpoint_unchanged": true,
+  "observation_columns_compared": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34
+  ],
+  "all_agent_actions_bitwise_equal": true,
+  "all_agent_observations_bitwise_equal_without_timestamp": true,
+  "first_difference_from_agent0_by_agent": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "sampled_native_state_equality": {
+    "31": {
+      "bodies": true,
+      "controls": true,
+      "joints": true
+    },
+    "1200": {
+      "bodies": true,
+      "controls": true,
+      "joints": true
+    }
+  },
+  "max_body_displacement_m_by_agent": [
+    11.099342346191406,
+    11.099342346191406,
+    11.099342346191406,
+    11.099342346191406,
+    11.099342346191406,
+    11.099342346191406,
+    11.099342346191406,
+    11.099342346191406
+  ],
+  "max_body_y_by_agent": [
+    -0.27466654777526855,
+    -0.27466654777526855,
+    -0.27466654777526855,
+    -0.27466654777526855,
+    -0.27466654777526855,
+    -0.27466654777526855,
+    -0.27466654777526855,
+    -0.27466654777526855
+  ],
+  "end_body_xy_by_agent": [
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ],
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ],
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ],
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ],
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ],
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ],
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ],
+    [
+      -33.409156799316406,
+      -2.301875352859497
+    ]
+  ],
+  "scope": "This checkpoint, deterministic cold rollout, 1200 steps; original single-world initialization equivalence remains a separate unresolved check.",
+  "trajectory_consistency": "PASS",
+  "status": "TRAJECTORY_PASS_RUNTIME_RECORD_ERROR"
+}

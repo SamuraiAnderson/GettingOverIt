@@ -112,7 +112,10 @@ Python 侧不直接控制 Unity，而是通过**信号文件**告知插件本次
 4. 创建 `StepController`（`STATE_DIM=33` 为唯一权威维度）。
 5. 启动 `TcpStepServer.StartListening(config.tcpPort)`。
 6. 激活 RL 输入拦截：`PlayerControlUpdatePatch.RlModeActive = true` + `RewiredMouseOverride.Active = true`。
-7. 附加 `ColliderVisualizer`（默认开）与 `FreeCameraController`（默认关）。
+7. 附加 `ColliderVisualizer`（默认开）与 `FreeCameraController`（默认关）。可视化根节点由
+   `StepController.GetVisualizationRoots()` 提供，受控模式使用每个 agent 的物理容器，
+   确保扁平化后的锤柄和锤头仍被绘制。可见策略运行需调用 `set_camera_free(True)`；
+   开启后按住鼠标左键拖动平移，滚轮缩放，`timeScale=0` 时也可操作。
 8. 启动 `TrainingLoop()` 协程，等待 Python 连接。
 
 ---
@@ -224,6 +227,15 @@ Unity 克隆后回到构造默认值的问题；每个控制器仍独立维护�
 开场流程，不支持任意快照 N。动作维度和观测协议不变，但旧策略的动作响应会改变。
 
 同时 `PlayerControl.Update()` 被 Harmony prefix patch，RL 模式下整体跳过，防止游戏从真实鼠标读输入覆盖注入值。输入范围经 `ClampInput` 限制在 `[-100, 100]`。
+
+`suppressHubDepthWrite=true` 是 GameRuntime 模式默认启用的独立修复，不依赖上述实验
+开关。`HubDepthWritePatch` 仅替换 `PoseControl.LateUpdate` 内把手部动画 z 写入
+`hammerMeshHub.position` 的一处 setter；该字段实际指向包含五个刚体的 `Player/Hub`，
+写入可经 Transform 同步扰动后代刚体 xy。其余 LateUpdate 计算和动画调用保留；
+每个原始角色及复制体的 `PoseControl.Awake()` 内两次初始化调用原样执行。
+补丁要求 IL 表达式恰好匹配一次，否则初始化报错。旧配置缺少该字段时保留默认 true；
+显式设 false 并重启进程可恢复原生写入，用于对照或回退。此修复会改变锤子显示深度，
+并去掉该路径引入的物理扰动，不承诺与未修复原版的运动轨迹逐位相同。
 
 ### 5.2 状态（输出）如何获取与回传
 

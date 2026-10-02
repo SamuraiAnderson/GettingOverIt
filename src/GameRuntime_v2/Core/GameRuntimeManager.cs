@@ -81,6 +81,11 @@ namespace GoiRuntime.Core
 			// 初始化模式管理器
 			modeManager = new ModeManager();
 			modeManager.Initialize(config);
+            if (config.suppressHubDepthWrite && modeManager.IsGameRuntimeMode())
+            {
+                HubDepthWritePatch.Apply();
+                Logger.LogInfo("Hub visual-depth write suppressed; native Awake initialization preserved");
+            }
             PlayerControlFixedUpdatePatch.Enabled = config.experimentalControlledUpdates
                 && modeManager.IsGameRuntimeMode();
             RewiredMouseOverride.NativeInputSmoothing = config.experimentalNativeInputSmoothing
@@ -577,15 +582,11 @@ namespace GoiRuntime.Core
 		{
 			colliderVisualizer = mainCam.gameObject.AddComponent<ColliderVisualizer>();
 
-			var roots = new System.Collections.Generic.List<GameObject>();
-			roots.Add(playerStateService.GetPlayerObject());
-			if (duplicateManager != null)
-			{
-				foreach (var dup in duplicateManager.GetAllDuplicates())
-					roots.Add(dup);
-			}
-			colliderVisualizer.playerRoots = roots.ToArray();
-			Logger.LogInfo($"ColliderVisualizer 已附加到主摄像机（{roots.Count} 个 Player，默认开启）");
+            // Controlled initialization moves hammer bodies out of Player's subtree.
+            // Draw the per-agent physics container without changing that hierarchy.
+            var roots = stepController.GetVisualizationRoots();
+            colliderVisualizer.SetPlayerRoots(roots);
+			Logger.LogInfo($"ColliderVisualizer 已附加到主摄像机（{roots.Length} 个 Player，默认开启）");
 			// 自由相机控制器（默认关闭，由 Python 'F' 命令开启）
 			freeCameraController = mainCam.gameObject.AddComponent<FreeCameraController>();
 			Logger.LogInfo("FreeCameraController 已附加到主摄像机（默认关闭）");
