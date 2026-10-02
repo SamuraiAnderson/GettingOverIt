@@ -73,6 +73,7 @@ namespace GoiRuntime.Core.Interfaces
 		Hello = (byte)'H',
 		CalibrationCapture = (byte)'P',
         ResetDiagnostics = (byte)'Q',
+        DynamicsProbe = (byte)'Y',
 	}
 
 	/// <summary>

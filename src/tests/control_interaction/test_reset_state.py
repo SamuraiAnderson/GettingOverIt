@@ -207,6 +207,26 @@ def assess_diagnostics(data, agents, limits, probe_kind, probe_steps, reference,
             "world_body_count": start["worldBodyCount"], "epoch": packets[0]["epoch"]}
 
 
+def assess_native_motor_limits(data, agents, expected):
+    """Check native Saviour motor caps for every agent at reset, idle and probe end."""
+    failures = []
+    for phase in ("after_reset", "after_wait", "after_probe"):
+        joints = [json.loads(value) for value in data[phase]["current"]["joints"]]
+        for agent in range(agents):
+            own = [j for j in joints if j["agent"] == agent]
+            roles = {
+                "hinge_cap": [j for j in own if j["type"] == "HingeJoint2D" and j["name"] == "Hub"],
+                "slider_cap": [j for j in own if j["type"] == "SliderJoint2D" and j["name"] == "Slider"],
+                "hub_cap": [j for j in own if j["type"] == "HingeJoint2D" and j["connected"] == "Hub"],
+            }
+            for name, rows in roles.items():
+                if len(rows) != 1 or rows[0]["maxMotorTorque"] != expected[name]:
+                    failures.append({"phase": phase, "agent": agent, "parameter": name,
+                                     "expected": expected[name], "actual": [r["maxMotorTorque"] for r in rows]})
+    return {"passed": not failures, "failures": failures, "agents": agents,
+            "scope": "Three native joint motor caps at reset, idle and probe end"}
+
+
 def measure_case(env, last_obs, actions, idle_s, probe_steps, agents, path, diagnostics=False,
                  probe_kind="zero", probe_seed=0, cold_live=False):
     """Always preserve received data, including partial/invalid failed cases."""
@@ -325,6 +345,7 @@ def overall_status(report):
         return "ERROR"
     return "PASS" if all(row.get("assessment", {}).get("passed", False) and row.get("history_exercised", True)
                          and row.get("diagnostic_assessment", {}).get("passed", True)
+                         and row.get("native_parameter_assessment", {}).get("passed", True)
                          for row in report["cases"]) else "FAIL"
 
 
@@ -336,6 +357,13 @@ def run(args):
     ensure_idle(args.port)
     args.out.mkdir(parents=True, exist_ok=False)
     limits = Limits(**{key: getattr(args, key) for key in asdict(Limits())})
+    native_parameters = None
+    if args.native_parameter_reference:
+        native_report = json.loads(args.native_parameter_reference.read_text(encoding="utf-8-sig"))
+        parameter_assessment = native_report["analysis"]["native_parameters"]
+        if native_report["status"] != "COMPLETE" or not parameter_assessment["passed"]:
+            raise ValueError("Native parameter reference did not pass")
+        native_parameters = parameter_assessment["expected_motor_parameters"]
     histories = [("none", 0), ("hold", 40)] + [("random", n) for n in args.burn_steps]
     report = {
         "version": 1, "status": "RUNNING", "started_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -343,6 +371,7 @@ def run(args):
         "raw_state_schema": {"name": "legacy33", "dimension": 33},
         "parameters": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         "thresholds": asdict(limits), "fields": list(FIELDS), "timestamp_excluded": 28,
+        "native_parameters": native_parameters,
         "limitations": [
             "Scene reset with diagnostics uses live state before any RESET as the cold reference; legacy mode uses first RESET.",
             "Q diagnostics expose all body velocities and selected control fields, not the full solver state.",
@@ -429,6 +458,9 @@ def run(args):
                             record["diagnostic_assessment"] = assess_diagnostics(
                                 diagnostic, args.agents, limits, args.probe_kind, args.probe_steps,
                                 diagnostic_reference, not args.allow_moving_start)
+                            if native_parameters is not None:
+                                record["native_parameter_assessment"] = assess_native_motor_limits(
+                                    diagnostic, args.agents, native_parameters)
                         if steps:
                             with np.load(args.out / record["raw_file"]) as raw:
                                 positions = raw["history_states"][:, :, [0, 1, 23, 24, 29, 30]]
@@ -441,6 +473,7 @@ def run(args):
                         LOG.info("%s %s(%d) wait=%.3fs reset=%.4fs %s", case_id, kind, steps, idle,
                                  elapsed, "PASS" if record["assessment"]["passed"] and
                                  record.get("history_exercised", True) and
+                                 record.get("native_parameter_assessment", {}).get("passed", True) and
                                  record.get("diagnostic_assessment", {}).get("passed", True) else "FAIL")
                 finally:
                     try:
@@ -474,6 +507,8 @@ def parse_args(argv=None):
     parser.add_argument("--game-exe", type=Path, help="Use an isolated game copy")
     parser.add_argument("--controlled-updates", action="store_true", help="Opt into experimental FixedUpdate gate")
     parser.add_argument("--reset-diagnostics", action="store_true", help="Save live idle and reset-stage diagnostics")
+    parser.add_argument("--native-parameter-reference", type=Path,
+                        help="Passed test_native_dynamics result.json; require native motor caps on every agent")
     parser.add_argument("--scene-reset", action="store_true", help="Experimental fixed-start scene reconstruction")
     parser.add_argument("--fixed-order", action="store_true", help="Repeat identical history order across processes")
     parser.add_argument("--restarts", type=int, default=3)
@@ -494,6 +529,8 @@ def parse_args(argv=None):
     for key, value in asdict(Limits()).items():
         parser.add_argument("--" + key.replace("_", "-"), type=float, default=value)
     args = parser.parse_args(argv)
+    if args.native_parameter_reference and not args.reset_diagnostics:
+        parser.error("--native-parameter-reference requires --reset-diagnostics")
     if not 2 <= args.agents <= 64:
         parser.error("--agents must be 2..64 so cross-agent alignment is tested")
     if min(args.restarts, args.cycles, args.probe_steps, *args.burn_steps) < 1:

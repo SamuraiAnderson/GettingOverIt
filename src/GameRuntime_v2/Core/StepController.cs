@@ -249,6 +249,7 @@ namespace GoiRuntime.Core
             simulationCalls++;
             if (PlayerControlFixedUpdatePatch.Enabled && !success)
                 throw new System.InvalidOperationException("Physics2D.Simulate did not advance");
+            GoiRuntime.Testing.DynamicsProbe.AfterManualPhysics();
         }
 
 		public void SetAnchorCalibration(bool available, float localX, float localY)

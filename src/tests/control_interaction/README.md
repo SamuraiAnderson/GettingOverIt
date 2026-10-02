@@ -19,6 +19,7 @@
 - `visualize_trajectory.py` — 给上述通道测试画轨迹、距离和剂量响应曲线。
 - `test_planb_premise.py` — 检查「多个复制体当作并行世界模型」所需的物理前提。
 - `test_reset_state.py` — 独立验证同一 agent 的 reset 与冷启动参考、静止性及动作探针；跨 agent 偏离仅记录，不走 PPO。
+- `test_native_dynamics.py` — 在独立游戏副本中采集原生、双路输入消融及修复模式的逐阶段动力学对照。
 
 ## Reset 状态验收
 
@@ -113,3 +114,98 @@ Q 同时检查所有 7 个刚体、等待期间控制器与物理步进计数、
 18 项离线判定器回归测试通过。汇总及生产 DLL/配置未变的哈希记录位于
 `runs/reset_fix_certified_8agents_1200/acceptance_summary.json`。
 其他 `runs/reset_fix_*` 包含定位阶段的失败实验，不应当作修复成功的证据。
+
+### 原生动力学对照
+
+reset 对修复模式冷启动的复现性，不能证明它保留了原生游戏的动力学。
+`test_native_dynamics.py` 对每组动作、模式、重复分别冷启动一个独立游戏进程，单 agent，
+记录控制器调用前、调用后、物理更新后三个阶段。默认是零动作、恒定 `(40,30)`、
+单步脉冲加反向脉冲，各 40 步、各模式重复 3 次，共 27 次启动。
+
+- `native` 保留原生 Update/FixedUpdate/自动物理、Saviour 初始化、层级和动画，仅替换
+  Rewired 鼠标轴及清零手柄轴。等待原生载入和输入暂停结束，再做 240 个零输入物理步。
+- `native_dual` 保持上述路径，仅在探针控制器调用前追加写入 `mouseInput`，模拟现有
+  RL 双路输入。这项消融用于区分已有输入接口差异与新 reset 修复的影响。
+- `candidate` 使用已修复的固定启动配方和 TCP STEP；不额外添加上述原生预热。
+  Y 仅启动记录，不 reset、不修改状态。两个起点若不同，不能把轨迹差异全部归因于物理算法。
+
+探针默认关闭（`dynamicsProbeMode=""`）。原生记录器插入 Unity PlayerLoop 的
+Physics2DFixedUpdate 之后；修复模式记录器位于显式 Simulate 和 SyncTransforms 之后。
+记录七个刚体的位姿与速度、质量/惯量/重力/阻尼、控制器内部量、实际轴值和读取次数、
+关节电机、接触点与冲量。原始 JSONL 中 bodyNames 标识刚体顺序；bodies 每体六列为
+`x,y,rotation,vx,vy,angularVelocity`；motors 为 hinge 的速度/上限、slider 的速度/上限、
+hinge 角度和 slider 平移量。只记录已显式列出的参数，不代表完整的隐藏求解器状态。
+
+```powershell
+& 'C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe' src/GameRuntime_v2/GameRuntime_v2.csproj /t:Build /p:Configuration=DynamicsExperiment /p:DeployPlugin=false /nologo /v:minimal
+Copy-Item bin/DynamicsExperiment/GameRuntime_v2.dll artifacts/reset_game/BepInEx/plugins/GameRuntime_v2.dll
+conda run -n getting-over-it-analysis python -u src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/native_dynamics_new
+conda run -n getting-over-it-analysis python -m unittest discover -s src/tests/control_interaction -p test_native_dynamics_checks.py -v
+```
+
+`COMPLETE` 和退出 0 只表示采集完整、输入及计数校验通过，不表示动力学等价。
+result.json 的 analysis 保留跨模式和模式内重启比较，起点不一致标为
+`INITIAL_STATE_MISMATCH`，不会因模式内可复现而判等价。原生参考仍含 BepInEx 和记录钩子，
+并非完全无插件的游戏。探针阻止 Saviour.SaveGameNow 写实验进度，但没有隔离其他
+PlayerPrefs 修改。生产 DLL/配置哈希前后检查与游戏进程清理由脚本执行。
+
+2026-10-02 在线结果在 `runs/native_dynamics_validation_20261002/result.json`，
+结论与原始记录哈希在同目录 `validation_summary.json`。27 次启动、1080 个物理步、
+3240 条阶段记录采集完整，**原生动力学保持验收未通过**：
+
+- 所有已记录阶段的伸缩电机上限，native/native_dual 为 10000，candidate 为 4300。
+  原生 `Saviour.Start()` 从 hinge.motor 构造 stillSliderMotor 并赋给 slider.motor；
+  修复流程在 Start 前禁用 Saviour，漏掉这一有效参数初始化。上限降低 57%，不能解释为
+  每一步实际施力都降低 57%。已记录的刚体配置和 1/120 秒物理步长一致。
+- 同样输入 `(40,30)`，第一步平滑后的 mouseInput 原生为 `(48,36)`，双路输入和
+  candidate 为 `(68,51)`。单步脉冲后的下一步，原生为 `(24,18)`，另外两者为零。
+  双路写入在 reset 修复提交之前已经存在，不应全部归因于这次 reset 修改。
+- 原生和 candidate 起点的最大坐标分量差约 0.0686m、角度差约 2.422°。
+  原生自身的重复轨迹也有差异，尤其脉冲探针；这些结果不能用于把后续运动差异
+  唯一归因于局部物理世界、刚体换父节点或禁用动画。尚未证明完整任务等价。
+
+关闭记录器后的 `runs/dynamics_probe_disabled_reset_regression/result.json` 为 4/4 PASS，
+冷启动恒定动作探针与上一版已验收 DLL 的结果逐位相同（排除 timestamp）。
+新增 9 项离线检查、原有 18 项 reset 检查均通过。测试结束已恢复实验副本的原已验收 DLL，
+生产 DLL 与配置哈希未变。本次只增加验证设施，没有修复上述新发现的差异。
+
+### 补齐原生物理初始化
+
+`PlayerControl/NativePhysicsInitialization.cs` 复刻 `Saviour.Start()` 的物理初始化段
+（IL 000F–00C6）。仅在 controlled 初始化中执行，每次冷启动和场景 reset 都重新执行：
+
+- 旋转电机读取原生 hinge.motor，并把初始速度置零。
+- 伸缩电机同样从 **hinge.motor** 复制，遵循原生代码；不读取 prefab 上的 4300，
+  也不把测到的 10000 写成新常量。
+- 锅体连接关节按原生规则置零速、上限 100，光标先放到锤头位置。
+- 上述操作发生在原始 PlayerControl.Start 和克隆之前。每个角色的 Start 完成后，
+  校验三个关节及两个控制器电机缓存，避免下一次 FixedUpdate 写回旧值。
+
+这一改动补齐了被禁用的 Saviour 中的物理初始化，未重新启用存档载入和自动时钟。
+本次范围不包含输入平滑、起点姿态或完整游戏任务等价性。
+
+`test_native_dynamics.py --require-native-parameters` 用实测 native 参考检查所有阶段的
+三个电机上限、两个控制器缓存、刚体配置和 fixedDeltaTime。参数不符退出 1；即使参数
+通过，完整动力学等价性仍显示 NOT_CERTIFIED。新增 JSONL 字段 motorParameters 的顺序为
+`hinge_cap, slider_cap, hub_cap, controller_hinge_cap, controller_slider_cap`。
+
+多 agent reset 可追加 `--native-parameter-reference <上述通过的result.json>`，要求
+`--reset-diagnostics`。它在 reset 后、等待后、动作探针结束后，逐个 agent 检查三个关节
+上限；缺失关节、复制体仍为旧值或动作后回退均不能通过。在线运行仍仅使用实验副本。
+
+参数补齐后的验收使用同一 DLL，SHA-256：
+`088d3f6ca23bdaacef0353489594b275e1baafa8a23ec4ff50884eb5bacc41d4`。
+
+- `runs/native_parameters_fixed_20261002/result.json`：原生/修复模式各 3 次启动，
+  零动作、恒定动作、脉冲各 40 步；18 次启动、2160 条阶段记录的参数检查通过。
+  三个电机上限为 10000/10000/100，两个控制器缓存均为 10000。
+- `runs/native_parameters_reset_2agents_20261002/result.json`：3 次启动、27 个条件通过，
+  含 40/200/1000 步历史和 0/0.25 秒等待；40 步恒定动作探针共 1107 帧逐位匹配。
+- `runs/native_parameters_reset_8agents_20261002/result.json`：4 个条件通过，1200 步
+  随机动作探针共 4804 帧逐位匹配。所有 agent 在 reset、等待、探针后参数均正确。
+
+逐位比较按对应 agent、排除 timestamp；31 个条件合计 5911 帧。2-agent reset 为
+0.59–0.64 秒，8-agent 为 0.83–0.85 秒。12 项动力学判定器和 19 项 reset 判定器测试通过。
+汇总与生产文件哈希位于 `runs/native_parameters_fixed_20261002/acceptance_summary.json`。
+新 DLL 保留在实验副本中，生产安装未部署。输入平滑与原生起点差异仍未处理，不能将
+这些参数与复现性验收结果解释为完整的原生动力学等价证明。

@@ -72,6 +72,9 @@ namespace GoiRuntime.Core.Configuration
         public bool experimentalControlledUpdates = false;
         public bool experimentalResetDiagnostics = false;
         public bool experimentalSceneReset = false;
+        // Test-only native/candidate dynamics recorder; empty leaves runtime unchanged.
+        public string dynamicsProbeMode = "";
+        public string dynamicsProbeFile = "";
 
 		#endregion
 

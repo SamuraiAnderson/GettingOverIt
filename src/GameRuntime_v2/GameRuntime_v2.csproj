@@ -51,6 +51,7 @@
     <!-- Core: RL 步进控制器 -->
     <Compile Include="Core\StepController.cs" />
     <Compile Include="Testing\ObservationDiagnostics.cs" />
+    <Compile Include="Testing\DynamicsProbe.cs" />
     <Compile Include="Testing\CalibrationCapture.cs" />
 
     <!-- Communication: TCP 步进服务器 -->
@@ -66,6 +67,7 @@
     <!-- PlayerControl: Player 控制服务 -->
     <Compile Include="PlayerControl\MouseInputOverride.cs" />
     <Compile Include="PlayerControl\PlayerInputService.cs" />
+    <Compile Include="PlayerControl\NativePhysicsInitialization.cs" />
     <Compile Include="PlayerControl\PlayerStateService.cs" />
     <Compile Include="PlayerControl\PlayerDuplicateManager.cs" />
     

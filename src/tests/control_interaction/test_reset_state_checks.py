@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tests.control_interaction.test_reset_state import (
     Limits, assess, compare, history_actions, measure_case, overall_status,
     ensure_idle, main, parse_args, run, runtime_settings, validate_obs, assess_diagnostics,
+    assess_native_motor_limits,
 )
 
 
@@ -26,6 +27,23 @@ def state(width=33):
 
 
 class ResetChecks(unittest.TestCase):
+    def test_native_caps_checked_for_every_clone_and_after_probe(self):
+        expected = {"hinge_cap": 10000., "slider_cap": 10000., "hub_cap": 100.}
+        joints = []
+        for agent in range(2):
+            for name, kind, connected, cap in (("Player", "HingeJoint2D", "Hub", 100.),
+                    ("Hub", "HingeJoint2D", "Slider", 10000.), ("Slider", "SliderJoint2D", "Handle", 10000.)):
+                joints.append(json.dumps(dict(agent=agent, name=name, type=kind, connected=connected, maxMotorTorque=cap)))
+        data = {phase: {"current": {"joints": list(joints)}} for phase in ("after_reset", "after_wait", "after_probe")}
+        self.assertTrue(assess_native_motor_limits(data, 2, expected)["passed"])
+        changed = copy.deepcopy(data)
+        joint = json.loads(changed["after_probe"]["current"]["joints"][-1])
+        joint["maxMotorTorque"] = 4300.
+        changed["after_probe"]["current"]["joints"][-1] = json.dumps(joint)
+        self.assertFalse(assess_native_motor_limits(changed, 2, expected)["passed"])
+        changed["after_probe"]["current"]["joints"].pop()
+        self.assertFalse(assess_native_motor_limits(changed, 2, expected)["passed"])
+
     def test_diagnostics_reject_hidden_motion_extra_steps_and_unpaused_clock(self):
         bodies = [{"agent": a, "name": str(i), "position": {"x": 1, "y": 2},
                    "rotation": 0, "velocity": {"x": 0, "y": 0}, "angularVelocity": 0}

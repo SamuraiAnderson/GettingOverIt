@@ -67,6 +67,7 @@ namespace GoiRuntime.Core
 
 			// 加载配置
 			config = RuntimeConfig.Load();
+            DynamicsProbe.Configure(config);
             if (config.experimentalSceneReset && !config.experimentalControlledUpdates)
                 throw new System.InvalidOperationException("Scene reset requires controlled updates");
             if (config.experimentalControlledUpdates && config.stepFrames != 1)
@@ -126,6 +127,12 @@ namespace GoiRuntime.Core
 		}
 		else if (modeManager.IsGameRuntimeMode())
 		{
+            if (DynamicsProbe.IsNative)
+            {
+                DynamicsProbe.BindScene();
+                isInitialized = true;
+                return;
+            }
             if (config.experimentalSceneReset && scene.GetPhysicsScene2D() == Physics2D.defaultPhysicsScene)
             {
                 // A scene reload in the default physics world reuses that world's
@@ -139,6 +146,7 @@ namespace GoiRuntime.Core
                         UnityEngine.SceneManagement.LocalPhysicsMode.Physics2D));
                 return;
             }
+            if (!string.IsNullOrEmpty(config.dynamicsProbeMode)) DynamicsProbe.BindScene();
             if (config.experimentalControlledUpdates)
                 StartCoroutine(RunControlledInitialization());
             else
@@ -448,6 +456,7 @@ namespace GoiRuntime.Core
             {
                 // sceneLoaded runs before native Start. Install the gates now, but
                 // wait for native references before cloning, normalizing or snapshotting.
+                var nativePhysics = NativePhysicsInitialization.ApplyBeforeStart(GameObject.Find("Player"));
                 var bootstrap = new PlayerInputService();
                 if (!bootstrap.Initialize()) throw new System.InvalidOperationException("Bootstrap failed");
                 float deadline = Time.realtimeSinceStartup + 15f;
@@ -462,9 +471,13 @@ namespace GoiRuntime.Core
                 InitializeGameRuntimeMode();
                 yield return null; // cloned PlayerControl.Start must run before its snapshot
                 PlayerInputService.PrepareControlledPlayer(playerStateService.GetPlayerObject());
+                nativePhysics.ValidateAfterStart(playerStateService.GetPlayerObject());
                 if (duplicateManager != null)
                     foreach (var go in duplicateManager.GetAllDuplicates())
+                    {
                         PlayerInputService.PrepareControlledPlayer(go);
+                        nativePhysics.ValidateAfterStart(go);
+                    }
                 // Native save/load Update can overwrite control state after readiness.
                 foreach (var script in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
                     if (script != null && (script.GetType().Name == "Saviour" ||
@@ -628,6 +641,10 @@ namespace GoiRuntime.Core
 				{
 						switch (cmd.Type)
 						{
+                        case CommandType.DynamicsProbe:
+                            DynamicsProbe.BeginCandidate();
+                            tcpStepServer.SendResponse(StatePacket(stepController.CollectAllStates()));
+                            break;
                         case CommandType.ResetDiagnostics:
                             tcpStepServer.SendResponse(StatePacket(
                                 diagnosticJson: stepController.CollectResetDiagnostics()));
