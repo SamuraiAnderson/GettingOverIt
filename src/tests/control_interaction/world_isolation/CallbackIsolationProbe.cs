@@ -31,7 +31,7 @@ public class CallbackIsolationProbe : BaseUnityPlugin
         if (cfg == null || String.IsNullOrEmpty(cfg.output)) return;
         output = Path.Combine(Path.GetDirectoryName(cfg.output), "callbacks.jsonl");
         var harmony = new Harmony("com.symbol.goi.callback_isolation_probe");
-        harmony.Patch(typeof(StepController).GetMethod("ExecuteStep", Flags),
+        harmony.Patch(typeof(IsolatedWorldRuntime).GetMethod("ExecuteStep", Flags),
             new HarmonyMethod(typeof(CallbackIsolationProbe).GetMethod("BeforeStep", Flags)));
         var patched = new List<string>();
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())

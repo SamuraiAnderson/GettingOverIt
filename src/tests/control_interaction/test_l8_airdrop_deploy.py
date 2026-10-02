@@ -2,7 +2,7 @@
 层次 8：空投部署测试 — 根据投放点缓存批量复制并传送 Player
 
 读取 L7 产出的 drop_points.json 缓存，自动配置 runtime_config.json 的
-numDuplicates，启动游戏，将每个 agent 传送到对应投放点，
+numAgents，启动游戏，将每个 agent 传送到对应投放点，
 并启用自由相机（滚轮缩放 + 中键拖动）方便观察。
 
 部署后会输出竖直落差统计：drop = teleport_y - settled_y（与训练侧
@@ -64,26 +64,7 @@ def load_drop_points(game_root: Path) -> list[list[float]]:
     return points
 
 
-def write_num_duplicates(game_root: Path, n: int) -> None:
-    """
-    在 runtime_config.json 中写入 numDuplicates。
-    若文件已存在则合并更新，否则创建新文件。
-    """
-    config_path = game_root / "GoiData" / "runtime_config.json"
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-
-    if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            cfg = json.load(f)
-    else:
-        cfg = {}
-
-    old_val = cfg.get("numDuplicates", "?")
-    cfg["numDuplicates"] = n
-    with open(config_path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2, ensure_ascii=False)
-
-    logger.info("runtime_config.json: numDuplicates %s → %d", old_val, n)
+from start.runtime_config import configure_players
 
 
 def warmup_and_snapshot(env, num_agents: int, warmup_steps: int) -> None:
@@ -327,18 +308,18 @@ def main():
     logger.info("L8: 投放 %d 个 agent 到预计算位置", n_drops)
     logger.info("=" * 60)
 
-    # 2. 写入 numDuplicates 并启动游戏
+    # 2. 写入 numAgents 并启动游戏
     from start.game_launcher import GameLauncher
     from start.game_mode_controller import GameModeController
     from env.goi_env import GoiEnv
 
     # agent 0 = 原始 Player（保持原位），agent 1..n_drops = 复制体
     num_agents = n_drops + 1
-    write_num_duplicates(game_root, num_agents)
+    configure_players(game_root, num_agents)
 
     if not args.no_launch:
         GameModeController(str(game_root)).set_game_runtime_mode()
-        GameLauncher().launch(wait=False)
+        GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
         logger.info("等待游戏启动（最多 %.0fs）...", timeout)
 
     # 3. 连接

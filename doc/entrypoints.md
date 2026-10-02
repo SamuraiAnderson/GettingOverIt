@@ -1,5 +1,7 @@
 # 与游戏交互的方式（Entrypoints）
 
+> 2026-10-02：批量运行已统一为独立物理世界，当前接口与 reset 契约见[多 player 运行接口](multiplayer_runtime.md)。下文旧复制体/刚体快照流程仅供历史参考。
+
 本文分析**当前项目如何与《Getting Over It》游戏进行交互**：从进程启动、模式选择，到帧级别 TCP 步进控制的完整链路。
 
 交互的根本形态：**Python 作为训练侧（TCP 客户端）**，**C# `GameRuntime_v2`（BepInEx 插件，运行在游戏进程内）作为服务端（`TcpStepServer`）**。每个 RL step 对应一次阻塞式请求-响应，实现帧级同步。端口从 `src/config/project.json` 的 `tcp_port` 读取（默认 9000），禁止硬编码。

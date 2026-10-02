@@ -57,16 +57,7 @@ def _load_config():
         return json.load(f)
 
 
-def write_num_duplicates(game_root, n):
-    config_path = game_root / "GoiData" / "runtime_config.json"
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    cfg = {}
-    if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            cfg = json.load(f)
-    cfg["numDuplicates"] = n
-    with open(config_path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2, ensure_ascii=False)
+from start.runtime_config import configure_players
 
 
 def log_agent_pos(label, obs, agents=None):
@@ -313,11 +304,11 @@ def main():
     logger.info("游戏根目录: %s", game_root)
 
     num_agents = 3
-    write_num_duplicates(game_root, num_agents)
+    configure_players(game_root, num_agents)
 
     if not args.no_launch:
         GameModeController(str(game_root)).set_game_runtime_mode()
-        GameLauncher().launch(wait=False)
+        GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
         logger.info("等待游戏启动...")
 
     env = GoiEnv(port=port, num_agents=num_agents, timeout=timeout)

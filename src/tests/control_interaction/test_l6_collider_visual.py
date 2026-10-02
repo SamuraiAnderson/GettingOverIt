@@ -62,10 +62,9 @@ def _detect_num_agents(env: GoiEnv) -> int:
     return n
 
 
-def launch_game():
-    logger.info("设置 GameRuntime 模式并启动游戏...")
-    GameModeController().set_game_runtime_mode()
-    GameLauncher().launch(wait=False)
+def launch_game(agents, port):
+    from start.multi_player import launch_players
+    return launch_players(agents, port=port)
 
 
 def warmup_and_snapshot(env: GoiEnv, n_agents: int, warmup_steps: int) -> None:
@@ -126,7 +125,7 @@ def run_visual_test(
     if max_displacement < 0.01:
         logger.error(
             "FAIL: Player 未移动（max_displacement=%.4f）— "
-            "检查 C# 侧 input_enabled / numDuplicates 配置",
+            "检查 C# 侧 input_enabled / numAgents 配置",
             max_displacement,
         )
     else:
@@ -160,7 +159,7 @@ def main():
     warmup_steps = args.warmup or l6.get("warmup_steps", 500)
 
     if not args.no_launch:
-        launch_game()
+        launch_game(1, port)
 
     with GoiEnv(port=port, num_agents=1, timeout=timeout) as env:
         n_agents = _detect_num_agents(env)

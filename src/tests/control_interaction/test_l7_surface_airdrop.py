@@ -44,8 +44,9 @@ from training.deploy_sampling import (
 
 logger = logging.getLogger(__name__)
 
-# L8 / Unity：复制体数量上限（与 PlayerDuplicateManager.MAX_DUPLICATES 一致）
-UNITY_L8_MAX_DROP_POINTS = 64
+# Reserve player 0 as the reference world.
+from start.runtime_config import MAX_PLAYERS
+UNITY_L8_MAX_DROP_POINTS = MAX_PLAYERS - 1
 DROP_POINTS_ALL_STABLE_FILENAME = "drop_points_all_stable.json"
 
 _CONFIG_PATH = Path(__file__).parent / "test_config.json"

@@ -36,7 +36,7 @@ from env.goi_env import GoiEnv
 from start.game_launcher import GameLauncher
 from start.game_mode_controller import GameModeController
 from training.config import TrainConfig
-from training.rollout import _write_num_duplicates
+from start.runtime_config import configure_players
 
 logger = logging.getLogger("solver_residue")
 
@@ -292,9 +292,9 @@ def _fmt_one(value) -> str:
 def _session(args, dose: str, burn: int, repeat: int, live: bool) -> dict:
     logger.info("==== %s  重复 %d/%d ====", dose, repeat + 1, args.repeats)
     game_root = Path(TrainConfig().game_root)
-    _write_num_duplicates(game_root, args.agents)
+    configure_players(game_root, args.agents)
     GameModeController().set_game_runtime_mode()
-    proc = GameLauncher().launch(wait=False)
+    proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
     logger.info("游戏 PID=%d，等待连接", proc.pid)
     record = {
         "dose": dose,

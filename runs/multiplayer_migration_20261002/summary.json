@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "backend": "isolated_worlds",
+  "deployed_dll": "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll",
+  "deployed_sha256": "632067533df42c1406d4ebfc1bc5ce4207f944d99d187d67261d59c181080bfe",
+  "backup": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\artifacts\\multiplayer_migration_backup\\GameRuntime_v2.dll",
+  "checkpoint_unchanged": true,
+  "offline_checks": 66,
+  "acceptance": {
+    "steps": 1200,
+    "counts": [
+      1,
+      2,
+      8
+    ],
+    "cold_resets_per_count": 2,
+    "same_and_different_actions_isolation": true,
+    "cross_count_bitwise_equal": true,
+    "warmup_snapshot_reset": true,
+    "teleport_isolation_and_snapshot_reset": true,
+    "readiness_seconds": {
+      "1": 7.684773500077426,
+      "2": 8.172335800016299,
+      "8": 12.768477200064808
+    },
+    "source": "runs/multiplayer_runtime_acceptance_20261002/result.json"
+  },
+  "final_binary_smoke": {
+    "policy_cold": {
+      "agents": 8,
+      "steps": 40,
+      "status": "PASS"
+    },
+    "production_rollout": {
+      "agents": 8,
+      "steps": 40,
+      "rounds": 2,
+      "agents_and_rounds_bitwise_equal": true,
+      "ppo_updates": 1
+    },
+    "archived_action_replay": {
+      "agents": 2,
+      "steps": 40,
+      "resets": 1,
+      "bitwise_equal": true
+    }
+  },
+  "scope": "Float32 state comparison excludes timestamp. Full acceptance preceded removal of unused legacy reset methods; final deployed DLL passed the production rollout and cold policy smoke tests.",
+  "source_state_at_validation": "Uncommitted multi-player migration based on ab387bd"
+}

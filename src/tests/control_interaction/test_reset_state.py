@@ -183,7 +183,7 @@ def assess_diagnostics(data, agents, limits, probe_kind, probe_steps, reference,
                and start["manualCalls"] == idle["manualCalls"]
                and start["simulationCalls"] == idle["simulationCalls"])
     advancement_ok = (end["manualCalls"] - idle["manualCalls"] == probe_steps * agents
-                      and end["simulationCalls"] - idle["simulationCalls"] == probe_steps)
+                      and end["simulationCalls"] - idle["simulationCalls"] == probe_steps * packets[0].get("physicsWorldCount", 1))
     rest_matrices = matrices if probe_kind == "zero" else matrices[:2]
     resting = all(np.linalg.norm(m[:, :, 3:5], axis=2).max() <= limits.rest_linear_speed
                   and np.abs(m[:, :, 5]).max() <= limits.rest_angular_speed for m in rest_matrices)
@@ -337,7 +337,8 @@ def runtime_settings(game_root, agents, port, overrides=None):
     original = {p: p.read_bytes() if p.exists() else None for p in paths}
     try:
         config = json.loads(original[config_path].decode("utf-8-sig")) if original[config_path] else {}
-        config.update(numDuplicates=agents, tcpPort=port)
+        from start.runtime_config import player_settings
+        config = player_settings(config, agents, port)
         config.update(overrides or {})
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")

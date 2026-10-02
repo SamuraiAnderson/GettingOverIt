@@ -14,7 +14,7 @@ namespace GoiRuntime.Testing
 		private PlayerStateService stateService;
 		private IGameControlService gameControl;
 		
-		private PlayerDuplicateManager duplicateManager;
+		public System.Action<int> StartMultiPlayer;
 		private InputCharacteristicsTest inputTest;
 		
 		private bool stepTestActive = false;
@@ -87,11 +87,7 @@ namespace GoiRuntime.Testing
 			
 			gameControl.OnLateUpdate();
 			
-			// 每帧覆盖复制体的 mouseInput（在游戏 Update 读取真实鼠标之后）
-			if (duplicateManager != null)
-			{
-				duplicateManager.UpdateDuplicates();
-			}
+
 		}
 		
 		/// <summary>
@@ -186,25 +182,25 @@ namespace GoiRuntime.Testing
 			// F9: 创建复制体
 			if (Input.GetKeyDown(KeyCode.F9))
 			{
-				TestCreateDuplicates();
+				StartPlayerWorlds();
 			}
 			
 			// F10: 为复制体设置输入
 			if (Input.GetKeyDown(KeyCode.F10))
 			{
-				TestDuplicateInputs();
+				StepPlayerWorlds();
 			}
 			
-			// F11: 打印复制体状态
+			// F11: 打印各世界诊断；F12: 切换 1/4 世界
 			if (Input.GetKeyDown(KeyCode.F11))
 			{
-				PrintDuplicateStatus();
+				PrintPlayerWorlds();
 			}
 			
 			// F12: 销毁复制体
 			if (Input.GetKeyDown(KeyCode.F12))
 			{
-				DestroyAllDuplicates();
+				SwitchPlayerWorlds();
 			}
 		}
 		
@@ -329,11 +325,7 @@ namespace GoiRuntime.Testing
 			Debug.Log($"Time.deltaTime: {Time.deltaTime}");
 			Debug.Log($"Time.unscaledDeltaTime: {Time.unscaledDeltaTime}");
 			
-			if (duplicateManager != null)
-			{
-				Debug.Log($"复制体数量: {duplicateManager.GetDuplicateCount()}");
-			}
-			
+
 			if (inputTest != null)
 			{
 				Debug.Log($"原版测试运行中: {inputTest.IsTestRunning}");
@@ -342,98 +334,11 @@ namespace GoiRuntime.Testing
 		
 		#endregion
 		
-		#region 复制体测试
-		
-		/// <summary>
-		/// 测试创建复制体
-		/// </summary>
-		private void TestCreateDuplicates()
-		{
-			if (duplicateManager == null)
-			{
-				duplicateManager = new PlayerDuplicateManager();
-				if (!duplicateManager.Initialize())
-				{
-					Debug.LogError("复制体管理器初始化失败");
-					return;
-				}
-			}
-			
-			// 如果已有复制体，先销毁
-			if (duplicateManager.GetDuplicateCount() > 0)
-			{
-				Debug.Log("已存在复制体，先销毁后重新创建");
-				duplicateManager.DestroyAll();
-			}
-			
-			// 创建 3 个复制体
-			bool success = duplicateManager.CreateDuplicates(3, Vector3.zero);
-			
-			if (success)
-			{
-				Debug.Log("复制体创建成功！按 F10 设置不同输入");
-				duplicateManager.PrintStatus();
-			}
-		}
-		
-		/// <summary>
-		/// 为复制体设置不同输入测试
-		/// </summary>
-		private void TestDuplicateInputs()
-		{
-			if (duplicateManager == null || duplicateManager.GetDuplicateCount() == 0)
-			{
-				Debug.LogWarning("请先按 F9 创建复制体");
-				return;
-			}
-			
-			// 为每个复制体设置不同的输入
-			Vector2[] inputs = new Vector2[]
-			{
-				new Vector2(50f, 0f),    // 复制体0: 向右
-				new Vector2(-50f, 0f),   // 复制体1: 向左
-				new Vector2(0f, 50f)     // 复制体2: 向上
-			};
-			
-			duplicateManager.SetInputForAll(inputs);
-			
-			Debug.Log("已为复制体设置不同输入:");
-			Debug.Log("  #0: (50, 0) - 向右");
-			Debug.Log("  #1: (-50, 0) - 向左");
-			Debug.Log("  #2: (0, 50) - 向上");
-		}
-		
-		/// <summary>
-		/// 打印复制体状态
-		/// </summary>
-		private void PrintDuplicateStatus()
-		{
-			if (duplicateManager == null || duplicateManager.GetDuplicateCount() == 0)
-			{
-				Debug.LogWarning("没有复制体，请先按 F9 创建");
-				return;
-			}
-			
-			duplicateManager.PrintStatus();
-		}
-		
-		/// <summary>
-		/// 销毁所有复制体
-		/// </summary>
-		private void DestroyAllDuplicates()
-		{
-			if (duplicateManager != null)
-			{
-				duplicateManager.DestroyAll();
-			}
-			else
-			{
-				Debug.Log("没有复制体需要销毁");
-			}
-		}
-		
-		#endregion
-		
+        private void StartPlayerWorlds() { if (StartMultiPlayer != null) StartMultiPlayer(4); }
+        private void StepPlayerWorlds() { Debug.Log("F9: initialize independent worlds first"); }
+        private void PrintPlayerWorlds() { Debug.Log("F9: initialize independent worlds first"); }
+        private void SwitchPlayerWorlds() { Debug.Log("No multi-player runtime is active"); }
+
 		#region 帮助信息
 		
 		/// <summary>
@@ -450,9 +355,9 @@ namespace GoiRuntime.Testing
 			Debug.Log("  F7: 打印暂停状态");
 			Debug.Log("  F8: 【原版】帧同步测试（InputCharacteristicsTest）");
 			Debug.Log("  --- 复制体测试 ---");
-			Debug.Log("  F9: 创建 3 个复制体");
-			Debug.Log("  F10: 为复制体设置不同输入");
-			Debug.Log("  F11: 打印复制体状态");
+			Debug.Log("  F9: 进入 4 player 独立世界调试；之后 F9 重置");
+			Debug.Log("  F10: 多世界执行一帧不同输入");
+			Debug.Log("  F11: 打印各世界诊断；F12: 切换 1/4 世界");
 			Debug.Log("  F12: 销毁所有复制体");
 		}
 		

@@ -33,12 +33,18 @@ namespace GoiRuntime.ColliderCollection
 		/// </summary>
 		public static bool ExportEnvironment(string outputPath)
 		{
+            return ExportEnvironment(outputPath, UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        }
+
+        private static bool ExportEnvironment(string outputPath, UnityEngine.SceneManagement.Scene scene)
+		{
 			var allPolys = Object.FindObjectsOfType<PolygonCollider2D>();
 			var envPolys = new List<PolygonCollider2D>();
 
 			int skippedDynamic = 0, skippedTrigger = 0, skippedDisabled = 0;
 			foreach (var poly in allPolys)
 			{
+                if (poly.gameObject.scene != scene) continue;
 				if (poly.GetComponentInParent<Rigidbody2D>() != null)
 				{ skippedDynamic++; continue; }
 				if (poly.isTrigger)
@@ -112,6 +118,7 @@ namespace GoiRuntime.ColliderCollection
 
 			foreach (var poly in allPolys)
 			{
+                if (poly.gameObject.scene != player.scene) continue;
 				string objName = poly.gameObject.name;
 				foreach (var kv in PlayerPartNames)
 				{
@@ -162,7 +169,7 @@ namespace GoiRuntime.ColliderCollection
 		public static void ExportAll(GameObject player, string collidersDir)
 		{
 			PathManager.EnsureDirectory(collidersDir);
-			ExportEnvironment(Path.Combine(collidersDir, "environment.json"));
+			ExportEnvironment(Path.Combine(collidersDir, "environment.json"), player.scene);
 			ExportPlayerContour(player, Path.Combine(collidersDir, "player_contour.json"));
 		}
 

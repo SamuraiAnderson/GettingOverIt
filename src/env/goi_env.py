@@ -78,12 +78,8 @@ class GoiEnv:
         timeout:    连接超时（秒）
         protocol:   "legacy33"（默认，不发 HELLO）或 "anchor35"（必须 HELLO 成功）
         startup_settle_s:
-            连接成功后的固定预热等待（秒）。游戏在 Mian 场景加载后需要
-            数秒完成初始化（Rewired/关节电机等），期间注入的鼠标动作虽被
-            GetAxis 正确读取，却不会转化为锤子力矩——实测约 5s 后才生效，
-            且一旦生效便跨 reset 持久。此等待与物理步进无关（Script 模式下
-            靠 Unity 渲染帧推进初始化），故必须用墙钟时间覆盖。默认 8s 留裕量。
-            连接到已长时间运行的游戏时可传 0 跳过。
+            Optional delay for external/older servers. The current runtime only
+            listens after all native worlds are ready, so the default is zero.
     """
 
     def __init__(
@@ -92,7 +88,7 @@ class GoiEnv:
         port: int = 9000,
         num_agents: int = 1,
         timeout: float = 60.0,
-        startup_settle_s: float = 8.0,
+        startup_settle_s: float = 0.0,
         protocol: str = "legacy33",
         expected_anchor_id: str | None = None,
         expected_calibration_sha256: str | None = None,
@@ -104,7 +100,7 @@ class GoiEnv:
         self.host       = host
         self.port       = port
         self.num_agents = num_agents
-        self.timeout    = timeout
+        self.timeout    = max(timeout, num_agents * 5.0)
         self.startup_settle_s = startup_settle_s
         self.protocol = protocol
         self.expected_anchor_id = expected_anchor_id
@@ -306,7 +302,7 @@ class GoiEnv:
                 raise ValueError("Invalid diagnostic packet length")
             packet = json.loads(self._recv_exact(length))
         if command == b"Q":
-            if (packet.get("version") != 1 or packet.get("kind") != "reset_diagnostics"
+            if (packet.get("version") not in (1, 2) or packet.get("kind") != "reset_diagnostics"
                     or packet.get("agentCount") != self.num_agents
                     or not isinstance(packet.get("current"), dict)
                     or not isinstance(packet.get("stages"), list)):

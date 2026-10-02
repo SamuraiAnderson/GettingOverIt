@@ -32,7 +32,8 @@ from training.anchor_projection import (
     project_orthographic,
     unity_screen_axes_to_image,
 )
-from training.rollout import _warmup_and_snapshot, _write_num_duplicates
+from training.rollout import _warmup_and_snapshot
+from start.runtime_config import configure_players
 from training.tas_pot_detector import LIVE_DETECTOR_VERSION, detect_live_pot_centre
 
 def _agent0(packet: dict) -> dict:
@@ -360,9 +361,9 @@ def main() -> None:
                 shutil.rmtree(folder)
         try:
             if not args.no_launch:
-                _write_num_duplicates(game_root, 1)
+                configure_players(game_root, 1)
                 GameModeController(str(game_root)).set_game_runtime_mode()
-                process = GameLauncher().launch(wait=False)
+                process = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
             port = TrainConfig().port if args.port is None else args.port
             env = GoiEnv(port=port, num_agents=1, protocol="legacy33", startup_settle_s=8.0)
             env.connect()

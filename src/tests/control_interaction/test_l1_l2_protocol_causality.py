@@ -65,16 +65,10 @@ def _load_config() -> dict:
         return {}
 
 
-def launch_game() -> object:
-    logger.info("设置游戏为 GameRuntime 模式...")
-    GameModeController().set_game_runtime_mode()
-    launcher = GameLauncher()
-    proc = launcher.launch(wait=False)
-    logger.info("游戏已启动 (PID=%d)", proc.pid)
-    return proc
+def launch_game(agents, port):
+    from start.multi_player import launch_players
+    return launch_players(agents, port=port)
 
-
-# ── 层次 1：协议验证 ─────────────────────────────────────────────────
 
 def verify_protocol(env: GoiEnv) -> dict:
     """验证 TCP 协议：shape、物理运行、零动作惯性"""
@@ -185,7 +179,7 @@ def main():
     )
 
     if not args.no_launch:
-        launch_game()
+        launch_game(1, args.port)
         logger.info("等待游戏启动（最多 %.0fs）...", args.timeout)
 
     with GoiEnv(port=args.port, num_agents=1, timeout=args.timeout) as env:

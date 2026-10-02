@@ -305,6 +305,7 @@ def main():
     parser.add_argument("--steps", type=int, default=400)
     parser.add_argument("--rounds", type=int, default=5)
     parser.add_argument("--num-agents", type=int, default=2)
+    parser.add_argument("--game-root", type=Path, help="Game installation or isolated test copy")
     parser.add_argument("--seed", type=int, default=20260917)
     parser.add_argument("--jitter", type=float, default=.01)
     parser.add_argument("--goal-progress", type=float, default=5.)
@@ -344,6 +345,8 @@ def main():
     configure_geometry(cfg, checkpoint or init_state, args.geometry_profile)
     apply_experiment_arguments(cfg, args, checkpoint)
     cfg.num_agents = args.num_agents
+    if args.game_root is not None:
+        cfg.game_root = str(args.game_root.resolve())
     cfg.random_deploy = cfg.sil_enabled = cfg.explore_boost_enabled = False
     reference_path = args.reference_trajectory or cfg.reference_trajectory or (
         ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory_game_world.json")
@@ -405,8 +408,8 @@ def main():
     failure = None
     try:
         if args.no_launch:
-            from env import GoiEnv
-            worker.env = GoiEnv(port=cfg.port, num_agents=cfg.num_agents)
+            from env import make_goi_env
+            worker.env = make_goi_env(cfg)
             worker.env.connect()
             worker.env.reset()
             _warmup_and_snapshot(worker.env, cfg.num_agents, cfg.warmup_steps)

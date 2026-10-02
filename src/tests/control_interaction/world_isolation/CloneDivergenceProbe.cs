@@ -43,7 +43,7 @@ public class CloneDivergenceProbe : BaseUnityPlugin
         public float[] worldPoints;
     }
     static Config cfg;
-    static StepController current;
+    static IsolatedWorldRuntime current;
     static int step;
     static readonly BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
@@ -54,7 +54,7 @@ public class CloneDivergenceProbe : BaseUnityPlugin
         cfg = JsonUtility.FromJson<Config>(File.ReadAllText(path));
         if (cfg == null || String.IsNullOrEmpty(cfg.output)) return;
         var harmony = new Harmony("com.symbol.goi.clone_divergence_probe");
-        harmony.Patch(typeof(StepController).GetMethod("ExecuteStep", Flags),
+        harmony.Patch(typeof(IsolatedWorldRuntime).GetMethod("ExecuteStep", Flags),
             new HarmonyMethod(typeof(CloneDivergenceProbe).GetMethod("BeforeStep", Flags)),
             new HarmonyMethod(typeof(CloneDivergenceProbe).GetMethod("AfterStep", Flags)));
         harmony.Patch(typeof(StepController).GetMethod("SimulatePhysics", Flags),
@@ -63,7 +63,7 @@ public class CloneDivergenceProbe : BaseUnityPlugin
         Logger.LogInfo("Clone probe enabled: " + cfg.mode);
     }
     static bool Recording { get { return step == 1 || (step >= 28 && step <= 34); } }
-    static void BeforeStep(StepController __instance)
+    static void BeforeStep(IsolatedWorldRuntime __instance)
     {
         current = __instance;
         step++;
@@ -78,7 +78,7 @@ public class CloneDivergenceProbe : BaseUnityPlugin
                         string suffix = cfg.mode == "ignore_rock3" ? " (3)" : cfg.mode == "ignore_rock2" ? " (2)" : null;
                         if (suffix != null)
                             foreach (var rock in UnityEngine.Object.FindObjectsOfType<PolygonCollider2D>())
-                                if (rock.name == "Intresto_rock055_252vert_500face_scale_1m_tex_sandstone1" + suffix)
+                                if (rock.gameObject.scene == col.gameObject.scene && rock.name == "Intresto_rock055_252vert_500face_scale_1m_tex_sandstone1" + suffix)
                                     Physics2D.IgnoreCollision(col, rock, true);
                     }
             Capture("after_intervention");
@@ -169,7 +169,7 @@ public class CloneDivergenceProbe : BaseUnityPlugin
                                 layerIgnored = Physics2D.GetIgnoreLayerCollision(col.gameObject.layer, other.gameObject.layer) }));
             }
         }
-        object frame = typeof(StepController).GetMethod("CaptureResetFrame", Flags).Invoke(current, new object[] { phase });
+        object frame = typeof(IsolatedWorldRuntime).GetMethod("CaptureFrame", Flags).Invoke(current, new object[] { phase });
         string frameJson = (string)typeof(StepController).GetMethod("ResetFrameJson", Flags).Invoke(null, new object[] { frame });
         string line = "{\"step\":" + step + ",\"phase\":\"" + phase + "\",\"frame\":" + frameJson
             + ",\"colliders\":[" + String.Join(",", rows.ToArray()) + "]"

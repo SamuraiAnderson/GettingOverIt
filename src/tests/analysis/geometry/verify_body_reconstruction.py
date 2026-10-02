@@ -254,15 +254,15 @@ def main():
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
     from start.game_mode_controller import GameModeController
-    from training.rollout import _write_num_duplicates
+    from start.runtime_config import configure_players
     from .drop_point_physics import _teardown_env_and_process, _warmup_and_snapshot
 
     num_agents = min(max(1, args.n_samples), eff_bs, UNITY_MAX_DUPLICATES) + 1
-    _write_num_duplicates(game_root, num_agents)
+    configure_players(game_root, num_agents)
     proc = None
     if not args.no_launch:
         GameModeController(str(game_root)).set_game_runtime_mode()
-        proc = GameLauncher().launch(wait=False)
+        proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
     env = GoiEnv(port=port, num_agents=num_agents, timeout=args.timeout)
     env.connect()
     try:

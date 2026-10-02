@@ -1,0 +1,12 @@
+{
+  "status": "COMPLETE",
+  "worlds": 2,
+  "steps": 40,
+  "resets": 1,
+  "other_zero": false,
+  "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\policy_0269_cold_8players_20261002_visual_fix\\deterministic_000_agent1.json",
+  "source_sha256": "b1fd90cfdf851e13bfc58c28964270193773ac1ade006679d2c7c679fa507bff",
+  "backend": "isolated_worlds",
+  "game_runtime_sha256": "632067533df42c1406d4ebfc1bc5ce4207f944d99d187d67261d59c181080bfe",
+  "wall_seconds": 11.049337199889123
+}

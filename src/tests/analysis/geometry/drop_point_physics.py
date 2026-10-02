@@ -25,8 +25,9 @@ from training.deploy_sampling import (
 
 logger = logging.getLogger(__name__)
 
-# 与 PlayerDuplicateManager.MAX_DUPLICATES 一致：最多 64 个复制体 + agent 0
-UNITY_MAX_DUPLICATES = 64
+# Reserve player 0 as the reference world.
+from start.runtime_config import MAX_PLAYERS
+UNITY_MAX_DUPLICATES = MAX_PLAYERS - 1
 
 # 锤头判定逻辑（TipReconConfig / make_tip_recon_config / _tip_in_obstacle）已下沉到
 # 生产模块 training.deploy_sampling，供离线筛选（本文件）与运行时投放（rollout）共用；
@@ -160,7 +161,7 @@ def filter_drop_points_stable(
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
     from start.game_mode_controller import GameModeController
-    from training.rollout import _write_num_duplicates
+    from start.runtime_config import configure_players
 
     candidates = np.asarray(candidates, dtype=np.float64)
     if candidates.size == 0:
@@ -188,11 +189,11 @@ def filter_drop_points_stable(
     }
 
     if not use_l8_batch_deploy:
-        _write_num_duplicates(game_root, 2)
+        configure_players(game_root, 2)
         proc = None
         if not no_launch:
             GameModeController(str(game_root)).set_game_runtime_mode()
-            proc = GameLauncher().launch(wait=False)
+            proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
         env = GoiEnv(port=port, num_agents=2, timeout=timeout)
         env.connect()
         meta["deploy_mode"] = "sequential_2agent"
@@ -249,11 +250,11 @@ def filter_drop_points_stable(
     m_probe = limit
     chunk_cap = min(eff_bs, m_probe, UNITY_MAX_DUPLICATES)
     num_agents = chunk_cap + 1
-    _write_num_duplicates(game_root, num_agents)
+    configure_players(game_root, num_agents)
     proc = None
     if not no_launch:
         GameModeController(str(game_root)).set_game_runtime_mode()
-        proc = GameLauncher().launch(wait=False)
+        proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
     env = GoiEnv(port=port, num_agents=num_agents, timeout=timeout)
     env.connect()
     meta["deploy_mode"] = "l8_batch"
@@ -339,7 +340,7 @@ def filter_all_drop_points_stable(
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
     from start.game_mode_controller import GameModeController
-    from training.rollout import _write_num_duplicates
+    from start.runtime_config import configure_players
 
     candidates = np.asarray(candidates, dtype=np.float64)
     if candidates.size == 0:
@@ -367,11 +368,11 @@ def filter_all_drop_points_stable(
     }
 
     if not use_l8_batch_deploy:
-        _write_num_duplicates(game_root, 2)
+        configure_players(game_root, 2)
         proc = None
         if not no_launch:
             GameModeController(str(game_root)).set_game_runtime_mode()
-            proc = GameLauncher().launch(wait=False)
+            proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
         env = GoiEnv(port=port, num_agents=2, timeout=timeout)
         env.connect()
         meta["deploy_mode"] = "sequential_2agent"
@@ -423,11 +424,11 @@ def filter_all_drop_points_stable(
 
     chunk_cap = min(eff_bs, m, UNITY_MAX_DUPLICATES)
     num_agents = chunk_cap + 1
-    _write_num_duplicates(game_root, num_agents)
+    configure_players(game_root, num_agents)
     proc = None
     if not no_launch:
         GameModeController(str(game_root)).set_game_runtime_mode()
-        proc = GameLauncher().launch(wait=False)
+        proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
     env = GoiEnv(port=port, num_agents=num_agents, timeout=timeout)
     env.connect()
     meta["deploy_mode"] = "l8_batch"
@@ -506,7 +507,7 @@ def probe_drop_points_stability(
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
     from start.game_mode_controller import GameModeController
-    from training.rollout import _write_num_duplicates
+    from start.runtime_config import configure_players
 
     candidates = np.asarray(candidates, dtype=np.float64)
     if candidates.size == 0:
@@ -533,11 +534,11 @@ def probe_drop_points_stability(
     }
 
     if not use_l8_batch_deploy:
-        _write_num_duplicates(game_root, 2)
+        configure_players(game_root, 2)
         proc = None
         if not no_launch:
             GameModeController(str(game_root)).set_game_runtime_mode()
-            proc = GameLauncher().launch(wait=False)
+            proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
         env = GoiEnv(port=port, num_agents=2, timeout=timeout)
         env.connect()
         meta["deploy_mode"] = "sequential_2agent"
@@ -575,11 +576,11 @@ def probe_drop_points_stability(
 
     chunk_cap = min(eff_bs, m, UNITY_MAX_DUPLICATES)
     num_agents = chunk_cap + 1
-    _write_num_duplicates(game_root, num_agents)
+    configure_players(game_root, num_agents)
     proc = None
     if not no_launch:
         GameModeController(str(game_root)).set_game_runtime_mode()
-        proc = GameLauncher().launch(wait=False)
+        proc = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
     env = GoiEnv(port=port, num_agents=num_agents, timeout=timeout)
     env.connect()
     meta["deploy_mode"] = "l8_batch"

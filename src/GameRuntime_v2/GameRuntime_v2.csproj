@@ -50,6 +50,8 @@
 
     <!-- Core: RL 步进控制器 -->
     <Compile Include="Core\StepController.cs" />
+    <Compile Include="Core\IsolatedWorldRuntime.cs" />
+    <Compile Include="Core\Interfaces\IMultiPlayerRuntime.cs" />
     <Compile Include="Testing\ObservationDiagnostics.cs" />
     <Compile Include="Testing\DynamicsProbe.cs" />
     <Compile Include="Testing\CalibrationCapture.cs" />
@@ -70,7 +72,6 @@
     <Compile Include="PlayerControl\NativePhysicsInitialization.cs" />
     <Compile Include="PlayerControl\HubDepthWritePatch.cs" />
     <Compile Include="PlayerControl\PlayerStateService.cs" />
-    <Compile Include="PlayerControl\PlayerDuplicateManager.cs" />
     
     <!-- Testing: 测试工具 -->
     <Compile Include="Testing\PlayerDebugTool.cs" />

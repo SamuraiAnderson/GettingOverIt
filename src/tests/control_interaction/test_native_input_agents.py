@@ -91,7 +91,7 @@ def run(args):
                         raw.write(json.dumps({"round": round_index, "step": step, "packet": packet}) + "\n")
                         current = packet["current"]
                         if (current["manualCalls"] - previous["manualCalls"] != args.agents
-                                or current["simulationCalls"] - previous["simulationCalls"] != 1
+                                or current["simulationCalls"] - previous["simulationCalls"] != args.agents
                                 or current["timeScale"] != 0 or len(current["controls"]) != args.agents):
                             raise ValueError("Controller/physics schedule mismatch")
                         for agent, kind in enumerate(kinds):

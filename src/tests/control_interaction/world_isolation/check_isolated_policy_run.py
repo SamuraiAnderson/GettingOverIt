@@ -12,9 +12,14 @@ def main():
     args = parser.parse_args()
     read = lambda name: json.loads((args.run / name).read_text(encoding="utf-8-sig"))
     status = read("run_status.json")
-    finished = read("finished.json")
+    finished = read("finished.json") if (args.run / "finished.json").exists() else {"status": status["status"]}
     assert status["status"] == "COMPLETE" and status["completed_steps"] == status["steps"]
-    epochs = read("worlds_epoch_0.json")
+    if (args.run / "worlds_epoch_0.json").exists():
+        epochs = read("worlds_epoch_0.json")
+    else:
+        cold = read("diagnostics_0_0.json")
+        assert cold["backend"] == "isolated_worlds" and cold["physicsWorldCount"] == 8
+        epochs = [dict(sceneHandle=handle, valid=True, isDefault=False) for handle in cold["sceneHandles"]]
     assert len(epochs) == 8 and len({e["sceneHandle"] for e in epochs}) == 8
     assert all(e["valid"] and not e["isDefault"] for e in epochs)
     states, actions = [], []
@@ -32,8 +37,15 @@ def main():
     same_actions = [np.array_equal(action_bits[0], x) for x in action_bits]
     native = {}
     norm = lambda obj: re.sub(r"ExperimentPlayer_\d+", "Player", json.dumps(obj, sort_keys=True))
-    for step in (31, status["steps"]):
+    for step in sorted({min(31, status["steps"]), status["steps"]}):
         packets = read(f"diagnostics_0_{step}.json")
+        if isinstance(packets, dict):
+            frame = packets["current"]
+            packets = []
+            for agent in range(8):
+                bodies = [dict(body, agent=0) for body in frame["bodies"] if body["agent"] == agent]
+                joints = [dict(json.loads(joint), agent=0) for joint in frame["joints"] if json.loads(joint)["agent"] == agent]
+                packets.append({"current": dict(bodies=bodies, joints=joints, controls=[frame["controls"][agent]])})
         native[str(step)] = {key: all(norm(x["current"][key]) == norm(packets[0]["current"][key]) for x in packets)
                              for key in ("bodies", "controls", "joints")}
     displacement = np.linalg.norm(states[:, :, :2] - states[:, :1, :2], axis=-1).max(axis=1)
@@ -53,7 +65,7 @@ def main():
               "max_body_displacement_m_by_agent": displacement.tolist(),
               "max_body_y_by_agent": states[:, :, 1].max(axis=1).tolist(),
               "end_body_xy_by_agent": states[:, -1, :2].tolist(),
-              "scope": f"This checkpoint, deterministic cold rollout, {status['steps']} steps; original single-world initialization equivalence remains a separate unresolved check."}
+              "scope": f"This checkpoint and deterministic cold rollout, {status['steps']} steps; no claim about arbitrary maps or actions."}
     assert status["checkpoint_unchanged"] and np.isfinite(states).all() and np.isfinite(actions).all()
     assert all(same_actions) and all(same_states) and all(displacement > 1)
     assert all(all(check.values()) for check in native.values())

@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 from env import GoiEnv, make_goi_env
-from start import GameLauncher, GameModeController
+from start.multi_player import launch_players
 
 if TYPE_CHECKING:
     from .actor_critic import ActorCritic
@@ -80,20 +80,6 @@ def _load_drop_points(game_root: Path) -> list[list[float]]:
             path,
         )
     return pts
-
-
-def _write_num_duplicates(game_root: Path, n: int) -> None:
-    """在 runtime_config.json 中写入 numDuplicates。"""
-    import json
-    config_path = game_root / "GoiData" / "runtime_config.json"
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    cfg = {}
-    if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            cfg = json.load(f)
-    cfg["numDuplicates"] = n
-    with open(config_path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2, ensure_ascii=False)
 
 
 def _warmup_and_snapshot(env: GoiEnv, num_agents: int, warmup_steps: int) -> None:
@@ -421,9 +407,7 @@ class RolloutWorker:
     def launch_game(self) -> None:
         """启动游戏进程、TCP 连接、warmup、拍快照、开启自由相机。可多次调用。"""
         game_root = Path(self.config.game_root)
-        _write_num_duplicates(game_root, self.config.num_agents)
-        GameModeController(str(game_root)).set_game_runtime_mode()
-        self._game_process = GameLauncher().launch(wait=False)
+        self._game_process = launch_players(self.config.num_agents, game_root=game_root, port=self.config.port)
 
         self.env = make_goi_env(self.config)
         self.env.connect()

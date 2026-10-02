@@ -18,6 +18,8 @@ namespace GoiRuntime.Core.Protocol
 		public string CalibrationSha256 = "";
 		public bool CalibrationAvailable;
 		public int NumAgents;
+        public string PhysicsBackend = "isolated_worlds";
+        public int PhysicsWorldCount;
 		public float FixedDeltaTime;
 		public int StepFrames;
 	}
@@ -90,6 +92,8 @@ namespace GoiRuntime.Core.Protocol
 			json.Append(",\"calibration_sha256\":\"").Append(Escape(snapshot.CalibrationSha256 ?? "")).Append('"');
 			json.Append(",\"calibration_available\":").Append(snapshot.CalibrationAvailable ? "true" : "false");
 			json.Append(",\"num_agents\":").Append(snapshot.NumAgents);
+            json.Append(",\"physics_backend\":\"").Append(Escape(snapshot.PhysicsBackend)).Append('"');
+            json.Append(",\"physics_world_count\":").Append(snapshot.PhysicsWorldCount);
 			json.Append(",\"fixed_delta_time\":").Append(snapshot.FixedDeltaTime.ToString("R", CultureInfo.InvariantCulture));
 			json.Append(",\"step_frames\":").Append(snapshot.StepFrames);
 			if (!string.IsNullOrEmpty(rejectReason))

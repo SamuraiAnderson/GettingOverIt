@@ -1,0 +1,126 @@
+{
+  "completed_steps": 40,
+  "independent_world_count": 8,
+  "runtime_finished_record": {
+    "status": "COMPLETE"
+  },
+  "runtime_close_verified": false,
+  "checkpoint_unchanged": true,
+  "observation_columns_compared": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34
+  ],
+  "all_agent_actions_bitwise_equal": true,
+  "all_agent_observations_bitwise_equal_without_timestamp": true,
+  "first_difference_from_agent0_by_agent": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "sampled_native_state_equality": {
+    "31": {
+      "bodies": true,
+      "controls": true,
+      "joints": true
+    },
+    "40": {
+      "bodies": true,
+      "controls": true,
+      "joints": true
+    }
+  },
+  "max_body_displacement_m_by_agent": [
+    2.2996978759765625,
+    2.2996978759765625,
+    2.2996978759765625,
+    2.2996978759765625,
+    2.2996978759765625,
+    2.2996978759765625,
+    2.2996978759765625,
+    2.2996978759765625
+  ],
+  "max_body_y_by_agent": [
+    -1.2629361152648926,
+    -1.2629361152648926,
+    -1.2629361152648926,
+    -1.2629361152648926,
+    -1.2629361152648926,
+    -1.2629361152648926,
+    -1.2629361152648926,
+    -1.2629361152648926
+  ],
+  "end_body_xy_by_agent": [
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ],
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ],
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ],
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ],
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ],
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ],
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ],
+    [
+      -42.29475402832031,
+      -1.2629361152648926
+    ]
+  ],
+  "scope": "This checkpoint and deterministic cold rollout, 40 steps; no claim about arbitrary maps or actions.",
+  "trajectory_consistency": "PASS",
+  "status": "PASS"
+}

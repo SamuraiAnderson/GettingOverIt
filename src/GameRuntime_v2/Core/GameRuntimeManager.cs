@@ -30,10 +30,10 @@ namespace GoiRuntime.Core
 		// Player 控制服务
 		private PlayerInputService playerInputService;
 		private PlayerStateService playerStateService;
-		private PlayerDuplicateManager duplicateManager;
+
 
 		// 训练核心（GameRuntime 模式）
-		private StepController stepController;
+		private IMultiPlayerRuntime players;
 		private TcpStepServer tcpStepServer;
 
 		// 碰撞箱可视化
@@ -46,10 +46,8 @@ namespace GoiRuntime.Core
 		private PlayerDebugTool playerDebugTool;
 
 		private bool isInitialized = false;
-        private bool runtimeReady;
-        private bool resettingScene;
-        private string initializationError;
-        private int environmentEpoch;
+        private bool debugWorlds, runtimeBusy;
+
 
 		void Awake()
 		{
@@ -68,14 +66,6 @@ namespace GoiRuntime.Core
 			// 加载配置
 			config = RuntimeConfig.Load();
             DynamicsProbe.Configure(config);
-            if (config.experimentalSceneReset && !config.experimentalControlledUpdates)
-                throw new System.InvalidOperationException("Scene reset requires controlled updates");
-            if (config.experimentalNativeNewGame && !config.experimentalSceneReset)
-                throw new System.InvalidOperationException("Native new-game initialization requires scene reset");
-            if (config.experimentalNativeInputSmoothing && !config.experimentalControlledUpdates)
-                throw new System.InvalidOperationException("Native input smoothing requires controlled updates");
-            if (config.experimentalControlledUpdates && config.stepFrames != 1)
-                throw new System.InvalidOperationException("Controlled reset experiment currently requires stepFrames=1");
 			config.Save(); // 首次运行时创建默认配置
 
 			// 初始化模式管理器
@@ -86,10 +76,8 @@ namespace GoiRuntime.Core
                 HubDepthWritePatch.Apply();
                 Logger.LogInfo("Hub visual-depth write suppressed; native Awake initialization preserved");
             }
-            PlayerControlFixedUpdatePatch.Enabled = config.experimentalControlledUpdates
-                && modeManager.IsGameRuntimeMode();
-            RewiredMouseOverride.NativeInputSmoothing = config.experimentalNativeInputSmoothing
-                && PlayerControlFixedUpdatePatch.Enabled;
+            PlayerControlFixedUpdatePatch.Enabled = modeManager.IsGameRuntimeMode() && !DynamicsProbe.IsNative;
+            RewiredMouseOverride.NativeInputSmoothing = PlayerControlFixedUpdatePatch.Enabled;
 			modeManager.PrintModeInfo();
 
 			// 订阅场景加载事件
@@ -125,7 +113,7 @@ namespace GoiRuntime.Core
 			return;
 		}
 
-		if (isInitialized && !resettingScene)
+		if (isInitialized)
 		{
 			Logger.LogWarning("服务已初始化，跳过");
 			return;
@@ -144,24 +132,9 @@ namespace GoiRuntime.Core
                 isInitialized = true;
                 return;
             }
-            if (config.experimentalSceneReset && scene.GetPhysicsScene2D() == Physics2D.defaultPhysicsScene)
-            {
-                // A scene reload in the default physics world reuses that world's
-                // solver. First startup and RESET must both create a new 2D world.
-                Physics2D.simulationMode = SimulationMode2D.Script;
-                Physics2D.autoSyncTransforms = false;
-                Time.timeScale = 0f;
-                UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Mian",
-                    new UnityEngine.SceneManagement.LoadSceneParameters(
-                        UnityEngine.SceneManagement.LoadSceneMode.Single,
-                        UnityEngine.SceneManagement.LocalPhysicsMode.Physics2D));
-                return;
-            }
-            if (!string.IsNullOrEmpty(config.dynamicsProbeMode)) DynamicsProbe.BindScene();
-            if (config.experimentalControlledUpdates)
-                StartCoroutine(RunControlledInitialization());
-            else
-			    InitializeGameRuntimeMode();
+            isInitialized = true;
+            players = new IsolatedWorldRuntime(config);
+            StartCoroutine(StartRuntime());
 		}
 		else if (modeManager.IsGameTestingMode())
 		{
@@ -379,241 +352,84 @@ namespace GoiRuntime.Core
 #endif
 		}
 
-		/// <summary>
-		/// 初始化游戏运行模式（帧级别 RL 训练）
-		/// 启动 TCP 步进服务器、StepController、PlayerDuplicateManager
-		/// </summary>
-		private void InitializeGameRuntimeMode()
-		{
-			Logger.LogInfo("=== 初始化游戏运行模式（帧级别 RL 训练）===");
-
-			// --- 原始 Player 服务 ---
-			playerStateService = new PlayerStateService();
-			if (!playerStateService.Initialize())
-			{
-				Logger.LogError("PlayerStateService 初始化失败，中止");
-				return;
-			}
-			Logger.LogInfo("PlayerStateService 初始化成功");
-
-			playerInputService = new PlayerInputService();
-			if (!playerInputService.Initialize())
-			{
-				Logger.LogError("PlayerInputService 初始化失败，中止");
-				return;
-			}
-			Logger.LogInfo("PlayerInputService 初始化成功");
-
-			// --- 复制体管理器（numDuplicates > 1 时创建复制体）---
-			int numAgents = Mathf.Max(1, config.numDuplicates);
-			if (numAgents > 1)
-			{
-				duplicateManager = new PlayerDuplicateManager();
-                duplicateManager.UsePhysicsCursorPose = config.experimentalNativeNewGame;
-				if (duplicateManager.Initialize())
-				{
-					// 创建 numAgents-1 个复制体（原始 Player 算 agent 0）
-					duplicateManager.CreateDuplicates(numAgents - 1, Vector3.zero);
-                    if (config.experimentalControlledUpdates && duplicateManager.GetAllDuplicates().Length != numAgents - 1)
-                        throw new System.InvalidOperationException("Agent creation incomplete");
-					Logger.LogInfo($"创建了 {numAgents - 1} 个复制体（共 {numAgents} 个 agent）");
-				}
-				else
-				{
-                    if (config.experimentalControlledUpdates)
-                        throw new System.InvalidOperationException("Duplicate manager initialization failed");
-					Logger.LogWarning("PlayerDuplicateManager 初始化失败，退化为单 agent");
-					numAgents = 1;
-					duplicateManager = null;
-				}
-			}
-
-            if (!config.experimentalControlledUpdates) FinishGameRuntimeMode(numAgents);
-        }
-
-        private System.Collections.IEnumerator RunControlledInitialization()
+        // Flatten nested coroutines so initialization/replay failures always close
+        // the TCP connection rather than leaving a client blocked on a response.
+        private System.Collections.IEnumerator RunGuarded(System.Collections.IEnumerator routine)
         {
-            var routine = InitializeControlledRuntime();
-            while (true)
-            {
-                bool next = false;
-                try { next = routine.MoveNext(); }
-                catch (System.Exception ex)
-                {
-                    initializationError = ex.ToString();
-                    Logger.LogError(initializationError);
-                }
-                if (!next) break;
-                yield return routine.Current;
-            }
-        }
-
-        private System.Collections.IEnumerator InitializeControlledRuntime()
-        {
-            float previousScale = Time.timeScale;
-            Time.timeScale = 0f;
-            Physics2D.simulationMode = SimulationMode2D.Script;
-            Physics2D.autoSyncTransforms = false;
-            PlayerControlUpdatePatch.RlModeActive = true;
-            RewiredMouseOverride.Active = true;
-            // Run the same fixed-start recipe on first load and subsequent reloads.
-            // Saviour.Start otherwise loads native save state before normalization.
-            foreach (var script in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
-                if (script != null && (script.GetType().Name == "Saviour" ||
-                    script.GetType().Name == "CameraControl" ||
-                    script.GetType().Name == "PoseControl")) script.enabled = false;
-            foreach (var behaviour in UnityEngine.Object.FindObjectsOfType<Behaviour>())
-                if (behaviour.GetType().Name == "Animator") behaviour.enabled = false;
+            var stack = new System.Collections.Generic.Stack<System.Collections.IEnumerator>();
+            stack.Push(routine);
+            runtimeBusy = true;
             try
             {
-                // sceneLoaded runs before native Start. Install the gates now, but
-                // wait for native references before cloning, normalizing or snapshotting.
-                var nativePhysics = NativePhysicsInitialization.ApplyBeforeStart(GameObject.Find("Player"));
-                var bootstrap = new PlayerInputService();
-                if (!bootstrap.Initialize()) throw new System.InvalidOperationException("Bootstrap failed");
-                float deadline = Time.realtimeSinceStartup + 15f;
-                while (!bootstrap.NativeStartReady)
+                while (stack.Count > 0)
                 {
-                    if (Time.realtimeSinceStartup > deadline)
-                        throw new System.InvalidOperationException("Native PlayerControl.Start timed out");
-                    yield return null;
-                }
-                // Let other native Start/first Update callbacks complete without physics.
-                yield return null;
-                InitializeGameRuntimeMode();
-                yield return null; // cloned PlayerControl.Start must run before its snapshot
-                PlayerInputService.PrepareControlledPlayer(playerStateService.GetPlayerObject());
-                nativePhysics.ValidateAfterStart(playerStateService.GetPlayerObject());
-                if (duplicateManager != null)
-                    foreach (var go in duplicateManager.GetAllDuplicates())
+                    bool more = false;
+                    object current = null;
+                    try
                     {
-                        PlayerInputService.PrepareControlledPlayer(go);
-                        nativePhysics.ValidateAfterStart(go);
-                        if (RewiredMouseOverride.NativeInputSmoothing)
-                            playerInputService.CopyNativeInputSettingsTo(go);
+                        more = stack.Peek().MoveNext();
+                        if (more) current = stack.Peek().Current;
                     }
-                // Native save/load Update can overwrite control state after readiness.
-                foreach (var script in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
-                    if (script != null && (script.GetType().Name == "Saviour" ||
-                        script.GetType().Name == "CameraControl" ||
-                        script.GetType().Name == "PoseControl")) script.enabled = false;
-                // CameraControl.OnGUI's fade timer unpauses Time.timeScale on a
-                // render-count deadline, otherwise changing the world during idle.
-                Physics2D.simulationMode = SimulationMode2D.Script;
-                FinishGameRuntimeMode(Mathf.Max(1, config.numDuplicates));
-                if (stepController == null || !stepController.IsReady || tcpStepServer == null)
-                    throw new System.InvalidOperationException("Controlled runtime initialization failed");
+                    catch (System.Exception ex)
+                    {
+                        Logger.LogError("Multi-player runtime failed: " + ex);
+                        tcpStepServer?.Stop();
+                        players = null;
+                        yield break;
+                    }
+                    if (!more) { stack.Pop(); continue; }
+                    var nested = current as System.Collections.IEnumerator;
+                    if (nested != null) stack.Push(nested);
+                    else yield return current;
+                }
             }
-            // Script simulation does not stop Unity's automatic FixedUpdate/transform
-            // synchronization. Keep the automatic clock paused between TCP steps.
-            finally { Time.timeScale = runtimeReady ? 0f : previousScale; }
-        }
-
-        private void FinishGameRuntimeMode(int numAgents)
-        {
-			// --- 禁用水体重置组件 ---
-		// RestartOnContact 挂在水体碰撞器上，落水时会：
-		//   1. FadeOut 屏幕变暗
-		//   2. Saviour.ResetPlayerButNotDialogue() 强制重置 Player 位置
-		//   3. 将 Physics2D.simulationMode 从 Script 改回 FixedUpdate（破坏 StepController）
-		// 训练模式下必须禁用，否则任何 agent 落水都会破坏整个物理控制
-		DisableWaterReset();
-
-		// 激活 RL 模式（必须在 StepController.Initialize 拍快照/姿态归一化之前）：
-		//   1. 阻止 PlayerControl.Update() 继续用真实鼠标驱动 cursor（否则初始姿态被污染）
-		//   2. 激活 Rewired 拦截，使姿态归一化的注入 mouseInput 生效
-		GoiRuntime.PlayerControl.PlayerControlUpdatePatch.RlModeActive = true;
-		GoiRuntime.PlayerControl.RewiredMouseOverride.Active = true;
-		Logger.LogInfo("RL 模式已激活（Rewired 拦截 mouseX/mouseY，注入值将替换真实鼠标）");
-
-		// --- StepController ---
-		// 内部步幅 35；未协商的旧客户端仍按 33 维发送。
-			stepController = new StepController(numAgents, config.stepFrames, StepController.STATE_DIM, config.actionDimension);
-            stepController.ResetDiagnosticsEnabled = config.experimentalResetDiagnostics;
-			if (!stepController.Initialize(
-				playerStateService, playerInputService, duplicateManager,
-				config.normalizeInitialPose, config.initPoseSettleFrames,
-				config.initCursorUpScale, config.initCursorOffsetX, config.initPoseGain,
-                config.experimentalNativeNewGame))
-			{
-				Logger.LogError("StepController 初始化失败，中止");
-				return;
-			}
-			Logger.LogInfo($"StepController 初始化成功（{numAgents} agent，每 step {config.stepFrames} 物理帧，内部 {StepController.STATE_DIM}D）");
-			var calib = AnchorCalibration.Load();
-			stepController.SetAnchorCalibration(calib.Available, calib.LocalX, calib.LocalY);
-			if (calib.Available)
-				Logger.LogInfo($"锚点标定可用: {calib.AnchorId} {calib.Sha256}");
-			else
-				Logger.LogInfo("锚点标定不可用；连接默认 legacy33，要求校准的 HELLO 将被拒绝");
-
-			// --- 视觉修复：启动角色手臂骨骼动画(PoseControl IK) ---
-			// RL 模式跳过游戏原生载入，从不调 StartAnimator，手臂会停在绑定姿(视觉扭曲)。
-			// 只改手/肘 mesh，不影响物理与 33D 状态。仅对原始 Player(agent 0，唯一可见)启动。
-		if (config.startAnimatorInRlMode && !config.experimentalControlledUpdates)
-			{
-				if (playerInputService.StartPoseAnimator())
-					Logger.LogInfo("已启动 PoseControl 手臂动画（视觉修复）");
-				else
-					Logger.LogWarning("StartAnimator 调用失败，手臂视觉未修复（不影响训练）");
-			}
-
-			// --- TCP 步进服务器 ---
-            bool newServer = tcpStepServer == null;
-            if (newServer)
+            finally
             {
-			var hello = new HelloSnapshot
-			{
-				NumAgents = numAgents,
-				FixedDeltaTime = Time.fixedDeltaTime,
-				StepFrames = config.stepFrames,
-				CalibrationAvailable = calib.Available,
-				AnchorId = calib.AnchorId ?? "",
-				CalibrationSha256 = calib.Sha256 ?? "",
-			};
-			tcpStepServer = new TcpStepServer(StepController.STATE_DIM, StepController.LEGACY_WIRE_DIM, hello);
-			tcpStepServer.StartListening(config.tcpPort);
-			Logger.LogInfo($"TcpStepServer 已启动，监听端口 {config.tcpPort}");
+                runtimeBusy = false;
+                foreach (var item in stack)
+                {
+                    var disposable = item as System.IDisposable;
+                    if (disposable != null) disposable.Dispose();
+                }
             }
-
-		// --- 碰撞箱可视化（默认开启，黑底白环境 + 彩色 Player）---
-		var mainCam = Camera.main;
-		if (mainCam != null)
-		{
-			colliderVisualizer = mainCam.gameObject.AddComponent<ColliderVisualizer>();
-
-            // Controlled initialization moves hammer bodies out of Player's subtree.
-            // Draw the per-agent physics container without changing that hierarchy.
-            var roots = stepController.GetVisualizationRoots();
-            colliderVisualizer.SetPlayerRoots(roots);
-			Logger.LogInfo($"ColliderVisualizer 已附加到主摄像机（{roots.Length} 个 Player，默认开启）");
-			// 自由相机控制器（默认关闭，由 Python 'F' 命令开启）
-			freeCameraController = mainCam.gameObject.AddComponent<FreeCameraController>();
-			Logger.LogInfo("FreeCameraController 已附加到主摄像机（默认关闭）");
-		}
-		else
-		{
-			Logger.LogWarning("未找到主摄像机，ColliderVisualizer / FreeCameraController 未创建");
-		}
-
-		// --- 启动训练主循环协程 ---
-        if (config.experimentalControlledUpdates)
-        {
-            stepController.EnvironmentEpoch = ++environmentEpoch;
-            runtimeReady = true;
         }
-		if (newServer) StartCoroutine(TrainingLoop());
-		Logger.LogInfo("游戏运行模式初始化完成，等待 Python 连接...");
-		}
+
+        private System.Collections.IEnumerator StartRuntime()
+        {
+            yield return RunGuarded(players.Initialize());
+            if (players == null) yield break;
+            if (debugWorlds) yield break;
+            var calibration = AnchorCalibration.Load();
+            var hello = new HelloSnapshot { NumAgents = players.NumAgents,
+                FixedDeltaTime = Time.fixedDeltaTime, StepFrames = config.stepFrames,
+                CalibrationAvailable = calibration.Available, AnchorId = calibration.AnchorId ?? "",
+                CalibrationSha256 = calibration.Sha256 ?? "", PhysicsBackend = "isolated_worlds",
+                PhysicsWorldCount = players.NumAgents };
+            tcpStepServer = new TcpStepServer(StepController.STATE_DIM, StepController.LEGACY_WIRE_DIM, hello);
+            tcpStepServer.StartListening(config.tcpPort);
+            Logger.LogInfo("Multi-player runtime ready: " + players.NumAgents + " independent physics worlds");
+            StartCoroutine(TrainingLoop());
+        }
+
+        private void StartDebugWorlds(int count)
+        {
+            playerDebugTool = null; // Native single-player hotkeys must not mutate controlled worlds.
+            debugWorlds = true;
+            config.numAgents = count;
+            config.experimentalResetDiagnostics = true;
+            HubDepthWritePatch.Apply();
+            players = new IsolatedWorldRuntime(config);
+            StartCoroutine(StartRuntime());
+        }
 
 		private StepResponse StatePacket(float[] states = null, string diagnosticJson = null)
 		{
-			bool anchorsOk = diagnosticJson != null || stepController.LastAnchorCollectOk;
+			bool anchorsOk = diagnosticJson != null || players.LastAnchorCollectOk;
 			return new StepResponse
 			{
 				States = states,
-				Dones = new bool[stepController.NumAgents],
-				Sequence = stepController.LastCollectSequence,
+				Dones = new bool[players.NumAgents],
+				Sequence = players.LastCollectSequence,
 				ErrorCode = anchorsOk ? 0 : 1,
 				ErrorMessage = anchorsOk ? null : "reference_anchor_unavailable",
 				DiagnosticJson = diagnosticJson,
@@ -626,7 +442,7 @@ namespace GoiRuntime.Core
 			{
 				States = new float[0],
 				Dones = new bool[0],
-				Sequence = stepController.LastCollectSequence,
+				Sequence = players.LastCollectSequence,
 			};
 		}
 
@@ -641,7 +457,7 @@ namespace GoiRuntime.Core
 				// 非阻塞轮询（每帧检查一次）
 				if (tcpStepServer.TryGetCommand(out StepCommand cmd))
 				{
-                    if (config.experimentalSceneReset && cmd.Type == CommandType.Reset)
+                    if (cmd.Type == CommandType.Reset)
                     {
                         yield return ResetSceneAndRespond();
                         continue;
@@ -654,85 +470,61 @@ namespace GoiRuntime.Core
 						{
                         case CommandType.DynamicsProbe:
                             DynamicsProbe.BeginCandidate();
-                            tcpStepServer.SendResponse(StatePacket(stepController.CollectAllStates()));
+                            tcpStepServer.SendResponse(StatePacket(players.CollectAllStates()));
                             break;
                         case CommandType.ResetDiagnostics:
                             tcpStepServer.SendResponse(StatePacket(
-                                diagnosticJson: stepController.CollectResetDiagnostics()));
+                                diagnosticJson: players.CollectResetDiagnostics()));
                             break;
                         case CommandType.ObservationDiagnostics:
                             tcpStepServer.SendResponse(StatePacket(
-                                diagnosticJson: stepController.CollectObservationDiagnostics()));
+                                diagnosticJson: players.CollectObservationDiagnostics()));
                             break;
 						case CommandType.CalibrationCapture:
 							tcpStepServer.SendResponse(StatePacket(
-								diagnosticJson: stepController.CollectCalibrationCapture()));
-							break;
-						case CommandType.Reset:
-							stepController.Reset();
-							resp = StatePacket(stepController.CollectAllStates());
-							tcpStepServer.SendResponse(resp);
+								diagnosticJson: players.CollectCalibrationCapture()));
 							break;
 
 						case CommandType.Step:
-							float[] states = stepController.ExecuteStep(cmd.Actions ?? new float[0]);
+							float[] states = players.ExecuteStep(cmd.Actions ?? new float[0]);
 							resp = StatePacket(states);
 							tcpStepServer.SendResponse(resp);
 							break;
 
 						case CommandType.NewSnapshot:
-                            if (config.experimentalSceneReset)
-                                throw new System.InvalidOperationException("Scene reset supports the fixed startup recipe only; NEW_SNAPSHOT is unsupported");
-							stepController.TakeNewSnapshot();
-							resp = StatePacket(stepController.CollectAllStates());
+							players.TakeNewSnapshot();
+							resp = StatePacket(players.CollectAllStates());
 							tcpStepServer.SendResponse(resp);
 							break;
 
-						case CommandType.Config:
-							// L3 可重复性测试：启用 RewiredMouseOverride，屏蔽真实鼠标
-							GoiRuntime.PlayerControl.RewiredMouseOverride.Active = cmd.ConfigRewiredMouseActive;
-							if (cmd.ConfigMouseXActionId >= 0)
-								GoiRuntime.PlayerControl.RewiredMouseOverride.MouseXActionId = cmd.ConfigMouseXActionId;
-							if (cmd.ConfigMouseYActionId >= 0)
-								GoiRuntime.PlayerControl.RewiredMouseOverride.MouseYActionId = cmd.ConfigMouseYActionId;
-							Logger.LogInfo($"[TrainingLoop] RewiredMouseOverride: Active={cmd.ConfigRewiredMouseActive} MouseX={cmd.ConfigMouseXActionId} MouseY={cmd.ConfigMouseYActionId}");
+                        case CommandType.Config:
+                            players.ConfigureInput(cmd.ConfigRewiredMouseActive, cmd.ConfigMouseXActionId, cmd.ConfigMouseYActionId);
 							resp = EmptyPacket();
 							tcpStepServer.SendResponse(resp);
 							break;
 
 					case CommandType.ExportColliders:
-						ColliderExporter.ExportAll(playerStateService.GetPlayerObject(), PathManager.CollidersPath);
+                        players.ExportColliders(PathManager.CollidersPath);
 						resp = EmptyPacket();
 						tcpStepServer.SendResponse(resp);
 						break;
 
 					case CommandType.Teleport:
-						float[] teleStates = stepController.Teleport(
+						float[] teleStates = players.Teleport(
 							cmd.TeleportAgentIndex,
 							new Vector2(cmd.TeleportX, cmd.TeleportY));
 						resp = StatePacket(teleStates);
 						tcpStepServer.SendResponse(resp);
 						break;
 
-						case CommandType.Visualize:
-							if (colliderVisualizer != null)
-							{
-								colliderVisualizer.enabled = cmd.VisualizeEnabled;
-								Logger.LogInfo($"[TrainingLoop] ColliderVisualizer {(cmd.VisualizeEnabled ? "开启" : "关闭")}");
-							}
-							resp = EmptyPacket();
-							tcpStepServer.SendResponse(resp);
-							break;
-
-					case CommandType.CameraFree:
-						if (freeCameraController != null)
-						{
-							freeCameraController.SetFreeMode(cmd.CameraFreeEnabled);
-							Logger.LogInfo($"[TrainingLoop] FreeCameraController {(cmd.CameraFreeEnabled ? "启用" : "禁用")}");
-						}
-						resp = EmptyPacket();
-						tcpStepServer.SendResponse(resp);
-						break;
+                        case CommandType.Visualize:
+                            players.SetVisualization(cmd.VisualizeEnabled);
+                            tcpStepServer.SendResponse(EmptyPacket());
+                            break;
+                        case CommandType.CameraFree:
+                            players.SetCameraFree(cmd.CameraFreeEnabled);
+                            tcpStepServer.SendResponse(EmptyPacket());
+                            break;
 
 						case CommandType.Close:
 							Logger.LogInfo("[TrainingLoop] 收到 CLOSE，退出训练循环");
@@ -743,25 +535,8 @@ namespace GoiRuntime.Core
 				catch (System.Exception ex)
 				{
 					Logger.LogError($"[TrainingLoop] cmd={cmd.Type} 处理异常: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
-                    if (config.experimentalControlledUpdates)
-                    {
-                        // Legacy packets cannot express errors. Close instead of fabricating valid observations.
-                        tcpStepServer.Stop();
-                        continue;
-                    }
-					// 发送空回包，避免 Python 永久阻塞
-					try
-					{
-						tcpStepServer.SendResponse(new StepResponse
-						{
-							States = new float[stepController.NumAgents * StepController.STATE_DIM],
-							Dones  = new bool[stepController.NumAgents],
-							Sequence = stepController.LastCollectSequence,
-							ErrorCode = 2,
-							ErrorMessage = ex.Message,
-						});
-					}
-					catch { }
+                    // Legacy framing cannot express command errors; never fabricate observations.
+                    tcpStepServer.Stop();
 				}
 				}
 
@@ -771,45 +546,9 @@ namespace GoiRuntime.Core
 
         private System.Collections.IEnumerator ResetSceneAndRespond()
         {
-            runtimeReady = false;
-            resettingScene = true;
-            initializationError = null;
-            UnityEngine.AsyncOperation reload = null;
-            try
-            {
-                if (!config.experimentalControlledUpdates)
-                    throw new System.InvalidOperationException("Scene reset requires controlled updates");
-                RewiredMouseOverride.Reset();
-                // Scene unload owns all player/cursor destruction. Destroying only
-                // the roots first leaves native callbacks holding broken references.
-                stepController = null;
-                playerInputService = null;
-                playerStateService = null;
-                duplicateManager = null;
-                colliderVisualizer = null;
-                freeCameraController = null;
-                reload = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(
-                    "Mian", new UnityEngine.SceneManagement.LoadSceneParameters(
-                        UnityEngine.SceneManagement.LoadSceneMode.Single,
-                        UnityEngine.SceneManagement.LocalPhysicsMode.Physics2D));
-            }
-            catch (System.Exception ex) { initializationError = ex.ToString(); }
-            float deadline = Time.realtimeSinceStartup + 30f;
-            while (initializationError == null && !runtimeReady && Time.realtimeSinceStartup < deadline)
-                yield return null;
-            resettingScene = false;
-            try
-            {
-                if (initializationError != null || !runtimeReady || reload == null || !reload.isDone)
-                    throw new System.InvalidOperationException(initializationError ?? "Scene reset readiness timed out");
-                stepController.RecordFreshSceneReset();
-                tcpStepServer.SendResponse(StatePacket(stepController.CollectAllStates()));
-            }
-            catch (System.Exception ex)
-            {
-                Logger.LogError("Scene reset failed: " + ex);
-                tcpStepServer.Stop();
-            }
+            yield return RunGuarded(players.Reset());
+            if (players != null && tcpStepServer != null && tcpStepServer.IsRunning)
+                tcpStepServer.SendResponse(StatePacket(players.CollectAllStates()));
         }
 
 		/// <summary>
@@ -848,6 +587,7 @@ namespace GoiRuntime.Core
 
 			// 初始化 Player 调试工具（使用所有服务）
 			playerDebugTool = new PlayerDebugTool();
+            playerDebugTool.StartMultiPlayer = StartDebugWorlds;
 			if (playerDebugTool.Initialize(playerInputService, playerStateService, gameControlService))
 			{
 				Logger.LogInfo("PlayerDebugTool 初始化成功");
@@ -955,8 +695,7 @@ namespace GoiRuntime.Core
 
 			tcpStepServer?.Stop();
 			tcpStepServer = null;
-			stepController = null;
-			duplicateManager = null;
+			players = null;
 			if (colliderVisualizer != null)
 			{
 				Destroy(colliderVisualizer);
@@ -979,8 +718,23 @@ namespace GoiRuntime.Core
 
 		#region 调试命令
 
-		void Update()
-		{
+        void Update()
+        {
+            if (debugWorlds)
+            {
+                if (runtimeBusy || players == null) return;
+                if (Input.GetKeyDown(KeyCode.F9)) StartCoroutine(RunGuarded(players.Reset()));
+                if (Input.GetKeyDown(KeyCode.F10))
+                {
+                    var actions = new float[players.NumAgents * 2];
+                    for (int i = 0; i < players.NumAgents; i++) actions[2*i] = i % 2 == 0 ? 50 : -50;
+                    players.ExecuteStep(actions);
+                }
+                if (Input.GetKeyDown(KeyCode.F11)) Logger.LogInfo(players.CollectResetDiagnostics());
+                if (Input.GetKeyDown(KeyCode.F12)) StartDebugWorlds(players.NumAgents == 1 ? 4 : 1);
+                return;
+            }
+
 			// 游戏测试模式：调用调试工具更新
 			if (modeManager.IsGameTestingMode() && playerDebugTool != null)
 			{

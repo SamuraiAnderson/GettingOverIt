@@ -114,43 +114,6 @@ namespace GoiRuntime.Core.Interfaces
 	}
 
 	/// <summary>
-	/// 复制体管理接口
-	/// 管理多个 Player 实例（num_duplis）
-	/// </summary>
-	public interface IDuplicateManager
-	{
-		/// <summary>
-		/// 初始化（查找所有复制体）
-		/// </summary>
-		bool Initialize();
-
-		/// <summary>
-		/// 获取复制体数量
-		/// </summary>
-		int GetDuplicateCount();
-
-		/// <summary>
-		/// 获取指定索引的复制体
-		/// </summary>
-		GameObject GetDuplicate(int index);
-
-		/// <summary>
-		/// 获取所有复制体
-		/// </summary>
-		GameObject[] GetAllDuplicates();
-
-		/// <summary>
-		/// 为所有复制体设置输入（批量操作）
-		/// </summary>
-		void SetInputForAll(Vector2[] inputs);
-
-		/// <summary>
-		/// 为指定复制体设置输入
-		/// </summary>
-		void SetInputForDuplicate(int index, Vector2 input);
-	}
-
-	/// <summary>
 	/// Player 状态服务接口
 	/// 采集 Player 的所有状态数据
 	/// </summary>

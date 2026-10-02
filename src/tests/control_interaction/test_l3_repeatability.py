@@ -83,12 +83,9 @@ def _load_config() -> dict:
         return {}
 
 
-def launch_game() -> object:
-    logger.info("设置游戏为 GameRuntime 模式...")
-    GameModeController().set_game_runtime_mode()
-    proc = GameLauncher().launch(wait=False)
-    logger.info("游戏已启动 (PID=%d)", proc.pid)
-    return proc
+def launch_game(agents, port):
+    from start.multi_player import launch_players
+    return launch_players(agents, port=port)
 
 
 def warmup_and_snapshot(env: GoiEnv, warmup_steps: int, csv_repeats: int = 2):
@@ -234,7 +231,7 @@ def main():
     )
 
     if not args.no_launch:
-        launch_game()
+        launch_game(1, args.port)
         logger.info("等待游戏启动（最多 %.0fs）...", args.timeout)
 
     # L3 可重复性保护：启用 RewiredMouseOverride，屏蔽真实鼠标

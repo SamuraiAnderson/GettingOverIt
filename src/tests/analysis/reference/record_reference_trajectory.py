@@ -123,15 +123,15 @@ def main() -> None:
     from env.goi_env import GoiEnv
     from start.game_launcher import GameLauncher
     from start.game_mode_controller import GameModeController
-    from training.rollout import _write_num_duplicates
+    from start.runtime_config import configure_players
 
     game_root = _get_game_root()
     process = None
 
     if not args.no_launch:
-        _write_num_duplicates(game_root, 1)
+        configure_players(game_root, 1)
         GameModeController(str(game_root)).set_game_runtime_mode()
-        process = GameLauncher().launch(wait=False)
+        process = GameLauncher(str(game_root / "GettingOverIt.exe")).launch(wait=False)
         logger.info("游戏已启动")
 
     env = GoiEnv(port=config.port, num_agents=1)

@@ -8,7 +8,7 @@
   - 同时检查两个 Agent 的 vel_x 符号是否在多数步骤中相反
 
 前置条件：
-  - C# 端 RuntimeConfig.json 中 numDuplicates >= 2
+  - C# 端 RuntimeConfig.json 中 numAgents >= 2
   - 已部署包含 per-agent 输入隔离的 GameRuntime_v2 DLL
 
 用法：
@@ -55,12 +55,9 @@ def _load_config() -> dict:
         return {}
 
 
-def launch_game() -> object:
-    logger.info("设置游戏为 GameRuntime 模式...")
-    GameModeController().set_game_runtime_mode()
-    proc = GameLauncher().launch(wait=False)
-    logger.info("游戏已启动 (PID=%d)", proc.pid)
-    return proc
+def launch_game(agents, port):
+    from start.multi_player import launch_players
+    return launch_players(agents, port=port)
 
 
 def warmup_and_snapshot(env: GoiEnv, n_agents: int, n_steps: int = 500) -> None:
@@ -208,7 +205,7 @@ def main():
         sys.exit(1)
 
     if not args.no_launch:
-        launch_game()
+        launch_game(args.agents, args.port)
         logger.info("等待游戏启动（最多 %.0fs）...", args.timeout)
 
     with GoiEnv(port=args.port, num_agents=args.agents, timeout=args.timeout) as env:

@@ -84,6 +84,7 @@ namespace GoiRuntime.ColliderCollection
 			var envList = new List<Collider2D>();
 			foreach (var poly in allPolys)
 			{
+                if (poly.gameObject.scene != gameObject.scene) continue;
 				if (poly.GetComponentInParent<Rigidbody2D>() != null) continue;
 				if (poly.isTrigger) continue;
 				envList.Add(poly);

@@ -71,7 +71,7 @@ namespace GoiRuntime.Core.Configuration
         // Runtime fix: prevent visual depth updates from moving the physics hub.
         // Disable only for an unmodified native reference or explicit rollback.
         public bool suppressHubDepthWrite = true;
-        // Opt-in reset experiment. Existing training keeps the legacy path.
+        // Historical experiment flags. GameRuntime always uses controlled isolated worlds.
         public bool experimentalControlledUpdates = false;
         public bool experimentalResetDiagnostics = false;
         public bool experimentalSceneReset = false;
@@ -90,9 +90,11 @@ namespace GoiRuntime.Core.Configuration
 		#region Player 配置
 
 		/// <summary>
-		/// 复制体数量（从注册表读取，此为默认值）
+		/// 并行 player 数量；每个 player 使用独立物理世界
 		/// </summary>
-		public int numDuplicates = 1;
+		public int numAgents = 1;
+        // Legacy JSON input only; all runtime callers use numAgents.
+        public int numDuplicates = 1;
 
 		/// <summary>
 		/// Player 对象名称
@@ -208,6 +210,8 @@ namespace GoiRuntime.Core.Configuration
 					// Preserve defaults for newly added fields in existing config files.
 					RuntimeConfig config = new RuntimeConfig();
 					JsonUtility.FromJsonOverwrite(json, config);
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(json, "\"numAgents\"\\s*:"))
+                        config.numAgents = config.numDuplicates;
 					Debug.Log($"配置已加载: {configPath}");
 					return config;
 				}
@@ -248,37 +252,6 @@ namespace GoiRuntime.Core.Configuration
 			}
 		}
 
-		/// <summary>
-		/// 从注册表更新复制体数量
-		/// </summary>
-		public void UpdateDuplicateCountFromRegistry()
-		{
-			#if !UNITY_EDITOR && UNITY_STANDALONE_WIN
-			try
-			{
-				using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-					@"Software\Bennett Foddy\Getting Over It"))
-				{
-					if (key != null)
-					{
-						object value = key.GetValue("numDuplis_h1216609508");
-						if (value != null)
-						{
-							numDuplicates = (int)value;
-							Debug.Log($"从注册表读取复制体数量: {numDuplicates}");
-						}
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Debug.LogWarning($"读取注册表失败: {e.Message}，使用默认值 {numDuplicates}");
-			}
-			#else
-			Debug.Log($"非 Windows 平台或编辑器模式，使用默认复制体数量: {numDuplicates}");
-			#endif
-		}
-
 		#endregion
 
 		#region 辅助方法
@@ -288,7 +261,7 @@ namespace GoiRuntime.Core.Configuration
 		/// </summary>
 		public int GetTotalStateDimension()
 		{
-			return stateDimension * numDuplicates;
+			return stateDimension * numAgents;
 		}
 
 		/// <summary>
@@ -296,7 +269,7 @@ namespace GoiRuntime.Core.Configuration
 		/// </summary>
 		public int GetTotalActionDimension()
 		{
-			return actionDimension * numDuplicates;
+			return actionDimension * numAgents;
 		}
 
 		#endregion

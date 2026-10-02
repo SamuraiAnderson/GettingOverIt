@@ -1,5 +1,7 @@
 # PlayerControl - Player 控制模块
 
+> 2026-10-02：批量运行已统一为独立物理世界，当前接口与 reset 契约见[多 player 运行接口](../../../doc/multiplayer_runtime.md)。下文旧复制体/刚体快照流程仅供历史参考。
+
 ## 文件说明
 
 - `PlayerInputService.cs` - Player 输入控制服务（通过反射注入 mouseInput）

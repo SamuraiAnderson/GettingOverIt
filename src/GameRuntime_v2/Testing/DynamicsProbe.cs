@@ -49,7 +49,7 @@ namespace GoiRuntime.Testing
             mode = config.dynamicsProbeMode;
             if (string.IsNullOrEmpty(mode)) return;
             if (!IsNative && mode != "candidate") throw new InvalidOperationException("Unknown dynamics probe mode");
-            if (config.numDuplicates != 1) throw new InvalidOperationException("Dynamics probe requires one agent");
+            if (config.numAgents != 1) throw new InvalidOperationException("Dynamics probe requires one agent");
             if (IsNative && (config.experimentalControlledUpdates || config.experimentalSceneReset))
                 throw new InvalidOperationException("Native reference cannot enable reset modifications");
             fixture = JsonUtility.FromJson<Fixture>(File.ReadAllText(config.dynamicsProbeFile));

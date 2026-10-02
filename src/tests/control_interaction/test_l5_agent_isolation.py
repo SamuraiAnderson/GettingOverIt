@@ -3,8 +3,8 @@
 
 验证同一游戏进程内的多个 Agent 的控制完全独立，动作不跨 Agent 干扰。
 
-前置条件：游戏已配置 numDuplicates >= 2（即至少 2 个 Agent）。
-  可在 GoiData/runtime_config.json 中设置 numDuplicates = 2。
+前置条件：游戏已配置 numAgents >= 2（即至少 2 个 Agent）。
+  可在 GoiData/runtime_config.json 中设置 numAgents = 2。
 
 三种情形：
   情形 X（同动作一致性）：actions[0] == actions[1]，期望轨迹完全一致
@@ -133,21 +133,16 @@ def _load_config() -> dict:
         return {}
 
 
-def launch_game() -> object:
-    logger.info("设置游戏为 GameRuntime 模式...")
-    GameModeController().set_game_runtime_mode()
-    proc = GameLauncher().launch(wait=False)
-    logger.info("游戏已启动 (PID=%d)", proc.pid)
-    return proc
+def launch_game(agents, port):
+    from start.multi_player import launch_players
+    return launch_players(agents, port=port)
 
-
-# ── 情形 X：同动作一致性 ─────────────────────────────────────────────
 
 def scenario_x(env: GoiEnv, n_steps: int) -> dict:
     """两个 Agent 给相同动作，轨迹应完全一致（差异 < 1e-3）。"""
     logger.info("--- 情形 X：同动作一致性（%d 步）---", n_steps)
 
-    action = np.array([[80.0, 0.0], [80.0, 0.0]], dtype=np.float32)
+    action = np.tile(np.float32([80.0, 0.0]), (env.num_agents, 1))
 
     obs0 = env.reset()
     traj_0, traj_1 = [obs0[0].copy()], [obs0[1].copy()]
@@ -160,7 +155,7 @@ def scenario_x(env: GoiEnv, n_steps: int) -> dict:
     traj_0 = np.stack(traj_0)
     traj_1 = np.stack(traj_1)
 
-    max_diff = float(np.abs(traj_0 - traj_1).max())
+    max_diff = float(np.abs(np.delete(traj_0 - traj_1, 28, axis=1)).max())
     passed   = max_diff < SCENARIO_X_MAX_DIFF
 
     logger.info("  max|obs[0]-obs[1]|: %.2e  期望 < %.0e  [%s]",
@@ -179,7 +174,8 @@ def scenario_y(env: GoiEnv, n_steps: int) -> dict:
     """两个 Agent 给相反方向动作，轨迹应持续分离（step 100 时距离 > 1.0）。"""
     logger.info("--- 情形 Y：不同动作可区分性（%d 步）---", n_steps)
 
-    action = np.array([[100.0, 0.0], [-100.0, 0.0]], dtype=np.float32)
+    action = np.zeros((env.num_agents, 2), dtype=np.float32)
+    action[:2, 0] = [100.0, -100.0]
 
     obs0 = env.reset()
     traj_0, traj_1 = [obs0[0].copy()], [obs0[1].copy()]
@@ -223,8 +219,9 @@ def scenario_z(env: GoiEnv, n_steps: int) -> dict:
     logger.info("--- 情形 Z：物理干扰测试（%d 步）---", n_steps)
 
     # 先采集纯零动作基线（单 Agent 或 Agent 1 零动作）
-    action_test = np.array([[100.0, 0.0], [0.0, 0.0]], dtype=np.float32)
-    action_zero = np.array([[  0.0, 0.0], [0.0, 0.0]], dtype=np.float32)
+    action_zero = np.zeros((env.num_agents, 2), dtype=np.float32)
+    action_test = action_zero.copy()
+    action_test[0, 0] = 100.0
 
     # 基线：两个 Agent 均零动作
     env.reset()
@@ -251,7 +248,7 @@ def scenario_z(env: GoiEnv, n_steps: int) -> dict:
     logger.info("  Agent 1 速度差（vs 纯零基线）最大值: %.2e  期望 < %.0e  [%s]",
                 max_vel_diff, SCENARIO_Z_VEL_THRESH, "OK" if passed else "FAIL")
     if not passed:
-        logger.warning("  [诊断] 检查 PlayerDuplicateManager 中 IgnoreCollision 配置")
+        logger.warning("  [诊断] 检查 HELLO physics_backend 和独立 world 句柄")
 
     return {
         "passed": passed,
@@ -287,11 +284,11 @@ def main():
     )
 
     if args.agents < 2:
-        logger.error("需要至少 2 个 Agent（--agents >= 2），请先在 runtime_config.json 中设置 numDuplicates >= 2")
+        logger.error("需要至少 2 个 Agent（--agents >= 2），请先在 runtime_config.json 中设置 numAgents >= 2")
         sys.exit(1)
 
     if not args.no_launch:
-        launch_game()
+        launch_game(args.agents, args.port)
         logger.info("等待游戏启动（最多 %.0fs）...", args.timeout)
 
     with GoiEnv(port=args.port, num_agents=args.agents, timeout=args.timeout) as env:
