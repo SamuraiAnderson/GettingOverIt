@@ -18,6 +18,7 @@ namespace GoiRuntime.PlayerControl
 		private GameObject originalPlayer;
 		private List<DuplicateInstance> duplicates = new List<DuplicateInstance>();
 		private bool isInitialized = false;
+        public bool UsePhysicsCursorPose;
 		
 		private const int MAX_DUPLICATES = 64;
 		
@@ -355,6 +356,14 @@ namespace GoiRuntime.PlayerControl
 			newFC.transform.position = origFC.position;
 			newFC.transform.rotation = origFC.rotation;
 			newFC.transform.localScale = origFC.localScale;
+            if (UsePhysicsCursorPose)
+            {
+                if (origRB == null) throw new InvalidOperationException("Missing source cursor body");
+                // Native physical initialization may precede Transform synchronization.
+                // Clones must inherit that initialized body pose, not the stale prefab transform.
+                newFC.transform.position = new Vector3(origRB.position.x, origRB.position.y, origFC.position.z);
+                newFC.transform.rotation = Quaternion.Euler(0f, 0f, origRB.rotation);
+            }
 
 			SpriteRenderer origSR = origFC.GetComponent<SpriteRenderer>();
 			if (origSR != null)
@@ -373,6 +382,11 @@ namespace GoiRuntime.PlayerControl
 				newRB.collisionDetectionMode = origRB.collisionDetectionMode;
 				newRB.interpolation = origRB.interpolation;
 				newRB.constraints = origRB.constraints;
+                if (UsePhysicsCursorPose)
+                {
+                    newRB.velocity = origRB.velocity;
+                    newRB.angularVelocity = origRB.angularVelocity;
+                }
 			}
 			else
 			{

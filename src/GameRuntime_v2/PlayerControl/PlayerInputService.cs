@@ -124,6 +124,20 @@ namespace GoiRuntime.PlayerControl
             pc.GetType().GetField("mouseSnap", flags).SetValue(pc, false);
             pc.GetType().GetField("menuPause", flags).SetValue(pc, false);
         }
+
+        public void BeginNativeOpening()
+        {
+            if (!NativeStartReady) throw new InvalidOperationException("Native Start incomplete");
+            var opening = playerControlComponent.GetType().GetMethod("PlayOpeningAnimation",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (opening == null) throw new InvalidOperationException("Missing native opening method");
+            // Use the game's own entry point and pause duration. Automatic animation
+            // and clocks remain disabled; the controller is stepped explicitly.
+            opening.Invoke(playerControlComponent, null);
+            var state = GetInternalState();
+            if (!state.valid || !(state.pauseInputTimer > 0f) || float.IsInfinity(state.pauseInputTimer))
+                throw new InvalidOperationException("Native opening did not install a finite input pause");
+        }
 		
 		/// <summary>
 		/// 设置鼠标输入。

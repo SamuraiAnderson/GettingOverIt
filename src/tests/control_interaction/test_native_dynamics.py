@@ -110,8 +110,41 @@ def summarize(cases, traces):
                       **comparison(traces[a["id"]], traces[b["id"]])})
     return {"equivalence": "NOT_CERTIFIED", "comparisons": pairs,
             "native_parameters": assess_native_parameters(cases, traces),
+            "native_start": assess_native_start(cases, traces),
             "first_step": {case["id"]: {phase: {key: row[key] for key in ("controls", "motors", "axes", "inputBeforeInjection")}
                                          for phase, row in zip(PHASES, traces[case["id"]][:3])} for case in cases}}
+
+
+def assess_native_start(cases, traces):
+    """Accept the observed starting state within declared tolerances, not bitwise equality."""
+    indexed = {(c["mode"], c["actions"], c["repeat"]): c for c in cases}
+    candidates = [c for c in cases if c["mode"] == "candidate"]
+    if not candidates:
+        return {"passed": False, "reason": "Missing candidate"}
+    results = []
+    # mouseInput/oldMouse, adaptive gain, mw.xy, oldAngle, pause timer,
+    # sensitivity and trackpad. Exact for input/gain/settings, spatial/angle
+    # limits for the state inherited from the physical trajectory.
+    control_limits = np.array([0, 0, 0, 0, 0, 1e-3, 1e-3, .05, 0, 0, 0])
+    for case in candidates:
+        reference = indexed.get(("native", case["actions"], case["repeat"]))
+        if reference is None:
+            results.append({"id": case["id"], "passed": False, "reason": "Missing paired native reference"})
+            continue
+        a, b = traces[reference["id"]][0], traces[case["id"]][0]
+        if a["bodyNames"] != b["bodyNames"]:
+            raise ValueError("Starting body ordering differs")
+        bodies = body_error(a["bodies"], b["bodies"])
+        controls = np.abs(np.asarray(a["controls"]) - np.asarray(b["controls"]))
+        controls_ok = bool(controls.shape == (11,) and np.isfinite(controls).all()
+                           and np.all(controls <= control_limits))
+        results.append({"id": case["id"], "reference": reference["id"],
+                        "passed": bodies["within_limits"] and controls_ok,
+                        "bodies": bodies, "controller_errors": controls.tolist(),
+                        "controller_within_limits": controls_ok})
+    return {"passed": all(c["passed"] for c in results), "cases": results,
+            "body_limits": LIMITS, "controller_limits": control_limits.tolist(),
+            "scope": "Initial seven-body state and recorded controller values; not full solver or trajectory equivalence"}
 
 
 def assess_native_parameters(cases, traces):
@@ -164,7 +197,8 @@ def run_case(args, launcher, mode, kind, repeat):
                                    "output": str(path.resolve())}), encoding="utf-8")
     overrides = {"dynamicsProbeMode": mode, "dynamicsProbeFile": str(fixture.resolve()),
                  "experimentalControlledUpdates": mode == "candidate", "experimentalSceneReset": mode == "candidate",
-                 "experimentalResetDiagnostics": False, "stepFrames": 1}
+                 "experimentalResetDiagnostics": False, "stepFrames": 1,
+                 "experimentalNativeNewGame": args.native_new_game and mode == "candidate"}
     ensure_idle(args.port)
     proc, env = None, None
     record = {"id": case_id, "mode": mode, "actions": kind, "repeat": repeat, "raw": path.name}
@@ -252,6 +286,8 @@ def run(args):
         report.update(status="COMPLETE", analysis=summarize(report["cases"], traces))
         if args.require_native_parameters and not report["analysis"]["native_parameters"]["passed"]:
             report["status"] = "FAIL"
+        if args.require_native_start and not report["analysis"]["native_start"]["passed"]:
+            report["status"] = "FAIL"
     except (Exception, KeyboardInterrupt) as exc:
         LOG.exception("Dynamics experiment failed")
         report["status"] = "ERROR"
@@ -278,12 +314,16 @@ def parse_args(argv=None):
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--steps", type=int, default=40)
     parser.add_argument("--native-warmup", type=int, default=240)
+    parser.add_argument("--native-new-game", action="store_true", help="Use the experimental native new-game initialization")
+    parser.add_argument("--require-native-start", action="store_true", help="Require initial body/controller state within declared limits")
     parser.add_argument("--seed", type=int, default=20261002)
     parser.add_argument("--timeout", type=float, default=90)
     parser.add_argument("--port", type=int)
     parser.add_argument("--require-native-parameters", action="store_true",
                         help="Exit 1 if measured joint caps/caches, body config or fixed dt differ from native")
     args = parser.parse_args(argv)
+    if args.require_native_start and (args.native_warmup != 0 or not {"native", "candidate"}.issubset(args.modes)):
+        parser.error("--require-native-start requires native/candidate and --native-warmup 0")
     if min(args.repeats, args.steps) < 1 or args.native_warmup < 0 or not np.isfinite(args.timeout) or args.timeout <= 0:
         parser.error("Invalid count or timeout")
     if len(set(args.modes)) != len(args.modes) or len(set(args.actions)) != len(args.actions):

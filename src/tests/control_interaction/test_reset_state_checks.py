@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tests.control_interaction.test_reset_state import (
     Limits, assess, compare, history_actions, measure_case, overall_status,
     ensure_idle, main, parse_args, run, runtime_settings, validate_obs, assess_diagnostics,
-    assess_native_motor_limits,
+    assess_native_motor_limits, assess_native_start_bodies,
 )
 
 
@@ -27,6 +27,20 @@ def state(width=33):
 
 
 class ResetChecks(unittest.TestCase):
+    def test_native_start_rejects_repeatable_clone_cursor_offset(self):
+        names = ['Player', 'Hub', 'Slider', 'Handle', 'PoleMiddle', 'Tip', 'Cursor']
+        bodies = [{"agent": a, "name": name, "position": {"x": 1., "y": 2.},
+                   "rotation": 0., "velocity": {"x": 0., "y": 0.}, "angularVelocity": 0.}
+                  for a in range(2) for name in names]
+        packet = {"current": {"bodies": bodies, "controls": [{"valid": True}] * 2}}
+        data = {phase: copy.deepcopy(packet) for phase in ('after_reset', 'after_wait')}
+        reference = {'bodyNames': names, 'bodies': [1., 2., 0., 0., 0., 0.] * 7}
+        self.assertTrue(assess_native_start_bodies(data, 2, reference, Limits())['passed'])
+        for phase in data:
+            data[phase]['current']['bodies'][-1]['position']['y'] += .035
+        self.assertFalse(assess_native_start_bodies(data, 2, reference, Limits())['passed'])
+        self.assertEqual(data['after_reset'], data['after_wait'])
+
     def test_native_caps_checked_for_every_clone_and_after_probe(self):
         expected = {"hinge_cap": 10000., "slider_cap": 10000., "hub_cap": 100.}
         joints = []

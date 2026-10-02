@@ -72,6 +72,9 @@ namespace GoiRuntime.Core.Configuration
         public bool experimentalControlledUpdates = false;
         public bool experimentalResetDiagnostics = false;
         public bool experimentalSceneReset = false;
+        // Use the scene's body layout and native opening controller, not the R template.
+        // Requires a fresh controlled scene on both startup and reset.
+        public bool experimentalNativeNewGame = false;
         // Test-only native/candidate dynamics recorder; empty leaves runtime unchanged.
         public string dynamicsProbeMode = "";
         public string dynamicsProbeFile = "";

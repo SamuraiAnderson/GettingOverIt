@@ -280,8 +280,10 @@ namespace GoiRuntime.Core
 			int settleFrames = 120,
 			float upScale = 1.0f,
 			float offsetX = 0f,
-			float gain = 15f)
+			float gain = 15f, bool nativeNewGame = false)
 		{
+            if (nativeNewGame && !PlayerControlFixedUpdatePatch.Enabled)
+                throw new System.InvalidOperationException("Native new-game initialization requires controlled updates");
 			inputServices.Clear();
 			stateServices.Clear();
 			initialSnapshots.Clear();
@@ -324,6 +326,14 @@ namespace GoiRuntime.Core
 			// --- 初始姿态归一化（须在拍快照前）---
             if (PlayerControlFixedUpdatePatch.Enabled)
             {
+                if (nativeNewGame)
+                {
+                    // Preserve the original hierarchy throughout opening physics.
+                    // Flatten only at the handover to stop idle render transforms
+                    // from changing the ready state between TCP requests.
+                    foreach (var input in inputServices) input.BeginNativeOpening();
+                    InitializeNativeNewGamePose();
+                }
                 SeparatePhysicsTransforms();
                 DisableBodyInterpolation();
                 foreach (var input in inputServices)
@@ -333,9 +343,9 @@ namespace GoiRuntime.Core
                     input.GetFakeCursorRB().interpolation = RigidbodyInterpolation2D.None;
                 }
             }
-			// 修复初始锤子扭曲：RL 激活前真实鼠标已把 cursor 拖到随机位置，
-			// 这里用闭环把 cursor 驱到 hub 上方的确定位置，得到一致且非扭曲的起始姿态。
-			if (normalizePose)
+			// Legacy normalization uses the R-reset template. Native new-game mode
+            // has already reached its input-ready boundary and must not normalize again.
+			if (!nativeNewGame && normalizePose)
 				NormalizeInitialPose(settleFrames, upScale, offsetX, gain);
 
 			// --- 保存各 agent 初始快照 ---
@@ -736,19 +746,35 @@ namespace GoiRuntime.Core
 	private static readonly float[] NATIVE_ANGLE =
 		{ -0.089379f, 0f, -34.89184f, 145.1082f, 144.9679f, 144.9679f };
 
-	/// <summary>
-	/// 把每个 agent 的锤子归一化到游戏原生的自然静止姿态。
-	///
-	/// 直接照搬游戏 `Saviour.ResetPlayerButNotDialogue`（按 -r 复位）硬编码的整套刚体姿态：
-	/// 逐刚体写入相对 body 的固定位置 + 固定角度 + 零速度，再把 fakeCursor 吸附到锤头
-	/// （复刻 `Saviour.Load` 结尾的 `cursor.position = hammer.position`，零牵引力），
-	/// 最后零输入静置若干帧让关节收敛到精确平衡。
-	///
-	/// 相比旧实现（仅吸附光标到当前锤头再靠重力回位）：本法确定性地重建整条锤臂，
-	/// 无论 RL 激活前光标被真实鼠标拖到哪里、锤臂是否交叉扭曲，都能得到唯一正确姿态。
-	/// 须在物理已切 Script 模式、且 RewiredMouseOverride.Active=true 之后调用。
-	/// （参数 upScale/offsetX/gain 已废弃，保留仅为兼容调用方。）
-	/// </summary>
+    // New-game startup follows the native controller to input readiness without
+    // overwriting body poses or adding an arbitrary number of settling steps.
+    private void InitializeNativeNewGamePose()
+    {
+        // Keep the scene's own body layout. Let the original controller finish
+        // its opening input pause; never write a reset pose or move the cursor.
+        int frames = 0;
+        while (true)
+        {
+            bool waiting = false;
+            foreach (var input in inputServices)
+                waiting |= input.GetInternalState().pauseInputTimer > 0f;
+            if (!waiting) break;
+            if (++frames > 2000) throw new System.InvalidOperationException("Native opening did not become ready");
+            foreach (var input in inputServices)
+            {
+                input.SetMouseInput(Vector2.zero);
+                input.InvokeFixedUpdate();
+            }
+            SimulatePhysics(Time.fixedDeltaTime);
+        }
+        Debug.Log("[StepController] Native new-game input ready after " + frames + " physical steps");
+    }
+
+    /// <summary>
+    /// Legacy fixed start: write the R-reset template, then settle while pinning
+    /// the cursor to the tip. This is not the native NewGame ready state.
+    /// upScale/offsetX/gain are retained only for compatibility.
+    /// </summary>
 	private void NormalizeInitialPose(int settleFrames, float upScale, float offsetX, float gain)
 	{
 		// 1. 逐 agent 硬写原生姿态

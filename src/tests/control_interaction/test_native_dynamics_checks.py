@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from test_native_dynamics import PHASES, assess_native_parameters, body_error, comparison, read_trace
+from test_native_dynamics import PHASES, assess_native_parameters, assess_native_start, body_error, comparison, read_trace
 
 
 def fixture():
@@ -104,6 +104,27 @@ class DynamicsChecks(unittest.TestCase):
         traces = {"native": fixture(), "candidate": fixture()}
         del traces["candidate"][1]["motorParameters"]
         self.assertFalse(assess_native_parameters(cases, traces)["passed"])
+
+    def test_start_requires_paired_native_and_checks_cursor_and_input_history(self):
+        cases = [{"id": mode, "mode": mode, "actions": "zero", "repeat": 0}
+                 for mode in ("native", "candidate")]
+        traces = {"native": fixture(), "candidate": fixture()}
+        self.assertTrue(assess_native_start(cases, traces)["passed"])
+        self.assertFalse(assess_native_start(cases[1:], traces)["passed"])
+        for field, index in (("bodies", 36), ("controls", 2), ("controls", 8)):
+            changed = copy.deepcopy(traces)
+            changed["candidate"][0][field][index] = .02
+            self.assertFalse(assess_native_start(cases, changed)["passed"])
+
+    def test_start_tolerance_does_not_mean_bitwise_or_trajectory_match(self):
+        cases = [{"id": mode, "mode": mode, "actions": "zero", "repeat": 0}
+                 for mode in ("native", "candidate")]
+        traces = {"native": fixture(), "candidate": fixture()}
+        traces["candidate"][0]["bodies"][0] = .0005
+        traces["candidate"][2]["bodies"][0] = 1.
+        result = assess_native_start(cases, traces)
+        self.assertTrue(result["passed"])
+        self.assertFalse(result["cases"][0]["bodies"]["bitwise_equal"])
 
 
 if __name__ == "__main__":

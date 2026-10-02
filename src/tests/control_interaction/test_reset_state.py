@@ -227,6 +227,28 @@ def assess_native_motor_limits(data, agents, expected):
             "scope": "Three native joint motor caps at reset, idle and probe end"}
 
 
+def assess_native_start_bodies(data, agents, reference, limits):
+    """Every clone, including its independent cursor, must match the native start."""
+    expected = np.asarray(reference["bodies"], dtype=float).reshape(7, 6)
+    if not np.isfinite(expected).all():
+        raise ValueError("Invalid native start reference")
+    results = []
+    for phase in ("after_reset", "after_wait"):
+        values = diagnostic_bodies(data[phase], agents)
+        for agent in range(agents):
+            names = [b['name'] for b in data[phase]['current']['bodies'] if b['agent'] == agent]
+            if names[1:6] != reference['bodyNames'][1:6]:
+                raise ValueError("Native/clone body roles differ")
+            error = np.abs(values[agent] - expected)
+            error[:, 2] = np.abs((values[agent, :, 2] - expected[:, 2] + 180) % 360 - 180)
+            errors = {"position": float(error[:, :2].max()), "angle": float(error[:, 2].max()),
+                      "linear_velocity": float(error[:, 3:5].max()), "angular_velocity": float(error[:, 5].max())}
+            results.append({"phase": phase, "agent": agent, "errors": errors,
+                            "passed": all(v <= getattr(limits, k) for k, v in errors.items())})
+    return {"passed": all(r['passed'] for r in results), "checks": results,
+            "scope": "All seven body states at reset and after idle versus native NewGame readiness"}
+
+
 def measure_case(env, last_obs, actions, idle_s, probe_steps, agents, path, diagnostics=False,
                  probe_kind="zero", probe_seed=0, cold_live=False):
     """Always preserve received data, including partial/invalid failed cases."""
@@ -346,6 +368,7 @@ def overall_status(report):
     return "PASS" if all(row.get("assessment", {}).get("passed", False) and row.get("history_exercised", True)
                          and row.get("diagnostic_assessment", {}).get("passed", True)
                          and row.get("native_parameter_assessment", {}).get("passed", True)
+                         and row.get("native_start_assessment", {}).get("passed", True)
                          for row in report["cases"]) else "FAIL"
 
 
@@ -358,12 +381,24 @@ def run(args):
     args.out.mkdir(parents=True, exist_ok=False)
     limits = Limits(**{key: getattr(args, key) for key in asdict(Limits())})
     native_parameters = None
+    native_start = None
     if args.native_parameter_reference:
         native_report = json.loads(args.native_parameter_reference.read_text(encoding="utf-8-sig"))
         parameter_assessment = native_report["analysis"]["native_parameters"]
         if native_report["status"] != "COMPLETE" or not parameter_assessment["passed"]:
             raise ValueError("Native parameter reference did not pass")
         native_parameters = parameter_assessment["expected_motor_parameters"]
+    if args.native_start_reference:
+        start_report = json.loads(args.native_start_reference.read_text(encoding="utf-8-sig"))
+        if (start_report["status"] != "COMPLETE" or start_report['parameters']['native_warmup'] != 0
+                or not start_report['analysis']['native_start']['passed']):
+            raise ValueError("Native start reference did not pass at the required readiness boundary")
+        native_case = next(c for c in start_report['cases'] if c['mode'] == 'native')
+        native_raw = args.native_start_reference.parent / native_case['raw']
+        with native_raw.open(encoding='utf-8-sig') as source:
+            native_start = json.loads(next(source))
+        if native_start['mode'] != 'native' or native_start['step'] != 0 or native_start['phase'] != 'before_control':
+            raise ValueError("Invalid native start phase")
     histories = [("none", 0), ("hold", 40)] + [("random", n) for n in args.burn_steps]
     report = {
         "version": 1, "status": "RUNNING", "started_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -372,6 +407,7 @@ def run(args):
         "parameters": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         "thresholds": asdict(limits), "fields": list(FIELDS), "timestamp_excluded": 28,
         "native_parameters": native_parameters,
+        "native_start_reference": native_start,
         "limitations": [
             "Scene reset with diagnostics uses live state before any RESET as the cold reference; legacy mode uses first RESET.",
             "Q diagnostics expose all body velocities and selected control fields, not the full solver state.",
@@ -394,7 +430,7 @@ def run(args):
     reference = None
     diagnostic_reference = None
     try:
-        overrides = {}
+        overrides = {"experimentalNativeNewGame": args.native_new_game}
         if args.controlled_updates:
             overrides["experimentalControlledUpdates"] = True
         if args.reset_diagnostics:
@@ -461,6 +497,9 @@ def run(args):
                             if native_parameters is not None:
                                 record["native_parameter_assessment"] = assess_native_motor_limits(
                                     diagnostic, args.agents, native_parameters)
+                            if native_start is not None:
+                                record["native_start_assessment"] = assess_native_start_bodies(
+                                    diagnostic, args.agents, native_start, limits)
                         if steps:
                             with np.load(args.out / record["raw_file"]) as raw:
                                 positions = raw["history_states"][:, :, [0, 1, 23, 24, 29, 30]]
@@ -474,6 +513,7 @@ def run(args):
                                  elapsed, "PASS" if record["assessment"]["passed"] and
                                  record.get("history_exercised", True) and
                                  record.get("native_parameter_assessment", {}).get("passed", True) and
+                                 record.get("native_start_assessment", {}).get("passed", True) and
                                  record.get("diagnostic_assessment", {}).get("passed", True) else "FAIL")
                 finally:
                     try:
@@ -509,7 +549,10 @@ def parse_args(argv=None):
     parser.add_argument("--reset-diagnostics", action="store_true", help="Save live idle and reset-stage diagnostics")
     parser.add_argument("--native-parameter-reference", type=Path,
                         help="Passed test_native_dynamics result.json; require native motor caps on every agent")
+    parser.add_argument("--native-start-reference", type=Path,
+                        help="Passed native-start result.json; require native body state on every agent")
     parser.add_argument("--scene-reset", action="store_true", help="Experimental fixed-start scene reconstruction")
+    parser.add_argument("--native-new-game", action="store_true", help="Use the experimental native new-game initialization")
     parser.add_argument("--fixed-order", action="store_true", help="Repeat identical history order across processes")
     parser.add_argument("--restarts", type=int, default=3)
     parser.add_argument("--cycles", type=int, default=1)
@@ -529,8 +572,12 @@ def parse_args(argv=None):
     for key, value in asdict(Limits()).items():
         parser.add_argument("--" + key.replace("_", "-"), type=float, default=value)
     args = parser.parse_args(argv)
+    if args.native_new_game and not args.scene_reset:
+        parser.error("--native-new-game requires --scene-reset")
     if args.native_parameter_reference and not args.reset_diagnostics:
         parser.error("--native-parameter-reference requires --reset-diagnostics")
+    if args.native_start_reference and not (args.reset_diagnostics and args.native_new_game):
+        parser.error("--native-start-reference requires --reset-diagnostics and --native-new-game")
     if not 2 <= args.agents <= 64:
         parser.error("--agents must be 2..64 so cross-agent alignment is tested")
     if min(args.restarts, args.cycles, args.probe_steps, *args.burn_steps) < 1:

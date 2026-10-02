@@ -70,6 +70,8 @@ namespace GoiRuntime.Core
             DynamicsProbe.Configure(config);
             if (config.experimentalSceneReset && !config.experimentalControlledUpdates)
                 throw new System.InvalidOperationException("Scene reset requires controlled updates");
+            if (config.experimentalNativeNewGame && !config.experimentalSceneReset)
+                throw new System.InvalidOperationException("Native new-game initialization requires scene reset");
             if (config.experimentalControlledUpdates && config.stepFrames != 1)
                 throw new System.InvalidOperationException("Controlled reset experiment currently requires stepFrames=1");
 			config.Save(); // 首次运行时创建默认配置
@@ -398,6 +400,7 @@ namespace GoiRuntime.Core
 			if (numAgents > 1)
 			{
 				duplicateManager = new PlayerDuplicateManager();
+                duplicateManager.UsePhysicsCursorPose = config.experimentalNativeNewGame;
 				if (duplicateManager.Initialize())
 				{
 					// 创建 numAgents-1 个复制体（原始 Player 算 agent 0）
@@ -519,7 +522,8 @@ namespace GoiRuntime.Core
 			if (!stepController.Initialize(
 				playerStateService, playerInputService, duplicateManager,
 				config.normalizeInitialPose, config.initPoseSettleFrames,
-				config.initCursorUpScale, config.initCursorOffsetX, config.initPoseGain))
+				config.initCursorUpScale, config.initCursorOffsetX, config.initPoseGain,
+                config.experimentalNativeNewGame))
 			{
 				Logger.LogError("StepController 初始化失败，中止");
 				return;

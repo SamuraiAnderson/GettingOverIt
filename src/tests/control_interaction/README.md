@@ -209,3 +209,97 @@ PlayerPrefs 修改。生产 DLL/配置哈希前后检查与游戏进程清理由
 汇总与生产文件哈希位于 `runs/native_parameters_fixed_20261002/acceptance_summary.json`。
 新 DLL 保留在实验副本中，生产安装未部署。输入平滑与原生起点差异仍未处理，不能将
 这些参数与复现性验收结果解释为完整的原生动力学等价证明。
+
+### 起点姿态差异专项测试
+
+`analyze_start_pose.py` 读取零输入原生/修复模式对照，分别比较世界坐标和以 Player
+刚体为原点、方向基准的坐标。后者消除整体平移、旋转，检查关节构型是否仍有差异。
+它同时要求电机等原生参数检查通过，且整个记录中的 mouseInput/oldMouse 均为零，
+避免把输入平滑残留当成姿态差异。位置是 Rigidbody2D 参考点，不是锅的几何中心。
+
+```powershell
+conda run -n getting-over-it-analysis python -u src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/start_pose_zero_new --repeats 3 --actions zero --modes native candidate --native-warmup 0 --steps 1200 --require-native-parameters
+conda run -n getting-over-it-analysis python src/tests/control_interaction/analyze_start_pose.py --run runs/start_pose_zero_new
+conda run -n getting-over-it-analysis python -m unittest discover -s src/tests/control_interaction -p test_start_pose_checks.py -v
+```
+
+2026-10-02 使用参数修复后的同一 DLL（`088d3f6c…`），6 次独立启动、每次 1200 步，
+合计 7200 个物理步、21600 条阶段记录。数据在 `runs/start_pose_zero_1200_20261002`，
+几何分析在其中的 `start_pose_analysis.json`。各模式从自己的就绪边界开始计步：原生
+不另加预热，修复模式已经完成固定姿态初始化和 120 步规范化，二者初始化配方不同。
+
+- 起点 Player 位置相差约 5.26 厘米，角度原生约 0.0463°、修复模式约 2.7575°。
+  七个刚体中最大世界位置距离差约 6.94 厘米（最大坐标分量差 6.90 厘米）。
+- 锤头到 Hub 的距离原生约 1.8983m、修复模式约 1.9999m；伸缩关节平移量相差
+  10.16 厘米。消除 Player 整体平移和旋转后，锤头仍相差约 11.02 厘米，构型确实不同。
+- 再执行 1200 步零输入（约 10 秒模拟时间）后，Player 角度差仍约 2.711°，伸缩量
+  差约 10.206–10.208 厘米，对齐后的锤头差约 10.691–10.693 厘米；这段额外静置
+  没有消除差异。不能由这次有限时长实验推断无限时间后的行为。
+- 三次修复模式的全部已记录刚体位姿/速度、控制器量和电机量一致。原生自身有微小
+  偏差：全程最大坐标分量差约 0.055 毫米、角度差约 0.00223°，远小于跨模式差异。
+  本次不继续排查原生自身偏离。
+
+代码中固定模板来自 `Saviour.ResetPlayerButNotDialogue`（原生按 R 复位），对照则是
+NewGame 启动；规范化期间还每步强制把光标移到锤头。模板和初始化流程均不同于对照，
+但本实验尚未区分模板、动画、层级及调度各自的贡献，不能把全部误差唯一归因于模板。
+这次只新增测试/分析，没有修正起点姿态或修改生产 DLL/配置。3 项几何判定器测试通过。
+
+### 使用 NewGame 场景起点（实验开关）
+
+`experimentalNativeNewGame=true` 要求同时开启 `experimentalSceneReset` 和
+`experimentalControlledUpdates`；默认关闭。首次启动和每次场景 reset 都执行同一流程：
+
+- 保留场景资源里的刚体初始位姿，使用已补齐的原生物理参数。
+- 复制体的独立光标从原始光标 Rigidbody2D 的物理位姿初始化，避免复制尚未同步的
+  Transform 而保留旧场景坐标；只在此实验模式启用。
+- 等待各角色原生 Start 完成，调用原生 `PlayerControl.PlayOpeningAnimation()` 入口，
+  由原生代码安装开场输入暂停；自动动画、自动时钟仍保持关闭。
+- 在原始刚体层级下，以零动作手动调用原生控制器和物理，直到输入暂停计时结束。
+  当前游戏版本为 721 步，约 6.008 秒模拟时间；代码按就绪条件停止，不硬编码 721。
+- 到达就绪边界后再把动态刚体挂到静态父节点并禁用插值，防止等待期间的渲染同步改状态。
+  随后保存起点；不再应用 R 复位模板、120 步规范化或额外的强制光标吸附。
+
+这项开关取代的是起点生成规则，`normalizeInitialPose/initPoseSettleFrames` 在此模式不生效。
+已有场景重建、TCP 接口和按对应 agent 比较的 reset 合同不变；仍不支持任意快照 N。
+输入平滑接口和视觉效果没有在本项修改中恢复为原生，不能据此宣称完整游戏等价。
+
+```powershell
+conda run -n getting-over-it-analysis python -u src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/native_start_new --repeats 3 --actions zero --modes native candidate --native-warmup 0 --steps 1200 --native-new-game --require-native-start --require-native-parameters
+conda run -n getting-over-it-analysis python src/tests/control_interaction/analyze_start_pose.py --run runs/native_start_new
+conda run -n getting-over-it-analysis python -u src/tests/control_interaction/test_reset_state.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/native_start_reset_new --native-new-game --scene-reset --reset-diagnostics --agents 2 --probe-steps 40 --probe-kind hold --native-parameter-reference runs/native_start_new/result.json --native-start-reference runs/native_start_new/result.json
+```
+
+`--require-native-start` 要求原生端 `--native-warmup 0`，按动作和重复编号配对原生参考。
+检查所有七个刚体的起点位姿/速度及已记录控制器量：位置分量容差 1mm、角度 0.05°、
+速度分量 1mm/s、角速度 0.1°/s；输入、平滑历史、增益、暂停计时和设置必须相同。
+控制器缓存 mw 的坐标容差 1mm，oldAngle 容差 0.05°。没有提高原有刚体判定阈值。
+缺少配对参考或超限即退出 1；通过仍区分逐位一致与容差内一致，完整动力学仍 NOT_CERTIFIED。
+
+reset 测试的 `--native-start-reference` 逐个复制体检查复位后和等待后的七刚体状态，
+包含各自的光标，使用同一组容差。这项检查与“相对自身冷启动可重复”独立；如果某个
+复制体稳定地从错误的位置出发，仍会失败。定位阶段 `native_start_reset_*_20261002`
+虽通过自身复现性检查，仍有复制体光标初值偏差，不属于最终原生起点验收证据。
+
+最终 DLL SHA-256 为
+`e6c6429fde0d429d0d0d99e02e701d136df3cb3ec725e3d50e9c54c44533acaf`。
+`runs/native_start_final_20261002/result.json` 包含原生/修复模式各 3 次独立启动、
+每次 1200 步零输入：起点状态和全程原生参数检查均通过，21600 条阶段记录完整。
+起点最大世界位置距离差 0.5314mm（坐标分量差 0.5055mm）、最大角度差 0.01521°；
+对齐 Player 后锤头距离差不超过 0.5681mm，伸缩量差不超过 0.2023mm。
+原来约 10 厘米的构型差异已消除，但这仍是容差内匹配，不是与原生逐位相同。
+全部零输入轨迹阶段的刚体误差均在原阈值内；修复模式自身的三次轨迹逐位一致。
+37 项离线检查通过，包含“复制体光标稳定偏移也必须判失败”的回归用例。
+
+同一最终 DLL 的 reset 验收：
+
+- `runs/native_start_final_reset_2agents_20261002/result.json`：3 次启动、27/27 条件通过，
+  包含 40/200/1000 步历史及 0/0.25 秒等待；1107/1107 帧逐位匹配对应冷启动参考。
+- `runs/native_start_final_reset_8agents_20261002/result.json`：4/4 条件通过，包含
+  1200 步随机历史和 1200 步随机探针；4804/4804 帧逐位匹配对应冷启动参考。
+- 所有复制体在复位后、等待后都通过原生七刚体起点检查，并在探针后通过原生电机
+  上限检查。逐位比较始终排除 timestamp，比较同一个 agent，不要求不同 agent 相同。
+- reset 耗时 2 agents 为 0.72–0.78 秒、8 agents 为 1.23–1.27 秒，比原来的 120 步
+  固定模板初始化更慢。开关保持默认关闭，最终 DLL 只放入实验副本，生产文件哈希未变。
+
+汇总：`runs/native_start_final_20261002/acceptance_summary.json`，含原生起点误差、
+全部复制体检查、31 条件合计 5911 帧逐位比较、DLL 与生产文件指纹。
