@@ -303,3 +303,57 @@ reset 测试的 `--native-start-reference` 逐个复制体检查复位后和等�
 
 汇总：`runs/native_start_final_20261002/acceptance_summary.json`，含原生起点误差、
 全部复制体检查、31 条件合计 5911 帧逐位比较、DLL 与生产文件指纹。
+
+### 原生输入平滑（实验开关）
+
+`experimentalNativeInputSmoothing=true` 默认关闭，要求受控更新与 `stepFrames=1`。
+动作只写入 Rewired 鼠标轴，原生 `PlayerControl.FixedUpdate()` 保留每个 agent 自己的
+`mouseInput` 历史，执行灵敏度、原生曲线、Lerp 0.5、暂停处理和自适应增益。
+零动作自然衰减，快照内部态补存 `mouseInput`，复制体输入接口也不再覆盖它。
+同时屏蔽四个手柄 Stick 轴，保证鼠标动作不会被手柄替换；未增加 Python 平滑器。
+复制体在原生 Start 完成后、开场模拟前，从原始角色同步灵敏度、触控板设置和两条响应
+曲线（曲线另建实例，历史不复制）。Unity 克隆遗漏了运行中设置的私有灵敏度：在本机
+原始角色为 2.4，而复制体原先仍为构造默认值 1；单人测试无法发现这项差异。
+
+`test_native_dynamics.py --require-native-input` 检查原生与候选每一步的控制前、控制后、
+物理后阶段：mouseInput、oldMouse、增益、暂停计时、灵敏度和触控板设置必须逐位一致。
+必须覆盖 hold、pulse、reverse、random，缺少配对原生参考或任何一项不一致均失败。
+`native_dual` 保留为只增加 raw 字段写入的负对照。原生与候选的位置/电机目标差异单独
+报告；输入验收不代表光标目标或整段物理轨迹等价。
+
+```powershell
+conda run -n getting-over-it-analysis python -u src/tests/control_interaction/test_native_dynamics.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/native_input_new --repeats 3 --actions zero hold pulse reverse random --modes native native_dual candidate --native-warmup 0 --steps 40 --native-new-game --native-input-smoothing --require-native-input --require-native-start --require-native-parameters
+conda run -n getting-over-it-analysis python -u src/tests/control_interaction/test_native_input_agents.py --game-exe artifacts/reset_game/GettingOverIt.exe --reference runs/native_input_new/result.json --out runs/native_input_agents_new --agents 8 --burn-steps 1000
+conda run -n getting-over-it-analysis python -u src/tests/control_interaction/test_reset_state.py --game-exe artifacts/reset_game/GettingOverIt.exe --out runs/native_input_reset_new --native-new-game --native-input-smoothing --scene-reset --reset-diagnostics --agents 2 --probe-steps 40 --probe-kind hold --native-parameter-reference runs/native_input_new/result.json --native-start-reference runs/native_input_new/result.json
+```
+
+`test_native_input_agents.py` 关闭 DynamicsProbe，在同一进程中给各 agent 分配不同
+动作序列，逐步把 live Q 诊断中的输入、历史、增益对照单人原生记录。随机搅动后 reset，
+再轮换各 agent 的动作序列，检查历史串用及 reset 残留。要求使用与原生对照同一 DLL。
+reset 验收另外比较复位后与探针后的所有控制器内部态，避免只检查刚体而遗漏输入残留。
+
+动作/观测维度未变，但开启此开关会改变已有策略的动作响应，需要重新评估；实验仍不
+覆盖生产 DLL 或生产配置，任意快照 N 仍不属于场景 reset 的支持范围。
+
+2026-10-02 最终验收 DLL SHA-256：
+`f5ce41e1ac158e517d655d29d3c98cda85848f7d806f4132795021e33d55692b`。
+
+- `runs/native_input_final_20261002/result.json`：5 组动作，原生/候选各独立启动一次，
+  每次 40 步。候选的全部 600 条阶段记录在上述输入检查量上逐位匹配原生，最大差为 0；
+  原生起点和参数检查通过。恒定输入前 3 步为 `(48,36) → (72,54) → (84,63)`；
+  单步脉冲后为 `(48,36) → (24,18) → (12,9)`。
+- `runs/native_input_final_agents_8_20261002/result.json`：8 agents、两轮不同动作分配，
+  其中第二轮在 1000 步随机历史后 reset；640/640 个 agent 步逐位匹配各自原生输入参考。
+  此项关闭 DynamicsProbe，直接检查实际运行时的 Q 诊断。
+- `runs/native_input_final_reset_2agents_20261002/result.json`：3 次冷启动、27/27 条件，
+  包含 40/200/1000 步历史和 0/0.25 秒等待；1107/1107 帧逐位匹配对应冷启动参考。
+- `runs/native_input_final_reset_8agents_20261002/result.json`：4/4 条件，包含 1200 步随机
+  历史和 1200 步随机探针；4804/4804 帧逐位匹配。两组 reset 的复位后/探针后内部态、
+  所有复制体原生起点和电机参数检查均通过。逐位帧比较排除 timestamp。
+- 编译与 40 项离线检查通过。最终 DLL 只部署到实验副本；生产 DLL/配置哈希未变。
+  总结见 `runs/native_input_final_20261002/acceptance_summary.json`。
+
+定位数据保留在 `runs/native_input_smoothing_20261002`（45 次启动，含旧双路负对照）
+和 `runs/native_input_agents_8_20261002`（复制体灵敏度遗漏导致失败）；后者不是验收证据。
+旧双路的恒定响应是 `(68,51)`，松开即归零，说明本次修复恢复了跨步历史。
+完整物理轨迹/光标目标的原生等价性仍未认证，不由输入处理一致性推断。

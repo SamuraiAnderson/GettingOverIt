@@ -186,7 +186,8 @@ namespace GoiRuntime.Testing
         {
             int index = AxisIndex(__0);
             if (index < 0 || fixture == null) return true;
-            if (index >= 2) { __result = 0f; return false; }
+            // Candidate must exercise the runtime's own stick isolation.
+            if (index >= 2 && IsNative) { __result = 0f; return false; }
             if (!IsNative) return true;
             __result = active ? (index == 0 ? requested.x : requested.y) : 0f;
             return false;

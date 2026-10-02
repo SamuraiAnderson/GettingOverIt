@@ -42,6 +42,14 @@ namespace GoiRuntime.PlayerControl
 			
 			public void SetMouseInput(Vector2 input)
 			{
+                if (RewiredMouseOverride.NativeInputSmoothing)
+                {
+                    // Duplicate indices start at zero; agent zero is the original.
+                    RewiredMouseOverride.SetForAgent(index + 1,
+                        Mathf.Clamp(input.x, -PlayerInputService.MAX_INPUT, PlayerInputService.MAX_INPUT),
+                        Mathf.Clamp(input.y, -PlayerInputService.MAX_INPUT, PlayerInputService.MAX_INPUT));
+                    return;
+                }
 				if (mouseInputField != null && playerControl != null)
 				{
 					mouseInputField.SetValue(playerControl, input);

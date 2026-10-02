@@ -70,6 +70,9 @@ class ResetChecks(unittest.TestCase):
         def check(data):
             return assess_diagnostics(data, 2, Limits(), "zero", 1, reference)["passed"]
         self.assertTrue(check(reference))
+        changed = copy.deepcopy(reference)
+        changed["after_probe"]["current"]["controls"][0]["mouseInput"] = {"x": 1, "y": 0}
+        self.assertFalse(check(changed))  # Body state alone cannot certify input-history reset.
         for field, value in [("timeScale", 1), ("simulationCalls", 2), ("worldBodyCount", 15)]:
             changed = copy.deepcopy(reference)
             changed["after_probe"]["current"][field] = value

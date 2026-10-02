@@ -198,8 +198,11 @@ def assess_diagnostics(data, agents, limits, probe_kind, probe_steps, reference,
                     and all(p["current"]["worldBodyCount"] == reference["after_reset"]["current"]["worldBodyCount"]
                             for p in packets))
     clock_paused = all(p["current"].get("timeScale") == 0 for p in packets)
+    controller_reference_ok = all(data[key]["current"]["controls"] == reference[key]["current"]["controls"]
+                                  for key in ("after_reset", "after_probe"))
     return {"passed": bool(idle_ok and advancement_ok and (resting or not require_rest)
-                           and body_reference_ok and lifecycle_ok and clock_paused),
+                           and body_reference_ok and lifecycle_ok and clock_paused and controller_reference_ok),
+            "controller_reference_matched": controller_reference_ok,
             "automatic_clock_paused": clock_paused,
             "idle_stable": bool(idle_ok), "step_counts_correct": advancement_ok,
             "all_bodies_at_rest": bool(resting), "body_reference_errors": errors,
@@ -430,7 +433,8 @@ def run(args):
     reference = None
     diagnostic_reference = None
     try:
-        overrides = {"experimentalNativeNewGame": args.native_new_game}
+        overrides = {"experimentalNativeNewGame": args.native_new_game,
+                     "experimentalNativeInputSmoothing": args.native_input_smoothing}
         if args.controlled_updates:
             overrides["experimentalControlledUpdates"] = True
         if args.reset_diagnostics:
@@ -553,6 +557,7 @@ def parse_args(argv=None):
                         help="Passed native-start result.json; require native body state on every agent")
     parser.add_argument("--scene-reset", action="store_true", help="Experimental fixed-start scene reconstruction")
     parser.add_argument("--native-new-game", action="store_true", help="Use the experimental native new-game initialization")
+    parser.add_argument("--native-input-smoothing", action="store_true", help="Inject axes only; preserve native input history")
     parser.add_argument("--fixed-order", action="store_true", help="Repeat identical history order across processes")
     parser.add_argument("--restarts", type=int, default=3)
     parser.add_argument("--cycles", type=int, default=1)
@@ -574,6 +579,8 @@ def parse_args(argv=None):
     args = parser.parse_args(argv)
     if args.native_new_game and not args.scene_reset:
         parser.error("--native-new-game requires --scene-reset")
+    if args.native_input_smoothing and not (args.controlled_updates or args.scene_reset):
+        parser.error("--native-input-smoothing requires --controlled-updates or --scene-reset")
     if args.native_parameter_reference and not args.reset_diagnostics:
         parser.error("--native-parameter-reference requires --reset-diagnostics")
     if args.native_start_reference and not (args.reset_diagnostics and args.native_new_game):

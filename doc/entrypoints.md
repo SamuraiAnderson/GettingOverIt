@@ -207,12 +207,21 @@ Socket IO 与 Unity 物理必须分离（Unity API 只能在主线程调用）�
 
 ### 5.1 动作如何变成游戏内操作
 
-动作是 **2D 鼠标相对位移 `(dx, dy)`**，注入采用**双路**：
+动作是 **2D 鼠标相对位移 `(dx, dy)`**，默认旧路径采用**双路**：
 
 1. **反射写 `mouseInput` 字段**：`PlayerInputService` 反射拿到 `PlayerControl.mouseInput`（`NonPublic Instance`）直接写入（兼容旧路径）。
 2. **Rewired 层拦截**：`RewiredMouseOverride.SetForAgent()` 记录各 agent 注入值；Harmony patch 了 `Rewired` 的 `GetAxis("mouseX"/"mouseY")`，RL 模式激活时返回注入值、屏蔽真实鼠标。
 
-关键细节：只有在**手动 `InvokeFixedUpdate()`** 上下文里（`CurrentAgentIndex >= 0`）拦截才返回真实注入值；Unity 自动触发的 FixedUpdate（`CurrentAgentIndex=-1`）对鼠标轴返回 0，成为无操作。这保证物理推进完全由我们的 STEP 驱动。
+关键细节：只有在**手动 `InvokeFixedUpdate()`** 上下文里（`CurrentAgentIndex >= 0`）拦截才返回真实注入值；其他上下文对鼠标轴返回 0。零轴仍会推进原生平滑和增益，不能视为无操作；实验受控模式通过 FixedUpdate 门控禁止自动推进。
+
+`experimentalNativeInputSmoothing=true`（默认关闭）要求 `experimentalControlledUpdates`
+且 `stepFrames=1`，仅采用上面的 Rewired 轴注入。每步保留 `PlayerControl.mouseInput`，
+由原生 FixedUpdate 读取上一物理步的历史并执行灵敏度、响应曲线、Lerp 0.5 和自适应增益。
+同时屏蔽两只手柄的四个 Stick 轴，避免覆盖鼠标动作。复制体的旧输入接口也遵守此规则。
+复制体 Start 后从原始角色同步灵敏度、触控板选项与两条原生曲线，修正私有灵敏度在
+Unity 克隆后回到构造默认值的问题；每个控制器仍独立维护历史。
+快照内部态补存 `mouseInput`；零动作不清历史。实验场景 reset 仍重建控制器并走统一
+开场流程，不支持任意快照 N。动作维度和观测协议不变，但旧策略的动作响应会改变。
 
 同时 `PlayerControl.Update()` 被 Harmony prefix patch，RL 模式下整体跳过，防止游戏从真实鼠标读输入覆盖注入值。输入范围经 `ClampInput` 限制在 `[-100, 100]`。
 

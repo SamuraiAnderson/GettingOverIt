@@ -72,6 +72,8 @@ namespace GoiRuntime.Core
                 throw new System.InvalidOperationException("Scene reset requires controlled updates");
             if (config.experimentalNativeNewGame && !config.experimentalSceneReset)
                 throw new System.InvalidOperationException("Native new-game initialization requires scene reset");
+            if (config.experimentalNativeInputSmoothing && !config.experimentalControlledUpdates)
+                throw new System.InvalidOperationException("Native input smoothing requires controlled updates");
             if (config.experimentalControlledUpdates && config.stepFrames != 1)
                 throw new System.InvalidOperationException("Controlled reset experiment currently requires stepFrames=1");
 			config.Save(); // 首次运行时创建默认配置
@@ -81,6 +83,8 @@ namespace GoiRuntime.Core
 			modeManager.Initialize(config);
             PlayerControlFixedUpdatePatch.Enabled = config.experimentalControlledUpdates
                 && modeManager.IsGameRuntimeMode();
+            RewiredMouseOverride.NativeInputSmoothing = config.experimentalNativeInputSmoothing
+                && PlayerControlFixedUpdatePatch.Enabled;
 			modeManager.PrintModeInfo();
 
 			// 订阅场景加载事件
@@ -480,6 +484,8 @@ namespace GoiRuntime.Core
                     {
                         PlayerInputService.PrepareControlledPlayer(go);
                         nativePhysics.ValidateAfterStart(go);
+                        if (RewiredMouseOverride.NativeInputSmoothing)
+                            playerInputService.CopyNativeInputSettingsTo(go);
                     }
                 // Native save/load Update can overwrite control state after readiness.
                 foreach (var script in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())

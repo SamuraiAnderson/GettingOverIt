@@ -25,6 +25,16 @@ namespace GoiRuntime.PlayerControl
 
 		public static volatile bool  Active    = false;
 
+        public static bool NativeInputSmoothing = false;
+
+        // PlayerControl reads both sticks after the mouse filter. A connected
+        // gamepad must not replace a mouse-only RL action in this experiment.
+        public static bool SuppressStick(string name)
+        {
+            return NativeInputSmoothing && (name == "StickLX" || name == "StickLY"
+                || name == "StickRX" || name == "StickRY");
+        }
+
 		/// <summary>手动调用 InvokeFixedUpdate() 期间设为 true，供 Postfix 标注日志。</summary>
 		public static volatile bool InsideInvokeFixedUpdate = false;
 
@@ -132,11 +142,12 @@ namespace GoiRuntime.PlayerControl
 		public static bool Prefix(string __0, ref float __result)
 		{
 			if (!RewiredMouseOverride.Active) return true;
+			if (RewiredMouseOverride.SuppressStick(__0)) { __result = 0f; return false; }
 			int idx = RewiredMouseOverride.CurrentAgentIndex;
 			if (idx < 0)
 			{
 				// Unity 自动调用 FixedUpdate 时 CurrentAgentIndex=-1，
-				// 返回 0 使其成为无操作，只有手动 InvokeFixedUpdate 才提供真实输入。
+				// 返回零轴；零轴仍会推进平滑/增益，实验模式另行禁止自动 FixedUpdate。
 				if (__0 == RewiredMouseOverride.MouseXActionName || __0 == RewiredMouseOverride.MouseYActionName)
 				{
 					__result = 0f;
@@ -171,6 +182,7 @@ namespace GoiRuntime.PlayerControl
 		public static bool Prefix(string __0, ref float __result)
 		{
 			if (!RewiredMouseOverride.Active) return true;
+			if (RewiredMouseOverride.SuppressStick(__0)) { __result = 0f; return false; }
 			int idx = RewiredMouseOverride.CurrentAgentIndex;
 			if (idx < 0)
 			{

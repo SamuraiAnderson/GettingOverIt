@@ -35,13 +35,21 @@ dump 方法见 `.cursor/skills/decompile-dotnet/SKILL.md`；IL 产物在游戏 `
 记 player 位置 `x_p`、cursor 位置 `x_c`、锤头（tip）位置 `x_t`、注入动作 `a`。每个 FixedUpdate：
 
 ```
-m   ← Lerp(m_old, mouseSensitivity · mouseCurve(|a|) · a, 0.5)        # 输入平滑（EMA）
+u   = mouseSensitivity · a
+m   ← Lerp(m_old, mouseCurve(|u|) · u, 0.5)                          # 输入平滑（EMA）
 g   ← Lerp(g, max(0.1·|m|, 0.001), 0.05) + 0.005                      # 自适应增益（mouseVelocityAverage）
 x_c' = x_c + g·m                                                       # 积分
 x_c' += 0.5·(x_t − x_c) · clamp(0.2 − min(g, 0.2), 0, 0.2)            # 静默回吸：无输入时 cursor 缓慢滑向 tip
 if |x_c' − x_p| > 3.5:  x_c' = x_p + 3.5 · normalize(x_c' − x_p)      # 硬半径钳制（R = 3.5 m）
 MovePosition(x_c');  velocity = x_c' − x_c                             # 运动学驱动，非弹簧
 ```
+
+输入公式描述普通鼠标、无暂停/跳过输入的分支；曲线的自变量是**灵敏度缩放之后**的
+模长，触控板使用 `trackpadCurve`。`m_old` 来自上一物理步最终保存的 `mouseInput`，
+暂停或跳过输入也可能改变它。应复用原生控制器，而非在 Python 再叠加一个 EMA。
+旧 RL 双路注入会在 FixedUpdate 前把 `mouseInput` 改成当前 raw action，因此破坏了
+这里的历史递推。实验开关 `experimentalNativeInputSmoothing` 取消该字段写入，
+只注入 Rewired 轴，保留原生平滑、增益和后续控制；默认仍关闭。
 
 对 RL 的两个直接推论：
 

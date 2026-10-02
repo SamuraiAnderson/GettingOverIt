@@ -16,6 +16,7 @@ namespace GoiRuntime.PlayerControl
 	public struct PlayerControlInternalState
 	{
 		public bool valid;
+		public Vector2 mouseInput;          // 下一步 oldMouse 的来源，不能由 raw action 覆盖
 		public float mouseVelocityAverage;  // 自适应增益 g（EMA 累积）
 		public Vector2 oldMouse;            // 上一帧 mouseInput（Lerp 平滑用）
 		public Vector2 mw;                  // 缓存的锤头/光标世界坐标
@@ -27,7 +28,7 @@ namespace GoiRuntime.PlayerControl
 
 	/// <summary>
 	/// Player 输入控制服务
-	/// 通过反射注入 mouseInput 字段来控制 Player
+	/// 注入鼠标轴；实验原生模式由 PlayerControl 自己维护平滑历史。
 	/// </summary>
 	public class PlayerInputService : IPlayerInputService
 	{
@@ -138,11 +139,34 @@ namespace GoiRuntime.PlayerControl
             if (!state.valid || !(state.pauseInputTimer > 0f) || float.IsInfinity(state.pauseInputTimer))
                 throw new InvalidOperationException("Native opening did not install a finite input pause");
         }
+
+        public void CopyNativeInputSettingsTo(GameObject target)
+        {
+            if (!NativeStartReady) throw new InvalidOperationException("Native input source is not ready");
+            var destination = target.GetComponent("PlayerControl");
+            if (destination == null) throw new InvalidOperationException("Missing clone PlayerControl");
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            // Unity does not clone the private sensitivity installed by the menu;
+            // cloned controllers otherwise retain their constructor default (1).
+            // Copy settings after Start, before the opening simulation, on every
+            // scene reconstruction. Histories remain owned by each controller.
+            foreach (string name in new[] { "mouseSensitivity", "trackpad", "mouseCurve", "trackpadCurve" })
+            {
+                var field = playerControlComponent.GetType().GetField(name, flags);
+                if (field == null) throw new InvalidOperationException("Missing native input setting: " + name);
+                object value = field.GetValue(playerControlComponent);
+                if (value == null) throw new InvalidOperationException("Uninitialized native input setting: " + name);
+                var curve = value as AnimationCurve;
+                if (curve != null)
+                    value = new AnimationCurve(curve.keys) { preWrapMode = curve.preWrapMode, postWrapMode = curve.postWrapMode };
+                field.SetValue(destination, value);
+            }
+        }
 		
 		/// <summary>
 		/// 设置鼠标输入。
-		/// 双路注入：① 反射写入 mouseInput 字段（兼容旧路径）；
-		///           ② 更新 MouseInputOverride 全局覆盖层（拦截 Input.GetAxis）。
+		/// 原生平滑模式只更新 Rewired 轴，零动作也保留控制器历史。
+		/// 默认仍保留旧双路注入，避免改变已有策略的动作语义。
 		/// </summary>
 		public void SetMouseInput(Vector2 input)
 		{
@@ -156,7 +180,8 @@ namespace GoiRuntime.PlayerControl
 			{
 			Vector2 clampedInput = ClampInput(input);
 			RewiredMouseOverride.SetForAgent(AgentIndex, clampedInput.x, clampedInput.y);
-			mouseInputField.SetValue(playerControlComponent, clampedInput);
+			if (!RewiredMouseOverride.NativeInputSmoothing)
+				mouseInputField.SetValue(playerControlComponent, clampedInput);
 			}
 			catch (Exception e)
 			{
@@ -473,6 +498,7 @@ namespace GoiRuntime.PlayerControl
 			if (!isInitialized || playerControlComponent == null) return s;
 			try
 			{
+				if (mouseInputField != null) s.mouseInput = (Vector2)mouseInputField.GetValue(playerControlComponent);
 				if (fMouseVelAvg != null) s.mouseVelocityAverage = (float)fMouseVelAvg.GetValue(playerControlComponent);
 				if (fOldMouse != null) s.oldMouse = (Vector2)fOldMouse.GetValue(playerControlComponent);
 				if (fMw != null) s.mw = (Vector2)fMw.GetValue(playerControlComponent);
@@ -498,6 +524,7 @@ namespace GoiRuntime.PlayerControl
 			if (!isInitialized || playerControlComponent == null || !s.valid) return;
 			try
 			{
+				if (mouseInputField != null) mouseInputField.SetValue(playerControlComponent, s.mouseInput);
 				if (fMouseVelAvg != null) fMouseVelAvg.SetValue(playerControlComponent, s.mouseVelocityAverage);
 				if (fOldMouse != null) fOldMouse.SetValue(playerControlComponent, s.oldMouse);
 				if (fMw != null) fMw.SetValue(playerControlComponent, s.mw);

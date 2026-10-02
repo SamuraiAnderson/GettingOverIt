@@ -75,6 +75,9 @@ namespace GoiRuntime.Core.Configuration
         // Use the scene's body layout and native opening controller, not the R template.
         // Requires a fresh controlled scene on both startup and reset.
         public bool experimentalNativeNewGame = false;
+        // Feed raw mouse axes only; preserve the native controller's input history.
+        // Requires one explicitly controlled FixedUpdate per physics step.
+        public bool experimentalNativeInputSmoothing = false;
         // Test-only native/candidate dynamics recorder; empty leaves runtime unchanged.
         public string dynamicsProbeMode = "";
         public string dynamicsProbeFile = "";

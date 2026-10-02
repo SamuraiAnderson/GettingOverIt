@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from test_native_dynamics import PHASES, assess_native_parameters, assess_native_start, body_error, comparison, read_trace
+from test_native_dynamics import PHASES, assess_native_input, assess_native_parameters, assess_native_start, body_error, comparison, read_trace
 
 
 def fixture():
@@ -24,6 +24,32 @@ def fixture():
 
 
 class DynamicsChecks(unittest.TestCase):
+    def input_fixtures(self):
+        cases = [{"id": f"{kind}_{mode}", "mode": mode, "actions": kind, "repeat": 0}
+                 for kind in ("hold", "pulse", "reverse", "random") for mode in ("native", "candidate")]
+        return cases, {c["id"]: copy.deepcopy(fixture()) for c in cases}
+
+    def test_native_input_checks_every_phase_and_history_gain(self):
+        cases, traces = self.input_fixtures()
+        self.assertTrue(assess_native_input(cases, traces)["passed"])
+        for phase in range(3):
+            for column in (0, 2, 4):
+                changed = copy.deepcopy(traces)
+                changed["pulse_candidate"][phase]["controls"][column] = .001
+                self.assertFalse(assess_native_input(cases, changed)["passed"])
+
+    def test_native_input_requires_reference_coverage_and_finite_values(self):
+        cases, traces = self.input_fixtures()
+        for excluded in ("pulse_candidate", "random_native"):
+            self.assertFalse(assess_native_input([c for c in cases if c["id"] != excluded], traces)["passed"])
+        traces["hold_candidate"][1]["controls"][0] = float("nan")
+        self.assertFalse(assess_native_input(cases, traces)["passed"])
+
+    def test_native_input_does_not_certify_body_dynamics(self):
+        cases, traces = self.input_fixtures()
+        traces["hold_candidate"][2]["bodies"][0] = 1.
+        self.assertTrue(assess_native_input(cases, traces)["passed"])
+
     def read(self, rows):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "trace.jsonl"

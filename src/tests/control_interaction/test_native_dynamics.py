@@ -38,6 +38,9 @@ def actions_for(kind, steps, seed):
             actions[20] = (-40, -30)
     elif kind == "random":
         actions[:] = np.random.default_rng(seed).uniform(-100, 100, actions.shape)
+    elif kind == "reverse":
+        actions[:] = (40, 30)
+        actions[steps // 2:] *= -1
     return actions
 
 
@@ -111,8 +114,49 @@ def summarize(cases, traces):
     return {"equivalence": "NOT_CERTIFIED", "comparisons": pairs,
             "native_parameters": assess_native_parameters(cases, traces),
             "native_start": assess_native_start(cases, traces),
+            "native_input": assess_native_input(cases, traces),
             "first_step": {case["id"]: {phase: {key: row[key] for key in ("controls", "motors", "axes", "inputBeforeInjection")}
                                          for phase, row in zip(PHASES, traces[case["id"]][:3])} for case in cases}}
+
+
+def assess_native_input(cases, traces):
+    """Compare observed native input state, independently of body trajectory error.
+
+    The reference runs the game's automatic lifecycle. The candidate must match
+    every measured stage, including pre-injection history and release tails.
+    This does not certify spatial cursor targets or complete game dynamics.
+    """
+    indexed = {(c["mode"], c["actions"], c["repeat"]): c for c in cases}
+    candidates = [c for c in cases if c["mode"] == "candidate"]
+    columns = [0, 1, 2, 3, 4, 8, 9, 10]  # input, old input, gain, pause, sensitivity, trackpad
+    results = []
+    for case in candidates:
+        reference = indexed.get(("native", case["actions"], case["repeat"]))
+        if reference is None:
+            results.append({"id": case["id"], "passed": False, "reason": "Missing paired native reference"})
+            continue
+        left, right = traces[reference["id"]], traces[case["id"]]
+        if len(left) != len(right) or not left:
+            results.append({"id": case["id"], "passed": False, "reason": "Incomplete paired traces"})
+            continue
+        errors = []
+        max_delta = 0.
+        for a, b in zip(left, right):
+            av, bv = (np.asarray(r["controls"], dtype=np.float32)[columns] for r in (a, b))
+            valid = np.isfinite(av).all() and np.isfinite(bv).all()
+            if valid:
+                max_delta = max(max_delta, float(np.max(np.abs(av.astype(float) - bv))))
+            if (not valid or not np.array_equal(av.view(np.uint32), bv.view(np.uint32))
+                    or (a["step"], a["phase"]) != (b["step"], b["phase"])):
+                errors.append({"step": b["step"], "phase": b["phase"]})
+        results.append({"id": case["id"], "reference": reference["id"], "passed": not errors,
+                        "rows": len(right), "max_abs_delta": max_delta, "mismatches": errors})
+    required = {"hold", "pulse", "reverse", "random"}
+    covered = {c["actions"] for c in candidates}
+    return {"passed": bool(results) and all(c["passed"] for c in results) and required <= covered,
+            "missing_fixtures": sorted(required - covered), "control_columns": columns,
+            "scope": "Bitwise input/history/gain/pause/settings at all recorded stages; not body/cursor dynamics",
+            "cases": results}
 
 
 def assess_native_start(cases, traces):
@@ -198,6 +242,7 @@ def run_case(args, launcher, mode, kind, repeat):
     overrides = {"dynamicsProbeMode": mode, "dynamicsProbeFile": str(fixture.resolve()),
                  "experimentalControlledUpdates": mode == "candidate", "experimentalSceneReset": mode == "candidate",
                  "experimentalResetDiagnostics": False, "stepFrames": 1,
+                 "experimentalNativeInputSmoothing": args.native_input_smoothing and mode == "candidate",
                  "experimentalNativeNewGame": args.native_new_game and mode == "candidate"}
     ensure_idle(args.port)
     proc, env = None, None
@@ -288,6 +333,8 @@ def run(args):
             report["status"] = "FAIL"
         if args.require_native_start and not report["analysis"]["native_start"]["passed"]:
             report["status"] = "FAIL"
+        if args.require_native_input and not report["analysis"]["native_input"]["passed"]:
+            report["status"] = "FAIL"
     except (Exception, KeyboardInterrupt) as exc:
         LOG.exception("Dynamics experiment failed")
         report["status"] = "ERROR"
@@ -310,11 +357,13 @@ def parse_args(argv=None):
     parser.add_argument("--game-exe", required=True, type=Path)
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--modes", nargs="+", choices=["native", "native_dual", "candidate"], default=["native", "native_dual", "candidate"])
-    parser.add_argument("--actions", nargs="+", choices=["zero", "hold", "pulse", "random"], default=["zero", "hold", "pulse"])
+    parser.add_argument("--actions", nargs="+", choices=["zero", "hold", "pulse", "reverse", "random"], default=["zero", "hold", "pulse"])
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--steps", type=int, default=40)
     parser.add_argument("--native-warmup", type=int, default=240)
     parser.add_argument("--native-new-game", action="store_true", help="Use the experimental native new-game initialization")
+    parser.add_argument("--native-input-smoothing", action="store_true", help="Inject axes only; preserve native input history")
+    parser.add_argument("--require-native-input", action="store_true", help="Require exact native input state across hold/pulse/reverse/random")
     parser.add_argument("--require-native-start", action="store_true", help="Require initial body/controller state within declared limits")
     parser.add_argument("--seed", type=int, default=20261002)
     parser.add_argument("--timeout", type=float, default=90)
@@ -322,6 +371,10 @@ def parse_args(argv=None):
     parser.add_argument("--require-native-parameters", action="store_true",
                         help="Exit 1 if measured joint caps/caches, body config or fixed dt differ from native")
     args = parser.parse_args(argv)
+    if args.require_native_input and (not args.native_input_smoothing
+            or not {"native", "candidate"}.issubset(args.modes)
+            or not {"hold", "pulse", "reverse", "random"}.issubset(args.actions) or args.steps < 4):
+        parser.error("--require-native-input requires smoothing, native/candidate, hold/pulse/reverse/random and >=4 steps")
     if args.require_native_start and (args.native_warmup != 0 or not {"native", "candidate"}.issubset(args.modes)):
         parser.error("--require-native-start requires native/candidate and --native-warmup 0")
     if min(args.repeats, args.steps) < 1 or args.native_warmup < 0 or not np.isfinite(args.timeout) or args.timeout <= 0:
