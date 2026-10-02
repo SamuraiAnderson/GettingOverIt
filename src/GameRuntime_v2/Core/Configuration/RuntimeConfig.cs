@@ -68,6 +68,11 @@ namespace GoiRuntime.Core.Configuration
 		/// </summary>
 		public int stepFrames = 1;
 
+        // Opt-in reset experiment. Existing training keeps the legacy path.
+        public bool experimentalControlledUpdates = false;
+        public bool experimentalResetDiagnostics = false;
+        public bool experimentalSceneReset = false;
+
 		#endregion
 
 		#region Player 配置
@@ -283,4 +288,3 @@ namespace GoiRuntime.Core.Configuration
 		#endregion
 	}
 }
-

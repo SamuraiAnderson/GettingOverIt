@@ -278,6 +278,10 @@ class GoiEnv:
         """Same-thread diagnostic + camera dump. Does not advance physics."""
         return self._recv_diagnostic_packet(b"P")
 
+    def reset_diagnostics(self) -> dict:
+        """Experimental live read plus reset stages; does not advance physics."""
+        return self._recv_diagnostic_packet(b"Q")
+
     def _recv_diagnostic_packet(self, command: bytes) -> dict:
         import json
         self._send_all(command)
@@ -301,7 +305,13 @@ class GoiEnv:
             if not 0 < length <= 8 * 1024 * 1024:
                 raise ValueError("Invalid diagnostic packet length")
             packet = json.loads(self._recv_exact(length))
-        if packet.get("version") not in (1, 2, 3, 4) or len(packet.get("agents", [])) != self.num_agents:
+        if command == b"Q":
+            if (packet.get("version") != 1 or packet.get("kind") != "reset_diagnostics"
+                    or packet.get("agentCount") != self.num_agents
+                    or not isinstance(packet.get("current"), dict)
+                    or not isinstance(packet.get("stages"), list)):
+                raise ValueError(f"Incompatible reset diagnostic packet: {packet}")
+        elif packet.get("version") not in (1, 2, 3, 4) or len(packet.get("agents", [])) != self.num_agents:
             raise ValueError(f"Incompatible diagnostic packet: {packet}")
         return packet
 

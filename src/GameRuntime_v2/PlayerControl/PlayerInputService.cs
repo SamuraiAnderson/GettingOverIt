@@ -12,6 +12,7 @@ namespace GoiRuntime.PlayerControl
 	/// 非零动作下经混沌放大导致同起点同动作不可复现（实测 P4≈191）。
 	/// 字段取自 PlayerControl IL（见 doc/hammer_physics.md）。
 	/// </summary>
+    [Serializable]
 	public struct PlayerControlInternalState
 	{
 		public bool valid;
@@ -94,6 +95,35 @@ namespace GoiRuntime.PlayerControl
 		/// 服务是否就绪
 		/// </summary>
 		public bool IsReady => isInitialized;
+        public bool NativeStartReady
+        {
+            get
+            {
+                if (!isInitialized || GetFakeCursorRB() == null) return false;
+                var field = playerControlComponent.GetType().GetField("player",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                return field != null && field.GetValue(playerControlComponent) != null;
+            }
+        }
+
+        public static void PrepareControlledPlayer(GameObject go)
+        {
+            var pc = go.GetComponent("PlayerControl");
+            if (pc == null) throw new InvalidOperationException("Missing PlayerControl");
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            foreach (string name in new[] { "fakeCursorRB", "player", "hj", "sj" })
+            {
+                var field = pc.GetType().GetField(name, flags);
+                if (field == null || field.GetValue(pc) == null)
+                    throw new InvalidOperationException("Native Start incomplete: " + name);
+            }
+            // Explicit fixed-start recipe, applied only after native Start completes.
+            pc.GetType().GetField("loadFinished", flags).SetValue(pc, true);
+            pc.GetType().GetField("pauseInputTimer", flags).SetValue(pc, 0f);
+            pc.GetType().GetField("inputsToSkip", flags).SetValue(pc, 0);
+            pc.GetType().GetField("mouseSnap", flags).SetValue(pc, false);
+            pc.GetType().GetField("menuPause", flags).SetValue(pc, false);
+        }
 		
 		/// <summary>
 		/// 设置鼠标输入。
@@ -126,9 +156,15 @@ namespace GoiRuntime.PlayerControl
 		/// </summary>
 		public void InvokeFixedUpdate()
 		{
-			if (!isInitialized || fixedUpdateMethod == null) return;
+			if (!isInitialized || fixedUpdateMethod == null)
+            {
+                if (PlayerControlFixedUpdatePatch.Enabled) throw new InvalidOperationException("Missing controlled FixedUpdate");
+                return;
+            }
+            var previousInstance = PlayerControlFixedUpdatePatch.AllowedInstance;
 			try
 			{
+                PlayerControlFixedUpdatePatch.AllowedInstance = playerControlComponent;
 				RewiredMouseOverride.CurrentAgentIndex = AgentIndex;
 				RewiredMouseOverride.InsideInvokeFixedUpdate = true;
 				fixedUpdateMethod.Invoke(playerControlComponent, null);
@@ -136,11 +172,13 @@ namespace GoiRuntime.PlayerControl
 			catch (Exception e)
 			{
 				Debug.LogError($"InvokeFixedUpdate 失败: {e.Message}");
+                if (PlayerControlFixedUpdatePatch.Enabled) throw;
 			}
 			finally
 			{
 				RewiredMouseOverride.CurrentAgentIndex = -1;
 				RewiredMouseOverride.InsideInvokeFixedUpdate = false;
+                PlayerControlFixedUpdatePatch.AllowedInstance = previousInstance;
 			}
 		}
 		
@@ -290,6 +328,14 @@ namespace GoiRuntime.PlayerControl
 			$"mouseSnap={fMouseSnap != null}, inputsToSkip={fInputsToSkip != null}");
 
 		var harmony = new HarmonyLib.Harmony("com.symbol.goi.playercontrol.lifecycle");
+        if (PlayerControlFixedUpdatePatch.Enabled)
+        {
+            if (fixedUpdateMethod == null || fMouseVelAvg == null || fOldMouse == null || fMw == null
+                || fOldAngle == null || fPauseInputTimer == null || fMouseSnap == null
+                || fInputsToSkip == null || fFakeCursorRB == null)
+                throw new InvalidOperationException("Controlled mode requires all PlayerControl snapshot fields");
+            PlayerControlFixedUpdatePatch.Install(harmony, fixedUpdateMethod);
+        }
 
 		// Patch Update()：RL 模式下跳过真实鼠标读取
 		var updateMethod = playerControlType.GetMethod("Update",
@@ -425,6 +471,7 @@ namespace GoiRuntime.PlayerControl
 			catch (Exception e)
 			{
 				Debug.LogWarning($"[PlayerInputService] GetInternalState 失败: {e.Message}");
+                if (PlayerControlFixedUpdatePatch.Enabled) throw;
 			}
 			return s;
 		}
@@ -448,6 +495,7 @@ namespace GoiRuntime.PlayerControl
 			catch (Exception e)
 			{
 				Debug.LogWarning($"[PlayerInputService] SetInternalState 失败: {e.Message}");
+                if (PlayerControlFixedUpdatePatch.Enabled) throw;
 			}
 		}
 		
@@ -458,6 +506,32 @@ namespace GoiRuntime.PlayerControl
 	/// Harmony prefix patch：RL 模式激活时跳过 PlayerControl.Update()，
 	/// 防止游戏从真实鼠标读取输入并覆盖我们注入的 mouseInput 值。
 	/// </summary>
+    public static class PlayerControlFixedUpdatePatch
+    {
+        public static bool Enabled;
+        public static Component AllowedInstance;
+        public static long BlockedCalls;
+        public static long ManualCalls;
+        private static bool installed;
+
+        public static void Install(HarmonyLib.Harmony harmony, MethodInfo method)
+        {
+            if (installed) return;
+            harmony.Patch(method, prefix: new HarmonyLib.HarmonyMethod(
+                typeof(PlayerControlFixedUpdatePatch), nameof(Prefix)));
+            installed = true;
+        }
+
+        public static bool Prefix(object __instance)
+        {
+            if (!Enabled) return true;
+            bool allowed = ReferenceEquals(__instance, AllowedInstance)
+                && RewiredMouseOverride.InsideInvokeFixedUpdate;
+            if (allowed) ManualCalls++; else BlockedCalls++;
+            return allowed;
+        }
+    }
+
 	public static class PlayerControlUpdatePatch
 	{
 		/// <summary>RL 模式激活后设为 true，阻止 Update() 读取真实鼠标。</summary>
@@ -470,4 +544,3 @@ namespace GoiRuntime.PlayerControl
 	}
 
 }
-

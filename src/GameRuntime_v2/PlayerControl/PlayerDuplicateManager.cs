@@ -96,6 +96,7 @@ namespace GoiRuntime.PlayerControl
 			}
 			return null;
 		}
+
 		
 		public GameObject[] GetAllDuplicates()
 		{
@@ -437,7 +438,8 @@ namespace GoiRuntime.PlayerControl
 				string typeName = script.GetType().Name;
 				
 				// 禁用可能触发全局逻辑的脚本
-				if (typeName.Contains("Save") ||
+				if ((PlayerControlFixedUpdatePatch.Enabled && typeName == "Saviour") ||
+                    typeName.Contains("Save") ||
 				    typeName.Contains("Load") ||
 				    typeName.Contains("Menu") ||
 				    typeName.Contains("UI") ||

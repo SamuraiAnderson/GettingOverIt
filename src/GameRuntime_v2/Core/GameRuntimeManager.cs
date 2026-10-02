@@ -46,6 +46,10 @@ namespace GoiRuntime.Core
 		private PlayerDebugTool playerDebugTool;
 
 		private bool isInitialized = false;
+        private bool runtimeReady;
+        private bool resettingScene;
+        private string initializationError;
+        private int environmentEpoch;
 
 		void Awake()
 		{
@@ -63,11 +67,17 @@ namespace GoiRuntime.Core
 
 			// 加载配置
 			config = RuntimeConfig.Load();
+            if (config.experimentalSceneReset && !config.experimentalControlledUpdates)
+                throw new System.InvalidOperationException("Scene reset requires controlled updates");
+            if (config.experimentalControlledUpdates && config.stepFrames != 1)
+                throw new System.InvalidOperationException("Controlled reset experiment currently requires stepFrames=1");
 			config.Save(); // 首次运行时创建默认配置
 
 			// 初始化模式管理器
 			modeManager = new ModeManager();
 			modeManager.Initialize(config);
+            PlayerControlFixedUpdatePatch.Enabled = config.experimentalControlledUpdates
+                && modeManager.IsGameRuntimeMode();
 			modeManager.PrintModeInfo();
 
 			// 订阅场景加载事件
@@ -103,7 +113,7 @@ namespace GoiRuntime.Core
 			return;
 		}
 
-		if (isInitialized)
+		if (isInitialized && !resettingScene)
 		{
 			Logger.LogWarning("服务已初始化，跳过");
 			return;
@@ -116,7 +126,23 @@ namespace GoiRuntime.Core
 		}
 		else if (modeManager.IsGameRuntimeMode())
 		{
-			InitializeGameRuntimeMode();
+            if (config.experimentalSceneReset && scene.GetPhysicsScene2D() == Physics2D.defaultPhysicsScene)
+            {
+                // A scene reload in the default physics world reuses that world's
+                // solver. First startup and RESET must both create a new 2D world.
+                Physics2D.simulationMode = SimulationMode2D.Script;
+                Physics2D.autoSyncTransforms = false;
+                Time.timeScale = 0f;
+                UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Mian",
+                    new UnityEngine.SceneManagement.LoadSceneParameters(
+                        UnityEngine.SceneManagement.LoadSceneMode.Single,
+                        UnityEngine.SceneManagement.LocalPhysicsMode.Physics2D));
+                return;
+            }
+            if (config.experimentalControlledUpdates)
+                StartCoroutine(RunControlledInitialization());
+            else
+			    InitializeGameRuntimeMode();
 		}
 		else if (modeManager.IsGameTestingMode())
 		{
@@ -368,16 +394,96 @@ namespace GoiRuntime.Core
 				{
 					// 创建 numAgents-1 个复制体（原始 Player 算 agent 0）
 					duplicateManager.CreateDuplicates(numAgents - 1, Vector3.zero);
+                    if (config.experimentalControlledUpdates && duplicateManager.GetAllDuplicates().Length != numAgents - 1)
+                        throw new System.InvalidOperationException("Agent creation incomplete");
 					Logger.LogInfo($"创建了 {numAgents - 1} 个复制体（共 {numAgents} 个 agent）");
 				}
 				else
 				{
+                    if (config.experimentalControlledUpdates)
+                        throw new System.InvalidOperationException("Duplicate manager initialization failed");
 					Logger.LogWarning("PlayerDuplicateManager 初始化失败，退化为单 agent");
 					numAgents = 1;
 					duplicateManager = null;
 				}
 			}
 
+            if (!config.experimentalControlledUpdates) FinishGameRuntimeMode(numAgents);
+        }
+
+        private System.Collections.IEnumerator RunControlledInitialization()
+        {
+            var routine = InitializeControlledRuntime();
+            while (true)
+            {
+                bool next = false;
+                try { next = routine.MoveNext(); }
+                catch (System.Exception ex)
+                {
+                    initializationError = ex.ToString();
+                    Logger.LogError(initializationError);
+                }
+                if (!next) break;
+                yield return routine.Current;
+            }
+        }
+
+        private System.Collections.IEnumerator InitializeControlledRuntime()
+        {
+            float previousScale = Time.timeScale;
+            Time.timeScale = 0f;
+            Physics2D.simulationMode = SimulationMode2D.Script;
+            Physics2D.autoSyncTransforms = false;
+            PlayerControlUpdatePatch.RlModeActive = true;
+            RewiredMouseOverride.Active = true;
+            // Run the same fixed-start recipe on first load and subsequent reloads.
+            // Saviour.Start otherwise loads native save state before normalization.
+            foreach (var script in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
+                if (script != null && (script.GetType().Name == "Saviour" ||
+                    script.GetType().Name == "CameraControl" ||
+                    script.GetType().Name == "PoseControl")) script.enabled = false;
+            foreach (var behaviour in UnityEngine.Object.FindObjectsOfType<Behaviour>())
+                if (behaviour.GetType().Name == "Animator") behaviour.enabled = false;
+            try
+            {
+                // sceneLoaded runs before native Start. Install the gates now, but
+                // wait for native references before cloning, normalizing or snapshotting.
+                var bootstrap = new PlayerInputService();
+                if (!bootstrap.Initialize()) throw new System.InvalidOperationException("Bootstrap failed");
+                float deadline = Time.realtimeSinceStartup + 15f;
+                while (!bootstrap.NativeStartReady)
+                {
+                    if (Time.realtimeSinceStartup > deadline)
+                        throw new System.InvalidOperationException("Native PlayerControl.Start timed out");
+                    yield return null;
+                }
+                // Let other native Start/first Update callbacks complete without physics.
+                yield return null;
+                InitializeGameRuntimeMode();
+                yield return null; // cloned PlayerControl.Start must run before its snapshot
+                PlayerInputService.PrepareControlledPlayer(playerStateService.GetPlayerObject());
+                if (duplicateManager != null)
+                    foreach (var go in duplicateManager.GetAllDuplicates())
+                        PlayerInputService.PrepareControlledPlayer(go);
+                // Native save/load Update can overwrite control state after readiness.
+                foreach (var script in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
+                    if (script != null && (script.GetType().Name == "Saviour" ||
+                        script.GetType().Name == "CameraControl" ||
+                        script.GetType().Name == "PoseControl")) script.enabled = false;
+                // CameraControl.OnGUI's fade timer unpauses Time.timeScale on a
+                // render-count deadline, otherwise changing the world during idle.
+                Physics2D.simulationMode = SimulationMode2D.Script;
+                FinishGameRuntimeMode(Mathf.Max(1, config.numDuplicates));
+                if (stepController == null || !stepController.IsReady || tcpStepServer == null)
+                    throw new System.InvalidOperationException("Controlled runtime initialization failed");
+            }
+            // Script simulation does not stop Unity's automatic FixedUpdate/transform
+            // synchronization. Keep the automatic clock paused between TCP steps.
+            finally { Time.timeScale = runtimeReady ? 0f : previousScale; }
+        }
+
+        private void FinishGameRuntimeMode(int numAgents)
+        {
 			// --- 禁用水体重置组件 ---
 		// RestartOnContact 挂在水体碰撞器上，落水时会：
 		//   1. FadeOut 屏幕变暗
@@ -396,6 +502,7 @@ namespace GoiRuntime.Core
 		// --- StepController ---
 		// 内部步幅 35；未协商的旧客户端仍按 33 维发送。
 			stepController = new StepController(numAgents, config.stepFrames, StepController.STATE_DIM, config.actionDimension);
+            stepController.ResetDiagnosticsEnabled = config.experimentalResetDiagnostics;
 			if (!stepController.Initialize(
 				playerStateService, playerInputService, duplicateManager,
 				config.normalizeInitialPose, config.initPoseSettleFrames,
@@ -415,7 +522,7 @@ namespace GoiRuntime.Core
 			// --- 视觉修复：启动角色手臂骨骼动画(PoseControl IK) ---
 			// RL 模式跳过游戏原生载入，从不调 StartAnimator，手臂会停在绑定姿(视觉扭曲)。
 			// 只改手/肘 mesh，不影响物理与 33D 状态。仅对原始 Player(agent 0，唯一可见)启动。
-			if (config.startAnimatorInRlMode)
+		if (config.startAnimatorInRlMode && !config.experimentalControlledUpdates)
 			{
 				if (playerInputService.StartPoseAnimator())
 					Logger.LogInfo("已启动 PoseControl 手臂动画（视觉修复）");
@@ -424,6 +531,9 @@ namespace GoiRuntime.Core
 			}
 
 			// --- TCP 步进服务器 ---
+            bool newServer = tcpStepServer == null;
+            if (newServer)
+            {
 			var hello = new HelloSnapshot
 			{
 				NumAgents = numAgents,
@@ -436,6 +546,7 @@ namespace GoiRuntime.Core
 			tcpStepServer = new TcpStepServer(StepController.STATE_DIM, StepController.LEGACY_WIRE_DIM, hello);
 			tcpStepServer.StartListening(config.tcpPort);
 			Logger.LogInfo($"TcpStepServer 已启动，监听端口 {config.tcpPort}");
+            }
 
 		// --- 碰撞箱可视化（默认开启，黑底白环境 + 彩色 Player）---
 		var mainCam = Camera.main;
@@ -462,7 +573,12 @@ namespace GoiRuntime.Core
 		}
 
 		// --- 启动训练主循环协程 ---
-		StartCoroutine(TrainingLoop());
+        if (config.experimentalControlledUpdates)
+        {
+            stepController.EnvironmentEpoch = ++environmentEpoch;
+            runtimeReady = true;
+        }
+		if (newServer) StartCoroutine(TrainingLoop());
 		Logger.LogInfo("游戏运行模式初始化完成，等待 Python 连接...");
 		}
 
@@ -501,12 +617,21 @@ namespace GoiRuntime.Core
 				// 非阻塞轮询（每帧检查一次）
 				if (tcpStepServer.TryGetCommand(out StepCommand cmd))
 				{
+                    if (config.experimentalSceneReset && cmd.Type == CommandType.Reset)
+                    {
+                        yield return ResetSceneAndRespond();
+                        continue;
+                    }
 					StepResponse resp;
 
 				try
 				{
 						switch (cmd.Type)
 						{
+                        case CommandType.ResetDiagnostics:
+                            tcpStepServer.SendResponse(StatePacket(
+                                diagnosticJson: stepController.CollectResetDiagnostics()));
+                            break;
                         case CommandType.ObservationDiagnostics:
                             tcpStepServer.SendResponse(StatePacket(
                                 diagnosticJson: stepController.CollectObservationDiagnostics()));
@@ -528,6 +653,8 @@ namespace GoiRuntime.Core
 							break;
 
 						case CommandType.NewSnapshot:
+                            if (config.experimentalSceneReset)
+                                throw new System.InvalidOperationException("Scene reset supports the fixed startup recipe only; NEW_SNAPSHOT is unsupported");
 							stepController.TakeNewSnapshot();
 							resp = StatePacket(stepController.CollectAllStates());
 							tcpStepServer.SendResponse(resp);
@@ -588,6 +715,12 @@ namespace GoiRuntime.Core
 				catch (System.Exception ex)
 				{
 					Logger.LogError($"[TrainingLoop] cmd={cmd.Type} 处理异常: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                    if (config.experimentalControlledUpdates)
+                    {
+                        // Legacy packets cannot express errors. Close instead of fabricating valid observations.
+                        tcpStepServer.Stop();
+                        continue;
+                    }
 					// 发送空回包，避免 Python 永久阻塞
 					try
 					{
@@ -607,6 +740,49 @@ namespace GoiRuntime.Core
 				yield return null;
 			}
 		}
+
+        private System.Collections.IEnumerator ResetSceneAndRespond()
+        {
+            runtimeReady = false;
+            resettingScene = true;
+            initializationError = null;
+            UnityEngine.AsyncOperation reload = null;
+            try
+            {
+                if (!config.experimentalControlledUpdates)
+                    throw new System.InvalidOperationException("Scene reset requires controlled updates");
+                RewiredMouseOverride.Reset();
+                // Scene unload owns all player/cursor destruction. Destroying only
+                // the roots first leaves native callbacks holding broken references.
+                stepController = null;
+                playerInputService = null;
+                playerStateService = null;
+                duplicateManager = null;
+                colliderVisualizer = null;
+                freeCameraController = null;
+                reload = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(
+                    "Mian", new UnityEngine.SceneManagement.LoadSceneParameters(
+                        UnityEngine.SceneManagement.LoadSceneMode.Single,
+                        UnityEngine.SceneManagement.LocalPhysicsMode.Physics2D));
+            }
+            catch (System.Exception ex) { initializationError = ex.ToString(); }
+            float deadline = Time.realtimeSinceStartup + 30f;
+            while (initializationError == null && !runtimeReady && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            resettingScene = false;
+            try
+            {
+                if (initializationError != null || !runtimeReady || reload == null || !reload.isDone)
+                    throw new System.InvalidOperationException(initializationError ?? "Scene reset readiness timed out");
+                stepController.RecordFreshSceneReset();
+                tcpStepServer.SendResponse(StatePacket(stepController.CollectAllStates()));
+            }
+            catch (System.Exception ex)
+            {
+                Logger.LogError("Scene reset failed: " + ex);
+                tcpStepServer.Stop();
+            }
+        }
 
 		/// <summary>
 		/// 初始化游戏测试模式

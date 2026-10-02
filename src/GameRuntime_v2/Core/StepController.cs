@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using GoiRuntime.Core.Utilities;
 using GoiRuntime.PlayerControl;
 using GoiRuntime.Core.Interfaces;
@@ -50,6 +51,30 @@ namespace GoiRuntime.Core
 		// 各 agent 的 Input 和 State 服务（索引 0 = 原始 Player）
 		private readonly List<PlayerInputService> inputServices = new List<PlayerInputService>();
 		private readonly List<PlayerStateService> stateServices = new List<PlayerStateService>();
+        private readonly Dictionary<GameObject, Rigidbody2D[]> controlledBodies =
+            new Dictionary<GameObject, Rigidbody2D[]>();
+
+        private Rigidbody2D[] PlayerBodies(GameObject go)
+        {
+            Rigidbody2D[] bodies;
+            return controlledBodies.TryGetValue(go, out bodies) ? bodies
+                : go.GetComponentsInChildren<Rigidbody2D>(true);
+        }
+
+        private void SeparatePhysicsTransforms()
+        {
+            // Nested dynamic bodies round-trip world/local coordinates on render
+            // synchronization. Keep references but give each body a static parent.
+            foreach (var service in stateServices)
+            {
+                var go = service.GetPlayerObject();
+                var bodies = go.GetComponentsInChildren<Rigidbody2D>(true);
+                controlledBodies.Add(go, bodies);
+                var container = new GameObject(go.name + "_PhysicsRoot");
+                SceneManager.MoveGameObjectToScene(container, go.scene);
+                foreach (var rb in bodies) rb.transform.SetParent(container.transform, true);
+            }
+        }
 
 		// 原始 Player 各刚体的快照（用于 Reset）
 		private struct RigidbodySnapshot
@@ -85,6 +110,146 @@ namespace GoiRuntime.Core
 		public bool IsReady => isInitialized;
 		public int NumAgents => numAgents;
 		public int StepFrames => stepFrames;
+        public bool ResetDiagnosticsEnabled;
+        public int EnvironmentEpoch;
+        private static long simulationCalls;
+        private readonly List<ResetFrame> resetFrames = new List<ResetFrame>();
+        private int resetNumber;
+        private ResetFrame initializationFrame;
+
+        [System.Serializable]
+        public class ResetBody
+        {
+            public int agent;
+            public string name;
+            public Vector2 position, velocity;
+            public float rotation, angularVelocity;
+            public bool sleeping;
+        }
+
+        [System.Serializable]
+        public class ResetFrame
+        {
+            public string phase;
+            public long manualCalls, blockedCalls, simulationCalls;
+            public int worldBodyCount;
+            public float timeScale;
+            public ResetBody[] bodies;
+            public PlayerControlInternalState[] controls;
+            public float[] states;
+            public string[] joints;
+        }
+
+        private static string ResetFrameJson(ResetFrame frame)
+        {
+            // Unity omits arrays of plugin-defined classes (see ObservationDiagnostics).
+            var bodies = new List<string>();
+            foreach (var body in frame.bodies) bodies.Add(JsonUtility.ToJson(body));
+            var controls = new List<string>();
+            foreach (var control in frame.controls) controls.Add(JsonUtility.ToJson(control));
+            var header = JsonUtility.ToJson(frame);
+            return header.Substring(0, header.Length - 1) + ",\"bodies\":["
+                + string.Join(",", bodies.ToArray()) + "],\"controls\":["
+                + string.Join(",", controls.ToArray()) + "]}";
+        }
+
+        private ResetFrame CaptureResetFrame(string phase)
+        {
+            var bodies = new List<ResetBody>();
+            var controls = new List<PlayerControlInternalState>();
+            var joints = new List<string>();
+            for (int a = 0; a < numAgents; a++)
+            {
+                var rbs = new List<Rigidbody2D>();
+                foreach (var snap in initialSnapshots[a]) rbs.Add(snap.rb);
+                var cursor = inputServices[a].GetFakeCursorRB();
+                if (cursor != null && !rbs.Contains(cursor)) rbs.Add(cursor);
+                foreach (var rb in rbs)
+                {
+                    if (rb == null) throw new System.InvalidOperationException("Missing reset body");
+                    bodies.Add(new ResetBody { agent = a, name = rb.name,
+                        position = rb.position, rotation = rb.rotation,
+                        velocity = rb.velocity, angularVelocity = rb.angularVelocity,
+                        sleeping = rb.IsSleeping() });
+                }
+                controls.Add(inputServices[a].GetInternalState());
+                var agentJoints = new List<Joint2D>();
+                foreach (var body in PlayerBodies(stateServices[a].GetPlayerObject()))
+                    agentJoints.AddRange(body.GetComponents<Joint2D>());
+                foreach (var joint in agentJoints)
+                {
+                    var anchored = joint as AnchoredJoint2D;
+                    var hinge = joint as HingeJoint2D;
+                    var slider = joint as SliderJoint2D;
+                    joints.Add(JsonUtility.ToJson(new ResetJoint {
+                        agent = a, name = joint.name, type = joint.GetType().Name,
+                        connected = joint.connectedBody == null ? "world" : joint.connectedBody.name,
+                        anchor = anchored == null ? Vector2.zero : anchored.anchor,
+                        connectedAnchor = anchored == null ? Vector2.zero : anchored.connectedAnchor,
+                        autoAnchor = anchored != null && anchored.autoConfigureConnectedAnchor,
+                        motorSpeed = hinge != null ? hinge.motor.motorSpeed : slider != null ? slider.motor.motorSpeed : 0f,
+                        maxMotorTorque = hinge != null ? hinge.motor.maxMotorTorque : slider != null ? slider.motor.maxMotorTorque : 0f,
+                        enabled = joint.enabled, enableCollision = joint.enableCollision,
+                        useMotor = hinge != null ? hinge.useMotor : slider != null && slider.useMotor
+                    }));
+                }
+            }
+            var full = CollectAllStates();
+            var legacy = new float[numAgents * LEGACY_WIRE_DIM];
+            for (int a = 0; a < numAgents; a++)
+                System.Array.Copy(full, a * STATE_DIM, legacy, a * LEGACY_WIRE_DIM, LEGACY_WIRE_DIM);
+            return new ResetFrame { phase = phase, bodies = bodies.ToArray(), controls = controls.ToArray(),
+                states = legacy, joints = joints.ToArray(), manualCalls = PlayerControlFixedUpdatePatch.ManualCalls,
+                timeScale = Time.timeScale,
+                simulationCalls = simulationCalls,
+                worldBodyCount = UnityEngine.Object.FindObjectsOfType<Rigidbody2D>().Length,
+                blockedCalls = PlayerControlFixedUpdatePatch.BlockedCalls };
+        }
+
+        [System.Serializable]
+        public class ResetJoint
+        {
+            public int agent;
+            public string name, type, connected;
+            public Vector2 anchor, connectedAnchor;
+            public float motorSpeed, maxMotorTorque;
+            public bool enabled, enableCollision, useMotor, autoAnchor;
+        }
+
+        public string CollectResetDiagnostics()
+        {
+            if (!ResetDiagnosticsEnabled) throw new System.InvalidOperationException("Reset diagnostics disabled");
+            var stages = new List<string>();
+            foreach (var frame in resetFrames) stages.Add(ResetFrameJson(frame));
+            return "{\"version\":1,\"kind\":\"reset_diagnostics\",\"agentCount\":" + numAgents
+                + ",\"epoch\":" + EnvironmentEpoch
+                + ",\"resetNumber\":" + resetNumber + ",\"controlledUpdates\":"
+                + (PlayerControlFixedUpdatePatch.Enabled ? "true" : "false")
+                + ",\"initialization\":" + (initializationFrame == null ? "null" : ResetFrameJson(initializationFrame))
+                + ",\"current\":" + ResetFrameJson(CaptureResetFrame("live"))
+                + ",\"stages\":[" + string.Join(",", stages.ToArray()) + "]}";
+        }
+
+        public void RecordFreshSceneReset()
+        {
+            // The freshly initialized world already IS the reset target. Reapplying
+            // a body snapshot here would disturb its matching contact/joint history.
+            resetNumber++;
+            resetFrames.Clear();
+            if (ResetDiagnosticsEnabled) resetFrames.Add(CaptureResetFrame("fresh_scene"));
+        }
+
+        private static void SimulatePhysics(float dt)
+        {
+            if (PlayerControlFixedUpdatePatch.Enabled) Physics2D.SyncTransforms();
+            bool success = PlayerControlFixedUpdatePatch.Enabled
+                ? SceneManager.GetActiveScene().GetPhysicsScene2D().Simulate(dt)
+                : Physics2D.Simulate(dt);
+            if (PlayerControlFixedUpdatePatch.Enabled) Physics2D.SyncTransforms();
+            simulationCalls++;
+            if (PlayerControlFixedUpdatePatch.Enabled && !success)
+                throw new System.InvalidOperationException("Physics2D.Simulate did not advance");
+        }
 
 		public void SetAnchorCalibration(bool available, float localX, float localY)
 		{
@@ -156,6 +321,17 @@ namespace GoiRuntime.Core
 			Debug.Log($"[StepController] fixedDeltaTime = {Time.fixedDeltaTime:F4}s，每 step 推进 {stepFrames} 帧");
 
 			// --- 初始姿态归一化（须在拍快照前）---
+            if (PlayerControlFixedUpdatePatch.Enabled)
+            {
+                SeparatePhysicsTransforms();
+                DisableBodyInterpolation();
+                foreach (var input in inputServices)
+                {
+                    if (input == null || !input.NativeStartReady)
+                        throw new System.InvalidOperationException("Cannot snapshot before native Start");
+                    input.GetFakeCursorRB().interpolation = RigidbodyInterpolation2D.None;
+                }
+            }
 			// 修复初始锤子扭曲：RL 激活前真实鼠标已把 cursor 拖到随机位置，
 			// 这里用闭环把 cursor 驱到 hub 上方的确定位置，得到一致且非扭曲的起始姿态。
 			if (normalizePose)
@@ -237,7 +413,7 @@ namespace GoiRuntime.Core
 			float dt = Time.fixedDeltaTime;
 			for (int f = 0; f < stepFrames; f++)
 			{
-				Physics2D.Simulate(dt);
+				SimulatePhysics(dt);
 			}
 
 			// 3. 采集状态（诊断：打印 Simulate 后的速度）
@@ -270,11 +446,13 @@ namespace GoiRuntime.Core
 		/// </summary>
 		public void Reset()
 		{
+            if (ResetDiagnosticsEnabled) { resetFrames.Clear(); resetNumber++; }
 			foreach (var snapList in initialSnapshots)
 			{
 				foreach (var snap in snapList)
 				{
 					if (snap.rb == null) continue;
+                    if (PlayerControlFixedUpdatePatch.Enabled) RestoreTransform(snap);
 					snap.rb.position        = snap.position;
 					snap.rb.rotation        = snap.rotation;
 					snap.rb.velocity        = snap.velocity;
@@ -285,6 +463,7 @@ namespace GoiRuntime.Core
 	foreach (var snap in fakeCursorSnapshots)
 	{
 		if (snap.rb == null) continue;
+        if (PlayerControlFixedUpdatePatch.Enabled) RestoreTransform(snap);
 		snap.rb.position        = snap.position;
 		snap.rb.rotation        = snap.rotation;
 		snap.rb.velocity        = snap.velocity;
@@ -301,6 +480,8 @@ namespace GoiRuntime.Core
 	_diagStepCount = 0;
 	// 清零注入值，避免上一 episode 的残余影响下一 episode
 	GoiRuntime.PlayerControl.RewiredMouseOverride.Reset();
+    if (PlayerControlFixedUpdatePatch.Enabled) Physics2D.SyncTransforms();
+    if (ResetDiagnosticsEnabled) resetFrames.Add(CaptureResetFrame("restored"));
 
 	// 关键修复：Reset 后的 Simulate 必须先调用 InvokeFixedUpdate，
 	// 以确保各 agent 的关节电机力在 Simulate 前被施加。
@@ -321,10 +502,21 @@ namespace GoiRuntime.Core
 			inputServices[i].SetMouseInput(Vector2.zero);  // 零输入，只激活电机阻尼/稳定力
 			inputServices[i].InvokeFixedUpdate();
 		}
-		Physics2D.Simulate(Time.fixedDeltaTime);
+		if (ResetDiagnosticsEnabled) resetFrames.Add(CaptureResetFrame("controlled_" + f));
+        SimulatePhysics(Time.fixedDeltaTime);
+        if (ResetDiagnosticsEnabled) resetFrames.Add(CaptureResetFrame("simulated_" + f));
 	}
 	Debug.Log($"[StepController] 所有 agent 已重置（settle={settle} 帧）");
 		}
+
+        private static void RestoreTransform(RigidbodySnapshot snap)
+        {
+            // PlayerControl reads Transform positions, not just Rigidbody2D.position.
+            // A body-only teleport can leave the old geometry visible until physics runs.
+            var p = snap.rb.transform.position;
+            snap.rb.transform.position = new Vector3(snap.position.x, snap.position.y, p.z);
+            snap.rb.transform.rotation = Quaternion.Euler(0f, 0f, snap.rotation);
+        }
 
 		/// <summary>
 		/// 将指定 agent 整体传送到目标世界坐标。
@@ -389,7 +581,7 @@ namespace GoiRuntime.Core
 				inputServices[agentIndex].SetMouseInput(Vector2.zero);
 				inputServices[agentIndex].InvokeFixedUpdate();
 			}
-			Physics2D.Simulate(Time.fixedDeltaTime);
+			SimulatePhysics(Time.fixedDeltaTime);
 
 			Debug.Log($"[StepController] Teleport agent{agentIndex} → ({target.x:F2}, {target.y:F2}), delta=({delta.x:F2}, {delta.y:F2}), {allRbs.Length} rigidbodies moved");
 
@@ -514,7 +706,7 @@ namespace GoiRuntime.Core
 				if (stateServices[i] == null || !stateServices[i].IsReady) continue;
 				GameObject go = stateServices[i].GetPlayerObject();
 				if (go == null) continue;
-				foreach (var rb in go.GetComponentsInChildren<Rigidbody2D>(true))
+				foreach (var rb in PlayerBodies(go))
 				{
 					if (rb != null)
 						rb.interpolation = RigidbodyInterpolation2D.None;
@@ -569,12 +761,16 @@ namespace GoiRuntime.Core
 			if (go == null) continue;
 			var rootRb = go.GetComponent<Rigidbody2D>();
 			if (rootRb == null) continue;
-			Vector2 body = rootRb.position;
+			Vector2 body = PlayerControlFixedUpdatePatch.Enabled
+                ? new Vector2(-44.2926f, -2.4218f) : rootRb.position;
 
-			foreach (var rb in go.GetComponentsInChildren<Rigidbody2D>(true))
+			foreach (var rb in PlayerBodies(go))
 			{
 				int idx = MapRigidbodyToNativeIndex(rb, go.transform);
 				if (idx < 0) continue;
+                if (PlayerControlFixedUpdatePatch.Enabled)
+                    RestoreTransform(new RigidbodySnapshot { rb = rb,
+                        position = body + NATIVE_REL_POS[idx], rotation = NATIVE_ANGLE[idx] });
 				rb.position        = body + NATIVE_REL_POS[idx];
 				rb.rotation        = NATIVE_ANGLE[idx];
 				rb.velocity        = Vector2.zero;
@@ -585,12 +781,21 @@ namespace GoiRuntime.Core
 			Rigidbody2D fcRB = isvc?.GetFakeCursorRB();
 			if (fcRB != null)
 			{
+				if (PlayerControlFixedUpdatePatch.Enabled)
+                    RestoreTransform(new RigidbodySnapshot { rb = fcRB,
+                        position = body + NATIVE_REL_POS[5], rotation = 0f });
 				fcRB.position        = body + NATIVE_REL_POS[5];
 				fcRB.velocity        = Vector2.zero;
 				fcRB.angularVelocity = 0f;
 			}
 		}
 
+        if (PlayerControlFixedUpdatePatch.Enabled) Physics2D.SyncTransforms();
+		if (ResetDiagnosticsEnabled)
+        {
+            CaptureAllSnapshots();
+            initializationFrame = CaptureResetFrame("before_normalization_steps");
+        }
 		// 2. 零输入静置：让关节从精确姿态收敛到物理平衡（每帧把光标跟到当前锤头，避免牵引）
 		int frames = settleFrames > 0 ? settleFrames : 1;
 		for (int f = 0; f < frames; f++)
@@ -615,7 +820,7 @@ namespace GoiRuntime.Core
 				isvc.SetMouseInput(Vector2.zero);
 				isvc.InvokeFixedUpdate();
 			}
-			Physics2D.Simulate(Time.fixedDeltaTime);
+			SimulatePhysics(Time.fixedDeltaTime);
 		}
 
 		// 3. 收尾：清零注入残留 + 光标再次吸附锤头
@@ -697,7 +902,7 @@ namespace GoiRuntime.Core
 					GameObject go = stateSvc.GetPlayerObject();
 					if (go != null)
 					{
-						var rbs = go.GetComponentsInChildren<Rigidbody2D>(true);
+						var rbs = PlayerBodies(go);
 						foreach (var rb in rbs)
 						{
 							list.Add(new RigidbodySnapshot
@@ -720,6 +925,8 @@ namespace GoiRuntime.Core
 				initialSnapshots.Add(list);
 
 				Rigidbody2D fcRB = (agentIdx < inputServices.Count) ? inputServices[agentIdx]?.GetFakeCursorRB() : null;
+                if (PlayerControlFixedUpdatePatch.Enabled && fcRB == null)
+                    throw new System.InvalidOperationException("Missing fakeCursor in snapshot for agent " + agentIdx);
 				if (fcRB != null)
 				{
 					fakeCursorSnapshots.Add(new RigidbodySnapshot

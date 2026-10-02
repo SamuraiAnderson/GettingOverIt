@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <Prefer32Bit>false</Prefer32Bit>
+    <DeployPlugin Condition=" '$(DeployPlugin)' == '' ">true</DeployPlugin>
 
     <!-- 游戏根目录 -->
     <GameRoot>C:\Users\Symbol\software\game_store\steam\steamapps\common\Getting Over It</GameRoot>
@@ -112,7 +113,7 @@
   </ItemGroup>
 
   <!-- 编译后自动拷到 BepInEx/plugins -->
-  <Target Name="PostBuild" AfterTargets="Build">
+  <Target Name="PostBuild" AfterTargets="Build" Condition=" '$(DeployPlugin)' == 'true' ">
     <MakeDir Directories="$(GameRoot)\BepInEx\plugins" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameRoot)\BepInEx\plugins" />
     <Message Text="✅ 已部署到: $(GameRoot)\BepInEx\plugins\$(TargetFileName)" Importance="high" />
