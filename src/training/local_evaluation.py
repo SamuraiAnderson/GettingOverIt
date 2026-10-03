@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, fields
+from dataclasses import asdict
 import hashlib
 import json
 import logging
@@ -19,7 +19,7 @@ from training.actor_critic import ActorCritic
 from training.config import TrainConfig
 from training.geometry_profile import configure_geometry
 from training.experimental_policy import create_actor_critic
-from training.experiment_options import add_experiment_arguments, apply_experiment_arguments, restore_initialization_shape
+from training.experiment_options import add_experiment_arguments, apply_experiment_arguments, restore_initialization_shape, ppo_config
 from training.model import expand_state_dict_for_dynamics_dim
 from training.policy_audit import audit_policy
 from training.ppo_trainer import PPOTrainer
@@ -307,7 +307,7 @@ def main():
     parser.add_argument("--num-agents", type=int, default=2)
     parser.add_argument("--game-root", type=Path, help="Game installation or isolated test copy")
     parser.add_argument("--seed", type=int, default=20260917)
-    parser.add_argument("--jitter", type=float, default=.01)
+    parser.add_argument("--jitter", type=float, default=0., help="Spawn position jitter in meters; default exact spawn")
     parser.add_argument("--goal-progress", type=float, default=5.)
     parser.add_argument("--dwell", type=int, default=10)
     parser.add_argument("--noise-phi", type=float, default=.85)
@@ -330,16 +330,15 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    cfg = TrainConfig(contact_heads_enabled=False, phase_weighting_enabled=False,
-                      sil_advantage_weighting_enabled=False)
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False) if args.checkpoint else {}
+    cfg = ppo_config(checkpoint)
+    for name in ("contact_heads_enabled", "phase_weighting_enabled", "sil_advantage_weighting_enabled"):
+        if name not in checkpoint.get("config", {}):
+            setattr(cfg, name, False)
     if args.init_from and args.checkpoint:
         raise ValueError("--init-from and --checkpoint are mutually exclusive")
     init_state = torch.load(args.init_from, map_location="cpu", weights_only=False) if args.init_from else {}
     restore_initialization_shape(cfg, init_state)
-    for f in fields(cfg):
-        if f.name in checkpoint.get("config", {}) and f.name not in ("game_root", "port"):
-            setattr(cfg, f.name, checkpoint["config"][f.name])
     if checkpoint:
         cfg.contact_heads_enabled = "actor_mean_contact.weight" in checkpoint["model"]
     configure_geometry(cfg, checkpoint or init_state, args.geometry_profile)

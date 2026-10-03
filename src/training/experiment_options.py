@@ -1,5 +1,6 @@
 """Shared CLI and explicit architecture/input migration policy for PPO experiments."""
 import argparse
+from dataclasses import fields
 from .config import TrainConfig
 from .policy_features import experimental_enabled, validate_experiments
 
@@ -11,6 +12,15 @@ EXPERIMENT_FIELDS = (
     "sparse_geometry", "sparse_window_cells", "sparse_window_meters",
     "sparse_max_contour_tokens", "sparse_relation_k", "sparse_mlp_hidden",
 )
+
+
+def ppo_config(checkpoint=None, *, legacy_bc=False):
+    """Use GRU for fresh PPO, without reinterpreting old saved input contracts."""
+    config = TrainConfig() if checkpoint or legacy_bc else TrainConfig.ppo_mainline()
+    for field in fields(config):
+        if field.name in (checkpoint or {}).get("config", {}) and field.name not in ("game_root", "port"):
+            setattr(config, field.name, checkpoint["config"][field.name])
+    return config
 
 
 def add_experiment_arguments(parser):

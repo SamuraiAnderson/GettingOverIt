@@ -2,13 +2,20 @@
 
 这里是会被训练和评估调用的实现，加上三个入口。一次性战役脚本不在这里。
 
+当前 PPO 主线为 GRU128：新任务经 `TrainConfig.ppo_mainline()` 默认启用动作历史
+归一化、TBPTT 32、精确出生状态、单头 PPO+OU，停用旧 SIL。依据是
+`runs/backbone_compare_20261002/comparison.json` 的三个配对种子比较。
+`--resume` 与评估按 checkpoint 恢复架构；缺少架构字段的旧存档仍按 Transformer
+解释。裸 `TrainConfig()` 保留 BC/历史存档默认值；新建 PPO 请使用 `ppo_config()`。
+固定出生评估默认 `--jitter 0`。启动及续训命令见 `doc/main_ppo_usage.md`。
+
 - `main_ppo.py` — PPO 训练入口：采集、更新、存档。
 - `main_train.py` — 旧的行为克隆入口：冷启动采集、打分、微调。
 - `local_evaluation.py` — 按训练同一条观测管线做固定走廊评估，不更新权重。
 - `config.py` — 集中保存训练可调参数。
 - `experiment_options.py` — 解析实验用 CLI，并规定换网络或换输入时如何迁移 checkpoint。
 - `actor_critic.py` — PPO 的策略与价值网络。
-- `experimental_policy.py` — 表征、GRU 和动作段的实验网络，checkpoint 语义与正式策略分开。
+- `experimental_policy.py` — 当前 GRU 主线及表征、动作段候选，通过统一工厂选择网络。
 - `model.py` — 行为克隆用的动作预测网络。
 - `ppo_trainer.py` — 对一批 rollout 做 PPO 更新，并接上 SIL。
 - `trainer.py` — 对示范动作做监督学习微调。

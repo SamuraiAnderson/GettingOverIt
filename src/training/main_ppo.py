@@ -36,7 +36,7 @@ from training.actor_critic import ActorCritic
 from training.config import TrainConfig
 from training.geometry_profile import configure_geometry
 from training.experimental_policy import create_actor_critic
-from training.experiment_options import add_experiment_arguments, apply_experiment_arguments, restore_initialization_shape
+from training.experiment_options import add_experiment_arguments, apply_experiment_arguments, restore_initialization_shape, ppo_config
 from training.dataset import (
     Trajectory,
     TrajectoryDataset,
@@ -575,16 +575,12 @@ def main() -> None:
     if args.run_dir and (args.checkpoint_dir or args.log_dir):
         raise SystemExit("--run-dir 与 --checkpoint-dir/--log-dir 互斥，二选一")
 
-    config = TrainConfig()
     resume_state = torch.load(args.resume, weights_only=False) if args.resume else {}
+    config = ppo_config(resume_state, legacy_bc=bool(args.resume_bc))
     if args.init_from and (args.resume or args.resume_bc):
         raise ValueError("--init-from is mutually exclusive with --resume / --resume-bc")
     init_state = torch.load(args.init_from, map_location="cpu", weights_only=False) if args.init_from else {}
     restore_initialization_shape(config, init_state)
-    # Restore the actual network/input contract, not today's defaults.
-    for field in fields(config):
-        if field.name in resume_state.get("config", {}) and field.name not in ("game_root", "port"):
-            setattr(config, field.name, resume_state["config"][field.name])
     if args.resume and "reference_progress_mode" not in resume_state.get("config", {}):
         from training.reference_corridor import PROGRESS_MODE_V1
         config.reference_progress_mode = PROGRESS_MODE_V1
@@ -647,6 +643,11 @@ def main() -> None:
     configure_credit(config, args, resume_state)
     configure_reference(config, args, resume_state)
     apply_experiment_arguments(config, args, resume_state)
+    from training.policy_features import experimental_enabled
+    if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
+        raise ValueError("GRU/representation policies support PPO --init-from/--resume and disable legacy BC/SIL")
+    if args.corridor_sil and config.policy_backbone == "gru":
+        raise ValueError("GRU does not support legacy corridor SIL sequence reconstruction; use PPO without --corridor-sil")
     if args.corridor_sil and config.reference_trajectory:
         # 走廊 SIL 机械（corridor_score / prune_trajectory 走廊分支 / MAP-Elites bd /
         # 种子 corridor 字段重放 / P3.2 优势加权）已就绪；configure_reference 与
@@ -658,6 +659,11 @@ def main() -> None:
     configure_sil_sampling(config, args, resume_state)
     if args.dry_run:
         payload = {
+            "policy_backbone": config.policy_backbone,
+            "normalize_action_history": config.normalize_action_history,
+            "recurrent_seq_len": config.recurrent_seq_len,
+            "random_deploy": config.random_deploy,
+            "sil_enabled": config.sil_enabled,
             "sil_td_sampling_mode": config.sil_td_sampling_mode,
             "sil_td_sampling_horizon_steps": config.sil_td_sampling_horizon_steps,
             "sil_td_windows_per_traj": config.sil_td_windows_per_traj,
@@ -675,9 +681,6 @@ def main() -> None:
         }
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-    from training.policy_features import experimental_enabled
-    if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
-        raise ValueError("Representation experiments support PPO --init-from/--resume and disable legacy BC/SIL")
     # 走廊模式 SIL 已迁移到走廊口径（剪枝/排序/bd/BC 截断全部基于 credited 进度，
     # patch wide 通道按 guidance_index 重建引导场），ppo-ou-sil 不再与走廊互斥。
 

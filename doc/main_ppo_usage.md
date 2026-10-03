@@ -5,6 +5,30 @@
 
 环境：统一用 conda `getting-over-it-analysis`。
 
+## 当前主线：GRU、精确出生状态
+
+2026-10-03 的三个配对种子比较后，新建 PPO 默认使用 **单层 GRU128**、动作历史
+归一化、TBPTT 32、固定出生点、单头 PPO+OU，停用旧 SIL。其余训练预算参数仍可
+由 CLI 指定。以下命令沿用本次比较的采样与更新设置，开始新的主线训练：
+
+```powershell
+conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --run-dir runs/gru_mainline --reference-trajectory --recipe ppo-ou --seed 7 --num-agents 8 --steps-per-rollout 1200 --ppo-batch-size 32 --value-warmup-iters 2 --max-iterations 100 --persist-game --torch-threads 4
+```
+
+加 `--dry-run` 只查看解析后的配置，不启动游戏。需要 Transformer 对照时显式传
+`--policy-backbone transformer`。`--resume PATH` 始终恢复原 checkpoint 的架构和输入
+语义，不把 Transformer 权重当作 GRU；转换架构须使用 `--init-from PATH`，且会重新
+开始迭代与优化器。旧 BC 入口仍保留其原结构。
+
+GRU 尚不支持旧 SIL 的序列重建，`--corridor-sil` 和 `--recipe ppo-ou-sil` 会明确报错。
+固定出生评估默认不扰动；可显式写出完整验证命令：
+
+```powershell
+conda run --no-capture-output -n getting-over-it-analysis python -m src.training.local_evaluation --checkpoint runs/gru_mainline/checkpoints/ppo_iter_0100.pt --output runs/gru_mainline/eval_exact --steps 1200 --rounds 2 --num-agents 2 --jitter 0 --modes deterministic
+```
+
+比较归档为 `runs/backbone_compare_20261002/`；GRU 的路线进度领先，但保持成功仍为零。
+
 新增可选的[视频参考走廊模式](reference_corridor_reward.md)：使用 `--reference-trajectory`
 启用“走廊内前进优先”的奖励，`--reference-corridor-radius 1.5` 设置半宽。
 该模式替换原 PPO 引导奖励和 wide 引导图；SIL 精英池在走廊模式下自动切换为
@@ -18,23 +42,23 @@
 
 下面这条 2 人、40 轮的「当前主线」命令已删除。续训用 `main_ppo --resume`，配方见后来的实验记录。
 
-`--recipe ppo` 关闭 OU，`ppo-ou` 保留 OU；两者均关闭 SIL、停滞加噪、接触分头、阶段权重及 SIL 优势权重。`ppo-ou-sil` 在走廊模式下可用——精英池已迁移到 credited 进度口径（见上文），不再是按高度筛选的旧实现。
+`--recipe ppo` 关闭 OU，`ppo-ou` 保留 OU；两者均关闭 SIL、停滞加噪、接触分头、阶段权重及 SIL 优势权重。历史 Transformer/SIL 路径另行保留，不适用于 GRU 主线。
 
-`--seed` 固定 Python、NumPy、Torch 和投放采样 RNG；Unity 复位仍有物理差异，应重复评估。`--geometry-profile native-pose-v1` 使用原生姿态标定（锤头 −180°、身体约 −84.498°）；`legacy` 为原来的 −90°/−90°。不传时，新模型使用新标定，旧 checkpoint 恢复其配置，缺少配置的旧权重回退 legacy。BC 入口继续使用 legacy。
+`--seed` 固定 Python、NumPy、Torch 和投放采样 RNG；当前隔离物理运行时已通过精确出生状态的重复一致性验证。`--geometry-profile native-pose-v1` 使用原生姿态标定（锤头 −180°、身体约 −84.498°）；`legacy` 为原来的 −90°/−90°。不传时，新模型使用新标定，旧 checkpoint 恢复其配置，缺少配置的旧权重回退 legacy。BC 入口继续使用 legacy。
 
 `--resume` 先恢复保存的配置，再应用显式 CLI 覆盖（本机 game_root/port 除外）。更换参考奖励或几何标定会从当前迭代重新预热 critic。`--max-iterations` 是累计迭代上限：从 335 恢复并传 337，只执行两轮。`--value-warmup-iters 0` 仅在明确需要跳过预热时使用。
 
 `--save-rollout-inputs` 将每轮采样权重和完整输入保存到 `checkpoints/rollouts/`，便于冻结重放；体积较大，通常用于验收或短诊断。采集自动批推理，`TrainConfig.ppo_inference_batch_size=1` 可用于串行对照，`0` 批处理全部活跃 agent。patch 按帧共享，minibatch 才组装窗口，CNN 更新仍重新计算。
 
-固定评估走 `local_evaluation`。评估分别执行无噪声与指定 OU 探索，默认要求同段有效前进 5 米、当前位置前进 5 米并在走廊内保持 10 步。`--goal-progress`、`--dwell` 可调整；`--jitter` 默认 ±0.01 米，第一轮无扰动。记录成功、跌落、离开走廊、到达步数、输入和接触/动作事件，详情见[执行记录](optimization_execution_2026-09-19.md)。加 `--native-diagnostics` 需要新版插件，会增加诊断通信开销。
+固定评估走 `local_evaluation`。评估分别执行无噪声与指定 OU 探索，默认要求同段有效前进 5 米、当前位置前进 5 米并在走廊内保持 10 步。`--goal-progress`、`--dwell` 可调整；`--jitter` 默认 0，所有轮次均从精确出生状态开始；显式设置非零值才测试位置扰动。记录成功、跌落、离开走廊、到达步数、输入和接触/动作事件，详情见[执行记录](optimization_execution_2026-09-19.md)。加 `--native-diagnostics` 需要新版插件，会增加诊断通信开销。
 
 ### P1.3 / P2 表示候选
 
-候选已实现并通过工程 smoke，默认保持原 Transformer/39D/逐步动作。开关、单位、序列与段概率契约及验证边界见[表示实验](policy_representation_experiments.md)。
+GRU 已成为新建 PPO 的默认主线，仍使用 39D 动力学与逐步动作；Transformer 保留为显式对照。开关、单位、序列与段概率契约及验证边界见[表示实验](policy_representation_experiments.md)。
 
 - `--features relations events geometry trends`：选择关系、事件、局部几何和多尺度趋势；可只选一组，`none` 清空这些组。
 - `--event-branch`：小事件 MLP，同时送入 backbone 和 actor/critic，并自动启用事件输入；`--event-source native|geometry` 指定事件来源，默认 native。
-- `--policy-backbone transformer|gru`：单帧 CNN+GRU 对照；`--recurrent-seq-len 16` 控制训练块的决策数。
+- `--policy-backbone transformer|gru`：选择时序骨干；新任务默认 GRU，`--recurrent-seq-len 32` 控制训练块的决策数。
 - `--normalize-action-history`：动作历史除以 100，执行动作不变。
 - `--action-segment-steps 4`：两端点线性插值短段；默认接触边缘中断，`--no-segment-interrupt-contacts` 可关闭。
 - `--feature-step-seconds`：特征计时所用物理步长，默认 1/120 秒；native 模式与游戏不一致时报错。

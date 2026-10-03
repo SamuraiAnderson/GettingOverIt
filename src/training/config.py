@@ -30,6 +30,15 @@ def _default_port() -> int:
 
 @dataclass
 class TrainConfig:
+    @classmethod
+    def ppo_mainline(cls) -> "TrainConfig":
+        """Fresh PPO defaults; bare defaults remain the legacy BC/checkpoint contract."""
+        return cls(policy_backbone="gru", normalize_action_history=True,
+                   recurrent_seq_len=32, random_deploy=False,
+                   contact_heads_enabled=False, sil_enabled=False,
+                   explore_boost_enabled=False, phase_weighting_enabled=False,
+                   sil_advantage_weighting_enabled=False)
+
     # ── 环境 ──
     game_root: str = field(default_factory=_default_game_root)
     num_agents: int = 10
@@ -63,7 +72,8 @@ class TrainConfig:
     patch_resolution: float = 0.5    # 仅 legacy 单尺度使用
     dropout: float = 0.1
 
-    # Independent PPO representation experiments; legacy baseline stays unchanged.
+    # Legacy defaults for BC and checkpoints missing these fields.
+    # New PPO runs use ppo_mainline(); explicit saved values always take precedence.
     policy_backbone: str = "transformer"  # transformer | gru
     relation_features: bool = False
     event_features: bool = False

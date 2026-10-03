@@ -91,9 +91,12 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
     font = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
     title = "原始状态回放" if rank is None else f"第 {rank} 名 · 原始状态回放"
     fig.suptitle(title, fontproperties=font, fontsize=17, y=.97)
-    run_tokens=episode.parents[2].name.split("_")
     progress_name = "确认终点 D" if progress_mode_of(cfg) == PROGRESS_MODE_V2 else "累计有效进度"
-    label=f"{progress_name} {data['metrics']['credited_progress_m']:.2f} 米 · {run_tokens[-2]} / seed {run_tokens[-1][1:]}"
+    progress = (data["metrics"].get("cap_progress_m")
+                if progress_mode_of(cfg) == PROGRESS_MODE_V2 else data["metrics"]["credited_progress_m"])
+    if progress is None:
+        progress = (marks or corridor_score_marks(states, cfg, route))["credited_progress_m"]
+    label=f"{progress_name} {progress:.2f} 米 · {episode.parent.name}"
     if peak is not None:
         label += f" · 封顶于 {peak * cfg.feature_step_seconds:.2f}s / 第 {peak} 步"
     if cut is not None:
@@ -185,6 +188,8 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
             "type":"archived_state_reconstruction_not_game_recording",
             "trail": "pot_transform_point_b" if states.shape[1] == 35 else "player_origin",
             "credited_progress_m": data["metrics"]["credited_progress_m"]}
+    meta["displayed_progress_m"] = progress
+    meta["displayed_progress_name"] = progress_name
     if peak is not None:
         meta["credited_state_index"] = int(peak)
         meta["credited_seconds"] = peak * cfg.feature_step_seconds

@@ -6,6 +6,13 @@
 
 ## 一、整体架构
 
+2026-10-03 起，新建 PPO 任务默认使用单层 GRU128、动作历史除以 100、TBPTT 32，
+只从精确出生状态训练。选择依据为 `runs/backbone_compare_20261002/comparison.json`。
+默认配置由 `TrainConfig.ppo_mainline()` 提供；旧 checkpoint 按保存的架构恢复，
+缺少架构字段时仍按历史 Transformer 解释。下文 Transformer 窗口结构保留为 BC
+及对照实现的说明。GRU 在线逐帧编码、隐藏状态跨帧保留，episode/reset 时清零；
+训练按完整前缀无梯度重建状态，再对 32 步块反传。
+
 存在两条并行训练管线，共享同一套环境接口、观测构建逻辑与投放机制。观测构建（dynamics 特征、4ch 粗图、稀疏几何 token、定长窗口填充/mask）在离线数据集与在线采集之间**收敛为单一实现**（`dataset.build_dynamics`/`build_patch`/`sparse_geometry.build_sparse_geometry`/`left_pad_sequence`），从结构上保证训练与推理逐窗口一致，不依赖文档手动对齐：
 
 | 管线 | 入口 | 算法 |
