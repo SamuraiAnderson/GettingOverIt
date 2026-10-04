@@ -1,0 +1,125 @@
+{
+  "agents": 1,
+  "status": "PASS",
+  "ready_seconds": 7.684773500077426,
+  "same_actions_equal": true,
+  "cold_reset_repeats_equal": true,
+  "warm_snapshot_equal": true,
+  "teleport_isolated_and_snapshot_equal": true,
+  "hello": {
+    "accepted": true,
+    "protocol": "v2",
+    "state_schema": "anchor35",
+    "raw_dim": 35,
+    "field_hash": "goi-state-v1-35",
+    "anchor_id": "pot_visible_center_v1",
+    "calibration_sha256": "94426ea3c49b32ff1b508a1026ba555ba7b2221174fa36da7b251c98dce72459",
+    "calibration_available": true,
+    "num_agents": 1,
+    "physics_backend": "isolated_worlds",
+    "physics_world_count": 1,
+    "fixed_delta_time": 0.008333334,
+    "step_frames": 1
+  },
+  "initial_bodies": [
+    {
+      "name": "Player",
+      "position": {
+        "x": -44.280982971191406,
+        "y": -2.4220328330993652
+      },
+      "velocity": {
+        "x": -5.683875592410459e-10,
+        "y": -1.685349360069921e-10
+      },
+      "rotation": 0.04725193604826927,
+      "angularVelocity": 3.729022424181494e-08,
+      "sleeping": false
+    },
+    {
+      "name": "Hub",
+      "position": {
+        "x": -44.24727249145508,
+        "y": -2.069005012512207
+      },
+      "velocity": {
+        "x": -8.70712335565571e-10,
+        "y": -1.6643667000160178e-10
+      },
+      "rotation": 0.0,
+      "angularVelocity": 0.0,
+      "sleeping": false
+    },
+    {
+      "name": "Slider",
+      "position": {
+        "x": -44.24727249145508,
+        "y": -2.069005250930786
+      },
+      "velocity": {
+        "x": -8.716500854433207e-10,
+        "y": -1.6848251960244198e-10
+      },
+      "rotation": -36.339115142822266,
+      "angularVelocity": -0.0341019444167614,
+      "sleeping": false
+    },
+    {
+      "name": "Handle",
+      "position": {
+        "x": -44.53202819824219,
+        "y": -1.8595333099365234
+      },
+      "velocity": {
+        "x": 0.00012465743930079043,
+        "y": 0.00016949631390161812
+      },
+      "rotation": 143.660888671875,
+      "angularVelocity": -0.0341019444167614,
+      "sleeping": false
+    },
+    {
+      "name": "PoleMiddle",
+      "position": {
+        "x": -43.59013748168945,
+        "y": -2.556976556777954
+      },
+      "velocity": {
+        "x": -0.00028245311114005744,
+        "y": -0.00038031002623029053
+      },
+      "rotation": 143.48121643066406,
+      "angularVelocity": -0.033444903790950775,
+      "sleeping": false
+    },
+    {
+      "name": "Tip",
+      "position": {
+        "x": -42.7221794128418,
+        "y": -3.19966983795166
+      },
+      "velocity": {
+        "x": -0.0006461915909312665,
+        "y": -0.0008936193189583719
+      },
+      "rotation": 143.48121643066406,
+      "angularVelocity": -0.033444903790950775,
+      "sleeping": false
+    },
+    {
+      "name": "Cursor",
+      "position": {
+        "x": -42.72588348388672,
+        "y": -3.2136011123657227
+      },
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "angularVelocity": 0.0,
+      "sleeping": true
+    }
+  ],
+  "wall_seconds": 76.02681370009668
+}

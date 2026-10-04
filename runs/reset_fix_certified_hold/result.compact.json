@@ -1,0 +1,1545 @@
+{
+  "source": "runs/reset_fix_certified_hold/result.json",
+  "source_sha256": "25bc304624903e37f4887197f361f646705a046c238f8554228086afc3159e1d",
+  "source_bytes": 8030370,
+  "compaction": "Lists longer than 32 entries replaced with their lengths; scalar metrics and smaller structures retained. Raw source remains local.",
+  "result": {
+    "version": 1,
+    "status": "PASS",
+    "started_at_utc": "2026-10-02T05:19:08.446772+00:00",
+    "scope": "same-agent reset versus reference and probe; cross-agent divergence is informational",
+    "raw_state_schema": {
+      "name": "legacy33",
+      "dimension": 33
+    },
+    "parameters": {
+      "agents": 2,
+      "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+      "controlled_updates": false,
+      "reset_diagnostics": true,
+      "scene_reset": true,
+      "fixed_order": false,
+      "restarts": 3,
+      "cycles": 1,
+      "burn_steps": [
+        40
+      ],
+      "idle_seconds": [
+        0.0,
+        0.25,
+        1.0
+      ],
+      "probe_steps": 40,
+      "probe_kind": "hold",
+      "seed": 20261002,
+      "startup_settle": 8.0,
+      "timeout": 120.0,
+      "port": 9000,
+      "out": "runs\\reset_fix_certified_hold",
+      "allow_moving_start": false,
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "thresholds": {
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "fields": {
+      "omitted_raw_array": true,
+      "length": 35
+    },
+    "timestamp_excluded": 28,
+    "limitations": [
+      "Scene reset with diagnostics uses live state before any RESET as the cold reference; legacy mode uses first RESET.",
+      "Q diagnostics expose all body velocities and selected control fields, not the full solver state.",
+      "Without Q diagnostics, wait effects are observed only at the next STEP.",
+      "Histories run sequentially; differences are not uniquely attributed to waiting versus prior history.",
+      "Stationarity is checked separately, including common motion shared by all agents.",
+      "Thresholds are provisional acceptance criteria, not a measured numerical noise floor."
+    ],
+    "expected_cases": 30,
+    "cases": [
+      {
+        "id": "restart_00_case_000",
+        "restart": 0,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.0028487000381574035,
+        "idle_actual_s": 5.00003807246685e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        }
+      },
+      {
+        "id": "restart_00_case_001",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6057265000417829,
+        "idle_actual_s": 1.0004195999354124,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        }
+      },
+      {
+        "id": "restart_00_case_002",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6386398000176996,
+        "idle_actual_s": 1.0001259999116883,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_003",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6289228000678122,
+        "idle_actual_s": 3.00002284348011e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        }
+      },
+      {
+        "id": "restart_00_case_004",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6125297999242321,
+        "idle_actual_s": 2.800021320581436e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_005",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6083858000347391,
+        "idle_actual_s": 3.200024366378784e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_006",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6415448000188917,
+        "idle_actual_s": 0.25047329999506474,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_007",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6420400999486446,
+        "idle_actual_s": 1.0002155000111088,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_008",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6473381000105292,
+        "idle_actual_s": 0.25041420001070946,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_009",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_009.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6221682000905275,
+        "idle_actual_s": 0.2504823999479413,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 10
+        }
+      },
+      {
+        "id": "restart_01_case_000",
+        "restart": 1,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.008363300003111362,
+        "idle_actual_s": 2.4600070901215076e-05,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        }
+      },
+      {
+        "id": "restart_01_case_001",
+        "restart": 1,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6442247000522912,
+        "idle_actual_s": 0.2500743999844417,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_002",
+        "restart": 1,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_01_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6382205999689177,
+        "idle_actual_s": 1.0002976999385282,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        }
+      },
+      {
+        "id": "restart_01_case_003",
+        "restart": 1,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6563215999631211,
+        "idle_actual_s": 3.100023604929447e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_004",
+        "restart": 1,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6251932999584824,
+        "idle_actual_s": 0.2504731999943033,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        }
+      },
+      {
+        "id": "restart_01_case_005",
+        "restart": 1,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.64226640004199,
+        "idle_actual_s": 4.00003045797348e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        }
+      },
+      {
+        "id": "restart_01_case_006",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6195881000021473,
+        "idle_actual_s": 0.2500595999881625,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_007",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6340925999684259,
+        "idle_actual_s": 3.400025889277458e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_008",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_01_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6267964999424294,
+        "idle_actual_s": 1.0004440000047907,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_009",
+        "restart": 1,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_01_case_009.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6487816999433562,
+        "idle_actual_s": 1.0002818000502884,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 10
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_000",
+        "restart": 2,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.010449999943375587,
+        "idle_actual_s": 3.600027412176132e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        }
+      },
+      {
+        "id": "restart_02_case_001",
+        "restart": 2,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_02_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6381475999951363,
+        "idle_actual_s": 1.0000812000362203,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        }
+      },
+      {
+        "id": "restart_02_case_002",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_02_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6082156000193208,
+        "idle_actual_s": 1.0006411999929696,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_003",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.630189900053665,
+        "idle_actual_s": 0.25007389998063445,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_004",
+        "restart": 2,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6192450999515131,
+        "idle_actual_s": 0.25037979998160154,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        }
+      },
+      {
+        "id": "restart_02_case_005",
+        "restart": 2,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6398046999238431,
+        "idle_actual_s": 2.599903382360935e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_006",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6213197000324726,
+        "idle_actual_s": 4.199915565550327e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "history_max_position_change_per_agent_m": [
+          6.06951904296875,
+          6.159229278564453
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_007",
+        "restart": 2,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.606012100004591,
+        "idle_actual_s": 2.600019797682762e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        }
+      },
+      {
+        "id": "restart_02_case_008",
+        "restart": 2,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_02_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6215643999166787,
+        "idle_actual_s": 1.0001450999407098,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_009",
+        "restart": 2,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_009.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6442486000014469,
+        "idle_actual_s": 0.2501116000348702,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 10
+        },
+        "history_max_position_change_per_agent_m": [
+          0.12823867797851562,
+          0.12898635864257812
+        ],
+        "history_exercised": true
+      }
+    ],
+    "sessions": [
+      {
+        "restart": 0,
+        "pid": 18504,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      },
+      {
+        "restart": 1,
+        "pid": 9472,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      },
+      {
+        "restart": 2,
+        "pid": 26108,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      }
+    ],
+    "errors": [],
+    "fingerprints": {
+      "script": "3106ffa4b54c413b77739bf56796937b4494e91f396642f0e3e13e03245a395e",
+      "deployed_plugin": "4fade7d4cf492b757e63306b491fe0cd3424aee8a51aea585fb5c83da288bce9",
+      "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844",
+      "project_config": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+    },
+    "runtime_config_requested": {
+      "mode": 0,
+      "tcpPort": 9000,
+      "stateDimension": 29,
+      "actionDimension": 2,
+      "stepFrames": 1,
+      "numDuplicates": 2,
+      "playerObjectName": "Player",
+      "minInput": 10.0,
+      "maxInput": 100.0,
+      "autoClampInput": true,
+      "normalizeInitialPose": true,
+      "initPoseSettleFrames": 120,
+      "startAnimatorInRlMode": true,
+      "initCursorUpScale": 1.0,
+      "initCursorOffsetX": 0.0,
+      "initPoseGain": 15.0,
+      "dataRoot": "GoiData",
+      "initializeDirectoriesOnStart": true,
+      "enableDebugLogs": true,
+      "experimentalResetDiagnostics": true,
+      "experimentalSceneReset": true,
+      "experimentalControlledUpdates": true
+    },
+    "reference_case": "restart_00_case_000",
+    "finished_at_utc": "2026-10-02T05:21:01.039161+00:00"
+  }
+}

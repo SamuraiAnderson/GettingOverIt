@@ -1,0 +1,579 @@
+{
+  "source": "runs/reset_fix_frame_barrier/result.json",
+  "source_sha256": "5ba43c564f1e75e62bb56ece1a7d151e2f8c888cc6d44f41d7627716869cd67c",
+  "source_bytes": 2740616,
+  "compaction": "Lists longer than 32 entries replaced with their lengths; scalar metrics and smaller structures retained. Raw source remains local.",
+  "result": {
+    "version": 1,
+    "status": "FAIL",
+    "started_at_utc": "2026-10-02T04:58:46.731106+00:00",
+    "scope": "same-agent reset versus reference and probe; cross-agent divergence is informational",
+    "raw_state_schema": {
+      "name": "legacy33",
+      "dimension": 33
+    },
+    "parameters": {
+      "agents": 2,
+      "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+      "controlled_updates": false,
+      "reset_diagnostics": true,
+      "scene_reset": true,
+      "fixed_order": true,
+      "restarts": 1,
+      "cycles": 1,
+      "burn_steps": [
+        1
+      ],
+      "idle_seconds": [
+        0.0,
+        0.25,
+        1.0
+      ],
+      "probe_steps": 40,
+      "probe_kind": "zero",
+      "seed": 20261002,
+      "startup_settle": 8.0,
+      "timeout": 120.0,
+      "port": 9000,
+      "out": "runs\\reset_fix_frame_barrier",
+      "allow_moving_start": false,
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "thresholds": {
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "fields": {
+      "omitted_raw_array": true,
+      "length": 35
+    },
+    "timestamp_excluded": 28,
+    "limitations": [
+      "The first reset is a comparison reference, not an assumed clean or stationary state.",
+      "Only player angular velocity is exposed; other rigidbody angular velocities and solver state are not certified.",
+      "Wait effects are observed at the next zero STEP, not through a live read during idle.",
+      "Histories run sequentially; differences are not uniquely attributed to waiting versus prior history.",
+      "Stationarity is checked separately, including common motion shared by all agents.",
+      "Thresholds are provisional acceptance criteria, not a measured numerical noise floor."
+    ],
+    "expected_cases": 10,
+    "cases": [
+      {
+        "id": "restart_00_case_000",
+        "restart": 0,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.013173899962566793,
+        "idle_actual_s": 5.500041879713535e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        }
+      },
+      {
+        "id": "restart_00_case_001",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6917520998977125,
+        "idle_actual_s": 3.400025889277458e-06,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        }
+      },
+      {
+        "id": "restart_00_case_002",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6550683999666944,
+        "idle_actual_s": 0.25030399998649955,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        }
+      },
+      {
+        "id": "restart_00_case_003",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6944281000178307,
+        "idle_actual_s": 1.000512000056915,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        }
+      },
+      {
+        "id": "restart_00_case_004",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6628104000119492,
+        "idle_actual_s": 2.800021320581436e-06,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "history_max_position_change_per_agent_m": [
+          2.9193496704101562,
+          2.9186768531799316
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_005",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6665075999917462,
+        "idle_actual_s": 0.25050500000361353,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "history_max_position_change_per_agent_m": [
+          2.919372797012329,
+          2.9190874099731445
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_006",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6480066999793053,
+        "idle_actual_s": 1.0002159000141546,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "history_max_position_change_per_agent_m": [
+          2.9193274974823,
+          2.9188129901885986
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_007",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6666074999375269,
+        "idle_actual_s": 3.00002284348011e-06,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "history_max_position_change_per_agent_m": [
+          3.9869461059570312,
+          4.135379791259766
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_008",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6489925000350922,
+        "idle_actual_s": 0.2501683000009507,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "history_max_position_change_per_agent_m": [
+          3.9869766235351562,
+          4.135311126708984
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_009",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_009.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6662112000631168,
+        "idle_actual_s": 1.0003823000006378,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 10
+        },
+        "history_max_position_change_per_agent_m": [
+          3.986888885498047,
+          4.135402679443359
+        ],
+        "history_exercised": true
+      }
+    ],
+    "sessions": [
+      {
+        "restart": 0,
+        "pid": 15636,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      }
+    ],
+    "errors": [],
+    "fingerprints": {
+      "script": "39c768ec1bcc84d3ecedb85912403b558f00a40d2aea7a4295dc596692c9734c",
+      "deployed_plugin": "1bdeb44fbd44769dffc711c2d87969637df6a6fcb010bbd1fee6ade3fd6a7490",
+      "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844",
+      "project_config": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+    },
+    "runtime_config_requested": {
+      "mode": 0,
+      "tcpPort": 9000,
+      "stateDimension": 29,
+      "actionDimension": 2,
+      "stepFrames": 1,
+      "numDuplicates": 2,
+      "playerObjectName": "Player",
+      "minInput": 10.0,
+      "maxInput": 100.0,
+      "autoClampInput": true,
+      "normalizeInitialPose": true,
+      "initPoseSettleFrames": 120,
+      "startAnimatorInRlMode": true,
+      "initCursorUpScale": 1.0,
+      "initCursorOffsetX": 0.0,
+      "initPoseGain": 15.0,
+      "dataRoot": "GoiData",
+      "initializeDirectoriesOnStart": true,
+      "enableDebugLogs": true,
+      "experimentalResetDiagnostics": true,
+      "experimentalSceneReset": true,
+      "experimentalControlledUpdates": true
+    },
+    "reference_case": "restart_00_case_000",
+    "finished_at_utc": "2026-10-02T04:59:21.792723+00:00"
+  }
+}

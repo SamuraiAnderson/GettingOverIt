@@ -1,0 +1,589 @@
+{
+  "source": "runs/reset_fix_flat_bodies/result.json",
+  "source_sha256": "ad172d7b749432d4f6719dd39c604dd58007b8fa1c9c3cacafbcb4b6f2c17ae4",
+  "source_bytes": 2718280,
+  "compaction": "Lists longer than 32 entries replaced with their lengths; scalar metrics and smaller structures retained. Raw source remains local.",
+  "result": {
+    "version": 1,
+    "status": "FAIL",
+    "started_at_utc": "2026-10-02T05:06:19.583416+00:00",
+    "scope": "same-agent reset versus reference and probe; cross-agent divergence is informational",
+    "raw_state_schema": {
+      "name": "legacy33",
+      "dimension": 33
+    },
+    "parameters": {
+      "agents": 2,
+      "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+      "controlled_updates": false,
+      "reset_diagnostics": true,
+      "scene_reset": true,
+      "fixed_order": true,
+      "restarts": 1,
+      "cycles": 1,
+      "burn_steps": [
+        40
+      ],
+      "idle_seconds": [
+        0.0,
+        0.25,
+        1.0
+      ],
+      "probe_steps": 40,
+      "probe_kind": "zero",
+      "seed": 20261002,
+      "startup_settle": 8.0,
+      "timeout": 120.0,
+      "port": 9000,
+      "out": "runs\\reset_fix_flat_bodies",
+      "allow_moving_start": false,
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "thresholds": {
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "fields": {
+      "omitted_raw_array": true,
+      "length": 35
+    },
+    "timestamp_excluded": 28,
+    "limitations": [
+      "Scene reset with diagnostics uses live state before any RESET as the cold reference; legacy mode uses first RESET.",
+      "Q diagnostics expose all body velocities and selected control fields, not the full solver state.",
+      "Without Q diagnostics, wait effects are observed only at the next STEP.",
+      "Histories run sequentially; differences are not uniquely attributed to waiting versus prior history.",
+      "Stationarity is checked separately, including common motion shared by all agents.",
+      "Thresholds are provisional acceptance criteria, not a measured numerical noise floor."
+    ],
+    "expected_cases": 10,
+    "cases": [
+      {
+        "id": "restart_00_case_000",
+        "restart": 0,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.005321800010278821,
+        "idle_actual_s": 1.4499993994832039e-05,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        }
+      },
+      {
+        "id": "restart_00_case_001",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.5987093000439927,
+        "idle_actual_s": 3.900029696524143e-06,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        }
+      },
+      {
+        "id": "restart_00_case_002",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6146291999612004,
+        "idle_actual_s": 0.25014520005788654,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        }
+      },
+      {
+        "id": "restart_00_case_003",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6197451000334695,
+        "idle_actual_s": 1.0002098999684677,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        }
+      },
+      {
+        "id": "restart_00_case_004",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.5945849000709131,
+        "idle_actual_s": 2.600019797682762e-06,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "history_max_position_change_per_agent_m": [
+          2.9127023220062256,
+          2.91282057762146
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_005",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.614340600091964,
+        "idle_actual_s": 0.25023160001728684,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "history_max_position_change_per_agent_m": [
+          2.912700891494751,
+          2.91282057762146
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_006",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6356174999382347,
+        "idle_actual_s": 1.0000568999676034,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "history_max_position_change_per_agent_m": [
+          2.9127023220062256,
+          2.912813663482666
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_007",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6264826999977231,
+        "idle_actual_s": 1.1599971912801266e-05,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "history_max_position_change_per_agent_m": [
+          4.924507141113281,
+          4.991279602050781
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_008",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.5963760999729857,
+        "idle_actual_s": 0.25008360005449504,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "history_max_position_change_per_agent_m": [
+          4.942996978759766,
+          4.991283416748047
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_009",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 1.0,
+        "raw_file": "restart_00_case_009.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6401810999959707,
+        "idle_actual_s": 1.000304999994114,
+        "assessment": {
+          "passed": false,
+          "alignment_required": false,
+          "matches_reference": false,
+          "agents_aligned": true,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": false,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.008258819580078125,
+            "angle": 0.171173095703125,
+            "linear_velocity": 2.8588267014129087e-05,
+            "angular_velocity": 0.0033637285232543945
+          },
+          "body_reference_matched": false,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 10
+        },
+        "history_max_position_change_per_agent_m": [
+          4.951728820800781,
+          4.9912567138671875
+        ],
+        "history_exercised": true
+      }
+    ],
+    "sessions": [
+      {
+        "restart": 0,
+        "pid": 32024,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      }
+    ],
+    "errors": [],
+    "fingerprints": {
+      "script": "3106ffa4b54c413b77739bf56796937b4494e91f396642f0e3e13e03245a395e",
+      "deployed_plugin": "0fdd5a422a27c347682b5de093f6e500d06f6d9b4d1604b47314f49673bf80e5",
+      "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844",
+      "project_config": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+    },
+    "runtime_config_requested": {
+      "mode": 0,
+      "tcpPort": 9000,
+      "stateDimension": 29,
+      "actionDimension": 2,
+      "stepFrames": 1,
+      "numDuplicates": 2,
+      "playerObjectName": "Player",
+      "minInput": 10.0,
+      "maxInput": 100.0,
+      "autoClampInput": true,
+      "normalizeInitialPose": true,
+      "initPoseSettleFrames": 120,
+      "startAnimatorInRlMode": true,
+      "initCursorUpScale": 1.0,
+      "initCursorOffsetX": 0.0,
+      "initPoseGain": 15.0,
+      "dataRoot": "GoiData",
+      "initializeDirectoriesOnStart": true,
+      "enableDebugLogs": true,
+      "experimentalResetDiagnostics": true,
+      "experimentalSceneReset": true,
+      "experimentalControlledUpdates": true
+    },
+    "reference_case": "restart_00_case_000",
+    "finished_at_utc": "2026-10-02T05:06:56.936575+00:00"
+  }
+}

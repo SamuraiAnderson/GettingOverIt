@@ -1,0 +1,92 @@
+{
+  "status": "PASS_NATIVE_INPUT_AND_RESET",
+  "plugin_sha256": "f5ce41e1ac158e517d655d29d3c98cda85848f7d806f4132795021e33d55692b",
+  "native_input": {
+    "passed": true,
+    "missing_fixtures": [],
+    "control_columns": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      8,
+      9,
+      10
+    ],
+    "scope": "Bitwise input/history/gain/pause/settings at all recorded stages; not body/cursor dynamics",
+    "cases": [
+      {
+        "id": "zero_candidate_00",
+        "reference": "zero_native_00",
+        "passed": true,
+        "rows": 120,
+        "max_abs_delta": 0.0,
+        "mismatches": []
+      },
+      {
+        "id": "hold_candidate_00",
+        "reference": "hold_native_00",
+        "passed": true,
+        "rows": 120,
+        "max_abs_delta": 0.0,
+        "mismatches": []
+      },
+      {
+        "id": "pulse_candidate_00",
+        "reference": "pulse_native_00",
+        "passed": true,
+        "rows": 120,
+        "max_abs_delta": 0.0,
+        "mismatches": []
+      },
+      {
+        "id": "reverse_candidate_00",
+        "reference": "reverse_native_00",
+        "passed": true,
+        "rows": 120,
+        "max_abs_delta": 0.0,
+        "mismatches": []
+      },
+      {
+        "id": "random_candidate_00",
+        "reference": "random_native_00",
+        "passed": true,
+        "rows": 120,
+        "max_abs_delta": 0.0,
+        "mismatches": []
+      }
+    ]
+  },
+  "independent_agent_steps": 640,
+  "reset": [
+    {
+      "agents": 2,
+      "conditions": 27,
+      "frames": 1107,
+      "bitwise_frames": 1107,
+      "controls_matched": true,
+      "all_native_starts_passed": true,
+      "all_native_parameters_passed": true
+    },
+    {
+      "agents": 8,
+      "conditions": 4,
+      "frames": 4804,
+      "bitwise_frames": 4804,
+      "controls_matched": true,
+      "all_native_starts_passed": true,
+      "all_native_parameters_passed": true
+    }
+  ],
+  "production_unchanged": true,
+  "production_fingerprints": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "limitations": [
+    "Native input and reset acceptance, not complete body/cursor dynamics equivalence.",
+    "Fixed-start scene reset only; arbitrary snapshot N remains unsupported.",
+    "The feature remains opt-in; existing policy action semantics change when enabled."
+  ]
+}

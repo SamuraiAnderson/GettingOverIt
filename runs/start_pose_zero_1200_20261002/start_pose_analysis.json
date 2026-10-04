@@ -1,0 +1,3764 @@
+{
+  "status": "COMPLETE",
+  "source_report": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\start_pose_zero_1200_20261002\\result.json",
+  "source_plugin_sha256": "088d3f6ca23bdaacef0353489594b275e1baafa8a23ec4ff50884eb5bacc41d4",
+  "repeats_per_mode": 3,
+  "native_extra_warmup_before_recording": 0,
+  "zero_actions_and_zero_input_history_verified": true,
+  "native_parameters_matched": true,
+  "measurements": [
+    {
+      "additional_physics_steps": 0,
+      "additional_simulated_seconds": 0.0,
+      "cross_mode_ranges": {
+        "max_world_position_distance_m": [
+          0.06940416437467976,
+          0.06940416437467976
+        ],
+        "max_world_position_component_m": [
+          0.06903839111328125,
+          0.06903839111328125
+        ],
+        "max_world_angle_difference_deg": [
+          2.7112093791365623,
+          2.7112093791365623
+        ],
+        "max_position_distance_after_aligning_player_m": [
+          0.11021461246644473,
+          0.11021461246644473
+        ],
+        "tip_distance_after_aligning_player_m": [
+          0.11021461246644473,
+          0.11021461246644473
+        ],
+        "slider_translation_difference_m": [
+          0.10161209106445312,
+          0.10161209106445312
+        ]
+      },
+      "self_repeat_max_difference": {
+        "native": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        },
+        "candidate": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631129652261734,
+            "tip_to_hub_distance_m": 1.89830677605557,
+            "cursor_to_tip_distance_m": 0.014938341556406241,
+            "hinge_angle_deg": 0.2513236403465271,
+            "slider_translation_m": -0.3536994457244873,
+            "max_linear_speed_m_s": 0.0010349994609647165,
+            "max_angular_speed_deg_s": 0.034139081835746765,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.005049999803304672,
+              -42.72201156616211,
+              -3.1991660594940186,
+              -0.011378576047718525,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161324501037598
+            ],
+            "player_angle_deg": 2.7575206756591797,
+            "tip_to_hub_distance_m": 1.9999195734298798,
+            "cursor_to_tip_distance_m": 0.0,
+            "hinge_angle_deg": 1.0449711084365845,
+            "slider_translation_m": -0.2520873546600342,
+            "max_linear_speed_m_s": 0.0006689452449860668,
+            "max_angular_speed_deg_s": 0.15208800137043,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10078568011522293,
+              -42.6796760559082,
+              -3.211336612701416,
+              0.05069643631577492,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940416437467976,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7112093791365623,
+            "max_position_distance_after_aligning_player_m": 0.11021461246644473,
+            "tip_distance_after_aligning_player_m": 0.11021461246644473,
+            "slider_translation_difference_m": 0.10161209106445312,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916118621826172
+                ],
+                "angle_delta_deg": 2.7112093791365623,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -1.3909175544946084e-06,
+                  3.901498950784066e-07
+                ],
+                "angular_velocity_delta_deg_s": 9.176531154508893e-05
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007115840911865234
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.5097724545901081e-06,
+                  6.490251380775192e-08
+                ],
+                "relative_angle_delta_deg": -2.7112093791365623,
+                "velocity_delta_xy_m_s": [
+                  -1.9641488425009568e-06,
+                  6.728175419856708e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116079330444336
+                ],
+                "angle_delta_deg": 0.7936477661132812,
+                "player_frame_delta_xy_m": [
+                  1.5099651646324763e-06,
+                  3.0332101502716924e-07
+                ],
+                "relative_angle_delta_deg": -1.917561613023281,
+                "velocity_delta_xy_m_s": [
+                  -3.8093801011940265e-06,
+                  2.1792049089523757e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.18622708320617676
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01078033447265625,
+                  -0.0559004545211792
+                ],
+                "angle_delta_deg": 0.7936553955078125,
+                "player_frame_delta_xy_m": [
+                  0.0869361864331186,
+                  -0.053546490614325815
+                ],
+                "relative_angle_delta_deg": -1.9175539836287498,
+                "velocity_delta_xy_m_s": [
+                  -0.0005261946789687499,
+                  -0.0007049574924167246
+                ],
+                "angular_velocity_delta_deg_s": 0.18618673086166382
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.0272064208984375,
+                  -0.033136606216430664
+                ],
+                "angle_delta_deg": 1.37213134765625,
+                "player_frame_delta_xy_m": [
+                  0.07036975838789694,
+                  -0.07535334657324885
+                ],
+                "relative_angle_delta_deg": -1.3390780314803123,
+                "velocity_delta_xy_m_s": [
+                  5.015775968786329e-05,
+                  0.00010090394061990082
+                ],
+                "angular_velocity_delta_deg_s": 0.048294300213456154
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.042339324951171875,
+                  -0.012164592742919922
+                ],
+                "angle_delta_deg": 1.37213134765625,
+                "player_frame_delta_xy_m": [
+                  0.055099886616279514,
+                  -0.0954529375975498
+                ],
+                "relative_angle_delta_deg": -1.3390780314803123,
+                "velocity_delta_xy_m_s": [
+                  0.0005644613447657321,
+                  0.000850256321427878
+                ],
+                "angular_velocity_delta_deg_s": 0.04389991983771324
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.046207427978515625,
+                  0.002264261245727539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05897965099934077,
+                  -0.08102721485004827
+                ],
+                "relative_angle_delta_deg": -2.7112093791365623,
+                "velocity_delta_xy_m_s": [
+                  0.0,
+                  0.0
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 1,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631129652261734,
+            "tip_to_hub_distance_m": 1.89830677605557,
+            "cursor_to_tip_distance_m": 0.014938341556406241,
+            "hinge_angle_deg": 0.2513236403465271,
+            "slider_translation_m": -0.3536994457244873,
+            "max_linear_speed_m_s": 0.0010349994609647165,
+            "max_angular_speed_deg_s": 0.034139081835746765,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.005049999803304672,
+              -42.72201156616211,
+              -3.1991660594940186,
+              -0.011378576047718525,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161324501037598
+            ],
+            "player_angle_deg": 2.7575206756591797,
+            "tip_to_hub_distance_m": 1.9999195734298798,
+            "cursor_to_tip_distance_m": 0.0,
+            "hinge_angle_deg": 1.0449711084365845,
+            "slider_translation_m": -0.2520873546600342,
+            "max_linear_speed_m_s": 0.0006689452449860668,
+            "max_angular_speed_deg_s": 0.15208800137043,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10078568011522293,
+              -42.6796760559082,
+              -3.211336612701416,
+              0.05069643631577492,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940416437467976,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7112093791365623,
+            "max_position_distance_after_aligning_player_m": 0.11021461246644473,
+            "tip_distance_after_aligning_player_m": 0.11021461246644473,
+            "slider_translation_difference_m": 0.10161209106445312,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916118621826172
+                ],
+                "angle_delta_deg": 2.7112093791365623,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -1.3909175544946084e-06,
+                  3.901498950784066e-07
+                ],
+                "angular_velocity_delta_deg_s": 9.176531154508893e-05
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007115840911865234
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.5097724545901081e-06,
+                  6.490251380775192e-08
+                ],
+                "relative_angle_delta_deg": -2.7112093791365623,
+                "velocity_delta_xy_m_s": [
+                  -1.9641488425009568e-06,
+                  6.728175419856708e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116079330444336
+                ],
+                "angle_delta_deg": 0.7936477661132812,
+                "player_frame_delta_xy_m": [
+                  1.5099651646324763e-06,
+                  3.0332101502716924e-07
+                ],
+                "relative_angle_delta_deg": -1.917561613023281,
+                "velocity_delta_xy_m_s": [
+                  -3.8093801011940265e-06,
+                  2.1792049089523757e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.18622708320617676
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01078033447265625,
+                  -0.0559004545211792
+                ],
+                "angle_delta_deg": 0.7936553955078125,
+                "player_frame_delta_xy_m": [
+                  0.0869361864331186,
+                  -0.053546490614325815
+                ],
+                "relative_angle_delta_deg": -1.9175539836287498,
+                "velocity_delta_xy_m_s": [
+                  -0.0005261946789687499,
+                  -0.0007049574924167246
+                ],
+                "angular_velocity_delta_deg_s": 0.18618673086166382
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.0272064208984375,
+                  -0.033136606216430664
+                ],
+                "angle_delta_deg": 1.37213134765625,
+                "player_frame_delta_xy_m": [
+                  0.07036975838789694,
+                  -0.07535334657324885
+                ],
+                "relative_angle_delta_deg": -1.3390780314803123,
+                "velocity_delta_xy_m_s": [
+                  5.015775968786329e-05,
+                  0.00010090394061990082
+                ],
+                "angular_velocity_delta_deg_s": 0.048294300213456154
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.042339324951171875,
+                  -0.012164592742919922
+                ],
+                "angle_delta_deg": 1.37213134765625,
+                "player_frame_delta_xy_m": [
+                  0.055099886616279514,
+                  -0.0954529375975498
+                ],
+                "relative_angle_delta_deg": -1.3390780314803123,
+                "velocity_delta_xy_m_s": [
+                  0.0005644613447657321,
+                  0.000850256321427878
+                ],
+                "angular_velocity_delta_deg_s": 0.04389991983771324
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.046207427978515625,
+                  0.002264261245727539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05897965099934077,
+                  -0.08102721485004827
+                ],
+                "relative_angle_delta_deg": -2.7112093791365623,
+                "velocity_delta_xy_m_s": [
+                  0.0,
+                  0.0
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 2,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631129652261734,
+            "tip_to_hub_distance_m": 1.89830677605557,
+            "cursor_to_tip_distance_m": 0.014938341556406241,
+            "hinge_angle_deg": 0.2513236403465271,
+            "slider_translation_m": -0.3536994457244873,
+            "max_linear_speed_m_s": 0.0010349994609647165,
+            "max_angular_speed_deg_s": 0.034139081835746765,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.005049999803304672,
+              -42.72201156616211,
+              -3.1991660594940186,
+              -0.011378576047718525,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161324501037598
+            ],
+            "player_angle_deg": 2.7575206756591797,
+            "tip_to_hub_distance_m": 1.9999195734298798,
+            "cursor_to_tip_distance_m": 0.0,
+            "hinge_angle_deg": 1.0449711084365845,
+            "slider_translation_m": -0.2520873546600342,
+            "max_linear_speed_m_s": 0.0006689452449860668,
+            "max_angular_speed_deg_s": 0.15208800137043,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10078568011522293,
+              -42.6796760559082,
+              -3.211336612701416,
+              0.05069643631577492,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940416437467976,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7112093791365623,
+            "max_position_distance_after_aligning_player_m": 0.11021461246644473,
+            "tip_distance_after_aligning_player_m": 0.11021461246644473,
+            "slider_translation_difference_m": 0.10161209106445312,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916118621826172
+                ],
+                "angle_delta_deg": 2.7112093791365623,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -1.3909175544946084e-06,
+                  3.901498950784066e-07
+                ],
+                "angular_velocity_delta_deg_s": 9.176531154508893e-05
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007115840911865234
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.5097724545901081e-06,
+                  6.490251380775192e-08
+                ],
+                "relative_angle_delta_deg": -2.7112093791365623,
+                "velocity_delta_xy_m_s": [
+                  -1.9641488425009568e-06,
+                  6.728175419856708e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116079330444336
+                ],
+                "angle_delta_deg": 0.7936477661132812,
+                "player_frame_delta_xy_m": [
+                  1.5099651646324763e-06,
+                  3.0332101502716924e-07
+                ],
+                "relative_angle_delta_deg": -1.917561613023281,
+                "velocity_delta_xy_m_s": [
+                  -3.8093801011940265e-06,
+                  2.1792049089523757e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.18622708320617676
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01078033447265625,
+                  -0.0559004545211792
+                ],
+                "angle_delta_deg": 0.7936553955078125,
+                "player_frame_delta_xy_m": [
+                  0.0869361864331186,
+                  -0.053546490614325815
+                ],
+                "relative_angle_delta_deg": -1.9175539836287498,
+                "velocity_delta_xy_m_s": [
+                  -0.0005261946789687499,
+                  -0.0007049574924167246
+                ],
+                "angular_velocity_delta_deg_s": 0.18618673086166382
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.0272064208984375,
+                  -0.033136606216430664
+                ],
+                "angle_delta_deg": 1.37213134765625,
+                "player_frame_delta_xy_m": [
+                  0.07036975838789694,
+                  -0.07535334657324885
+                ],
+                "relative_angle_delta_deg": -1.3390780314803123,
+                "velocity_delta_xy_m_s": [
+                  5.015775968786329e-05,
+                  0.00010090394061990082
+                ],
+                "angular_velocity_delta_deg_s": 0.048294300213456154
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.042339324951171875,
+                  -0.012164592742919922
+                ],
+                "angle_delta_deg": 1.37213134765625,
+                "player_frame_delta_xy_m": [
+                  0.055099886616279514,
+                  -0.0954529375975498
+                ],
+                "relative_angle_delta_deg": -1.3390780314803123,
+                "velocity_delta_xy_m_s": [
+                  0.0005644613447657321,
+                  0.000850256321427878
+                ],
+                "angular_velocity_delta_deg_s": 0.04389991983771324
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.046207427978515625,
+                  0.002264261245727539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05897965099934077,
+                  -0.08102721485004827
+                ],
+                "relative_angle_delta_deg": -2.7112093791365623,
+                "velocity_delta_xy_m_s": [
+                  0.0,
+                  0.0
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "additional_physics_steps": 40,
+      "additional_simulated_seconds": 0.3333333507180214,
+      "cross_mode_ranges": {
+        "max_world_position_distance_m": [
+          0.06940423771422244,
+          0.06940423771422244
+        ],
+        "max_world_position_component_m": [
+          0.06903839111328125,
+          0.06903839111328125
+        ],
+        "max_world_angle_difference_deg": [
+          2.711312063038349,
+          2.711312063038349
+        ],
+        "max_position_distance_after_aligning_player_m": [
+          0.10981276466538341,
+          0.10981276466538341
+        ],
+        "tip_distance_after_aligning_player_m": [
+          0.10981276466538341,
+          0.10981276466538341
+        ],
+        "slider_translation_difference_m": [
+          0.10162553191184998,
+          0.10162553191184998
+        ]
+      },
+      "self_repeat_max_difference": {
+        "native": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        },
+        "candidate": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631113260984421,
+            "tip_to_hub_distance_m": 1.898294423750944,
+            "cursor_to_tip_distance_m": 0.0006350054955370995,
+            "hinge_angle_deg": 0.2194710522890091,
+            "slider_translation_m": -0.3537106513977051,
+            "max_linear_speed_m_s": 0.0010702801784084304,
+            "max_angular_speed_deg_s": 0.04004964232444763,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.08866928517818451,
+              -42.72272872924805,
+              -3.200679063796997,
+              -0.01335093379020691,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161319732666016
+            ],
+            "player_angle_deg": 2.7576231956481934,
+            "tip_to_hub_distance_m": 1.9999207767462754,
+            "cursor_to_tip_distance_m": 4.498472753551771e-06,
+            "hinge_angle_deg": 1.0904123783111572,
+            "slider_translation_m": -0.2520851194858551,
+            "max_linear_speed_m_s": 0.0005614406436505529,
+            "max_angular_speed_deg_s": 0.1228012815117836,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10097251087427139,
+              -42.6796760559082,
+              -3.2113354206085205,
+              0.04093805328011513,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940423771422244,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711312063038349,
+            "max_position_distance_after_aligning_player_m": 0.10981276466538341,
+            "tip_distance_after_aligning_player_m": 0.10981276466538341,
+            "slider_translation_difference_m": 0.10162553191184998,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916595458984375
+                ],
+                "angle_delta_deg": 2.711312063038349,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.891185132926355e-05,
+                  8.005364013782823e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0018754280001229695
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.1538793889414043e-06,
+                  2.42108545822628e-07
+                ],
+                "relative_angle_delta_deg": -2.711312063038349,
+                "velocity_delta_xy_m_s": [
+                  -4.41159565543886e-05,
+                  7.389295819424518e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116794586181641
+                ],
+                "angle_delta_deg": 0.870941162109375,
+                "player_frame_delta_xy_m": [
+                  2.1427942455132243e-06,
+                  4.808030592551304e-07
+                ],
+                "relative_angle_delta_deg": -1.8403709009289742,
+                "velocity_delta_xy_m_s": [
+                  -4.403095881753971e-05,
+                  7.2638046499685915e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.16285092383623123
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01055908203125,
+                  -0.0562281608581543
+                ],
+                "angle_delta_deg": 0.870941162109375,
+                "player_frame_delta_xy_m": [
+                  0.08670794356602674,
+                  -0.05386859738467309
+                ],
+                "relative_angle_delta_deg": -1.8403709009289742,
+                "velocity_delta_xy_m_s": [
+                  -0.0005037302180426195,
+                  -0.0006323061825241894
+                ],
+                "angular_velocity_delta_deg_s": 0.16284196078777313
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.027431488037109375,
+                  -0.03285551071166992
+                ],
+                "angle_delta_deg": 1.4091033935546875,
+                "player_frame_delta_xy_m": [
+                  0.07059108291273475,
+                  -0.07507165803861382
+                ],
+                "relative_angle_delta_deg": -1.3022086694836617,
+                "velocity_delta_xy_m_s": [
+                  6.813516665715724e-05,
+                  0.0001501147635281086
+                ],
+                "angular_velocity_delta_deg_s": 0.047388993203639984
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.042980194091796875,
+                  -0.011322021484375
+                ],
+                "angle_delta_deg": 1.4091033935546875,
+                "player_frame_delta_xy_m": [
+                  0.05574003515375825,
+                  -0.09461443739996911
+                ],
+                "relative_angle_delta_deg": -1.3022086694836617,
+                "velocity_delta_xy_m_s": [
+                  0.0005788393318653107,
+                  0.0008805704610495013
+                ],
+                "angular_velocity_delta_deg_s": 0.04774827789515257
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.043048858642578125,
+                  -0.010693550109863281
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05580909930166045,
+                  -0.09398583852528342
+                ],
+                "relative_angle_delta_deg": -2.711312063038349,
+                "velocity_delta_xy_m_s": [
+                  -3.814697265625e-06,
+                  -3.719329833984375e-05
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 1,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631113260984421,
+            "tip_to_hub_distance_m": 1.898294423750944,
+            "cursor_to_tip_distance_m": 0.0006350054955370995,
+            "hinge_angle_deg": 0.2194710522890091,
+            "slider_translation_m": -0.3537106513977051,
+            "max_linear_speed_m_s": 0.0010702801784084304,
+            "max_angular_speed_deg_s": 0.04004964232444763,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.08866928517818451,
+              -42.72272872924805,
+              -3.200679063796997,
+              -0.01335093379020691,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161319732666016
+            ],
+            "player_angle_deg": 2.7576231956481934,
+            "tip_to_hub_distance_m": 1.9999207767462754,
+            "cursor_to_tip_distance_m": 4.498472753551771e-06,
+            "hinge_angle_deg": 1.0904123783111572,
+            "slider_translation_m": -0.2520851194858551,
+            "max_linear_speed_m_s": 0.0005614406436505529,
+            "max_angular_speed_deg_s": 0.1228012815117836,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10097251087427139,
+              -42.6796760559082,
+              -3.2113354206085205,
+              0.04093805328011513,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940423771422244,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711312063038349,
+            "max_position_distance_after_aligning_player_m": 0.10981276466538341,
+            "tip_distance_after_aligning_player_m": 0.10981276466538341,
+            "slider_translation_difference_m": 0.10162553191184998,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916595458984375
+                ],
+                "angle_delta_deg": 2.711312063038349,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.891185132926355e-05,
+                  8.005364013782823e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0018754280001229695
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.1538793889414043e-06,
+                  2.42108545822628e-07
+                ],
+                "relative_angle_delta_deg": -2.711312063038349,
+                "velocity_delta_xy_m_s": [
+                  -4.41159565543886e-05,
+                  7.389295819424518e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116794586181641
+                ],
+                "angle_delta_deg": 0.870941162109375,
+                "player_frame_delta_xy_m": [
+                  2.1427942455132243e-06,
+                  4.808030592551304e-07
+                ],
+                "relative_angle_delta_deg": -1.8403709009289742,
+                "velocity_delta_xy_m_s": [
+                  -4.403095881753971e-05,
+                  7.2638046499685915e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.16285092383623123
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01055908203125,
+                  -0.0562281608581543
+                ],
+                "angle_delta_deg": 0.870941162109375,
+                "player_frame_delta_xy_m": [
+                  0.08670794356602674,
+                  -0.05386859738467309
+                ],
+                "relative_angle_delta_deg": -1.8403709009289742,
+                "velocity_delta_xy_m_s": [
+                  -0.0005037302180426195,
+                  -0.0006323061825241894
+                ],
+                "angular_velocity_delta_deg_s": 0.16284196078777313
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.027431488037109375,
+                  -0.03285551071166992
+                ],
+                "angle_delta_deg": 1.4091033935546875,
+                "player_frame_delta_xy_m": [
+                  0.07059108291273475,
+                  -0.07507165803861382
+                ],
+                "relative_angle_delta_deg": -1.3022086694836617,
+                "velocity_delta_xy_m_s": [
+                  6.813516665715724e-05,
+                  0.0001501147635281086
+                ],
+                "angular_velocity_delta_deg_s": 0.047388993203639984
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.042980194091796875,
+                  -0.011322021484375
+                ],
+                "angle_delta_deg": 1.4091033935546875,
+                "player_frame_delta_xy_m": [
+                  0.05574003515375825,
+                  -0.09461443739996911
+                ],
+                "relative_angle_delta_deg": -1.3022086694836617,
+                "velocity_delta_xy_m_s": [
+                  0.0005788393318653107,
+                  0.0008805704610495013
+                ],
+                "angular_velocity_delta_deg_s": 0.04774827789515257
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.043048858642578125,
+                  -0.010693550109863281
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05580909930166045,
+                  -0.09398583852528342
+                ],
+                "relative_angle_delta_deg": -2.711312063038349,
+                "velocity_delta_xy_m_s": [
+                  -3.814697265625e-06,
+                  -3.719329833984375e-05
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 2,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631113260984421,
+            "tip_to_hub_distance_m": 1.898294423750944,
+            "cursor_to_tip_distance_m": 0.0006350054955370995,
+            "hinge_angle_deg": 0.2194710522890091,
+            "slider_translation_m": -0.3537106513977051,
+            "max_linear_speed_m_s": 0.0010702801784084304,
+            "max_angular_speed_deg_s": 0.04004964232444763,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.08866928517818451,
+              -42.72272872924805,
+              -3.200679063796997,
+              -0.01335093379020691,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161319732666016
+            ],
+            "player_angle_deg": 2.7576231956481934,
+            "tip_to_hub_distance_m": 1.9999207767462754,
+            "cursor_to_tip_distance_m": 4.498472753551771e-06,
+            "hinge_angle_deg": 1.0904123783111572,
+            "slider_translation_m": -0.2520851194858551,
+            "max_linear_speed_m_s": 0.0005614406436505529,
+            "max_angular_speed_deg_s": 0.1228012815117836,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10097251087427139,
+              -42.6796760559082,
+              -3.2113354206085205,
+              0.04093805328011513,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940423771422244,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711312063038349,
+            "max_position_distance_after_aligning_player_m": 0.10981276466538341,
+            "tip_distance_after_aligning_player_m": 0.10981276466538341,
+            "slider_translation_difference_m": 0.10162553191184998,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916595458984375
+                ],
+                "angle_delta_deg": 2.711312063038349,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.891185132926355e-05,
+                  8.005364013782823e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0018754280001229695
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.1538793889414043e-06,
+                  2.42108545822628e-07
+                ],
+                "relative_angle_delta_deg": -2.711312063038349,
+                "velocity_delta_xy_m_s": [
+                  -4.41159565543886e-05,
+                  7.389295819424518e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116794586181641
+                ],
+                "angle_delta_deg": 0.870941162109375,
+                "player_frame_delta_xy_m": [
+                  2.1427942455132243e-06,
+                  4.808030592551304e-07
+                ],
+                "relative_angle_delta_deg": -1.8403709009289742,
+                "velocity_delta_xy_m_s": [
+                  -4.403095881753971e-05,
+                  7.2638046499685915e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.16285092383623123
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01055908203125,
+                  -0.0562281608581543
+                ],
+                "angle_delta_deg": 0.870941162109375,
+                "player_frame_delta_xy_m": [
+                  0.08670794356602674,
+                  -0.05386859738467309
+                ],
+                "relative_angle_delta_deg": -1.8403709009289742,
+                "velocity_delta_xy_m_s": [
+                  -0.0005037302180426195,
+                  -0.0006323061825241894
+                ],
+                "angular_velocity_delta_deg_s": 0.16284196078777313
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.027431488037109375,
+                  -0.03285551071166992
+                ],
+                "angle_delta_deg": 1.4091033935546875,
+                "player_frame_delta_xy_m": [
+                  0.07059108291273475,
+                  -0.07507165803861382
+                ],
+                "relative_angle_delta_deg": -1.3022086694836617,
+                "velocity_delta_xy_m_s": [
+                  6.813516665715724e-05,
+                  0.0001501147635281086
+                ],
+                "angular_velocity_delta_deg_s": 0.047388993203639984
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.042980194091796875,
+                  -0.011322021484375
+                ],
+                "angle_delta_deg": 1.4091033935546875,
+                "player_frame_delta_xy_m": [
+                  0.05574003515375825,
+                  -0.09461443739996911
+                ],
+                "relative_angle_delta_deg": -1.3022086694836617,
+                "velocity_delta_xy_m_s": [
+                  0.0005788393318653107,
+                  0.0008805704610495013
+                ],
+                "angular_velocity_delta_deg_s": 0.04774827789515257
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.043048858642578125,
+                  -0.010693550109863281
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05580909930166045,
+                  -0.09398583852528342
+                ],
+                "relative_angle_delta_deg": -2.711312063038349,
+                "velocity_delta_xy_m_s": [
+                  -3.814697265625e-06,
+                  -3.719329833984375e-05
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "additional_physics_steps": 120,
+      "additional_simulated_seconds": 1.0000000521540642,
+      "cross_mode_ranges": {
+        "max_world_position_distance_m": [
+          0.0694042132668978,
+          0.0694042132668978
+        ],
+        "max_world_position_component_m": [
+          0.06903839111328125,
+          0.06903839111328125
+        ],
+        "max_world_angle_difference_deg": [
+          2.7113143540918827,
+          2.7113143540918827
+        ],
+        "max_position_distance_after_aligning_player_m": [
+          0.10959241667313172,
+          0.10959241667313172
+        ],
+        "tip_distance_after_aligning_player_m": [
+          0.10954195593968802,
+          0.10954195593968802
+        ],
+        "slider_translation_difference_m": [
+          0.10162660479545593,
+          0.10162660479545593
+        ]
+      },
+      "self_repeat_max_difference": {
+        "native": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        },
+        "candidate": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631122574210167,
+            "tip_to_hub_distance_m": 1.898275232298241,
+            "cursor_to_tip_distance_m": 0.00016387943448966622,
+            "hinge_angle_deg": 0.19916489720344543,
+            "slider_translation_m": -0.3537324070930481,
+            "max_linear_speed_m_s": 0.0009306903343239232,
+            "max_angular_speed_deg_s": 0.032554544508457184,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1007964015007019,
+              -42.72294998168945,
+              -3.200415849685669,
+              -0.010850437916815281,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161319732666016
+            ],
+            "player_angle_deg": 2.7576255798339844,
+            "tip_to_hub_distance_m": 1.9999006338491403,
+            "cursor_to_tip_distance_m": 1.3199434791246804e-05,
+            "hinge_angle_deg": 1.159895896911621,
+            "slider_translation_m": -0.25210580229759216,
+            "max_linear_speed_m_s": 0.000386184218656034,
+            "max_angular_speed_deg_s": 0.08440093696117401,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099960118532181,
+              -42.6796760559082,
+              -3.211310863494873,
+              0.028131544589996338,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.0694042132668978,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7113143540918827,
+            "max_position_distance_after_aligning_player_m": 0.10959241667313172,
+            "tip_distance_after_aligning_player_m": 0.10954195593968802,
+            "slider_translation_difference_m": 0.10162660479545593,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916595458984375
+                ],
+                "angle_delta_deg": 2.7113143540918827,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.0326116394242533e-05,
+                  5.625957585443653e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0013186112930769767
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.167994597464251e-06,
+                  2.4074893217873594e-07
+                ],
+                "relative_angle_delta_deg": -2.7113143540918827,
+                "velocity_delta_xy_m_s": [
+                  -3.1015487078928095e-05,
+                  5.194281165625536e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.9607315063476562,
+                "player_frame_delta_xy_m": [
+                  2.145438872835914e-06,
+                  2.4130095760410697e-07
+                ],
+                "relative_angle_delta_deg": -1.7505828477442265,
+                "velocity_delta_xy_m_s": [
+                  -3.0951726816413894e-05,
+                  5.098831792348796e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.1169554814696312
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01030731201171875,
+                  -0.056580305099487305
+                ],
+                "angle_delta_deg": 0.960723876953125,
+                "player_frame_delta_xy_m": [
+                  0.08644488482219856,
+                  -0.05421105353490907
+                ],
+                "relative_angle_delta_deg": -1.7505904771387577,
+                "velocity_delta_xy_m_s": [
+                  -0.0003648835627245717,
+                  -0.00045977631816640496
+                ],
+                "angular_velocity_delta_deg_s": 0.11693041026592255
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.02752685546875,
+                  -0.03273296356201172
+                ],
+                "angle_delta_deg": 1.438018798828125,
+                "player_frame_delta_xy_m": [
+                  0.0706820498583225,
+                  -0.07494459480022742
+                ],
+                "relative_angle_delta_deg": -1.2732955552637577,
+                "velocity_delta_xy_m_s": [
+                  9.855609096121043e-05,
+                  0.00017263727204408497
+                ],
+                "angular_velocity_delta_deg_s": 0.038338025100529194
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.04339599609375,
+                  -0.01075887680053711
+                ],
+                "angle_delta_deg": 1.438018798828125,
+                "player_frame_delta_xy_m": [
+                  0.05615791495070699,
+                  -0.0940517341652014
+                ],
+                "relative_angle_delta_deg": -1.2732955552637577,
+                "velocity_delta_xy_m_s": [
+                  0.0005124708623043261,
+                  0.0007630353393324185
+                ],
+                "angular_velocity_delta_deg_s": 0.038614300079643726
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.043277740478515625,
+                  -0.010888814926147461
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05603896103678818,
+                  -0.09418138158985911
+                ],
+                "relative_angle_delta_deg": -2.7113143540918827,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.198883056640625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 1,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631122574210167,
+            "tip_to_hub_distance_m": 1.898275232298241,
+            "cursor_to_tip_distance_m": 0.00016387943448966622,
+            "hinge_angle_deg": 0.19916489720344543,
+            "slider_translation_m": -0.3537324070930481,
+            "max_linear_speed_m_s": 0.0009306903343239232,
+            "max_angular_speed_deg_s": 0.032554544508457184,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1007964015007019,
+              -42.72294998168945,
+              -3.200415849685669,
+              -0.010850437916815281,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161319732666016
+            ],
+            "player_angle_deg": 2.7576255798339844,
+            "tip_to_hub_distance_m": 1.9999006338491403,
+            "cursor_to_tip_distance_m": 1.3199434791246804e-05,
+            "hinge_angle_deg": 1.159895896911621,
+            "slider_translation_m": -0.25210580229759216,
+            "max_linear_speed_m_s": 0.000386184218656034,
+            "max_angular_speed_deg_s": 0.08440093696117401,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099960118532181,
+              -42.6796760559082,
+              -3.211310863494873,
+              0.028131544589996338,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.0694042132668978,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7113143540918827,
+            "max_position_distance_after_aligning_player_m": 0.10959241667313172,
+            "tip_distance_after_aligning_player_m": 0.10954195593968802,
+            "slider_translation_difference_m": 0.10162660479545593,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916595458984375
+                ],
+                "angle_delta_deg": 2.7113143540918827,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.0326116394242533e-05,
+                  5.625957585443653e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0013186112930769767
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.167994597464251e-06,
+                  2.4074893217873594e-07
+                ],
+                "relative_angle_delta_deg": -2.7113143540918827,
+                "velocity_delta_xy_m_s": [
+                  -3.1015487078928095e-05,
+                  5.194281165625536e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.9607315063476562,
+                "player_frame_delta_xy_m": [
+                  2.145438872835914e-06,
+                  2.4130095760410697e-07
+                ],
+                "relative_angle_delta_deg": -1.7505828477442265,
+                "velocity_delta_xy_m_s": [
+                  -3.0951726816413894e-05,
+                  5.098831792348796e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.1169554814696312
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01030731201171875,
+                  -0.056580305099487305
+                ],
+                "angle_delta_deg": 0.960723876953125,
+                "player_frame_delta_xy_m": [
+                  0.08644488482219856,
+                  -0.05421105353490907
+                ],
+                "relative_angle_delta_deg": -1.7505904771387577,
+                "velocity_delta_xy_m_s": [
+                  -0.0003648835627245717,
+                  -0.00045977631816640496
+                ],
+                "angular_velocity_delta_deg_s": 0.11693041026592255
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.02752685546875,
+                  -0.03273296356201172
+                ],
+                "angle_delta_deg": 1.438018798828125,
+                "player_frame_delta_xy_m": [
+                  0.0706820498583225,
+                  -0.07494459480022742
+                ],
+                "relative_angle_delta_deg": -1.2732955552637577,
+                "velocity_delta_xy_m_s": [
+                  9.855609096121043e-05,
+                  0.00017263727204408497
+                ],
+                "angular_velocity_delta_deg_s": 0.038338025100529194
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.04339599609375,
+                  -0.01075887680053711
+                ],
+                "angle_delta_deg": 1.438018798828125,
+                "player_frame_delta_xy_m": [
+                  0.05615791495070699,
+                  -0.0940517341652014
+                ],
+                "relative_angle_delta_deg": -1.2732955552637577,
+                "velocity_delta_xy_m_s": [
+                  0.0005124708623043261,
+                  0.0007630353393324185
+                ],
+                "angular_velocity_delta_deg_s": 0.038614300079643726
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.043277740478515625,
+                  -0.010888814926147461
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05603896103678818,
+                  -0.09418138158985911
+                ],
+                "relative_angle_delta_deg": -2.7113143540918827,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.198883056640625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 2,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631122574210167,
+            "tip_to_hub_distance_m": 1.898275232298241,
+            "cursor_to_tip_distance_m": 0.00016387943448966622,
+            "hinge_angle_deg": 0.19916489720344543,
+            "slider_translation_m": -0.3537324070930481,
+            "max_linear_speed_m_s": 0.0009306903343239232,
+            "max_angular_speed_deg_s": 0.032554544508457184,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1007964015007019,
+              -42.72294998168945,
+              -3.200415849685669,
+              -0.010850437916815281,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161319732666016
+            ],
+            "player_angle_deg": 2.7576255798339844,
+            "tip_to_hub_distance_m": 1.9999006338491403,
+            "cursor_to_tip_distance_m": 1.3199434791246804e-05,
+            "hinge_angle_deg": 1.159895896911621,
+            "slider_translation_m": -0.25210580229759216,
+            "max_linear_speed_m_s": 0.000386184218656034,
+            "max_angular_speed_deg_s": 0.08440093696117401,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099960118532181,
+              -42.6796760559082,
+              -3.211310863494873,
+              0.028131544589996338,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.0694042132668978,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7113143540918827,
+            "max_position_distance_after_aligning_player_m": 0.10959241667313172,
+            "tip_distance_after_aligning_player_m": 0.10954195593968802,
+            "slider_translation_difference_m": 0.10162660479545593,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.005916595458984375
+                ],
+                "angle_delta_deg": 2.7113143540918827,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.0326116394242533e-05,
+                  5.625957585443653e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0013186112930769767
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.167994597464251e-06,
+                  2.4074893217873594e-07
+                ],
+                "relative_angle_delta_deg": -2.7113143540918827,
+                "velocity_delta_xy_m_s": [
+                  -3.1015487078928095e-05,
+                  5.194281165625536e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.9607315063476562,
+                "player_frame_delta_xy_m": [
+                  2.145438872835914e-06,
+                  2.4130095760410697e-07
+                ],
+                "relative_angle_delta_deg": -1.7505828477442265,
+                "velocity_delta_xy_m_s": [
+                  -3.0951726816413894e-05,
+                  5.098831792348796e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.1169554814696312
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01030731201171875,
+                  -0.056580305099487305
+                ],
+                "angle_delta_deg": 0.960723876953125,
+                "player_frame_delta_xy_m": [
+                  0.08644488482219856,
+                  -0.05421105353490907
+                ],
+                "relative_angle_delta_deg": -1.7505904771387577,
+                "velocity_delta_xy_m_s": [
+                  -0.0003648835627245717,
+                  -0.00045977631816640496
+                ],
+                "angular_velocity_delta_deg_s": 0.11693041026592255
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.02752685546875,
+                  -0.03273296356201172
+                ],
+                "angle_delta_deg": 1.438018798828125,
+                "player_frame_delta_xy_m": [
+                  0.0706820498583225,
+                  -0.07494459480022742
+                ],
+                "relative_angle_delta_deg": -1.2732955552637577,
+                "velocity_delta_xy_m_s": [
+                  9.855609096121043e-05,
+                  0.00017263727204408497
+                ],
+                "angular_velocity_delta_deg_s": 0.038338025100529194
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.04339599609375,
+                  -0.01075887680053711
+                ],
+                "angle_delta_deg": 1.438018798828125,
+                "player_frame_delta_xy_m": [
+                  0.05615791495070699,
+                  -0.0940517341652014
+                ],
+                "relative_angle_delta_deg": -1.2732955552637577,
+                "velocity_delta_xy_m_s": [
+                  0.0005124708623043261,
+                  0.0007630353393324185
+                ],
+                "angular_velocity_delta_deg_s": 0.038614300079643726
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.043277740478515625,
+                  -0.010888814926147461
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05603896103678818,
+                  -0.09418138158985911
+                ],
+                "relative_angle_delta_deg": -2.7113143540918827,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.198883056640625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "additional_physics_steps": 240,
+      "additional_simulated_seconds": 2.0000001043081284,
+      "cross_mode_ranges": {
+        "max_world_position_distance_m": [
+          0.06940426216235747,
+          0.06940426216235747
+        ],
+        "max_world_position_component_m": [
+          0.06903839111328125,
+          0.06903839111328125
+        ],
+        "max_world_angle_difference_deg": [
+          2.7113036029040813,
+          2.7113036029040813
+        ],
+        "max_position_distance_after_aligning_player_m": [
+          0.10927757806206627,
+          0.10928383766430856
+        ],
+        "tip_distance_after_aligning_player_m": [
+          0.109254283781324,
+          0.10925769475980389
+        ],
+        "slider_translation_difference_m": [
+          0.10171592235565186,
+          0.10171934962272644
+        ]
+      },
+      "self_repeat_max_difference": {
+        "native": {
+          "max_world_position_distance_m": 6.294431105825465e-06,
+          "max_world_position_component_m": 5.0067901611328125e-06,
+          "max_world_angle_difference_deg": 0.000152587890625,
+          "max_position_distance_after_aligning_player_m": 6.2944311057807745e-06,
+          "tip_distance_after_aligning_player_m": 4.163801478499908e-06,
+          "slider_translation_difference_m": 3.427267074584961e-06
+        },
+        "candidate": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631124809384346,
+            "tip_to_hub_distance_m": 1.8982512280786297,
+            "cursor_to_tip_distance_m": 0.0001715447771590988,
+            "hinge_angle_deg": 0.17014342546463013,
+            "slider_translation_m": -0.353751540184021,
+            "max_linear_speed_m_s": 0.0009367022119499047,
+            "max_angular_speed_deg_s": 0.03244369849562645,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1009996235370636,
+              -42.72353744506836,
+              -3.2011606693267822,
+              -0.010811698623001575,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.757614850997925,
+            "tip_to_hub_distance_m": 1.9999664767151262,
+            "cursor_to_tip_distance_m": 3.823701840519005e-05,
+            "hinge_angle_deg": 1.2244548797607422,
+            "slider_translation_m": -0.25203219056129456,
+            "max_linear_speed_m_s": 0.00025138066692216625,
+            "max_angular_speed_deg_s": 0.05497520789504051,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.679649353027344,
+              -3.211322546005249,
+              0.01832665503025055,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7113036029040813,
+            "max_position_distance_after_aligning_player_m": 0.10928383766430856,
+            "tip_distance_after_aligning_player_m": 0.10925769475980389,
+            "slider_translation_difference_m": 0.10171934962272644,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.7113036029040813,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -1.3112188459896146e-05,
+                  3.629568103014069e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0008507404676763031
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.0902858733906626e-06,
+                  8.986655031240076e-09
+                ],
+                "relative_angle_delta_deg": -2.7113036029040813,
+                "velocity_delta_xy_m_s": [
+                  -2.000770993215717e-05,
+                  3.3542287742882593e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.0543098449707031,
+                "player_frame_delta_xy_m": [
+                  2.1019491107110433e-06,
+                  4.855476469223241e-07
+                ],
+                "relative_angle_delta_deg": -1.6569937579333782,
+                "velocity_delta_xy_m_s": [
+                  -1.9980813747544346e-05,
+                  3.3144346245350675e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.08741320297122002
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.010112762451171875,
+                  -0.05700850486755371
+                ],
+                "angle_delta_deg": 1.0543060302734375,
+                "player_frame_delta_xy_m": [
+                  0.0862371616928844,
+                  -0.054634178642274045
+                ],
+                "relative_angle_delta_deg": -1.6569975726306438,
+                "velocity_delta_xy_m_s": [
+                  -0.0002785007964121178,
+                  -0.0003553385613486171
+                ],
+                "angular_velocity_delta_deg_s": 0.08741320669651031
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.027774810791015625,
+                  -0.03255891799926758
+                ],
+                "angle_delta_deg": 1.4744873046875,
+                "player_frame_delta_xy_m": [
+                  0.07092340665620289,
+                  -0.07476977671597601
+                ],
+                "relative_angle_delta_deg": -1.2368162982165813,
+                "velocity_delta_xy_m_s": [
+                  0.00014754585572518408,
+                  0.0002237417793367058
+                ],
+                "angular_velocity_delta_deg_s": 0.035152199678123
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.044048309326171875,
+                  -0.010030746459960938
+                ],
+                "angle_delta_deg": 1.4744873046875,
+                "player_frame_delta_xy_m": [
+                  0.056809590076303484,
+                  -0.09332692183710356
+                ],
+                "relative_angle_delta_deg": -1.2368162982165813,
+                "velocity_delta_xy_m_s": [
+                  0.0005281584781187121,
+                  0.0007644018724022317
+                ],
+                "angular_velocity_delta_deg_s": 0.03529507061466575
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.043895721435546875,
+                  -0.010155916213989258
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.056657069280537486,
+                  -0.09345016680123863
+                ],
+                "relative_angle_delta_deg": -2.7113036029040813,
+                "velocity_delta_xy_m_s": [
+                  7.62939453125e-06,
+                  5.9604644775390625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 1,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631124809384346,
+            "tip_to_hub_distance_m": 1.8982552853422214,
+            "cursor_to_tip_distance_m": 0.00016907290099362043,
+            "hinge_angle_deg": 0.16998974978923798,
+            "slider_translation_m": -0.3537481129169464,
+            "max_linear_speed_m_s": 0.0008181575241716756,
+            "max_angular_speed_deg_s": 0.032422177493572235,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1009996235370636,
+              -42.72353744506836,
+              -3.2011656761169434,
+              -0.01080637238919735,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.757614850997925,
+            "tip_to_hub_distance_m": 1.9999664767151262,
+            "cursor_to_tip_distance_m": 3.823701840519005e-05,
+            "hinge_angle_deg": 1.2244548797607422,
+            "slider_translation_m": -0.25203219056129456,
+            "max_linear_speed_m_s": 0.00025138066692216625,
+            "max_angular_speed_deg_s": 0.05497520789504051,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.679649353027344,
+              -3.211322546005249,
+              0.01832665503025055,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7113036029040813,
+            "max_position_distance_after_aligning_player_m": 0.10927757806206627,
+            "tip_distance_after_aligning_player_m": 0.109254283781324,
+            "slider_translation_difference_m": 0.10171592235565186,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.7113036029040813,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -1.3113983594686962e-05,
+                  3.6291216565023654e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0008508126614161782
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.0902858733906626e-06,
+                  8.986655031240076e-09
+                ],
+                "relative_angle_delta_deg": -2.7113036029040813,
+                "velocity_delta_xy_m_s": [
+                  -2.0010499424322203e-05,
+                  3.3533564297444363e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.0544624328613281,
+                "player_frame_delta_xy_m": [
+                  2.1019491107110433e-06,
+                  4.855476469223241e-07
+                ],
+                "relative_angle_delta_deg": -1.6568411700427532,
+                "velocity_delta_xy_m_s": [
+                  -1.9985518196458107e-05,
+                  3.31057407431095e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.08739738538861275
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01010894775390625,
+                  -0.05700790882110596
+                ],
+                "angle_delta_deg": 1.054443359375,
+                "player_frame_delta_xy_m": [
+                  0.0862333474786395,
+                  -0.054633579512663566
+                ],
+                "relative_angle_delta_deg": -1.6568602435290813,
+                "velocity_delta_xy_m_s": [
+                  -0.0002784907046589069,
+                  -0.00035525743442121893
+                ],
+                "angular_velocity_delta_deg_s": 0.0873916856944561
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.02777099609375,
+                  -0.032558441162109375
+                ],
+                "angle_delta_deg": 1.47454833984375,
+                "player_frame_delta_xy_m": [
+                  0.07091959234560308,
+                  -0.07476929679561606
+                ],
+                "relative_angle_delta_deg": -1.2367552630603313,
+                "velocity_delta_xy_m_s": [
+                  0.00011073681525886059,
+                  0.00017421413213014603
+                ],
+                "angular_velocity_delta_deg_s": 0.03213030565530062
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.04404449462890625,
+                  -0.010029077529907227
+                ],
+                "angle_delta_deg": 1.47454833984375,
+                "player_frame_delta_xy_m": [
+                  0.05680577672925291,
+                  -0.09332524982423751
+                ],
+                "relative_angle_delta_deg": -1.2367552630603313,
+                "velocity_delta_xy_m_s": [
+                  0.00045843233601772226,
+                  0.0006685313519483316
+                ],
+                "angular_velocity_delta_deg_s": 0.03227317659184337
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.04389190673828125,
+                  -0.010150909423828125
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.056653258631424785,
+                  -0.09344515692935551
+                ],
+                "relative_angle_delta_deg": -2.7113036029040813,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  5.9604644775390625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 2,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631124809384346,
+            "tip_to_hub_distance_m": 1.8982552853422214,
+            "cursor_to_tip_distance_m": 0.00016907290099362043,
+            "hinge_angle_deg": 0.16998974978923798,
+            "slider_translation_m": -0.3537481129169464,
+            "max_linear_speed_m_s": 0.0008181575241716756,
+            "max_angular_speed_deg_s": 0.032422177493572235,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1009996235370636,
+              -42.72353744506836,
+              -3.2011656761169434,
+              -0.01080637238919735,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.757614850997925,
+            "tip_to_hub_distance_m": 1.9999664767151262,
+            "cursor_to_tip_distance_m": 3.823701840519005e-05,
+            "hinge_angle_deg": 1.2244548797607422,
+            "slider_translation_m": -0.25203219056129456,
+            "max_linear_speed_m_s": 0.00025138066692216625,
+            "max_angular_speed_deg_s": 0.05497520789504051,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.679649353027344,
+              -3.211322546005249,
+              0.01832665503025055,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7113036029040813,
+            "max_position_distance_after_aligning_player_m": 0.10927757806206627,
+            "tip_distance_after_aligning_player_m": 0.109254283781324,
+            "slider_translation_difference_m": 0.10171592235565186,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.7113036029040813,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -1.3113983594686962e-05,
+                  3.6291216565023654e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0008508126614161782
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  2.0902858733906626e-06,
+                  8.986655031240076e-09
+                ],
+                "relative_angle_delta_deg": -2.7113036029040813,
+                "velocity_delta_xy_m_s": [
+                  -2.0010499424322203e-05,
+                  3.3533564297444363e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.0544624328613281,
+                "player_frame_delta_xy_m": [
+                  2.1019491107110433e-06,
+                  4.855476469223241e-07
+                ],
+                "relative_angle_delta_deg": -1.6568411700427532,
+                "velocity_delta_xy_m_s": [
+                  -1.9985518196458107e-05,
+                  3.31057407431095e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.08739738538861275
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.01010894775390625,
+                  -0.05700790882110596
+                ],
+                "angle_delta_deg": 1.054443359375,
+                "player_frame_delta_xy_m": [
+                  0.0862333474786395,
+                  -0.054633579512663566
+                ],
+                "relative_angle_delta_deg": -1.6568602435290813,
+                "velocity_delta_xy_m_s": [
+                  -0.0002784907046589069,
+                  -0.00035525743442121893
+                ],
+                "angular_velocity_delta_deg_s": 0.0873916856944561
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.02777099609375,
+                  -0.032558441162109375
+                ],
+                "angle_delta_deg": 1.47454833984375,
+                "player_frame_delta_xy_m": [
+                  0.07091959234560308,
+                  -0.07476929679561606
+                ],
+                "relative_angle_delta_deg": -1.2367552630603313,
+                "velocity_delta_xy_m_s": [
+                  0.00011073681525886059,
+                  0.00017421413213014603
+                ],
+                "angular_velocity_delta_deg_s": 0.03213030565530062
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.04404449462890625,
+                  -0.010029077529907227
+                ],
+                "angle_delta_deg": 1.47454833984375,
+                "player_frame_delta_xy_m": [
+                  0.05680577672925291,
+                  -0.09332524982423751
+                ],
+                "relative_angle_delta_deg": -1.2367552630603313,
+                "velocity_delta_xy_m_s": [
+                  0.00045843233601772226,
+                  0.0006685313519483316
+                ],
+                "angular_velocity_delta_deg_s": 0.03227317659184337
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.04389190673828125,
+                  -0.010150909423828125
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.056653258631424785,
+                  -0.09344515692935551
+                ],
+                "relative_angle_delta_deg": -2.7113036029040813,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  5.9604644775390625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "additional_physics_steps": 600,
+      "additional_simulated_seconds": 5.000000260770321,
+      "cross_mode_ranges": {
+        "max_world_position_distance_m": [
+          0.06940426216235747,
+          0.06940426216235747
+        ],
+        "max_world_position_component_m": [
+          0.06903839111328125,
+          0.06903839111328125
+        ],
+        "max_world_angle_difference_deg": [
+          2.711265206336975,
+          2.711265217512846
+        ],
+        "max_position_distance_after_aligning_player_m": [
+          0.10835807550785882,
+          0.10836626023020579
+        ],
+        "tip_distance_after_aligning_player_m": [
+          0.10833570206230253,
+          0.10834431177078979
+        ],
+        "slider_translation_difference_m": [
+          0.10188671946525574,
+          0.10188782215118408
+        ]
+      },
+      "self_repeat_max_difference": {
+        "native": {
+          "max_world_position_distance_m": 2.48001167754094e-05,
+          "max_world_position_component_m": 1.9550323486328125e-05,
+          "max_world_angle_difference_deg": 0.0007781982421875,
+          "max_position_distance_after_aligning_player_m": 2.4799783793959983e-05,
+          "tip_distance_after_aligning_player_m": 2.102920834196419e-05,
+          "slider_translation_difference_m": 1.1026859283447266e-06
+        },
+        "candidate": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.046311259269714355,
+            "tip_to_hub_distance_m": 1.8981880216956275,
+            "cursor_to_tip_distance_m": 0.00017376315053293986,
+            "hinge_angle_deg": 0.08322585374116898,
+            "slider_translation_m": -0.35381558537483215,
+            "max_linear_speed_m_s": 0.0010275645004403043,
+            "max_angular_speed_deg_s": 0.032324615865945816,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.72529983520508,
+              -3.203423023223877,
+              -0.01077231764793396,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.7575764656066895,
+            "tip_to_hub_distance_m": 2.0000686148993183,
+            "cursor_to_tip_distance_m": 3.8173785323382254e-05,
+            "hinge_angle_deg": 1.3211157321929932,
+            "slider_translation_m": -0.25192776322364807,
+            "max_linear_speed_m_s": 0.00010650465446096034,
+            "max_angular_speed_deg_s": 0.02329382672905922,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.67951583862305,
+              -3.2113144397735596,
+              0.007762358523905277,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711265206336975,
+            "max_position_distance_after_aligning_player_m": 0.10836626023020579,
+            "tip_distance_after_aligning_player_m": 0.10834431177078979,
+            "slider_translation_difference_m": 0.10188782215118408,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.711265206336975,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -5.678493848471078e-06,
+                  1.5711205127999506e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.00036833096571342594
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.8537243137856096e-06,
+                  3.1772709518929076e-08
+                ],
+                "relative_angle_delta_deg": -2.711265206336975,
+                "velocity_delta_xy_m_s": [
+                  -8.6639038983094e-06,
+                  1.4518231108429092e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.2378921508789062,
+                "player_frame_delta_xy_m": [
+                  1.8653873916016361e-06,
+                  5.08333709070552e-07
+                ],
+                "relative_angle_delta_deg": -1.4733730554580688,
+                "velocity_delta_xy_m_s": [
+                  -8.65926036563991e-06,
+                  1.4382100210763582e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.05561314895749092
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.009685516357421875,
+                  -0.057884812355041504
+                ],
+                "angle_delta_deg": 1.2378997802734375,
+                "player_frame_delta_xy_m": [
+                  0.08578980113583182,
+                  -0.055502200911089594
+                ],
+                "relative_angle_delta_deg": -1.4733654260635376,
+                "velocity_delta_xy_m_s": [
+                  -0.0001862866265582852,
+                  -0.00024272254086099565
+                ],
+                "angular_velocity_delta_deg_s": 0.05560071021318436
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.028553009033203125,
+                  -0.03179502487182617
+                ],
+                "angle_delta_deg": 1.5740509033203125,
+                "player_frame_delta_xy_m": [
+                  0.07169342904179277,
+                  -0.0740054231871351
+                ],
+                "relative_angle_delta_deg": -1.1372143030166626,
+                "velocity_delta_xy_m_s": [
+                  0.0002264312824991066,
+                  0.00031389193100039847
+                ],
+                "angular_velocity_delta_deg_s": 0.033878553193062544
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.0459442138671875,
+                  -0.007756471633911133
+                ],
+                "angle_delta_deg": 1.5740509033203125,
+                "player_frame_delta_xy_m": [
+                  0.05870834971083272,
+                  -0.09105942876669426
+                ],
+                "relative_angle_delta_deg": -1.1372143030166626,
+                "velocity_delta_xy_m_s": [
+                  0.0005952154406259069,
+                  0.0008335869238180749
+                ],
+                "angular_velocity_delta_deg_s": 0.03393841814249754
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.045787811279296875,
+                  -0.007885217666625977
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05855181960520284,
+                  -0.0911862422583608
+                ],
+                "relative_angle_delta_deg": -2.711265206336975,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.198883056640625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 1,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631124809384346,
+            "tip_to_hub_distance_m": 1.8981891068912442,
+            "cursor_to_tip_distance_m": 0.00016942420807740372,
+            "hinge_angle_deg": 0.08259406685829163,
+            "slider_translation_m": -0.35381463170051575,
+            "max_linear_speed_m_s": 0.0008208530248566316,
+            "max_angular_speed_deg_s": 0.03234982490539551,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.72531509399414,
+              -3.2034425735473633,
+              -0.010782245546579361,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.7575764656066895,
+            "tip_to_hub_distance_m": 2.0000686148993183,
+            "cursor_to_tip_distance_m": 3.8173785323382254e-05,
+            "hinge_angle_deg": 1.3211157321929932,
+            "slider_translation_m": -0.25192776322364807,
+            "max_linear_speed_m_s": 0.00010650465446096034,
+            "max_angular_speed_deg_s": 0.02329382672905922,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.67951583862305,
+              -3.2113144397735596,
+              0.007762358523905277,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711265217512846,
+            "max_position_distance_after_aligning_player_m": 0.10835807550785882,
+            "tip_distance_after_aligning_player_m": 0.10833610257199304,
+            "slider_translation_difference_m": 0.10188686847686768,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.711265217512846,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -5.680378302730382e-06,
+                  1.5706821846137031e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0003684206464287243
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.8537931684090014e-06,
+                  3.176607765720263e-08
+                ],
+                "relative_angle_delta_deg": -2.711265217512846,
+                "velocity_delta_xy_m_s": [
+                  -8.666824143674368e-06,
+                  1.4509592641421404e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.2385215759277344,
+                "player_frame_delta_xy_m": [
+                  1.8654562461833946e-06,
+                  5.083270772088255e-07
+                ],
+                "relative_angle_delta_deg": -1.4727436415851116,
+                "velocity_delta_xy_m_s": [
+                  -8.663742775624761e-06,
+                  1.434780603952815e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.05564365163445473
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.00968170166015625,
+                  -0.05788838863372803
+                ],
+                "angle_delta_deg": 1.238525390625,
+                "player_frame_delta_xy_m": [
+                  0.0857859836591072,
+                  -0.05550577405643242
+                ],
+                "relative_angle_delta_deg": -1.472739826887846,
+                "velocity_delta_xy_m_s": [
+                  -0.00018644326337380335,
+                  -0.000242872309172526
+                ],
+                "angular_velocity_delta_deg_s": 0.05562591925263405
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.028560638427734375,
+                  -0.031789302825927734
+                ],
+                "angle_delta_deg": 1.5748291015625,
+                "player_frame_delta_xy_m": [
+                  0.0717010630321332,
+                  -0.07399970744425133
+                ],
+                "relative_angle_delta_deg": -1.136436115950346,
+                "velocity_delta_xy_m_s": [
+                  0.00016204109488171525,
+                  0.0002274628095619846
+                ],
+                "angular_velocity_delta_deg_s": 0.028618484269827604
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.045955657958984375,
+                  -0.00773930549621582
+                ],
+                "angle_delta_deg": 1.5748291015625,
+                "player_frame_delta_xy_m": [
+                  0.058719807521317335,
+                  -0.09104227218797234
+                ],
+                "relative_angle_delta_deg": -1.136436115950346,
+                "velocity_delta_xy_m_s": [
+                  0.00047340872151835356,
+                  0.0006665753494417004
+                ],
+                "angular_velocity_delta_deg_s": 0.0286783492192626
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.045803070068359375,
+                  -0.007865667343139648
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05856709403883009,
+                  -0.09116670457800735
+                ],
+                "relative_angle_delta_deg": -2.711265217512846,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.198883056640625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 2,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631124809384346,
+            "tip_to_hub_distance_m": 1.8981893918980106,
+            "cursor_to_tip_distance_m": 0.00016977612748046494,
+            "hinge_angle_deg": 0.08259406685829163,
+            "slider_translation_m": -0.3538144826889038,
+            "max_linear_speed_m_s": 0.0008396388340771984,
+            "max_angular_speed_deg_s": 0.03235607221722603,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.72531509399414,
+              -3.2034425735473633,
+              -0.010782245546579361,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.7575764656066895,
+            "tip_to_hub_distance_m": 2.0000686148993183,
+            "cursor_to_tip_distance_m": 3.8173785323382254e-05,
+            "hinge_angle_deg": 1.3211157321929932,
+            "slider_translation_m": -0.25192776322364807,
+            "max_linear_speed_m_s": 0.00010650465446096034,
+            "max_angular_speed_deg_s": 0.02329382672905922,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.67951583862305,
+              -3.2113144397735596,
+              0.007762358523905277,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711265217512846,
+            "max_position_distance_after_aligning_player_m": 0.10835807550785882,
+            "tip_distance_after_aligning_player_m": 0.10833570206230253,
+            "slider_translation_difference_m": 0.10188671946525574,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.711265217512846,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -5.678496380223663e-06,
+                  1.57123917765567e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0003683240885692385
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.8537931684090014e-06,
+                  3.176607765720263e-08
+                ],
+                "relative_angle_delta_deg": -2.711265217512846,
+                "velocity_delta_xy_m_s": [
+                  -8.663671968278663e-06,
+                  1.4522302480557414e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.2385215759277344,
+                "player_frame_delta_xy_m": [
+                  1.8654562461833946e-06,
+                  5.083270772088255e-07
+                ],
+                "relative_angle_delta_deg": -1.4727436415851116,
+                "velocity_delta_xy_m_s": [
+                  -8.657878502127403e-06,
+                  1.4402336345753497e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.055638592690229416
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.00968170166015625,
+                  -0.057888150215148926
+                ],
+                "angle_delta_deg": 1.238525390625,
+                "player_frame_delta_xy_m": [
+                  0.08578598385181704,
+                  -0.05550553563793126
+                ],
+                "relative_angle_delta_deg": -1.472739826887846,
+                "velocity_delta_xy_m_s": [
+                  -0.00018640141206560656,
+                  -0.0002428806765237823
+                ],
+                "angular_velocity_delta_deg_s": 0.05563216656446457
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.028560638427734375,
+                  -0.03178882598876953
+                ],
+                "angle_delta_deg": 1.5748291015625,
+                "player_frame_delta_xy_m": [
+                  0.07170106341755289,
+                  -0.07399923060724889
+                ],
+                "relative_angle_delta_deg": -1.136436115950346,
+                "velocity_delta_xy_m_s": [
+                  0.00016791515008662827,
+                  0.0002352870833419729
+                ],
+                "angular_velocity_delta_deg_s": 0.029097131919115782
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.045955657958984375,
+                  -0.007738828659057617
+                ],
+                "angle_delta_deg": 1.5748291015625,
+                "player_frame_delta_xy_m": [
+                  0.05871980790673703,
+                  -0.0910417953509699
+                ],
+                "relative_angle_delta_deg": -1.136436115950346,
+                "velocity_delta_xy_m_s": [
+                  0.0004845079620281467,
+                  0.0006817318094363145
+                ],
+                "angular_velocity_delta_deg_s": 0.029156996868550777
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.045803070068359375,
+                  -0.007865667343139648
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.05856709403883009,
+                  -0.09116670457800735
+                ],
+                "relative_angle_delta_deg": -2.711265217512846,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.198883056640625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "additional_physics_steps": 1200,
+      "additional_simulated_seconds": 10.000000521540642,
+      "cross_mode_ranges": {
+        "max_world_position_distance_m": [
+          0.06940426216235747,
+          0.06940426216235747
+        ],
+        "max_world_position_component_m": [
+          0.06903839111328125,
+          0.06903839111328125
+        ],
+        "max_world_angle_difference_deg": [
+          2.711247079074383,
+          2.711247108876705
+        ],
+        "max_position_distance_after_aligning_player_m": [
+          0.10692641329760058,
+          0.10694464084854857
+        ],
+        "tip_distance_after_aligning_player_m": [
+          0.10691374541626496,
+          0.10692898172751056
+        ],
+        "slider_translation_difference_m": [
+          0.1020587682723999,
+          0.10208183526992798
+        ]
+      },
+      "self_repeat_max_difference": {
+        "native": {
+          "max_world_position_distance_m": 5.479738681107141e-05,
+          "max_world_position_component_m": 4.1961669921875e-05,
+          "max_world_angle_difference_deg": 0.00146484375,
+          "max_position_distance_after_aligning_player_m": 5.4797170785156834e-05,
+          "tip_distance_after_aligning_player_m": 5.4797170785156834e-05,
+          "slider_translation_difference_m": 2.3066997528076172e-05
+        },
+        "candidate": {
+          "max_world_position_distance_m": 0.0,
+          "max_world_position_component_m": 0.0,
+          "max_world_angle_difference_deg": 0.0,
+          "max_position_distance_after_aligning_player_m": 0.0,
+          "tip_distance_after_aligning_player_m": 0.0,
+          "slider_translation_difference_m": 0.0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631124436855316,
+            "tip_to_hub_distance_m": 1.89807470323206,
+            "cursor_to_tip_distance_m": 0.0001669781331528962,
+            "hinge_angle_deg": -0.06148194894194603,
+            "slider_translation_m": -0.35392850637435913,
+            "max_linear_speed_m_s": 0.0007676043461366563,
+            "max_angular_speed_deg_s": 0.032243818044662476,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.72825622558594,
+              -3.2071895599365234,
+              -0.010748936794698238,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.7575583457946777,
+            "tip_to_hub_distance_m": 2.0001269421243704,
+            "cursor_to_tip_distance_m": 3.8158891723141775e-05,
+            "hinge_angle_deg": 1.3831337690353394,
+            "slider_translation_m": -0.25186973810195923,
+            "max_linear_speed_m_s": 4.573073900753708e-05,
+            "max_angular_speed_deg_s": 0.010004316456615925,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.679439544677734,
+              -3.2113068103790283,
+              0.0033355841878801584,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.7112471014261246,
+            "max_position_distance_after_aligning_player_m": 0.10693426717180816,
+            "tip_distance_after_aligning_player_m": 0.10692377911837797,
+            "slider_translation_difference_m": 0.1020587682723999,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.7112471014261246,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.4116349189792774e-06,
+                  6.667295994518957e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0001565987315732542
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.7421798067032701e-06,
+                  4.2516831388894616e-08
+                ],
+                "relative_angle_delta_deg": -2.7112471014261246,
+                "velocity_delta_xy_m_s": [
+                  -3.6807123144910747e-06,
+                  6.168322099851103e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.4446144104003906,
+                "player_frame_delta_xy_m": [
+                  1.753842809149031e-06,
+                  5.190778345487423e-07
+                ],
+                "relative_angle_delta_deg": -1.266632691025734,
+                "velocity_delta_xy_m_s": [
+                  -3.6801586595913705e-06,
+                  6.128936431790827e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0422481345012784
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.00913238525390625,
+                  -0.05892825126647949
+                ],
+                "angle_delta_deg": 1.444610595703125,
+                "player_frame_delta_xy_m": [
+                  0.08522362581591439,
+                  -0.056539713747324916
+                ],
+                "relative_angle_delta_deg": -1.2666365057229996,
+                "velocity_delta_xy_m_s": [
+                  -0.0001478322101320373,
+                  -0.0001952078746398911
+                ],
+                "angular_velocity_delta_deg_s": 0.04224609863013029
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.029865264892578125,
+                  -0.03033590316772461
+                ],
+                "angle_delta_deg": 1.72674560546875,
+                "player_frame_delta_xy_m": [
+                  0.07300129816632583,
+                  -0.07254626214321688
+                ],
+                "relative_angle_delta_deg": -0.9845014959573746,
+                "velocity_delta_xy_m_s": [
+                  0.00016726072499295697,
+                  0.00022685890326101799
+                ],
+                "angular_velocity_delta_deg_s": 0.025748629006557167
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.04897308349609375,
+                  -0.003988504409790039
+                ],
+                "angle_delta_deg": 1.72674560546875,
+                "player_frame_delta_xy_m": [
+                  0.061740790087848385,
+                  -0.08729701816376045
+                ],
+                "relative_angle_delta_deg": -0.9845014959573746,
+                "velocity_delta_xy_m_s": [
+                  0.00044884814087708946,
+                  0.0006209235955338954
+                ],
+                "angular_velocity_delta_deg_s": 0.02577855938579887
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.04882049560546875,
+                  -0.004111051559448242
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.06158810224376343,
+                  -0.08741763642185363
+                ],
+                "relative_angle_delta_deg": -2.7112471014261246,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.198883056640625e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 1,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.04631126672029495,
+            "tip_to_hub_distance_m": 1.8980551375598664,
+            "cursor_to_tip_distance_m": 0.00017172246084598983,
+            "hinge_angle_deg": -0.06267040222883224,
+            "slider_translation_m": -0.3539515733718872,
+            "max_linear_speed_m_s": 0.0009399837005758956,
+            "max_angular_speed_deg_s": 0.03223942220211029,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.72829818725586,
+              -3.2072062492370605,
+              -0.01074539590626955,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.7575583457946777,
+            "tip_to_hub_distance_m": 2.0001269421243704,
+            "cursor_to_tip_distance_m": 3.8158891723141775e-05,
+            "hinge_angle_deg": 1.3831337690353394,
+            "slider_translation_m": -0.25186973810195923,
+            "max_linear_speed_m_s": 4.573073900753708e-05,
+            "max_angular_speed_deg_s": 0.010004316456615925,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.679439544677734,
+              -3.2113068103790283,
+              0.0033355841878801584,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711247079074383,
+            "max_position_distance_after_aligning_player_m": 0.10694464084854857,
+            "tip_distance_after_aligning_player_m": 0.10692898172751056,
+            "slider_translation_difference_m": 0.10208183526992798,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.711247079074383,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.411322374343272e-06,
+                  6.667136341698479e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.00015657829122872613
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.7420420974495476e-06,
+                  4.253009505683636e-08
+                ],
+                "relative_angle_delta_deg": -2.711247079074383,
+                "velocity_delta_xy_m_s": [
+                  -3.6802339984653987e-06,
+                  6.168149151051724e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.4458045959472656,
+                "player_frame_delta_xy_m": [
+                  1.753705099992453e-06,
+                  5.190910982166841e-07
+                ],
+                "relative_angle_delta_deg": -1.2654424831271172,
+                "velocity_delta_xy_m_s": [
+                  -3.6796792915738674e-06,
+                  6.128779827556038e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.042243738658726215
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.00914764404296875,
+                  -0.05894637107849121
+                ],
+                "angle_delta_deg": 1.44580078125,
+                "player_frame_delta_xy_m": [
+                  0.0852388697338467,
+                  -0.05655784598431568
+                ],
+                "relative_angle_delta_deg": -1.2654462978243828,
+                "velocity_delta_xy_m_s": [
+                  -0.00014782558901060838,
+                  -0.0001951922895386815
+                ],
+                "angular_velocity_delta_deg_s": 0.042241702787578106
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.0298919677734375,
+                  -0.030331134796142578
+                ],
+                "angle_delta_deg": 1.7279815673828125,
+                "player_frame_delta_xy_m": [
+                  0.073028004946746,
+                  -0.07254151508836124
+                ],
+                "relative_angle_delta_deg": -0.9832655116915703,
+                "velocity_delta_xy_m_s": [
+                  0.00022108686243882403,
+                  0.00029875495420128573
+                ],
+                "angular_velocity_delta_deg_s": 0.030138507368974388
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.049015045166015625,
+                  -0.003965139389038086
+                ],
+                "angle_delta_deg": 1.7279815673828125,
+                "player_frame_delta_xy_m": [
+                  0.061782770936467335,
+                  -0.08727368646215361
+                ],
+                "relative_angle_delta_deg": -0.9832655116915703,
+                "velocity_delta_xy_m_s": [
+                  0.0005507754594873404,
+                  0.0007599399625632941
+                ],
+                "angular_velocity_delta_deg_s": 0.030168437748216093
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.048862457275390625,
+                  -0.004094123840332031
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.06163007788916697,
+                  -0.08740074201973491
+                ],
+                "relative_angle_delta_deg": -2.711247079074383,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.4373016357421875e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        },
+        {
+          "repeat": 2,
+          "native": {
+            "player_xy_m": [
+              -44.28096008300781,
+              -2.422048568725586
+            ],
+            "player_angle_deg": 0.046311236917972565,
+            "tip_to_hub_distance_m": 1.8980677702234308,
+            "cursor_to_tip_distance_m": 0.00017358853808707714,
+            "hinge_angle_deg": -0.06293336302042007,
+            "slider_translation_m": -0.3539348542690277,
+            "max_linear_speed_m_s": 0.0009581778699879939,
+            "max_angular_speed_deg_s": 0.0322495773434639,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.72829055786133,
+              -3.2072231769561768,
+              -0.01074681431055069,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "candidate": {
+            "player_xy_m": [
+              -44.3332633972168,
+              -2.4161317348480225
+            ],
+            "player_angle_deg": 2.7575583457946777,
+            "tip_to_hub_distance_m": 2.0001269421243704,
+            "cursor_to_tip_distance_m": 3.8158891723141775e-05,
+            "hinge_angle_deg": 1.3831337690353394,
+            "slider_translation_m": -0.25186973810195923,
+            "max_linear_speed_m_s": 4.573073900753708e-05,
+            "max_angular_speed_deg_s": 0.010004316456615925,
+            "controller_values": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.10099998116493225,
+              -42.679439544677734,
+              -3.2113068103790283,
+              0.0033355841878801584,
+              0.0,
+              2.4000000953674316,
+              0.0
+            ]
+          },
+          "difference": {
+            "max_world_position_distance_m": 0.06940426216235747,
+            "max_world_position_component_m": 0.06903839111328125,
+            "max_world_angle_difference_deg": 2.711247108876705,
+            "max_position_distance_after_aligning_player_m": 0.10692641329760058,
+            "tip_distance_after_aligning_player_m": 0.10691374541626496,
+            "slider_translation_difference_m": 0.10206511616706848,
+            "bodies": [
+              {
+                "name": "Player",
+                "world_delta_xy_m": [
+                  -0.052303314208984375,
+                  0.0059168338775634766
+                ],
+                "angle_delta_deg": 2.711247108876705,
+                "player_frame_delta_xy_m": [
+                  0.0,
+                  0.0
+                ],
+                "relative_angle_delta_deg": 0.0,
+                "velocity_delta_xy_m_s": [
+                  -2.4094182917711038e-06,
+                  6.670889062254659e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.00015649922398353056
+              },
+              {
+                "name": "Hub",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007116556167602539
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  1.7422257097901572e-06,
+                  4.25124102032548e-08
+                ],
+                "relative_angle_delta_deg": -2.711247108876705,
+                "velocity_delta_xy_m_s": [
+                  -3.677278477276502e-06,
+                  6.179021347918479e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              },
+              {
+                "name": "Slider",
+                "world_delta_xy_m": [
+                  -0.06903839111328125,
+                  0.007117033004760742
+                ],
+                "angle_delta_deg": 1.4460678100585938,
+                "player_frame_delta_xy_m": [
+                  1.7538887122012237e-06,
+                  5.190734133631025e-07
+                ],
+                "relative_angle_delta_deg": -1.2651792988181114,
+                "velocity_delta_xy_m_s": [
+                  -3.673919860336383e-06,
+                  6.182393277320841e-07
+                ],
+                "angular_velocity_delta_deg_s": 0.04224299360066652
+              },
+              {
+                "name": "Handle",
+                "world_delta_xy_m": [
+                  0.00913238525390625,
+                  -0.05893886089324951
+                ],
+                "angle_delta_deg": 1.4460601806640625,
+                "player_frame_delta_xy_m": [
+                  0.0852236173137256,
+                  -0.056550323338141584
+                ],
+                "relative_angle_delta_deg": -1.2651869282126427,
+                "velocity_delta_xy_m_s": [
+                  -0.00014781552636122797,
+                  -0.00019520288333296776
+                ],
+                "angular_velocity_delta_deg_s": 0.04225185792893171
+              },
+              {
+                "name": "PoleMiddle",
+                "world_delta_xy_m": [
+                  0.02988433837890625,
+                  -0.030318498611450195
+                ],
+                "angle_delta_deg": 1.72821044921875,
+                "player_frame_delta_xy_m": [
+                  0.07302038569621017,
+                  -0.07252887309885922
+                ],
+                "relative_angle_delta_deg": -0.9830366596579552,
+                "velocity_delta_xy_m_s": [
+                  0.0002267735035275109,
+                  0.0003063233471038984
+                ],
+                "angular_velocity_delta_deg_s": 0.030602533253841102
+              },
+              {
+                "name": "Tip",
+                "world_delta_xy_m": [
+                  0.04901123046875,
+                  -0.003949165344238281
+                ],
+                "angle_delta_deg": 1.72821044921875,
+                "player_frame_delta_xy_m": [
+                  0.06177896874288291,
+                  -0.08725771014643813
+                ],
+                "relative_angle_delta_deg": -0.9830366596579552,
+                "velocity_delta_xy_m_s": [
+                  0.000561547834877274,
+                  0.0007746023559320747
+                ],
+                "angular_velocity_delta_deg_s": 0.030632463633082807
+              },
+              {
+                "name": "Cursor",
+                "world_delta_xy_m": [
+                  0.048854827880859375,
+                  -0.00407719612121582
+                ],
+                "angle_delta_deg": 0.0,
+                "player_frame_delta_xy_m": [
+                  0.06162246177046882,
+                  -0.08738380894671738
+                ],
+                "relative_angle_delta_deg": -2.711247108876705,
+                "velocity_delta_xy_m_s": [
+                  3.814697265625e-06,
+                  6.4373016357421875e-06
+                ],
+                "angular_velocity_delta_deg_s": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "raw_sha256": {
+    "zero_native_00.jsonl": "c1b3b2c359db24150059a652db17dc8d47b5dc119ef2f8bc74ab0274f24399c8",
+    "zero_candidate_00.jsonl": "824bc59f780a3a0f907f495a710aca910af2eaec054a4f0f5be752ed9f4d372b",
+    "zero_native_01.jsonl": "e78976a0ac915f9302159ea2650e97cf389bbd87c70ca52e973aa9358cead9c2",
+    "zero_candidate_01.jsonl": "be2822e2812094265bd8b5503552625bbdd673db278ee662385fdea006269a62",
+    "zero_native_02.jsonl": "174e88bca337913696047095d1e63fafc16a8ef90975608980bdac2bd0262ba0",
+    "zero_candidate_02.jsonl": "8ae3e20556fb951171f8ae2bb7b7fc8ff2a04faf249d9205ebcdbbfcf531337e"
+  },
+  "limits": [
+    "Native and candidate have different initialization recipes before time zero.",
+    "Player-frame alignment removes global translation and rotation, not joint articulation.",
+    "Body coordinates are Rigidbody2D reference points, not pot geometric center or collision outlines.",
+    "Small initial velocities and zero input do not guarantee identical hidden solver states.",
+    "This test does not separate pose template, animation, hierarchy and update-scheduling effects."
+  ]
+}

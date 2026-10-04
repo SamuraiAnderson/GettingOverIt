@@ -1,0 +1,1118 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE",
+  "scope": "Instrumented native reference; ablations are diagnostic changes, not fixes",
+  "source_runs": {
+    "pose_write_bound_20261002": {
+      "directory": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\pose_write_bound_20261002",
+      "parameters": {
+        "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+        "out": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\pose_write_bound_20261002",
+        "modes": [
+          "native"
+        ],
+        "actions": [
+          "random"
+        ],
+        "repeats": 1,
+        "steps": 40,
+        "native_warmup": 0,
+        "native_new_game": false,
+        "native_input_smoothing": false,
+        "require_native_input": false,
+        "require_native_start": false,
+        "seed": 20261002,
+        "timeout": 90,
+        "timing_audit": true,
+        "buffered_trace": true,
+        "render_fps": 0,
+        "capture_fps": 0,
+        "skip_player_update": false,
+        "skip_pose_late_update": false,
+        "no_interpolation": false,
+        "pose_write_audit": true,
+        "skip_pose_operations": [],
+        "port": 9000,
+        "require_native_parameters": false
+      },
+      "fingerprints": {
+        "script": "49b066391e09831d2520ba498c6fcd13d9eb504d44689adcbb2862f1ff8d0273",
+        "plugin": "7aba72f6fe445d0fb56fad86d412c9a914bce12ebf68d4400897d5818d458ec9",
+        "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844"
+      },
+      "production_unchanged": true
+    }
+  },
+  "groups": {
+    "pose_write_bound_20261002": {
+      "launches": 1,
+      "pairs": 0,
+      "all_initial_bodies_bitwise_equal": false,
+      "all_trajectories_bitwise_equal": false,
+      "all_input_states_equal": false,
+      "max_initial_position_distance_m": null,
+      "max_trajectory_position_distance_m": null
+    }
+  },
+  "cases": {
+    "pose_write_bound_20261002/random_native_00": {
+      "events": 30485,
+      "scene_bound": {
+        "sequence": 0,
+        "phase": "scene_bound",
+        "renderFrame": 69,
+        "controllers": 0,
+        "physics": 0,
+        "fixedTime": 1.350000023841858,
+        "time": 1.3714638948440552,
+        "deltaTime": 0.01665000058710575,
+        "pause": 0.0,
+        "loadFinished": false,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "opening_events": [
+        {
+          "sequence": 1,
+          "phase": "before_Saviour.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 2,
+          "phase": "after_Saviour.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 3,
+          "phase": "before_PlayerControl.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 4,
+          "phase": "after_PlayerControl.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 14,
+          "phase": "before_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 15,
+          "phase": "before_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 152,
+          "phase": "after_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 153,
+          "phase": "after_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3714638948440552,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        }
+      ],
+      "first_load_finished": {
+        "sequence": 154,
+        "phase": "after_Saviour.Update",
+        "renderFrame": 69,
+        "controllers": 2,
+        "physics": 2,
+        "fixedTime": 1.3666667938232422,
+        "time": 1.3714638948440552,
+        "deltaTime": 0.01665000058710575,
+        "pause": 12.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "first_probe": {
+        "sequence": 28957,
+        "phase": "before_controller",
+        "renderFrame": 429,
+        "controllers": 724,
+        "physics": 723,
+        "fixedTime": 7.383333683013916,
+        "time": 7.383333683013916,
+        "deltaTime": 0.008333333767950535,
+        "pause": 0.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "interpolation_at_probe": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "auto_sync_at_probe": true,
+      "simulation_mode_at_probe": 0,
+      "callback_changes": {
+        "Saviour.Start": {
+          "calls": 1,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PlayerControl.Start": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 42.72588348388672,
+          "max_transform_xy_delta": 42.71900177001953,
+          "first_body_change": {
+            "before": {
+              "sequence": 3,
+              "phase": "before_PlayerControl.Start",
+              "renderFrame": 69,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 0.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 4,
+              "phase": "after_PlayerControl.Start",
+              "renderFrame": 69,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 42.72588348388672,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": false,
+              "bitwise_equal": false,
+              "position_distance_m": 42.84656755900129
+            },
+            "target": "",
+            "value": [],
+            "changed_components": [
+              {
+                "index": 36,
+                "before": 0.0,
+                "after": -42.72588348388672
+              },
+              {
+                "index": 37,
+                "before": 0.0,
+                "after": -3.2136011123657227
+              }
+            ]
+          }
+        },
+        "PoseWrite.0.lookTarget.position": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.2.dudeMeshHub.position": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.3.potMeshHub.position": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.4.leftHand.localPosition": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.5.rightHand.localPosition": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.6.leftHandGripCenter.localPosition": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.7.rightHandGripCenter.localPosition": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.8.anim.Update": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.9.hammerMeshHub.position": {
+          "calls": 381,
+          "body_changed_calls": 103,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 33,
+              "phase": "before_PoseWrite.9.hammerMeshHub.position",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 34,
+              "phase": "after_PoseWrite.9.hammerMeshHub.position",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            },
+            "target": "Player/Hub",
+            "value": [
+              -44.2471923828125,
+              -2.068965435028076,
+              0.7104553580284119
+            ],
+            "changed_components": [
+              {
+                "index": 19,
+                "before": -1.8610457181930542,
+                "after": -1.8610458374023438
+              },
+              {
+                "index": 25,
+                "before": -2.5625898838043213,
+                "after": -2.562589645385742
+              },
+              {
+                "index": 31,
+                "before": -3.2087557315826416,
+                "after": -3.2087554931640625
+              }
+            ]
+          }
+        },
+        "PoseWrite.10.leftHand.position": {
+          "calls": 1143,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.11.rightHand.position": {
+          "calls": 1143,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.12.leftElbow.rotation": {
+          "calls": 1143,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.13.rightElbow.rotation": {
+          "calls": 1143,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.14.leftHand.rotation": {
+          "calls": 1143,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.15.rightHand.rotation": {
+          "calls": 1143,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.16.leftElbow.rotation": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.17.rightElbow.rotation": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.18.leftHand.position": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.19.rightHand.position": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.20.leftHand.rotation": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseWrite.21.rightHand.rotation": {
+          "calls": 381,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PoseControl.LateUpdate": {
+          "calls": 381,
+          "body_changed_calls": 103,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 16,
+              "phase": "before_PoseControl.LateUpdate",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 83,
+              "phase": "after_PoseControl.LateUpdate",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            },
+            "target": "",
+            "value": [],
+            "changed_components": [
+              {
+                "index": 19,
+                "before": -1.8610457181930542,
+                "after": -1.8610458374023438
+              },
+              {
+                "index": 25,
+                "before": -2.5625898838043213,
+                "after": -2.562589645385742
+              },
+              {
+                "index": 31,
+                "before": -3.2087557315826416,
+                "after": -3.2087554931640625
+              }
+            ]
+          }
+        },
+        "PoseControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 15,
+              "phase": "before_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 152,
+              "phase": "after_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            },
+            "target": "",
+            "value": [],
+            "changed_components": [
+              {
+                "index": 19,
+                "before": -1.8610457181930542,
+                "after": -1.8610458374023438
+              },
+              {
+                "index": 25,
+                "before": -2.5625898838043213,
+                "after": -2.562589645385742
+              },
+              {
+                "index": 31,
+                "before": -3.2087557315826416,
+                "after": -3.2087554931640625
+              }
+            ]
+          }
+        },
+        "PlayerControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 14,
+              "phase": "before_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 153,
+              "phase": "after_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            },
+            "target": "",
+            "value": [],
+            "changed_components": [
+              {
+                "index": 19,
+                "before": -1.8610457181930542,
+                "after": -1.8610458374023438
+              },
+              {
+                "index": 25,
+                "before": -2.5625898838043213,
+                "after": -2.562589645385742
+              },
+              {
+                "index": 31,
+                "before": -3.2087557315826416,
+                "after": -3.2087554931640625
+              }
+            ]
+          }
+        },
+        "Saviour.Update": {
+          "calls": 379,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 13,
+              "phase": "before_Saviour.Update",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 154,
+              "phase": "after_Saviour.Update",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3714638948440552,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": true,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            },
+            "target": "",
+            "value": [],
+            "changed_components": [
+              {
+                "index": 19,
+                "before": -1.8610457181930542,
+                "after": -1.8610458374023438
+              },
+              {
+                "index": 25,
+                "before": -2.5625898838043213,
+                "after": -2.562589645385742
+              },
+              {
+                "index": 31,
+                "before": -3.2087557315826416,
+                "after": -3.2087554931640625
+              }
+            ]
+          }
+        },
+        "PlayerControl.Update": {
+          "calls": 379,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        }
+      },
+      "probe_render_frames": [
+        429,
+        429,
+        430,
+        430,
+        431,
+        431,
+        432,
+        432,
+        433,
+        433,
+        434,
+        434,
+        435,
+        435,
+        436,
+        436,
+        437,
+        437,
+        438,
+        438,
+        439,
+        439,
+        440,
+        440,
+        441,
+        441,
+        442,
+        442,
+        443,
+        443,
+        444,
+        444,
+        445,
+        445,
+        446,
+        446,
+        447,
+        447,
+        448,
+        448
+      ],
+      "physics_dt_values": [
+        0.008333333767950535
+      ],
+      "render_delta_values": [
+        0.01665000058710575,
+        0.016666699200868607,
+        0.01666720025241375,
+        0.016669899225234985,
+        0.01668200083076954,
+        0.016682099550962448,
+        0.016682200133800507,
+        0.016682300716638565,
+        0.016682399436831474,
+        0.016682500019669533,
+        0.01668260060250759,
+        0.0166826993227005,
+        0.01668279990553856,
+        0.016682900488376617,
+        0.016683099791407585,
+        0.01668339967727661,
+        0.016696900129318237,
+        0.016698399558663368,
+        0.019999999552965164,
+        0.05392700061202049
+      ],
+      "pose_sites": [
+        {
+          "index": 0,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "lookTarget.position",
+          "targetPath": "Player/dude/LookTarget",
+          "descendantBodies": [],
+          "targetAliases": [
+            "lookTarget"
+          ]
+        },
+        {
+          "index": 1,
+          "calls": 0,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "",
+          "targetPath": "",
+          "descendantBodies": [],
+          "targetAliases": []
+        },
+        {
+          "index": 2,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "dudeMeshHub.position",
+          "targetPath": "Player/dude",
+          "descendantBodies": [],
+          "targetAliases": [
+            "dudeMeshHub"
+          ]
+        },
+        {
+          "index": 3,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "potMeshHub.position",
+          "targetPath": "Player/Pot",
+          "descendantBodies": [],
+          "targetAliases": [
+            "potMeshHub"
+          ]
+        },
+        {
+          "index": 4,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_localPosition",
+          "operation": "leftHand.localPosition",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftHand"
+          ]
+        },
+        {
+          "index": 5,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_localPosition",
+          "operation": "rightHand.localPosition",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightHand"
+          ]
+        },
+        {
+          "index": 6,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_localPosition",
+          "operation": "leftHandGripCenter.localPosition",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand/LeftHandGripCenter",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftHandGripCenter"
+          ]
+        },
+        {
+          "index": 7,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_localPosition",
+          "operation": "rightHandGripCenter.localPosition",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/RightHandGripCenter",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightHandGripCenter"
+          ]
+        },
+        {
+          "index": 8,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Animator.Update",
+          "operation": "anim.Update",
+          "targetPath": "Player/dude",
+          "descendantBodies": [],
+          "targetAliases": [
+            "anim"
+          ]
+        },
+        {
+          "index": 9,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "hammerMeshHub.position",
+          "targetPath": "Player/Hub",
+          "descendantBodies": [
+            "Player/Hub",
+            "Player/Hub/Slider",
+            "Player/Hub/Slider/Handle",
+            "Player/Hub/Slider/Handle/PoleMiddle",
+            "Player/Hub/Slider/Handle/PoleMiddle/Tip"
+          ],
+          "targetAliases": [
+            "center",
+            "hammerMeshHub"
+          ]
+        },
+        {
+          "index": 10,
+          "calls": 1143,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "leftHand.position",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftHand"
+          ]
+        },
+        {
+          "index": 11,
+          "calls": 1143,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "rightHand.position",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightHand"
+          ]
+        },
+        {
+          "index": 12,
+          "calls": 1143,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "leftElbow.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftElbow"
+          ]
+        },
+        {
+          "index": 13,
+          "calls": 1143,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "rightElbow.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightElbow"
+          ]
+        },
+        {
+          "index": 14,
+          "calls": 1143,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "leftHand.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftHand"
+          ]
+        },
+        {
+          "index": 15,
+          "calls": 1143,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "rightHand.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightHand"
+          ]
+        },
+        {
+          "index": 16,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "leftElbow.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftElbow"
+          ]
+        },
+        {
+          "index": 17,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "rightElbow.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightElbow"
+          ]
+        },
+        {
+          "index": 18,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "leftHand.position",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftHand"
+          ]
+        },
+        {
+          "index": 19,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_position",
+          "operation": "rightHand.position",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightHand"
+          ]
+        },
+        {
+          "index": 20,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "leftHand.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "leftHand"
+          ]
+        },
+        {
+          "index": 21,
+          "calls": 381,
+          "skippedCalls": 0,
+          "method": "Transform.set_rotation",
+          "operation": "rightHand.rotation",
+          "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+          "descendantBodies": [],
+          "targetAliases": [
+            "rightHand"
+          ]
+        }
+      ]
+    }
+  },
+  "comparisons": []
+}

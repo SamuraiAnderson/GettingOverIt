@@ -1,0 +1,20 @@
+{
+  "source_commit": "73d0fda",
+  "checkpoint": "runs/backbone_compare_20261002/gru_s7/checkpoints/ppo_iter_0010.pt",
+  "checkpoint_sha256": "9931b3b2db9704b7632f30795f6ac30631d0ced6bd20e66d0d500864cb1900e3",
+  "runtime_dll_sha256": "632067533df42c1406d4ebfc1bc5ce4207f944d99d187d67261d59c181080bfe",
+  "policy_backbone": "gru",
+  "seed": 7,
+  "num_agents": 8,
+  "steps_per_rollout": 1200,
+  "recurrent_seq_len": 32,
+  "ppo_batch_size": 32,
+  "gamma": 0.99,
+  "gae_lambda": 0.95,
+  "max_hours": 5,
+  "save_interval": 5,
+  "reset_scope": "exact canonical spawn",
+  "monitoring": "No training metrics, logs or trajectories inspected while training; review only after completion",
+  "hour_limit_semantics": "Five hours from training loop start; finish current iteration and save",
+  "created_at_utc": "2026-10-03T10:09:21.7976302+00:00"
+}

@@ -1,0 +1,80 @@
+{
+  "status": "passed",
+  "completed_at_utc": "2026-10-03T13:42:34.472927+00:00",
+  "scope": "Exact-spawn reference-v2 base GRU + OU + recurrent SIL; offline review and regression, no new game training",
+  "source_commit": "73d0fda879977a60e7d5d371479ea8b62cc8c4b4",
+  "source_sha256": {
+    "src/training/config.py": "836731f63a26b7049f5bb6bc61124223ef0aec1dd54cf7104f7251b3752d31d6",
+    "src/training/main_ppo.py": "6af2d16c054abcbd12394e2fd9ac6d3e73726c841a71623579403b566a744c80",
+    "src/training/dataset.py": "ce89f61a4243051fe4097129973e5a55e820ff272385f50a72b00ee33bebec4d",
+    "src/training/gru_sil.py": "79cd7493cc3782affe4391e2cffcd380ca3ae13904c82df344445db35a7b5027",
+    "src/training/elite_archive.py": "3c54f86a808edc065298a0ed3e35e00c082bf4a70e8d8526d2711476f4bd4e18",
+    "src/training/run_logging.py": "826ed3554f1854b5346d08e52580f0efd55a6820a819da9b4e0de378d4cb20d7",
+    "src/training/actor_critic.py": "c8dc372749a03bb3997e68a36c7a608f5a242d8645eecc25bb4601dedf6d1e86",
+    "src/training/experimental_policy.py": "1dc4c4772338e77e589dd828c9572187ea91dc25794ecc50689de000f3b28257",
+    "src/training/experimental_rollout.py": "bb9da0139ff0a3aced4a253279603187ca98b06cc40ce5534eea6d2c78857acb",
+    "src/training/random_state.py": "c30f94eaff579560edfe8966d8c7e9736265ee820ba42e0e86454f4670f4b9d6",
+    "src/training/decision_buffer.py": "cfb1e70fd939442ead93620f4246b871533d26a8eba34c96505a5779c51b665e",
+    "src/training/ppo_buffer.py": "b27cc14a3cbcc8751dd11f69f9bd0031822290d45f531c7b537841022646e707",
+    "src/training/policy_audit.py": "7bcd45005d0eaa22eaa54cc69d6d755e91d8057270828681a6e2c908ca9f5bd8",
+    "src/training/policy_features.py": "14685af8b731917bcda897264a71e35ad6d19c479f8a351fe3c4083321aca3b9",
+    "src/training/ppo_trainer.py": "ddbace70985faebf60052fe094723a3537e062db9f01eb92ba5f6cf3df1b0289",
+    "src/training/local_evaluation.py": "19b67c2509b66145ee7987613fcff972a3274fd5f3821ad3b45390c8e9150e78",
+    "src/training/rollout.py": "9df7ba889553991fb8a5fd4c224c37c09d5fca9ad65b27552180963d3e0ecd3c",
+    "src/tests/training/test_training_consistency.py": "d16c43d101904281d7d00a23ab2d5b1ac01db7e307f830544c00ce4c3143c7e4",
+    "src/tests/training/test_gru_sil.py": "06673dcf2285900c74536415010a0baa73f123135b9b82d401864f41f0734fc3",
+    "src/tests/training/test_elite_archive.py": "ba1b893dec5d87f77887d0c707d1b135f8fc68ddf00045d50eb420300f9648b4",
+    "src/tests/training/test_ppo_contract.py": "8ccdaf9e8fc9f78a3f3240f8a0f9521dc9540a47fc0a8a2f0445f052f20d4327",
+    "src/tests/training/test_rollout_pipeline.py": "e945481df3c165f7d482b977fbbb02845c6a8b3db7a7dd7560a4eb72143e4735"
+  },
+  "tests": {
+    "passed": 135,
+    "log": "regression_tests.log",
+    "continuous_vs_checkpoint_resumed": "tensor-exact actions, PPO/SIL metrics, weights, optimizer, trainer and RNG state in deterministic fixture",
+    "capacity_compressed_pool": "order, roles and score precision preserved"
+  },
+  "real_rollout_audit": {
+    "passed": true,
+    "rows": [
+      {
+        "iteration": 51,
+        "preupdate_ratio_max_error": 0.0005160709260962903,
+        "preupdate_kl": 1.5794879004715767e-09,
+        "action_saturation_fraction": 0.0,
+        "audit_samples": 1200.0,
+        "rng_unchanged": true
+      },
+      {
+        "iteration": 52,
+        "preupdate_ratio_max_error": 0.00042810809100046754,
+        "preupdate_kl": 1.4667856855036613e-09,
+        "action_saturation_fraction": 0.0,
+        "audit_samples": 1200.0,
+        "rng_unchanged": true
+      },
+      {
+        "iteration": 53,
+        "preupdate_ratio_max_error": 0.00035292175016365945,
+        "preupdate_kl": 1.2133529973349747e-09,
+        "action_saturation_fraction": 0.0,
+        "audit_samples": 1200.0,
+        "rng_unchanged": true
+      }
+    ]
+  },
+  "fixed": [
+    "Checkpoint now captures/restores Python, NumPy, Torch CPU/CUDA and deployment RNG; explicit reset-rng required for a new seed on a stateful resume",
+    "Audits use local RNG; deterministic/iid collection no longer draws unused OU initial noise; SIL remains iteration-seeded independently",
+    "Full elite restoration preserves compressed pool ordering and float64 tie-break scores",
+    "Fresh policy log_std now uses ppo_init_log_std; loading learned weights leaves their std intact",
+    "Trainer adapters and critic optimizer are saved; current CLI learning rate survives optimizer state restoration",
+    "Delayed exploration inherits on resume with explicit off switch; evaluation noise defaults to checkpoint settings; unsupported GRU phase-noise is rejected",
+    "SIL KL uses the same conditional OU implementation as collection/PPO; terminal spatial padding matches the online collector"
+  ],
+  "remaining_limits": [
+    "Old checkpoint 50 contains no RNG snapshot, so the interrupted historical random sequence cannot be recovered; new checkpoints support continuation",
+    "Tensor-exact continuation was verified in a deterministic CPU fixture; cross-device/runtime numerical identity is not claimed",
+    "SIL correctness does not establish long-training performance benefit"
+  ],
+  "formal_training": "paused; original checkpoint 50 unchanged; prepared continuation not launched"
+}

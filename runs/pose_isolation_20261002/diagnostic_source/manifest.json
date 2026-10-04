@@ -1,0 +1,39 @@
+{
+  "purpose": "Historical native timing and pose-write diagnostic sources, removed from the active plugin after isolation. Restore matching source files into a separate checkout for reproduction; use the original test DLL fingerprint from each result.json. Not a deployed production fix.",
+  "files": [
+    {
+      "path": "src/GameRuntime_v2/Testing/NativeTimingProbe.cs",
+      "sha256": "2326845cbeaad15ae4058ff5d810cf08680c9c79c90521289c13aa498f64f7c2"
+    },
+    {
+      "path": "src/GameRuntime_v2/Testing/PoseWriteProbe.cs",
+      "sha256": "37196dbd112be79f7304df5f1ecaa0ece1ac5be6195c92d828ffb6e354e2ad9a"
+    },
+    {
+      "path": "src/GameRuntime_v2/Testing/DynamicsProbe.cs",
+      "sha256": "ee19d2383692527e8e3ca66fccba181f63a40092481fc09e44c2e17b589e6606"
+    },
+    {
+      "path": "src/GameRuntime_v2/GameRuntime_v2.csproj",
+      "sha256": "604c33cef3f111263020ebaedf2d1125eee45c577b8d66d5d3564d839d57015d"
+    },
+    {
+      "path": "src/tests/control_interaction/test_native_dynamics.py",
+      "sha256": "49b066391e09831d2520ba498c6fcd13d9eb504d44689adcbb2862f1ff8d0273"
+    },
+    {
+      "path": "src/tests/control_interaction/analyze_native_timing.py",
+      "sha256": "9ce65df1bcdb2428a6e6bdc4dc061e341bea01403f02913d1030b35ad09fe64a"
+    },
+    {
+      "path": "src/tests/control_interaction/test_native_timing_checks.py",
+      "sha256": "d5b368b7d259003527fffa5b4f1c51c9e2da21e630036bc4716959d89f44de87"
+    },
+    {
+      "path": "src/tests/control_interaction/README.md",
+      "sha256": "a2c84c9fcf2e3012ae383e62a64daf46b2b4285bd35b34fdca8cb08123170e8c"
+    }
+  ],
+  "experiment_dll": "bin/PoseIsolationExperiment/GameRuntime_v2.dll",
+  "experiment_dll_sha256": "7aba72f6fe445d0fb56fad86d412c9a914bce12ebf68d4400897d5818d458ec9"
+}

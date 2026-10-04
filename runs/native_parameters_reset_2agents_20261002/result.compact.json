@@ -1,0 +1,1595 @@
+{
+  "source": "runs/native_parameters_reset_2agents_20261002/result.json",
+  "source_sha256": "dcb926712355f95c68e56f3388be354b54d401502552f97ad6bb3e23d2e558fb",
+  "source_bytes": 7245959,
+  "compaction": "Lists longer than 32 entries replaced with their lengths; scalar metrics and smaller structures retained. Raw source remains local.",
+  "result": {
+    "version": 1,
+    "status": "PASS",
+    "started_at_utc": "2026-10-02T06:39:45.385522+00:00",
+    "scope": "same-agent reset versus reference and probe; cross-agent divergence is informational",
+    "raw_state_schema": {
+      "name": "legacy33",
+      "dimension": 33
+    },
+    "parameters": {
+      "agents": 2,
+      "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+      "controlled_updates": false,
+      "reset_diagnostics": true,
+      "native_parameter_reference": "runs\\native_parameters_fixed_20261002\\result.json",
+      "scene_reset": true,
+      "fixed_order": false,
+      "restarts": 3,
+      "cycles": 1,
+      "burn_steps": [
+        200,
+        1000
+      ],
+      "idle_seconds": [
+        0.0,
+        0.25
+      ],
+      "probe_steps": 40,
+      "probe_kind": "hold",
+      "seed": 20261002,
+      "startup_settle": 2.0,
+      "timeout": 120.0,
+      "port": 9000,
+      "out": "runs\\native_parameters_reset_2agents_20261002",
+      "allow_moving_start": false,
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "thresholds": {
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "fields": {
+      "omitted_raw_array": true,
+      "length": 35
+    },
+    "timestamp_excluded": 28,
+    "native_parameters": {
+      "hinge_cap": 10000.0,
+      "slider_cap": 10000.0,
+      "hub_cap": 100.0,
+      "controller_hinge_cap": 10000.0,
+      "controller_slider_cap": 10000.0
+    },
+    "limitations": [
+      "Scene reset with diagnostics uses live state before any RESET as the cold reference; legacy mode uses first RESET.",
+      "Q diagnostics expose all body velocities and selected control fields, not the full solver state.",
+      "Without Q diagnostics, wait effects are observed only at the next STEP.",
+      "Histories run sequentially; differences are not uniquely attributed to waiting versus prior history.",
+      "Stationarity is checked separately, including common motion shared by all agents.",
+      "Thresholds are provisional acceptance criteria, not a measured numerical noise floor."
+    ],
+    "expected_cases": 27,
+    "cases": [
+      {
+        "id": "restart_00_case_000",
+        "restart": 0,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.006261800066567957,
+        "idle_actual_s": 1.3199984095990658e-05,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_00_case_001",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6152369000483304,
+        "idle_actual_s": 2.800021320581436e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.020289957523345947,
+          0.020285427570343018
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_002",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6218333999859169,
+        "idle_actual_s": 0.2502411000896245,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          7.415065765380859,
+          7.727222442626953
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_003",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6170045000035316,
+        "idle_actual_s": 2.400018274784088e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_00_case_004",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6000176999950781,
+        "idle_actual_s": 2.600019797682762e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          7.415065765380859,
+          7.727222442626953
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_005",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6292122999439016,
+        "idle_actual_s": 0.25028979999478906,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.020289957523345947,
+          0.020285427570343018
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_006",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6279996000230312,
+        "idle_actual_s": 2.300017513334751e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.317386627197266,
+          6.809906005859375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_007",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6323900000425056,
+        "idle_actual_s": 0.25016130006406456,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.317386627197266,
+          6.809906005859375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_008",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6186027000658214,
+        "idle_actual_s": 0.25042659998871386,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_01_case_000",
+        "restart": 1,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.007019100012257695,
+        "idle_actual_s": 2.300017513334751e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_01_case_001",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6281762999715284,
+        "idle_actual_s": 2.400018274784088e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.317386627197266,
+          6.809906005859375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_002",
+        "restart": 1,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6358922999352217,
+        "idle_actual_s": 2.600019797682762e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.020289957523345947,
+          0.020285427570343018
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_003",
+        "restart": 1,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6282406999962404,
+        "idle_actual_s": 0.2500993999419734,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.020289957523345947,
+          0.020285427570343018
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_004",
+        "restart": 1,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6230727999936789,
+        "idle_actual_s": 0.25019669998437166,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_01_case_005",
+        "restart": 1,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.5898669000016525,
+        "idle_actual_s": 2.800021320581436e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_01_case_006",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6277130999369547,
+        "idle_actual_s": 2.800021320581436e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          7.415065765380859,
+          7.727222442626953
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_007",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6158401999855414,
+        "idle_actual_s": 0.25004339998122305,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          7.415065765380859,
+          7.727222442626953
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_008",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6256537999724969,
+        "idle_actual_s": 0.25025889999233186,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.317386627197266,
+          6.809906005859375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_000",
+        "restart": 2,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.0025662999833002687,
+        "idle_actual_s": 3.0999071896076202e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_02_case_001",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6303189999889582,
+        "idle_actual_s": 0.2500636000186205,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          7.415065765380859,
+          7.727222442626953
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_002",
+        "restart": 2,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.615594599978067,
+        "idle_actual_s": 0.2501243998995051,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.020289957523345947,
+          0.020285427570343018
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_003",
+        "restart": 2,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6137260999530554,
+        "idle_actual_s": 2.600019797682762e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.020289957523345947,
+          0.020285427570343018
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_004",
+        "restart": 2,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.609356899978593,
+        "idle_actual_s": 0.25049320003017783,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_02_case_005",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6166789999697357,
+        "idle_actual_s": 2.600019797682762e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          7.415065765380859,
+          7.727222442626953
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_006",
+        "restart": 2,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6147003000369295,
+        "idle_actual_s": 4.100031219422817e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        }
+      },
+      {
+        "id": "restart_02_case_007",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6363731999881566,
+        "idle_actual_s": 0.25050870003178716,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.317386627197266,
+          6.809906005859375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_008",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.6304031999316067,
+        "idle_actual_s": 2.700020559132099e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.317386627197266,
+          6.809906005859375
+        ],
+        "history_exercised": true
+      }
+    ],
+    "sessions": [
+      {
+        "restart": 0,
+        "pid": 21484,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "dynamicsProbeMode": "",
+          "dynamicsProbeFile": "",
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      },
+      {
+        "restart": 1,
+        "pid": 12320,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "dynamicsProbeMode": "",
+          "dynamicsProbeFile": "",
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      },
+      {
+        "restart": 2,
+        "pid": 14756,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "dynamicsProbeMode": "",
+          "dynamicsProbeFile": "",
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      }
+    ],
+    "errors": [],
+    "fingerprints": {
+      "script": "038329ec324540fbbb24d1d53f5055100534de0ddac4d431b67ea985b325cba1",
+      "deployed_plugin": "088d3f6ca23bdaacef0353489594b275e1baafa8a23ec4ff50884eb5bacc41d4",
+      "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844",
+      "project_config": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+    },
+    "runtime_config_requested": {
+      "mode": 0,
+      "tcpPort": 9000,
+      "stateDimension": 29,
+      "actionDimension": 2,
+      "stepFrames": 1,
+      "numDuplicates": 2,
+      "playerObjectName": "Player",
+      "minInput": 10.0,
+      "maxInput": 100.0,
+      "autoClampInput": true,
+      "normalizeInitialPose": true,
+      "initPoseSettleFrames": 120,
+      "startAnimatorInRlMode": true,
+      "initCursorUpScale": 1.0,
+      "initCursorOffsetX": 0.0,
+      "initPoseGain": 15.0,
+      "dataRoot": "GoiData",
+      "initializeDirectoriesOnStart": true,
+      "enableDebugLogs": true,
+      "experimentalResetDiagnostics": true,
+      "experimentalSceneReset": true,
+      "experimentalControlledUpdates": true
+    },
+    "reference_case": "restart_00_case_000",
+    "finished_at_utc": "2026-10-02T06:42:58.858780+00:00"
+  }
+}

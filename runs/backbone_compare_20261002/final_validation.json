@@ -1,0 +1,15 @@
+{
+  "complete_training_runs": 6,
+  "iterations_per_run": 10,
+  "executed_world_steps_total": 576000.0,
+  "exact_evaluations": 12,
+  "all_repeat_states_bitwise_equal": true,
+  "all_policies_share_exact_initial_physical_state": true,
+  "cross_process_excluded_column": "28: timestamp (not a model feature)",
+  "all_offsets_zero": true,
+  "full_eval_audit_samples": 57600.0,
+  "full_eval_max_ratio_error": 0.0,
+  "training_metrics_finite": true,
+  "production_source_hashes_unchanged": true,
+  "unit_tests_passed": 20
+}

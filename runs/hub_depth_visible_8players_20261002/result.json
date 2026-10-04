@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "agents": 8,
+  "steps_per_round": 1200,
+  "desktop": "current (verified Desktop 1)",
+  "plugin": "9f9d0c3bdbb18ff57670846a2f62b2267c6c9a20cad37ca8ff63e2035dcb0c1f",
+  "rounds": [
+    {
+      "round": 1,
+      "bitwise_equal_without_timestamp": true
+    },
+    {
+      "round": 2,
+      "bitwise_equal_without_timestamp": true
+    }
+  ],
+  "game_pid": 34952,
+  "window_left_open": true
+}

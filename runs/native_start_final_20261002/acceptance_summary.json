@@ -1,0 +1,2491 @@
+{
+  "status": "PASS_WITHIN_TOLERANCES_NOT_NATIVE_BITWISE",
+  "plugin_sha256": "e6c6429fde0d429d0d0d99e02e701d136df3cb3ec725e3d50e9c54c44533acaf",
+  "native_start": {
+    "passed": true,
+    "cases": [
+      {
+        "id": "zero_candidate_00",
+        "reference": "zero_native_00",
+        "passed": true,
+        "bodies": {
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        "controller_errors": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.000156402587890625,
+          0.0004980564117431641,
+          9.46875661611557e-06,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "controller_within_limits": true
+      },
+      {
+        "id": "zero_candidate_01",
+        "reference": "zero_native_01",
+        "passed": true,
+        "bodies": {
+          "errors": {
+            "position_m": 0.0004978179931640625,
+            "angle_deg": 0.015087127685546875,
+            "velocity_m_s": 5.470780888572335e-05,
+            "angular_velocity_deg_s": 0.0017173998057842255
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        "controller_errors": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.000164031982421875,
+          0.0004978179931640625,
+          1.2380070984363556e-05,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "controller_within_limits": true
+      },
+      {
+        "id": "zero_candidate_02",
+        "reference": "zero_native_02",
+        "passed": true,
+        "bodies": {
+          "errors": {
+            "position_m": 0.0005054473876953125,
+            "angle_deg": 0.01520538330078125,
+            "velocity_m_s": 0.00015969714149832726,
+            "angular_velocity_deg_s": 0.0050210654735565186
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        "controller_errors": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.000164031982421875,
+          0.0005047321319580078,
+          8.740462362766266e-06,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "controller_within_limits": true
+      }
+    ],
+    "body_limits": {
+      "position_m": 0.001,
+      "angle_deg": 0.05,
+      "velocity_m_s": 0.001,
+      "angular_velocity_deg_s": 0.1
+    },
+    "controller_limits": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.001,
+      0.001,
+      0.05,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scope": "Initial seven-body state and recorded controller values; not full solver or trajectory equivalence"
+  },
+  "geometry_at_start": {
+    "max_world_position_distance_m": [
+      0.0005213540015729516,
+      0.0005313977352090107
+    ],
+    "max_world_position_component_m": [
+      0.0004973411560058594,
+      0.0005054473876953125
+    ],
+    "max_world_angle_difference_deg": [
+      0.014919281005859375,
+      0.01520538330078125
+    ],
+    "max_position_distance_after_aligning_player_m": [
+      0.0005581782802548714,
+      0.000568025449026418
+    ],
+    "tip_distance_after_aligning_player_m": [
+      0.0005581782802548714,
+      0.000568025449026418
+    ],
+    "slider_translation_difference_m": [
+      0.0001965165138244629,
+      0.00020226836204528809
+    ]
+  },
+  "geometry_after_1200": {
+    "max_world_position_distance_m": [
+      0.0004580665619454485,
+      0.0004945959950506438
+    ],
+    "max_world_position_component_m": [
+      0.00041103363037109375,
+      0.0004496574401855469
+    ],
+    "max_world_angle_difference_deg": [
+      0.013519287109375,
+      0.0145111083984375
+    ],
+    "max_position_distance_after_aligning_player_m": [
+      0.0004913843620267343,
+      0.0005285520716113845
+    ],
+    "tip_distance_after_aligning_player_m": [
+      0.0004898478728605064,
+      0.0005285520716113845
+    ],
+    "slider_translation_difference_m": [
+      0.0001157224178314209,
+      0.00013589859008789062
+    ]
+  },
+  "reset_runs": [
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_start_final_reset_2agents_20261002\\result.json",
+      "status": "PASS",
+      "cases": 27,
+      "agents": 2,
+      "frames": 1107,
+      "bitwise_frames_excluding_timestamp": 1107,
+      "reset_latency_seconds": [
+        0.7203008000506088,
+        0.7792594999773428
+      ],
+      "all_agents_native_start_max_errors": {
+        "position_m": 0.0004973411560058594,
+        "angle_deg": 0.014919281005859375,
+        "velocity_m_s": 4.1152117773890495e-05,
+        "angular_velocity_deg_s": 0.0012820959091186523
+      },
+      "native_start_checks": [
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_004",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_004",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_004",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_004",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_005",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_005",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_005",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_005",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_006",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_006",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_006",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_006",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_007",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_007",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_007",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_007",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_008",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_008",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_008",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_008",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_000",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_000",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_000",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_000",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_001",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_001",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_001",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_001",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_002",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_002",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_002",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_002",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_003",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_003",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_003",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_003",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_004",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_004",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_004",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_004",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_005",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_005",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_005",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_005",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_006",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_006",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_006",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_006",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_007",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_007",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_007",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_007",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_008",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_008",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_008",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_01_case_008",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_000",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_000",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_000",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_000",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_001",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_001",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_001",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_001",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_002",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_002",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_002",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_002",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_003",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_003",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_003",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_003",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_004",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_004",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_004",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_004",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_005",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_005",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_005",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_005",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_006",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_006",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_006",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_006",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_007",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_007",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_007",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_007",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_008",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_008",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_008",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_02_case_008",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        }
+      ],
+      "diagnostic_sha256": {
+        "restart_00_case_000.diagnostics.json": "1f8509b96d62830045e97f3ad257e137b785b625a9a0c4889e51f6a79e488abf",
+        "restart_00_case_001.diagnostics.json": "1013fa1c58cf4dedf060b145408e826c91cc48d4e1c245b840992c4d2ab1515f",
+        "restart_00_case_002.diagnostics.json": "17e7cb998e71592c50cc07e44300d4949564e517d7a16a561e94b4b65c2e9bb7",
+        "restart_00_case_003.diagnostics.json": "27ce6e64c18012abca27e0b1d6a0971d4088645376197e2fb85b05f9532cd870",
+        "restart_00_case_004.diagnostics.json": "a57999aa599f63f0621f960043c8b3b8e3c30410b66efb808741af5502017f25",
+        "restart_00_case_005.diagnostics.json": "152356450764a3d66ced71acca44cc458b1ffd9be86de8b9b1c59d0097b7c567",
+        "restart_00_case_006.diagnostics.json": "8947683926c2cd444ac8319177c5bfd51ac18eaec87e444b00bed950e39a8efb",
+        "restart_00_case_007.diagnostics.json": "739e7b3d3d5834e152e2086090ee01a43fd63ebc3f7140c9b89b91e4a41c2316",
+        "restart_00_case_008.diagnostics.json": "53d4dfb2ad61225a34e7ca43d443e5bcbca242396ddbf35711ae2a9f1cc6064a",
+        "restart_01_case_000.diagnostics.json": "248e584a000c5e18659f90546cb746eb2e23425ab0b66b9e3f4c044f019ca9b1",
+        "restart_01_case_001.diagnostics.json": "03d8456c7bf88876032ceff9360669c3f42a86e49d2580fd18689f6ba75d921d",
+        "restart_01_case_002.diagnostics.json": "e38895d0d45a04c21feffb9e695bb543267d88fba7ed8fdf535c7ad6ef238ee1",
+        "restart_01_case_003.diagnostics.json": "e298b31e0504f7bf2364cc43b076d9da47f172f9eccb58cc9e668a964a5f3c4f",
+        "restart_01_case_004.diagnostics.json": "0e5570c5d6908b5f55c35c1e92c97e0a4d5b68f8f9c64d42d2bc683766d6f4fe",
+        "restart_01_case_005.diagnostics.json": "7184f73f1fbe465574c328c33822db404017c14caba9d070c275e57c2fa7d06b",
+        "restart_01_case_006.diagnostics.json": "9574f4e5f82af145eaac2c2958f0312a40befbbc0c93bfde8d1403b9ebac5a0e",
+        "restart_01_case_007.diagnostics.json": "024f31b95f82fca446b7784c9807194ec087492cfb530e1ab0a44ef5211621eb",
+        "restart_01_case_008.diagnostics.json": "300021c78f582e5a9bf9941ba19c25f5b21c33bbac58268a5607503ccb900d71",
+        "restart_02_case_000.diagnostics.json": "dd1d6c60bf89ec940bf820cc5f2ce9d4d43aef1cb3ad1974da1a2ec175a92227",
+        "restart_02_case_001.diagnostics.json": "9b50846855c6e937cfba2be510ca9e7c08a826f8bc23088b28123b2903acb282",
+        "restart_02_case_002.diagnostics.json": "8f7b4b9e3ef9e8ed526925759423f4a53a1183563e4ce5c16ca821986fdddc6d",
+        "restart_02_case_003.diagnostics.json": "57f4dd043e7ed12210c94cb0fcf65a1774683202dd192ba29c007e036cc988bd",
+        "restart_02_case_004.diagnostics.json": "7f2e14e1bfa7c7509b4c6fb3b2717e764c71632ceedec7a9bd4aa754bc14f255",
+        "restart_02_case_005.diagnostics.json": "6e99c9e018cb0ce91e7ee2f7547e42b2ae1df398bba1142877dd4f8067168780",
+        "restart_02_case_006.diagnostics.json": "e665d2d0e2391db769df9bf396d0675e611c664b770d26d2dea313f26ad1a239",
+        "restart_02_case_007.diagnostics.json": "d935e34bb15fa5366e8092d3a9d424f2c3e99c6f01dcb023dbb86eb067479ad7",
+        "restart_02_case_008.diagnostics.json": "70080af4b210a0455d331a63caeff3eb08531484fb1423e19968b731a2d8462c"
+      }
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_start_final_reset_8agents_20261002\\result.json",
+      "status": "PASS",
+      "cases": 4,
+      "agents": 8,
+      "frames": 4804,
+      "bitwise_frames_excluding_timestamp": 4804,
+      "reset_latency_seconds": [
+        1.23222020000685,
+        1.2665581000037491
+      ],
+      "all_agents_native_start_max_errors": {
+        "position_m": 0.0004973411560058594,
+        "angle_deg": 0.014919281005859375,
+        "velocity_m_s": 4.1152117773890495e-05,
+        "angular_velocity_deg_s": 0.0012820959091186523
+      },
+      "native_start_checks": [
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_reset",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_000",
+          "phase": "after_wait",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_reset",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_001",
+          "phase": "after_wait",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_reset",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_002",
+          "phase": "after_wait",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_reset",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 0,
+          "errors": {
+            "position_m": 0.0004973411560058594,
+            "angle_deg": 0.014919281005859375,
+            "velocity_m_s": 2.81732645817101e-05,
+            "angular_velocity_deg_s": 0.0008837990462779999
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 1,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 2,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 3,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 4,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 5,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 6,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        {
+          "case": "restart_00_case_003",
+          "phase": "after_wait",
+          "agent": 7,
+          "errors": {
+            "position_m": 0.0004754066467285156,
+            "angle_deg": 0.014270782470703125,
+            "velocity_m_s": 4.1152117773890495e-05,
+            "angular_velocity_deg_s": 0.0012820959091186523
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        }
+      ],
+      "diagnostic_sha256": {
+        "restart_00_case_000.diagnostics.json": "d758cb0909f7e0940d898c8016e8b5d08c1423082f5a424d846f98b0a9c586ac",
+        "restart_00_case_001.diagnostics.json": "993fabb867c74347111c2da5c1078643d51c698d0d1cf7b9f525c1164fa55726",
+        "restart_00_case_002.diagnostics.json": "35fe8482c7d31c249a3308312e3d4e9a1a801d67ccbc6984ff3608c45d5f9d1a",
+        "restart_00_case_003.diagnostics.json": "18938211a3c5c28e73627b3d84b66d76ea3ad9a65bd7ad9d464688f3a73e3222"
+      }
+    }
+  ],
+  "production_unchanged": true,
+  "production_after": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "scope": "Observed native starting state within existing tolerances; reset versus corresponding modified cold agent bitwise excluding timestamp.",
+  "limits": [
+    "Not native bitwise equality or a complete solver-state comparison.",
+    "Nonzero input smoothing, visual animation, training deployment and full gameplay equivalence remain outside this acceptance."
+  ]
+}

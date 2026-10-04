@@ -1,0 +1,11 @@
+{
+  "reason": "User authorized restart to enable independent elite archival",
+  "saved_iteration": 50,
+  "checkpoint": "C:/Users/Symbol/aCodes/GettingOverIt/runs/gru_formal_5h_20261003/checkpoints/ppo_iter_0050.pt",
+  "stopped_at_utc": "2026-10-03T12:40:34.8858575+00:00",
+  "original_training_started_at_utc": "2026-10-03T10:10:24Z",
+  "training_seconds_before_restart": 9010.888491,
+  "training_pid": 33340,
+  "game_pid": 22676,
+  "note": "Checkpoint 50 is complete. Any in-flight work after it is excluded from continuation."
+}

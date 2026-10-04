@@ -1,0 +1,64 @@
+{
+  "status": "PASS_NATIVE_PHYSICS_INITIALIZATION_AND_RESET",
+  "scope": "Saviour physical initialization plus reset repeatability against the modified cold start; not full native dynamics equivalence",
+  "native_parameter_report": "result.json",
+  "native_process_starts": 18,
+  "native_parameter_phase_rows": 2160,
+  "native_parameters": {
+    "hinge_cap": 10000.0,
+    "slider_cap": 10000.0,
+    "hub_cap": 100.0,
+    "controller_hinge_cap": 10000.0,
+    "controller_slider_cap": 10000.0
+  },
+  "reset_reports": [
+    {
+      "report": "../native_parameters_reset_2agents_20261002/result.json",
+      "agents": 2,
+      "process_starts": 3,
+      "cases": 27,
+      "frames": 1107,
+      "bitwise_frames_without_timestamp": 1107,
+      "native_motor_caps_all_agents_all_stages": true,
+      "reset_seconds_range": [
+        0.5898669000016525,
+        0.6363731999881566
+      ]
+    },
+    {
+      "report": "../native_parameters_reset_8agents_20261002/result.json",
+      "agents": 8,
+      "process_starts": 1,
+      "cases": 4,
+      "frames": 4804,
+      "bitwise_frames_without_timestamp": 4804,
+      "native_motor_caps_all_agents_all_stages": true,
+      "reset_seconds_range": [
+        0.826587300049141,
+        0.8526267000706866
+      ]
+    }
+  ],
+  "offline_checks": {
+    "native_dynamics": 12,
+    "reset_state": 19,
+    "all_passed": true
+  },
+  "remaining": [
+    "Existing dual input injection still differs from native smoothing.",
+    "Canonical initial pose still differs from native.",
+    "Full task/dynamics equivalence has not been certified."
+  ],
+  "plugin_sha256": "088d3f6ca23bdaacef0353489594b275e1baafa8a23ec4ff50884eb5bacc41d4",
+  "production_before": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_after": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_unchanged": true,
+  "test_processes_and_listener_absent": true,
+  "experimental_plugin_updated": true
+}

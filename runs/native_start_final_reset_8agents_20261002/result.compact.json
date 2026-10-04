@@ -1,0 +1,1173 @@
+{
+  "source": "runs/native_start_final_reset_8agents_20261002/result.json",
+  "source_sha256": "ac80078e534dcb5a8da1b473b2b5e8fa9e5b70b062d2e3c33357c8707d85a8b8",
+  "source_bytes": 40007074,
+  "compaction": "Lists longer than 32 entries replaced with their lengths; scalar metrics and smaller structures retained. Raw source remains local.",
+  "result": {
+    "version": 1,
+    "status": "PASS",
+    "started_at_utc": "2026-10-02T08:02:31.946618+00:00",
+    "scope": "same-agent reset versus reference and probe; cross-agent divergence is informational",
+    "raw_state_schema": {
+      "name": "legacy33",
+      "dimension": 33
+    },
+    "parameters": {
+      "agents": 8,
+      "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+      "controlled_updates": false,
+      "reset_diagnostics": true,
+      "native_parameter_reference": "runs\\native_start_final_20261002\\result.json",
+      "native_start_reference": "runs\\native_start_final_20261002\\result.json",
+      "scene_reset": true,
+      "native_new_game": true,
+      "fixed_order": false,
+      "restarts": 1,
+      "cycles": 1,
+      "burn_steps": [
+        1200
+      ],
+      "idle_seconds": [
+        0.0
+      ],
+      "probe_steps": 1200,
+      "probe_kind": "random",
+      "seed": 20261002,
+      "startup_settle": 8.0,
+      "timeout": 120.0,
+      "port": 9000,
+      "out": "runs\\native_start_final_reset_8agents_20261002",
+      "allow_moving_start": false,
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "thresholds": {
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "fields": {
+      "omitted_raw_array": true,
+      "length": 35
+    },
+    "timestamp_excluded": 28,
+    "native_parameters": {
+      "hinge_cap": 10000.0,
+      "slider_cap": 10000.0,
+      "hub_cap": 100.0,
+      "controller_hinge_cap": 10000.0,
+      "controller_slider_cap": 10000.0
+    },
+    "native_start_reference": {
+      "step": 0,
+      "renderFrame": 429,
+      "controllerCalls": 1,
+      "physicsCalls": 0,
+      "phase": "before_control",
+      "mode": "native",
+      "fixedTime": 7.383333683013916,
+      "fixedDeltaTime": 0.008333333767950535,
+      "timeScale": 1.0,
+      "requested": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "inputBeforeInjection": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "bodyNames": [
+        "Player",
+        "Hub",
+        "Slider",
+        "Handle",
+        "PoleMiddle",
+        "Tip",
+        "Cursor"
+      ],
+      "axes": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bodies": {
+        "omitted_raw_array": true,
+        "length": 42
+      },
+      "bodyConfig": {
+        "omitted_raw_array": true,
+        "length": 63
+      },
+      "controls": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.005049999803304672,
+        -42.72201919555664,
+        -3.1991658210754395,
+        -0.011375664733350277,
+        0.0,
+        2.4000000953674316,
+        0.0
+      ],
+      "motors": [
+        -0.034126993268728256,
+        10000.0,
+        0.0,
+        10000.0,
+        0.2511563003063202,
+        -0.35370519757270813
+      ],
+      "contacts": {
+        "omitted_raw_array": true,
+        "length": 50
+      },
+      "motorParameters": [
+        10000.0,
+        10000.0,
+        100.0,
+        10000.0,
+        10000.0
+      ],
+      "axisReads": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "limitations": [
+      "Scene reset with diagnostics uses live state before any RESET as the cold reference; legacy mode uses first RESET.",
+      "Q diagnostics expose all body velocities and selected control fields, not the full solver state.",
+      "Without Q diagnostics, wait effects are observed only at the next STEP.",
+      "Histories run sequentially; differences are not uniquely attributed to waiting versus prior history.",
+      "Stationarity is checked separately, including common motion shared by all agents.",
+      "Thresholds are provisional acceptance criteria, not a measured numerical noise floor."
+    ],
+    "expected_cases": 4,
+    "cases": [
+      {
+        "id": "restart_00_case_000",
+        "restart": 0,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.006075199926272035,
+        "idle_actual_s": 1.859990879893303e-05,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 1201
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 64,
+          "epoch": 1
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 8,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_00_case_001",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 1.2430947000393644,
+        "idle_actual_s": 3.0999071896076202e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 1201
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 64,
+          "epoch": 2
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 8,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_00_case_002",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1200,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 1.23222020000685,
+        "idle_actual_s": 3.200024366378784e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 1201
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 64,
+          "epoch": 3
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 8,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          9.02597427368164,
+          6.051113128662109,
+          6.498035430908203,
+          6.163722991943359,
+          6.934291839599609,
+          6.188869476318359,
+          6.637535095214844,
+          6.508941650390625
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_003",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 1.2665581000037491,
+        "idle_actual_s": 2.700020559132099e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 1201
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 64,
+          "epoch": 4
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 8,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004973411560058594,
+                "angle": 0.014919281005859375,
+                "linear_velocity": 2.81732645817101e-05,
+                "angular_velocity": 0.0008837990462779999
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 2,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 3,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 4,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 5,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 6,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 7,
+              "errors": {
+                "position": 0.0004754066467285156,
+                "angle": 0.014270782470703125,
+                "linear_velocity": 4.1152117773890495e-05,
+                "angular_velocity": 0.0012820959091186523
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          4.486763954162598,
+          4.455412864685059,
+          4.455412864685059,
+          4.455412864685059,
+          4.455412864685059,
+          4.455412864685059,
+          4.455412864685059,
+          4.455412864685059
+        ],
+        "history_exercised": true
+      }
+    ],
+    "sessions": [
+      {
+        "restart": 0,
+        "pid": 7360,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "experimentalNativeNewGame": true,
+          "dynamicsProbeMode": "",
+          "dynamicsProbeFile": "",
+          "numDuplicates": 8,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      }
+    ],
+    "errors": [],
+    "fingerprints": {
+      "script": "a91fe081f369d65a52bde8c3fea673b74a138fb53d036b67efcc95807774f382",
+      "deployed_plugin": "e6c6429fde0d429d0d0d99e02e701d136df3cb3ec725e3d50e9c54c44533acaf",
+      "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844",
+      "project_config": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+    },
+    "runtime_config_requested": {
+      "mode": 0,
+      "tcpPort": 9000,
+      "stateDimension": 29,
+      "actionDimension": 2,
+      "stepFrames": 1,
+      "numDuplicates": 8,
+      "playerObjectName": "Player",
+      "minInput": 10.0,
+      "maxInput": 100.0,
+      "autoClampInput": true,
+      "normalizeInitialPose": true,
+      "initPoseSettleFrames": 120,
+      "startAnimatorInRlMode": true,
+      "initCursorUpScale": 1.0,
+      "initCursorOffsetX": 0.0,
+      "initPoseGain": 15.0,
+      "dataRoot": "GoiData",
+      "initializeDirectoriesOnStart": true,
+      "enableDebugLogs": true,
+      "experimentalNativeNewGame": true,
+      "experimentalResetDiagnostics": true,
+      "experimentalSceneReset": true,
+      "experimentalControlledUpdates": true
+    },
+    "reference_case": "restart_00_case_000",
+    "finished_at_utc": "2026-10-02T08:04:35.758923+00:00"
+  }
+}

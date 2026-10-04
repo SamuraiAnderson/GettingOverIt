@@ -1,0 +1,643 @@
+{
+  "status": "COMPLETE",
+  "started_at_utc": "2026-10-02T06:02:53.532956+00:00",
+  "parameters": {
+    "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+    "out": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_dynamics_pilot",
+    "modes": [
+      "native",
+      "native_dual",
+      "candidate"
+    ],
+    "actions": [
+      "hold"
+    ],
+    "repeats": 1,
+    "steps": 40,
+    "native_warmup": 240,
+    "seed": 20261002,
+    "timeout": 90,
+    "port": 9000
+  },
+  "initial_body_limits": {
+    "position_m": 0.001,
+    "angle_deg": 0.05,
+    "velocity_m_s": 0.001,
+    "angular_velocity_deg_s": 0.1
+  },
+  "cases": [
+    {
+      "id": "hold_native_00",
+      "mode": "native",
+      "actions": "hold",
+      "repeat": 0,
+      "raw": "hold_native_00.jsonl",
+      "config": {
+        "mode": 0,
+        "tcpPort": 9000,
+        "stateDimension": 29,
+        "actionDimension": 2,
+        "stepFrames": 1,
+        "numDuplicates": 1,
+        "playerObjectName": "Player",
+        "minInput": 10.0,
+        "maxInput": 100.0,
+        "autoClampInput": true,
+        "normalizeInitialPose": true,
+        "initPoseSettleFrames": 120,
+        "startAnimatorInRlMode": true,
+        "initCursorUpScale": 1.0,
+        "initCursorOffsetX": 0.0,
+        "initPoseGain": 15.0,
+        "dataRoot": "GoiData",
+        "initializeDirectoriesOnStart": true,
+        "enableDebugLogs": true,
+        "dynamicsProbeMode": "native",
+        "dynamicsProbeFile": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_dynamics_pilot\\hold_native_00.fixture.json",
+        "experimentalControlledUpdates": false,
+        "experimentalSceneReset": false,
+        "experimentalResetDiagnostics": false
+      },
+      "pid": 39980,
+      "status": "COMPLETE",
+      "seconds": 15.172523700050078,
+      "rows": 120
+    },
+    {
+      "id": "hold_native_dual_00",
+      "mode": "native_dual",
+      "actions": "hold",
+      "repeat": 0,
+      "raw": "hold_native_dual_00.jsonl",
+      "config": {
+        "mode": 0,
+        "tcpPort": 9000,
+        "stateDimension": 29,
+        "actionDimension": 2,
+        "stepFrames": 1,
+        "numDuplicates": 1,
+        "playerObjectName": "Player",
+        "minInput": 10.0,
+        "maxInput": 100.0,
+        "autoClampInput": true,
+        "normalizeInitialPose": true,
+        "initPoseSettleFrames": 120,
+        "startAnimatorInRlMode": true,
+        "initCursorUpScale": 1.0,
+        "initCursorOffsetX": 0.0,
+        "initPoseGain": 15.0,
+        "dataRoot": "GoiData",
+        "initializeDirectoriesOnStart": true,
+        "enableDebugLogs": true,
+        "dynamicsProbeMode": "native_dual",
+        "dynamicsProbeFile": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_dynamics_pilot\\hold_native_dual_00.fixture.json",
+        "experimentalControlledUpdates": false,
+        "experimentalSceneReset": false,
+        "experimentalResetDiagnostics": false
+      },
+      "pid": 30880,
+      "status": "COMPLETE",
+      "seconds": 15.069447899935767,
+      "rows": 120
+    },
+    {
+      "id": "hold_candidate_00",
+      "mode": "candidate",
+      "actions": "hold",
+      "repeat": 0,
+      "raw": "hold_candidate_00.jsonl",
+      "config": {
+        "mode": 0,
+        "tcpPort": 9000,
+        "stateDimension": 29,
+        "actionDimension": 2,
+        "stepFrames": 1,
+        "numDuplicates": 1,
+        "playerObjectName": "Player",
+        "minInput": 10.0,
+        "maxInput": 100.0,
+        "autoClampInput": true,
+        "normalizeInitialPose": true,
+        "initPoseSettleFrames": 120,
+        "startAnimatorInRlMode": true,
+        "initCursorUpScale": 1.0,
+        "initCursorOffsetX": 0.0,
+        "initPoseGain": 15.0,
+        "dataRoot": "GoiData",
+        "initializeDirectoriesOnStart": true,
+        "enableDebugLogs": true,
+        "dynamicsProbeMode": "candidate",
+        "dynamicsProbeFile": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_dynamics_pilot\\hold_candidate_00.fixture.json",
+        "experimentalControlledUpdates": true,
+        "experimentalSceneReset": true,
+        "experimentalResetDiagnostics": false
+      },
+      "pid": 40320,
+      "status": "COMPLETE",
+      "seconds": 10.288532899925485,
+      "rows": 120
+    }
+  ],
+  "errors": [],
+  "fingerprints": {
+    "script": "73b131f41e1dbcdd80855a0103acd13bbffbda1ec922f681a8d846b95f975c29",
+    "plugin": "b62fb6688974dc5111ca0caa46b044682ca3ea38e41c7ec62c3c39065ac6a2b1",
+    "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844"
+  },
+  "limitations": [
+    "Native reference still uses BepInEx and input interception; not an uninstrumented executable.",
+    "Native readiness plus zero-input warmup differs from candidate canonical initialization.",
+    "Contact and joint solver hidden caches are not observed.",
+    "Single-agent, short-horizon dynamics; does not certify task interfaces or full gameplay.",
+    "Native autosave-to-disk is suppressed. Other PlayerPrefs changes are not isolated.",
+    "Body tolerances are predefined screening thresholds, not a proof of matching solver states."
+  ],
+  "analysis": {
+    "equivalence": "NOT_CERTIFIED",
+    "comparisons": [
+      {
+        "left": "hold_native_00",
+        "right": "hold_native_dual_00",
+        "kind": "cross_mode",
+        "initial_bodies": {
+          "errors": {
+            "position_m": 9.298324584960938e-06,
+            "angle_deg": 7.62939453125e-05,
+            "velocity_m_s": 0.00016477244207635522,
+            "angular_velocity_deg_s": 0.005183262750506401
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        "body_config_max_abs_delta": 0.0,
+        "fixed_dt_equal": true,
+        "phases": {
+          "before_control": {
+            "errors": {
+              "position_m": 0.08232951164245605,
+              "angle_deg": 0.0013197362422943115,
+              "velocity_m_s": 0.08232235908508301,
+              "angular_velocity_deg_s": 0.024827003479003906
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 227.12353515625,
+            "motors_max_abs_delta": 0.011379241943359375
+          },
+          "after_control": {
+            "errors": {
+              "position_m": 0.08232951164245605,
+              "angle_deg": 0.0013197362422943115,
+              "velocity_m_s": 0.08232235908508301,
+              "angular_velocity_deg_s": 0.024827003479003906
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 227.12353515625,
+            "motors_max_abs_delta": 0.011379241943359375
+          },
+          "after_physics": {
+            "errors": {
+              "position_m": 0.08232951164245605,
+              "angle_deg": 0.0013197362422943115,
+              "velocity_m_s": 0.08232235908508301,
+              "angular_velocity_deg_s": 0.024827003479003906
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 227.12353515625,
+            "motors_max_abs_delta": 0.011379241943359375
+          }
+        },
+        "trajectory_attribution": "INITIAL_BODIES_WITHIN_LIMITS_NOT_FULL_SOLVER_STATE"
+      },
+      {
+        "left": "hold_native_00",
+        "right": "hold_candidate_00",
+        "kind": "cross_mode",
+        "initial_bodies": {
+          "errors": {
+            "position_m": 0.06859588623046875,
+            "angle_deg": 2.4222556464374065,
+            "velocity_m_s": 0.0007184685673564672,
+            "angular_velocity_deg_s": 0.1893104687333107
+          },
+          "within_limits": false,
+          "bitwise_equal": false
+        },
+        "body_config_max_abs_delta": 0.0,
+        "fixed_dt_equal": true,
+        "phases": {
+          "before_control": {
+            "errors": {
+              "position_m": 0.10634613037109375,
+              "angle_deg": 3.2356476485729218,
+              "velocity_m_s": 1.7836837768554688,
+              "angular_velocity_deg_s": 59.718353271484375
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 127.892333984375,
+            "motors_max_abs_delta": 5700.0
+          },
+          "after_control": {
+            "errors": {
+              "position_m": 0.10634613037109375,
+              "angle_deg": 3.2356476485729218,
+              "velocity_m_s": 1.7836837768554688,
+              "angular_velocity_deg_s": 59.718353271484375
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 127.892333984375,
+            "motors_max_abs_delta": 5700.0
+          },
+          "after_physics": {
+            "errors": {
+              "position_m": 0.10634613037109375,
+              "angle_deg": 3.4102743268013,
+              "velocity_m_s": 1.7836837768554688,
+              "angular_velocity_deg_s": 59.718353271484375
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 127.892333984375,
+            "motors_max_abs_delta": 5700.0
+          }
+        },
+        "trajectory_attribution": "INITIAL_STATE_MISMATCH"
+      },
+      {
+        "left": "hold_native_dual_00",
+        "right": "hold_candidate_00",
+        "kind": "cross_mode",
+        "initial_bodies": {
+          "errors": {
+            "position_m": 0.06859588623046875,
+            "angle_deg": 2.4222555607557297,
+            "velocity_m_s": 0.0008315929071613937,
+            "angular_velocity_deg_s": 0.18926908820867538
+          },
+          "within_limits": false,
+          "bitwise_equal": false
+        },
+        "body_config_max_abs_delta": 0.0,
+        "fixed_dt_equal": true,
+        "phases": {
+          "before_control": {
+            "errors": {
+              "position_m": 0.0753936767578125,
+              "angle_deg": 3.2366789281368256,
+              "velocity_m_s": 1.784027099609375,
+              "angular_velocity_deg_s": 59.722747802734375
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 149.11083984375,
+            "motors_max_abs_delta": 5700.0
+          },
+          "after_control": {
+            "errors": {
+              "position_m": 0.0753936767578125,
+              "angle_deg": 3.2366789281368256,
+              "velocity_m_s": 1.784027099609375,
+              "angular_velocity_deg_s": 59.722747802734375
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 149.11083984375,
+            "motors_max_abs_delta": 5700.0
+          },
+          "after_physics": {
+            "errors": {
+              "position_m": 0.0753936767578125,
+              "angle_deg": 3.4112207293510437,
+              "velocity_m_s": 1.784027099609375,
+              "angular_velocity_deg_s": 59.722747802734375
+            },
+            "within_limits": false,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 149.11083984375,
+            "motors_max_abs_delta": 5700.0
+          }
+        },
+        "trajectory_attribution": "INITIAL_STATE_MISMATCH"
+      }
+    ],
+    "first_step": {
+      "hold_native_00": {
+        "before_control": {
+          "controls": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.1009996235370636,
+            -42.72353744506836,
+            -3.2011656761169434,
+            -0.01080637238919735,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.0324191153049469,
+            10000.0,
+            2.467402638543087e-13,
+            10000.0,
+            0.16998974978923798,
+            -0.3537481129169464
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_control": {
+          "controls": [
+            48.0,
+            36.0,
+            0.0,
+            0.0,
+            0.400949627161026,
+            -42.723541259765625,
+            -3.201171875,
+            -0.010804952122271061,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.03241485729813576,
+            10000.0,
+            3.4325244469696203e-13,
+            10000.0,
+            0.16998974978923798,
+            -0.3537481129169464
+          ],
+          "axes": [
+            40.0,
+            30.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_physics": {
+          "controls": [
+            48.0,
+            36.0,
+            0.0,
+            0.0,
+            0.400949627161026,
+            -42.723541259765625,
+            -3.201171875,
+            -0.010804952122271061,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.03241485729813576,
+            10000.0,
+            3.4325244469696203e-13,
+            10000.0,
+            0.16973702609539032,
+            -0.3537485599517822
+          ],
+          "axes": [
+            40.0,
+            30.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "hold_native_dual_00": {
+        "before_control": {
+          "controls": [
+            40.0,
+            30.0,
+            0.0,
+            0.0,
+            0.1009996235370636,
+            -42.723541259765625,
+            -3.2011587619781494,
+            -0.010794661939144135,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.032383985817432404,
+            10000.0,
+            6.060981794578368e-13,
+            10000.0,
+            0.16994193196296692,
+            -0.3537575304508209
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_control": {
+          "controls": [
+            68.0,
+            51.0,
+            40.0,
+            30.0,
+            0.5259496569633484,
+            -42.72354507446289,
+            -3.201164722442627,
+            -0.010790047235786915,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.03237014263868332,
+            10000.0,
+            4.954239601027977e-13,
+            10000.0,
+            0.16994193196296692,
+            -0.3537575304508209
+          ],
+          "axes": [
+            40.0,
+            30.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_physics": {
+          "controls": [
+            68.0,
+            51.0,
+            40.0,
+            30.0,
+            0.5259496569633484,
+            -42.72354507446289,
+            -3.201164722442627,
+            -0.010790047235786915,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.03237014263868332,
+            10000.0,
+            4.954239601027977e-13,
+            10000.0,
+            0.16968239843845367,
+            -0.35375866293907166
+          ],
+          "axes": [
+            40.0,
+            30.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "hold_candidate_00": {
+        "before_control": {
+          "controls": [
+            40.0,
+            30.0,
+            0.0,
+            0.0,
+            0.10078568011522293,
+            -42.67938995361328,
+            -3.2113232612609863,
+            0.05229613184928894,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            0.15688839554786682,
+            10000.0,
+            0.0,
+            4300.0,
+            1.0582387447357178,
+            -0.2527771592140198
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 40.0,
+            "y": 30.0
+          }
+        },
+        "after_control": {
+          "controls": [
+            68.0,
+            51.0,
+            40.0,
+            30.0,
+            0.5257464051246643,
+            -42.67938995361328,
+            -3.211322546005249,
+            0.05200342833995819,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            0.15601028501987457,
+            10000.0,
+            0.0,
+            4300.0,
+            1.0582387447357178,
+            -0.2527771592140198
+          ],
+          "axes": [
+            40.0,
+            30.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 40.0,
+            "y": 30.0
+          }
+        },
+        "after_physics": {
+          "controls": [
+            68.0,
+            51.0,
+            40.0,
+            30.0,
+            0.5257464051246643,
+            -42.67938995361328,
+            -3.211322546005249,
+            0.05200342833995819,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            0.15601028501987457,
+            10000.0,
+            0.0,
+            4300.0,
+            1.0595399141311646,
+            -0.2527772784233093
+          ],
+          "axes": [
+            40.0,
+            30.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 40.0,
+            "y": 30.0
+          }
+        }
+      }
+    }
+  },
+  "production_before": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_after": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_unchanged": true,
+  "finished_at_utc": "2026-10-02T06:03:36.757729+00:00"
+}

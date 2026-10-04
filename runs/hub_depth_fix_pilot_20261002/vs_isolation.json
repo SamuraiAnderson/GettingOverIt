@@ -1,0 +1,53 @@
+{
+  "initial_bodies": {
+    "errors": {
+      "position_m": 0.0,
+      "angle_deg": 0.0,
+      "velocity_m_s": 0.0,
+      "angular_velocity_deg_s": 0.0
+    },
+    "within_limits": true,
+    "bitwise_equal": true
+  },
+  "body_config_max_abs_delta": 0.0,
+  "fixed_dt_equal": true,
+  "phases": {
+    "before_control": {
+      "errors": {
+        "position_m": 0.0,
+        "angle_deg": 0.0,
+        "velocity_m_s": 0.0,
+        "angular_velocity_deg_s": 0.0
+      },
+      "within_limits": true,
+      "bitwise_equal": true,
+      "controls_max_abs_delta": 0.0,
+      "motors_max_abs_delta": 0.0
+    },
+    "after_control": {
+      "errors": {
+        "position_m": 0.0,
+        "angle_deg": 0.0,
+        "velocity_m_s": 0.0,
+        "angular_velocity_deg_s": 0.0
+      },
+      "within_limits": true,
+      "bitwise_equal": true,
+      "controls_max_abs_delta": 0.0,
+      "motors_max_abs_delta": 0.0
+    },
+    "after_physics": {
+      "errors": {
+        "position_m": 0.0,
+        "angle_deg": 0.0,
+        "velocity_m_s": 0.0,
+        "angular_velocity_deg_s": 0.0
+      },
+      "within_limits": true,
+      "bitwise_equal": true,
+      "controls_max_abs_delta": 0.0,
+      "motors_max_abs_delta": 0.0
+    }
+  },
+  "trajectory_attribution": "INITIAL_BODIES_WITHIN_LIMITS_NOT_FULL_SOLVER_STATE"
+}

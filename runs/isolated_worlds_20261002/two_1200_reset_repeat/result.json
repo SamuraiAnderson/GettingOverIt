@@ -1,0 +1,33 @@
+{
+  "status": "COMPLETE",
+  "worlds": 2,
+  "steps": 1200,
+  "resets": 2,
+  "other_zero": false,
+  "startup_sync": false,
+  "scene_sync_only": false,
+  "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\policy_0269_cold_8players_20261002_visual_fix\\deterministic_000_agent1.json",
+  "source_sha256": "b1fd90cfdf851e13bfc58c28964270193773ac1ade006679d2c7c679fa507bff",
+  "game_runtime_sha256": "4608e828630f69a2536527fe5a22aa68e4d79fd40599cc055b2a5506ed4bbf59",
+  "experiment_sha256": "e72587362aec96ba7e6c0203854de502a1c7d96d880a48de493be621a68db75f",
+  "runtime_overrides": {
+    "suppressHubDepthWrite": true,
+    "experimentalControlledUpdates": true,
+    "experimentalSceneReset": true,
+    "experimentalNativeNewGame": true,
+    "experimentalNativeInputSmoothing": true,
+    "experimentalResetDiagnostics": true,
+    "stepFrames": 1,
+    "dynamicsProbeMode": "",
+    "dynamicsProbeFile": ""
+  },
+  "pid": 37524,
+  "experiment": {
+    "status": "COMPLETE",
+    "error": "",
+    "worlds": 2,
+    "epochs": 3,
+    "steps": 1200
+  },
+  "wall_seconds": 14.075135300168768
+}

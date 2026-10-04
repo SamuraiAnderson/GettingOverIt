@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "mode": "gru_full_prefix_positive_advantage",
+  "iteration": 167,
+  "seed": 7,
+  "budget": 4,
+  "chunks": [
+    {
+      "trajectory": 11,
+      "source_iteration": 128,
+      "start": 96,
+      "end": 128,
+      "cap": 186,
+      "bootstrap": -0.8505175709724426,
+      "positive_frames": 32,
+      "accepted": true,
+      "kl": 0.00027822688571177423,
+      "frame_kl_max": 0.0032004714012145996,
+      "loss": 0.28688162565231323
+    },
+    {
+      "trajectory": 13,
+      "source_iteration": 97,
+      "start": 192,
+      "end": 224,
+      "cap": 586,
+      "bootstrap": -0.2437802106142044,
+      "positive_frames": 32,
+      "accepted": true,
+      "kl": 0.000538597465492785,
+      "frame_kl_max": 0.007759988307952881,
+      "loss": 0.13794201612472534
+    },
+    {
+      "trajectory": 15,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "cap": 90,
+      "bootstrap": 0.15171268582344055,
+      "positive_frames": 1,
+      "accepted": true,
+      "kl": 0.0010507855331525207,
+      "frame_kl_max": 0.014142334461212158,
+      "loss": 0.002174003515392542
+    },
+    {
+      "trajectory": 12,
+      "source_iteration": 97,
+      "start": 96,
+      "end": 128,
+      "cap": 446,
+      "bootstrap": -0.9516840577125549,
+      "positive_frames": 32,
+      "accepted": true,
+      "kl": 0.0027648834511637688,
+      "frame_kl_max": 0.03536248207092285,
+      "loss": 0.29602617025375366
+    }
+  ]
+}

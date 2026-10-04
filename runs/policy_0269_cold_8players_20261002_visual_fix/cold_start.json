@@ -1,0 +1,1638 @@
+{
+  "diagnostics": {
+    "version": 1,
+    "kind": "reset_diagnostics",
+    "agentCount": 8,
+    "epoch": 1,
+    "resetNumber": 0,
+    "controlledUpdates": true,
+    "initialization": null,
+    "current": {
+      "phase": "live",
+      "manualCalls": 5768,
+      "blockedCalls": 0,
+      "simulationCalls": 721,
+      "worldBodyCount": 64,
+      "timeScale": 0.0,
+      "states": [
+        -44.280982971191406,
+        -2.4220328330993652,
+        -5.683875592410459e-10,
+        -1.685349360069921e-10,
+        3.729022424181494e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        -8.70712335565571e-10,
+        -1.6643667000160178e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        -8.716500854433207e-10,
+        -1.6848251960244198e-10,
+        323.660888671875,
+        -44.53202819824219,
+        -1.8595333099365234,
+        0.00012465743930079043,
+        0.00016949631390161812,
+        -43.59013748168945,
+        -2.556976556777954,
+        -0.00028245311114005744,
+        -0.00038031002623029053,
+        -42.7221794128418,
+        -3.19966983795166,
+        -0.0006461915909312665,
+        -0.0008936193189583719,
+        -36.55228805541992,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0,
+        -44.280982971191406,
+        -2.4220328330993652,
+        4.775537187917678e-10,
+        1.4179067642228205e-10,
+        -3.134740111931933e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        7.317814687546331e-10,
+        1.397557625182344e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        7.326622641912195e-10,
+        1.4194477537810002e-10,
+        323.6615295410156,
+        -44.53203201293945,
+        -1.859534740447998,
+        0.0001244476588908583,
+        0.00016918775509111583,
+        -43.59012985229492,
+        -2.5569663047790527,
+        -0.00028750443016178906,
+        -0.0003871712542604655,
+        -42.72216796875,
+        -3.199647903442383,
+        -0.0006555684376507998,
+        -0.0009065981721505523,
+        -36.55154800415039,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0,
+        -44.280982971191406,
+        -2.4220328330993652,
+        4.775537187917678e-10,
+        1.4179067642228205e-10,
+        -3.134740111931933e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        7.317814687546331e-10,
+        1.397557625182344e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        7.326622641912195e-10,
+        1.4194477537810002e-10,
+        323.6615295410156,
+        -44.53203201293945,
+        -1.859534740447998,
+        0.0001244476588908583,
+        0.00016918775509111583,
+        -43.59012985229492,
+        -2.5569663047790527,
+        -0.00028750443016178906,
+        -0.0003871712542604655,
+        -42.72216796875,
+        -3.199647903442383,
+        -0.0006555684376507998,
+        -0.0009065981721505523,
+        -36.55154800415039,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0,
+        -44.280982971191406,
+        -2.4220328330993652,
+        4.775537187917678e-10,
+        1.4179067642228205e-10,
+        -3.134740111931933e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        7.317814687546331e-10,
+        1.397557625182344e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        7.326622641912195e-10,
+        1.4194477537810002e-10,
+        323.6615295410156,
+        -44.53203201293945,
+        -1.859534740447998,
+        0.0001244476588908583,
+        0.00016918775509111583,
+        -43.59012985229492,
+        -2.5569663047790527,
+        -0.00028750443016178906,
+        -0.0003871712542604655,
+        -42.72216796875,
+        -3.199647903442383,
+        -0.0006555684376507998,
+        -0.0009065981721505523,
+        -36.55154800415039,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0,
+        -44.280982971191406,
+        -2.4220328330993652,
+        4.775537187917678e-10,
+        1.4179067642228205e-10,
+        -3.134740111931933e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        7.317814687546331e-10,
+        1.397557625182344e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        7.326622641912195e-10,
+        1.4194477537810002e-10,
+        323.6615295410156,
+        -44.53203201293945,
+        -1.859534740447998,
+        0.0001244476588908583,
+        0.00016918775509111583,
+        -43.59012985229492,
+        -2.5569663047790527,
+        -0.00028750443016178906,
+        -0.0003871712542604655,
+        -42.72216796875,
+        -3.199647903442383,
+        -0.0006555684376507998,
+        -0.0009065981721505523,
+        -36.55154800415039,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0,
+        -44.280982971191406,
+        -2.4220328330993652,
+        4.775537187917678e-10,
+        1.4179067642228205e-10,
+        -3.134740111931933e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        7.317814687546331e-10,
+        1.397557625182344e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        7.326622641912195e-10,
+        1.4194477537810002e-10,
+        323.6615295410156,
+        -44.53203201293945,
+        -1.859534740447998,
+        0.0001244476588908583,
+        0.00016918775509111583,
+        -43.59012985229492,
+        -2.5569663047790527,
+        -0.00028750443016178906,
+        -0.0003871712542604655,
+        -42.72216796875,
+        -3.199647903442383,
+        -0.0006555684376507998,
+        -0.0009065981721505523,
+        -36.55154800415039,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0,
+        -44.280982971191406,
+        -2.4220328330993652,
+        4.775537187917678e-10,
+        1.4179067642228205e-10,
+        -3.134740111931933e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        7.317814687546331e-10,
+        1.397557625182344e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        7.326622641912195e-10,
+        1.4194477537810002e-10,
+        323.6615295410156,
+        -44.53203201293945,
+        -1.859534740447998,
+        0.0001244476588908583,
+        0.00016918775509111583,
+        -43.59012985229492,
+        -2.5569663047790527,
+        -0.00028750443016178906,
+        -0.0003871712542604655,
+        -42.72216796875,
+        -3.199647903442383,
+        -0.0006555684376507998,
+        -0.0009065981721505523,
+        -36.55154800415039,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0,
+        -44.280982971191406,
+        -2.4220328330993652,
+        4.775537187917678e-10,
+        1.4179067642228205e-10,
+        -3.134740111931933e-08,
+        -44.24727249145508,
+        -2.069005012512207,
+        7.317814687546331e-10,
+        1.397557625182344e-10,
+        0.0,
+        -44.24727249145508,
+        -2.069005250930786,
+        7.326622641912195e-10,
+        1.4194477537810002e-10,
+        323.6615295410156,
+        -44.53203201293945,
+        -1.859534740447998,
+        0.0001244476588908583,
+        0.00016918775509111583,
+        -43.59012985229492,
+        -2.5569663047790527,
+        -0.00028750443016178906,
+        -0.0003871712542604655,
+        -42.72216796875,
+        -3.199647903442383,
+        -0.0006555684376507998,
+        -0.0009065981721505523,
+        -36.55154800415039,
+        1.3674569129943848,
+        -42.72588348388672,
+        -3.2136011123657227,
+        0.0,
+        0.0
+      ],
+      "joints": [
+        "{\"agent\":0,\"name\":\"Player\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":0,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034098587930202487,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":0,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":0,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":0,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":0,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":1,\"name\":\"Player_Duplicate_0\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":1,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034043990075588229,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":1,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":1,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":1,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":1,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":2,\"name\":\"Player_Duplicate_1\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":2,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034043990075588229,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":2,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":2,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":2,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":2,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":3,\"name\":\"Player_Duplicate_2\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":3,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034043990075588229,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":3,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":3,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":3,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":3,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":4,\"name\":\"Player_Duplicate_3\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":4,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034043990075588229,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":4,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":4,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":4,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":4,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":5,\"name\":\"Player_Duplicate_4\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":5,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034043990075588229,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":5,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":5,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":5,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":5,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":6,\"name\":\"Player_Duplicate_5\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":6,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034043990075588229,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":6,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":6,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":6,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":6,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":7,\"name\":\"Player_Duplicate_6\",\"type\":\"HingeJoint2D\",\"connected\":\"Hub\",\"anchor\":{\"x\":0.034000396728515628,\"y\":0.3529999256134033},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":100.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":7,\"name\":\"Hub\",\"type\":\"HingeJoint2D\",\"connected\":\"Slider\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":-0.034043990075588229,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":7,\"name\":\"Slider\",\"type\":\"SliderJoint2D\",\"connected\":\"Handle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":true,\"autoAnchor\":false}",
+        "{\"agent\":7,\"name\":\"Handle\",\"type\":\"FixedJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.1719999313354493,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}",
+        "{\"agent\":7,\"name\":\"Handle\",\"type\":\"HingeJoint2D\",\"connected\":\"PoleMiddle\",\"anchor\":{\"x\":0.0,\"y\":0.0},\"connectedAnchor\":{\"x\":1.3600000143051148,\"y\":-1.1889495254990834e-7},\"motorSpeed\":0.0,\"maxMotorTorque\":10000.0,\"enabled\":false,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":true}",
+        "{\"agent\":7,\"name\":\"PoleMiddle\",\"type\":\"FixedJoint2D\",\"connected\":\"Tip\",\"anchor\":{\"x\":-1.0800000429153443,\"y\":0.0},\"connectedAnchor\":{\"x\":0.0,\"y\":0.0},\"motorSpeed\":0.0,\"maxMotorTorque\":0.0,\"enabled\":true,\"enableCollision\":false,\"useMotor\":false,\"autoAnchor\":false}"
+      ],
+      "bodies": [
+        {
+          "agent": 0,
+          "name": "Player",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": -5.683875592410459e-10,
+            "y": -1.685349360069921e-10
+          },
+          "rotation": 0.04725193604826927,
+          "angularVelocity": 3.729022424181494e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 0,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": -8.70712335565571e-10,
+            "y": -1.6643667000160178e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 0,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": -8.716500854433207e-10,
+            "y": -1.6848251960244198e-10
+          },
+          "rotation": -36.3391227722168,
+          "angularVelocity": -0.0341019444167614,
+          "sleeping": false
+        },
+        {
+          "agent": 0,
+          "name": "Handle",
+          "position": {
+            "x": -44.53202819824219,
+            "y": -1.8595333099365234
+          },
+          "velocity": {
+            "x": 0.00012465743930079043,
+            "y": 0.00016949631390161812
+          },
+          "rotation": 143.660888671875,
+          "angularVelocity": -0.0341019444167614,
+          "sleeping": false
+        },
+        {
+          "agent": 0,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59013748168945,
+            "y": -2.556976795196533
+          },
+          "velocity": {
+            "x": -0.00028245311114005744,
+            "y": -0.00038031002623029053
+          },
+          "rotation": 143.48121643066406,
+          "angularVelocity": -0.033444903790950775,
+          "sleeping": false
+        },
+        {
+          "agent": 0,
+          "name": "Tip",
+          "position": {
+            "x": -42.7221794128418,
+            "y": -3.1996700763702393
+          },
+          "velocity": {
+            "x": -0.0006461915909312665,
+            "y": -0.0008936193189583719
+          },
+          "rotation": 143.48121643066406,
+          "angularVelocity": -0.033444903790950775,
+          "sleeping": false
+        },
+        {
+          "agent": 0,
+          "name": "Cursor",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        },
+        {
+          "agent": 1,
+          "name": "Player_Duplicate_0",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": 4.775537187917678e-10,
+            "y": 1.4179067642228205e-10
+          },
+          "rotation": 0.04725189879536629,
+          "angularVelocity": -3.134740111931933e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 1,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": 7.317814687546331e-10,
+            "y": 1.397557625182344e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 1,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": 7.326622641912195e-10,
+            "y": 1.4194477537810002e-10
+          },
+          "rotation": -36.33847427368164,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 1,
+          "name": "Handle",
+          "position": {
+            "x": -44.53203201293945,
+            "y": -1.8595348596572876
+          },
+          "velocity": {
+            "x": 0.0001244476588908583,
+            "y": 0.00016918775509111583
+          },
+          "rotation": 143.66152954101562,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 1,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59012985229492,
+            "y": -2.556966543197632
+          },
+          "velocity": {
+            "x": -0.00028750443016178906,
+            "y": -0.0003871712542604655
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 1,
+          "name": "Tip",
+          "position": {
+            "x": -42.72216796875,
+            "y": -3.199648141860962
+          },
+          "velocity": {
+            "x": -0.0006555684376507998,
+            "y": -0.0009065981721505523
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 1,
+          "name": "FakeCursor_Dup_0",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        },
+        {
+          "agent": 2,
+          "name": "Player_Duplicate_1",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": 4.775537187917678e-10,
+            "y": 1.4179067642228205e-10
+          },
+          "rotation": 0.04725189879536629,
+          "angularVelocity": -3.134740111931933e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 2,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": 7.317814687546331e-10,
+            "y": 1.397557625182344e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 2,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": 7.326622641912195e-10,
+            "y": 1.4194477537810002e-10
+          },
+          "rotation": -36.33847427368164,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 2,
+          "name": "Handle",
+          "position": {
+            "x": -44.53203201293945,
+            "y": -1.8595348596572876
+          },
+          "velocity": {
+            "x": 0.0001244476588908583,
+            "y": 0.00016918775509111583
+          },
+          "rotation": 143.66152954101562,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 2,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59012985229492,
+            "y": -2.556966543197632
+          },
+          "velocity": {
+            "x": -0.00028750443016178906,
+            "y": -0.0003871712542604655
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 2,
+          "name": "Tip",
+          "position": {
+            "x": -42.72216796875,
+            "y": -3.199648141860962
+          },
+          "velocity": {
+            "x": -0.0006555684376507998,
+            "y": -0.0009065981721505523
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 2,
+          "name": "FakeCursor_Dup_1",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        },
+        {
+          "agent": 3,
+          "name": "Player_Duplicate_2",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": 4.775537187917678e-10,
+            "y": 1.4179067642228205e-10
+          },
+          "rotation": 0.04725189879536629,
+          "angularVelocity": -3.134740111931933e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 3,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": 7.317814687546331e-10,
+            "y": 1.397557625182344e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 3,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": 7.326622641912195e-10,
+            "y": 1.4194477537810002e-10
+          },
+          "rotation": -36.33847427368164,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 3,
+          "name": "Handle",
+          "position": {
+            "x": -44.53203201293945,
+            "y": -1.8595348596572876
+          },
+          "velocity": {
+            "x": 0.0001244476588908583,
+            "y": 0.00016918775509111583
+          },
+          "rotation": 143.66152954101562,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 3,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59012985229492,
+            "y": -2.556966543197632
+          },
+          "velocity": {
+            "x": -0.00028750443016178906,
+            "y": -0.0003871712542604655
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 3,
+          "name": "Tip",
+          "position": {
+            "x": -42.72216796875,
+            "y": -3.199648141860962
+          },
+          "velocity": {
+            "x": -0.0006555684376507998,
+            "y": -0.0009065981721505523
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 3,
+          "name": "FakeCursor_Dup_2",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        },
+        {
+          "agent": 4,
+          "name": "Player_Duplicate_3",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": 4.775537187917678e-10,
+            "y": 1.4179067642228205e-10
+          },
+          "rotation": 0.04725189879536629,
+          "angularVelocity": -3.134740111931933e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 4,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": 7.317814687546331e-10,
+            "y": 1.397557625182344e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 4,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": 7.326622641912195e-10,
+            "y": 1.4194477537810002e-10
+          },
+          "rotation": -36.33847427368164,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 4,
+          "name": "Handle",
+          "position": {
+            "x": -44.53203201293945,
+            "y": -1.8595348596572876
+          },
+          "velocity": {
+            "x": 0.0001244476588908583,
+            "y": 0.00016918775509111583
+          },
+          "rotation": 143.66152954101562,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 4,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59012985229492,
+            "y": -2.556966543197632
+          },
+          "velocity": {
+            "x": -0.00028750443016178906,
+            "y": -0.0003871712542604655
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 4,
+          "name": "Tip",
+          "position": {
+            "x": -42.72216796875,
+            "y": -3.199648141860962
+          },
+          "velocity": {
+            "x": -0.0006555684376507998,
+            "y": -0.0009065981721505523
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 4,
+          "name": "FakeCursor_Dup_3",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        },
+        {
+          "agent": 5,
+          "name": "Player_Duplicate_4",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": 4.775537187917678e-10,
+            "y": 1.4179067642228205e-10
+          },
+          "rotation": 0.04725189879536629,
+          "angularVelocity": -3.134740111931933e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 5,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": 7.317814687546331e-10,
+            "y": 1.397557625182344e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 5,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": 7.326622641912195e-10,
+            "y": 1.4194477537810002e-10
+          },
+          "rotation": -36.33847427368164,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 5,
+          "name": "Handle",
+          "position": {
+            "x": -44.53203201293945,
+            "y": -1.8595348596572876
+          },
+          "velocity": {
+            "x": 0.0001244476588908583,
+            "y": 0.00016918775509111583
+          },
+          "rotation": 143.66152954101562,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 5,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59012985229492,
+            "y": -2.556966543197632
+          },
+          "velocity": {
+            "x": -0.00028750443016178906,
+            "y": -0.0003871712542604655
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 5,
+          "name": "Tip",
+          "position": {
+            "x": -42.72216796875,
+            "y": -3.199648141860962
+          },
+          "velocity": {
+            "x": -0.0006555684376507998,
+            "y": -0.0009065981721505523
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 5,
+          "name": "FakeCursor_Dup_4",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        },
+        {
+          "agent": 6,
+          "name": "Player_Duplicate_5",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": 4.775537187917678e-10,
+            "y": 1.4179067642228205e-10
+          },
+          "rotation": 0.04725189879536629,
+          "angularVelocity": -3.134740111931933e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 6,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": 7.317814687546331e-10,
+            "y": 1.397557625182344e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 6,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": 7.326622641912195e-10,
+            "y": 1.4194477537810002e-10
+          },
+          "rotation": -36.33847427368164,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 6,
+          "name": "Handle",
+          "position": {
+            "x": -44.53203201293945,
+            "y": -1.8595348596572876
+          },
+          "velocity": {
+            "x": 0.0001244476588908583,
+            "y": 0.00016918775509111583
+          },
+          "rotation": 143.66152954101562,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 6,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59012985229492,
+            "y": -2.556966543197632
+          },
+          "velocity": {
+            "x": -0.00028750443016178906,
+            "y": -0.0003871712542604655
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 6,
+          "name": "Tip",
+          "position": {
+            "x": -42.72216796875,
+            "y": -3.199648141860962
+          },
+          "velocity": {
+            "x": -0.0006555684376507998,
+            "y": -0.0009065981721505523
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 6,
+          "name": "FakeCursor_Dup_5",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        },
+        {
+          "agent": 7,
+          "name": "Player_Duplicate_6",
+          "position": {
+            "x": -44.280982971191406,
+            "y": -2.4220328330993652
+          },
+          "velocity": {
+            "x": 4.775537187917678e-10,
+            "y": 1.4179067642228205e-10
+          },
+          "rotation": 0.04725189879536629,
+          "angularVelocity": -3.134740111931933e-08,
+          "sleeping": false
+        },
+        {
+          "agent": 7,
+          "name": "Hub",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005012512207
+          },
+          "velocity": {
+            "x": 7.317814687546331e-10,
+            "y": 1.397557625182344e-10
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": false
+        },
+        {
+          "agent": 7,
+          "name": "Slider",
+          "position": {
+            "x": -44.24727249145508,
+            "y": -2.069005250930786
+          },
+          "velocity": {
+            "x": 7.326622641912195e-10,
+            "y": 1.4194477537810002e-10
+          },
+          "rotation": -36.33847427368164,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 7,
+          "name": "Handle",
+          "position": {
+            "x": -44.53203201293945,
+            "y": -1.8595348596572876
+          },
+          "velocity": {
+            "x": 0.0001244476588908583,
+            "y": 0.00016918775509111583
+          },
+          "rotation": 143.66152954101562,
+          "angularVelocity": -0.034040775150060654,
+          "sleeping": false
+        },
+        {
+          "agent": 7,
+          "name": "PoleMiddle",
+          "position": {
+            "x": -43.59012985229492,
+            "y": -2.556966543197632
+          },
+          "velocity": {
+            "x": -0.00028750443016178906,
+            "y": -0.0003871712542604655
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 7,
+          "name": "Tip",
+          "position": {
+            "x": -42.72216796875,
+            "y": -3.199648141860962
+          },
+          "velocity": {
+            "x": -0.0006555684376507998,
+            "y": -0.0009065981721505523
+          },
+          "rotation": 143.4819793701172,
+          "angularVelocity": -0.03384320065379143,
+          "sleeping": false
+        },
+        {
+          "agent": 7,
+          "name": "FakeCursor_Dup_6",
+          "position": {
+            "x": -42.72588348388672,
+            "y": -3.2136011123657227
+          },
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "rotation": 0.0,
+          "angularVelocity": 0.0,
+          "sleeping": true
+        }
+      ],
+      "controls": [
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72217559814453,
+            "y": -3.1996638774871826
+          },
+          "oldAngle": -0.011366195976734161,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        },
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72216033935547,
+            "y": -3.1996426582336426
+          },
+          "oldAngle": -0.0113479970023036,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        },
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72216033935547,
+            "y": -3.1996426582336426
+          },
+          "oldAngle": -0.0113479970023036,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        },
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72216033935547,
+            "y": -3.1996426582336426
+          },
+          "oldAngle": -0.0113479970023036,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        },
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72216033935547,
+            "y": -3.1996426582336426
+          },
+          "oldAngle": -0.0113479970023036,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        },
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72216033935547,
+            "y": -3.1996426582336426
+          },
+          "oldAngle": -0.0113479970023036,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        },
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72216033935547,
+            "y": -3.1996426582336426
+          },
+          "oldAngle": -0.0113479970023036,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        },
+        {
+          "valid": true,
+          "mouseInput": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mouseVelocityAverage": 0.005049999803304672,
+          "oldMouse": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "mw": {
+            "x": -42.72216033935547,
+            "y": -3.1996426582336426
+          },
+          "oldAngle": -0.0113479970023036,
+          "pauseInputTimer": 0.0,
+          "mouseSnap": false,
+          "inputsToSkip": 0
+        }
+      ]
+    },
+    "stages": []
+  },
+  "states": [
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      -5.683875592410459e-10,
+      -1.685349360069921e-10,
+      3.729022424181494e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      -8.70712335565571e-10,
+      -1.6643667000160178e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      -8.716500854433207e-10,
+      -1.6848251960244198e-10,
+      323.660888671875,
+      -44.53202819824219,
+      -1.8595333099365234,
+      0.00012465743930079043,
+      0.00016949631390161812,
+      -43.59013748168945,
+      -2.556976556777954,
+      -0.00028245311114005744,
+      -0.00038031002623029053,
+      -42.7221794128418,
+      -3.19966983795166,
+      -0.0006461915909312665,
+      -0.0008936193189583719,
+      -36.55228805541992,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ],
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      4.775537187917678e-10,
+      1.4179067642228205e-10,
+      -3.134740111931933e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      7.317814687546331e-10,
+      1.397557625182344e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      7.326622641912195e-10,
+      1.4194477537810002e-10,
+      323.6615295410156,
+      -44.53203201293945,
+      -1.859534740447998,
+      0.0001244476588908583,
+      0.00016918775509111583,
+      -43.59012985229492,
+      -2.5569663047790527,
+      -0.00028750443016178906,
+      -0.0003871712542604655,
+      -42.72216796875,
+      -3.199647903442383,
+      -0.0006555684376507998,
+      -0.0009065981721505523,
+      -36.55154800415039,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ],
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      4.775537187917678e-10,
+      1.4179067642228205e-10,
+      -3.134740111931933e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      7.317814687546331e-10,
+      1.397557625182344e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      7.326622641912195e-10,
+      1.4194477537810002e-10,
+      323.6615295410156,
+      -44.53203201293945,
+      -1.859534740447998,
+      0.0001244476588908583,
+      0.00016918775509111583,
+      -43.59012985229492,
+      -2.5569663047790527,
+      -0.00028750443016178906,
+      -0.0003871712542604655,
+      -42.72216796875,
+      -3.199647903442383,
+      -0.0006555684376507998,
+      -0.0009065981721505523,
+      -36.55154800415039,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ],
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      4.775537187917678e-10,
+      1.4179067642228205e-10,
+      -3.134740111931933e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      7.317814687546331e-10,
+      1.397557625182344e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      7.326622641912195e-10,
+      1.4194477537810002e-10,
+      323.6615295410156,
+      -44.53203201293945,
+      -1.859534740447998,
+      0.0001244476588908583,
+      0.00016918775509111583,
+      -43.59012985229492,
+      -2.5569663047790527,
+      -0.00028750443016178906,
+      -0.0003871712542604655,
+      -42.72216796875,
+      -3.199647903442383,
+      -0.0006555684376507998,
+      -0.0009065981721505523,
+      -36.55154800415039,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ],
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      4.775537187917678e-10,
+      1.4179067642228205e-10,
+      -3.134740111931933e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      7.317814687546331e-10,
+      1.397557625182344e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      7.326622641912195e-10,
+      1.4194477537810002e-10,
+      323.6615295410156,
+      -44.53203201293945,
+      -1.859534740447998,
+      0.0001244476588908583,
+      0.00016918775509111583,
+      -43.59012985229492,
+      -2.5569663047790527,
+      -0.00028750443016178906,
+      -0.0003871712542604655,
+      -42.72216796875,
+      -3.199647903442383,
+      -0.0006555684376507998,
+      -0.0009065981721505523,
+      -36.55154800415039,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ],
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      4.775537187917678e-10,
+      1.4179067642228205e-10,
+      -3.134740111931933e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      7.317814687546331e-10,
+      1.397557625182344e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      7.326622641912195e-10,
+      1.4194477537810002e-10,
+      323.6615295410156,
+      -44.53203201293945,
+      -1.859534740447998,
+      0.0001244476588908583,
+      0.00016918775509111583,
+      -43.59012985229492,
+      -2.5569663047790527,
+      -0.00028750443016178906,
+      -0.0003871712542604655,
+      -42.72216796875,
+      -3.199647903442383,
+      -0.0006555684376507998,
+      -0.0009065981721505523,
+      -36.55154800415039,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ],
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      4.775537187917678e-10,
+      1.4179067642228205e-10,
+      -3.134740111931933e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      7.317814687546331e-10,
+      1.397557625182344e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      7.326622641912195e-10,
+      1.4194477537810002e-10,
+      323.6615295410156,
+      -44.53203201293945,
+      -1.859534740447998,
+      0.0001244476588908583,
+      0.00016918775509111583,
+      -43.59012985229492,
+      -2.5569663047790527,
+      -0.00028750443016178906,
+      -0.0003871712542604655,
+      -42.72216796875,
+      -3.199647903442383,
+      -0.0006555684376507998,
+      -0.0009065981721505523,
+      -36.55154800415039,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ],
+    [
+      -44.280982971191406,
+      -2.4220328330993652,
+      4.775537187917678e-10,
+      1.4179067642228205e-10,
+      -3.134740111931933e-08,
+      -44.24727249145508,
+      -2.069005012512207,
+      7.317814687546331e-10,
+      1.397557625182344e-10,
+      0.0,
+      -44.24727249145508,
+      -2.069005250930786,
+      7.326622641912195e-10,
+      1.4194477537810002e-10,
+      323.6615295410156,
+      -44.53203201293945,
+      -1.859534740447998,
+      0.0001244476588908583,
+      0.00016918775509111583,
+      -43.59012985229492,
+      -2.5569663047790527,
+      -0.00028750443016178906,
+      -0.0003871712542604655,
+      -42.72216796875,
+      -3.199647903442383,
+      -0.0006555684376507998,
+      -0.0009065981721505523,
+      -36.55154800415039,
+      1.3674569129943848,
+      -42.72588348388672,
+      -3.2136011123657227,
+      0.0,
+      0.0,
+      -44.21461486816406,
+      -2.853879451751709
+    ]
+  ]
+}

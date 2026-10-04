@@ -1,0 +1,24 @@
+{
+  "status": "COMPLETE",
+  "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\optimizer_momentum_fix_20261001\\checkpoints\\ppo_iter_0269.pt",
+  "checkpoint_sha256": "d29e3f764e1d3a0a506216fceac0912b5b88a5871ab793876cd7bac9bf9f37fe",
+  "agents": 8,
+  "selection": "Latest checkpoint of optimizer_momentum_fix; not certified best under corrected dynamics",
+  "initialization": "live cold start; no reset, warmup, snapshot or teleport before policy",
+  "steps": 1200,
+  "game_pid": 32128,
+  "policy_start_seconds": 19.101249899948016,
+  "completed_steps": 1200,
+  "player_y": [
+    -1.923397183418274,
+    -1.0206536054611206,
+    -1.0206536054611206,
+    -2.1433093547821045,
+    -0.35229283571243286,
+    -0.35229283571243286,
+    -2.085221290588379,
+    -2.085221290588379
+  ],
+  "checkpoint_unchanged": true,
+  "game_left_open": true
+}

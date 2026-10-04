@@ -1,0 +1,617 @@
+{
+  "status": "completed",
+  "finished_at": "2026-10-03T12:22:52-04:00",
+  "last_iteration": 76,
+  "initial_checkpoint_sha256": "0ce71eba0f4b2797f0367e62052c7509b1b7a6bfeabf2e5f55ba1c3784403f6a",
+  "final_checkpoint_sha256": "f85ac49d4bb8cf3b9d69784b5eac62c88a169288f0d86d1d086121531418046d",
+  "checkpoint_fields": [
+    "model",
+    "optimizer",
+    "iteration",
+    "config",
+    "reference_corridor",
+    "value_warmup_end",
+    "rng_state",
+    "trainer_state",
+    "loop_state"
+  ],
+  "checkpoint_model_optimizer_finite": true,
+  "resume_state_present": {
+    "rng_state": true,
+    "trainer_state": true,
+    "loop_state": true,
+    "optimizer": true
+  },
+  "stages": {
+    "ppo_only": {
+      "iterations": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "rounds": 40,
+      "physical_steps": 382472,
+      "nonfinite": [],
+      "overall_mean": {
+        "sum_reward": 29.8042191028595,
+        "corridor_progress_m": 73.69379150611996,
+        "corridor_inside_fraction": 0.4708769825081577,
+        "n_updates": 22.425,
+        "rollout_total_seconds": 222.13990128999575,
+        "update_and_sil_seconds": 0.9701974575058557
+      },
+      "last5_mean": {
+        "sum_reward": 31.109089279174803,
+        "corridor_progress_m": 76.73282262676875,
+        "corridor_inside_fraction": 0.44849999999999995,
+        "n_updates": 11.4,
+        "rollout_total_seconds": 264.7271582399961,
+        "update_and_sil_seconds": 0.6190564000513404
+      },
+      "last": {
+        "iteration": 50.0,
+        "policy_loss": 0.06582990512251854,
+        "value_loss": 0.04460419740062207,
+        "entropy": -1.6179949998855592,
+        "approx_kl": 0.012048050202429295,
+        "clip_fraction": 0.1578125,
+        "total_loss": 0.0785989448428154,
+        "n_updates": 20.0,
+        "early_stopped": 1.0,
+        "stop_kl": 0.12995342910289764,
+        "behavior_kl": 0.0,
+        "target_kl": 0.03,
+        "max_grad_norm": 0.5,
+        "preupdate_ratio_max_error": 0.0001716466504149139,
+        "preupdate_kl": 5.327587260239852e-10,
+        "action_saturation_fraction": 0.0,
+        "audit_samples": 128.0,
+        "mean_reward": 0.0026667569763958454,
+        "sum_reward": 25.600866317749023,
+        "buffer_size": 9600.0,
+        "corridor_progress_m": 77.47306143886915,
+        "corridor_deviation_penalty": 51.872202727616404,
+        "corridor_inside_fraction": 0.39427083333333335,
+        "corridor_gap_fraction": 0.0,
+        "corridor_valid_agents": 8.0,
+        "corridor_invalid_agents": 0.0,
+        "rollout_patch_seconds": 318.0344890987035,
+        "rollout_contact_seconds": 7.517864504130557,
+        "rollout_features_seconds": 0.5719078965485096,
+        "rollout_inference_seconds": 22.15125669981353,
+        "rollout_env_seconds": 8.379022498615086,
+        "rollout_bootstrap_seconds": 0.5102309000212699,
+        "rollout_diagnostics_seconds": 0.0,
+        "rollout_total_seconds": 365.31209339993075,
+        "rollout_samples_per_second": 26.278900078706837,
+        "rollout_environment_steps": 9600.0,
+        "rollout_decisions": 9600.0,
+        "rollout_mean_segment_steps": 1.0,
+        "rollout_contact_interruptions": 0.0,
+        "rollout_patch_storage_bytes": 157417472.0,
+        "rollout_cnn_frame_evaluations": 9608.0,
+        "executed_action_saturation_fraction": 0.0,
+        "observation_embedding_rms": 0.551827609539032,
+        "action_embedding_rms": 0.42563486099243164,
+        "action_history_rms": 25.22573471069336,
+        "normalized_action_history_rms": 0.2522573173046112,
+        "update_and_sil_seconds": 1.027421599952504
+      }
+    },
+    "gru_sil": {
+      "iterations": [
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ],
+      "rounds": 26,
+      "physical_steps": 246774,
+      "nonfinite": [],
+      "overall_mean": {
+        "sum_reward": 38.46591091156006,
+        "corridor_progress_m": 67.48489951082776,
+        "corridor_inside_fraction": 0.6084852782379617,
+        "n_updates": 16.53846153846154,
+        "rollout_total_seconds": 255.76970900382955,
+        "update_and_sil_seconds": 96.33027733845385
+      },
+      "last5_mean": {
+        "sum_reward": 41.968352508544925,
+        "corridor_progress_m": 69.57114109110341,
+        "corridor_inside_fraction": 0.6007083333333334,
+        "n_updates": 21.8,
+        "rollout_total_seconds": 163.1737570399884,
+        "update_and_sil_seconds": 67.76878161998465
+      },
+      "last": {
+        "iteration": 76.0,
+        "elite_archive_pareto": 7.0,
+        "elite_archive_behavior": 0.0,
+        "elite_archive_bucketed": 0.0,
+        "elite_archive_capped": 0.0,
+        "elite_archive_size": 7.0,
+        "elite_archive_rejected_incomplete": 0.0,
+        "elite_archive_max_distance_m": 13.127598771047799,
+        "policy_loss": -0.2480476653380763,
+        "value_loss": 0.0894476748016175,
+        "entropy": -1.6176257474081857,
+        "approx_kl": 0.0074363211613325845,
+        "clip_fraction": 0.09821428571428571,
+        "total_loss": -0.22406810786508555,
+        "n_updates": 21.0,
+        "early_stopped": 1.0,
+        "stop_kl": 0.11666136980056763,
+        "behavior_kl": 0.0,
+        "target_kl": 0.03,
+        "max_grad_norm": 0.5,
+        "preupdate_ratio_max_error": 0.00012206286191940308,
+        "preupdate_kl": 5.393179236534706e-10,
+        "action_saturation_fraction": 0.0,
+        "audit_samples": 128.0,
+        "gru_sil_updates": 4.0,
+        "gru_sil_budget": 4.0,
+        "gru_sil_attempts": 4.0,
+        "gru_sil_positive_frames": 128.0,
+        "gru_sil_sampled_frames": 128.0,
+        "gru_sil_rejected_steps": 0.0,
+        "gru_sil_kl": 0.005289279855787754,
+        "gru_sil_frame_kl_max": 0.015481650829315186,
+        "gru_sil_attempted_kl_max": 0.005289279855787754,
+        "gru_sil_loss": 0.4552171751856804,
+        "mean_reward": 0.0064301518723368645,
+        "sum_reward": 61.72945785522461,
+        "buffer_size": 9600.0,
+        "corridor_progress_m": 69.92164910160548,
+        "corridor_deviation_penalty": 8.19218910111757,
+        "corridor_inside_fraction": 0.83125,
+        "corridor_gap_fraction": 0.0,
+        "corridor_valid_agents": 8.0,
+        "corridor_invalid_agents": 0.0,
+        "rollout_patch_seconds": 117.06526990234852,
+        "rollout_contact_seconds": 3.8767052008770406,
+        "rollout_features_seconds": 0.3658897038549185,
+        "rollout_inference_seconds": 12.09933419758454,
+        "rollout_env_seconds": 8.78967029438354,
+        "rollout_bootstrap_seconds": 0.30300349998287857,
+        "rollout_diagnostics_seconds": 0.0,
+        "rollout_total_seconds": 150.0868301000446,
+        "rollout_samples_per_second": 63.962973923833616,
+        "rollout_environment_steps": 9600.0,
+        "rollout_decisions": 9600.0,
+        "rollout_mean_segment_steps": 1.0,
+        "rollout_contact_interruptions": 0.0,
+        "rollout_patch_storage_bytes": 157417472.0,
+        "rollout_cnn_frame_evaluations": 9608.0,
+        "executed_action_saturation_fraction": 0.0,
+        "observation_embedding_rms": 0.5320810079574585,
+        "action_embedding_rms": 0.4478362202644348,
+        "action_history_rms": 34.88629150390625,
+        "normalized_action_history_rms": 0.3488629162311554,
+        "update_and_sil_seconds": 32.285279399948195
+      }
+    }
+  },
+  "elite_pool": {
+    "restored_valid": true,
+    "size": 7,
+    "max_D": 13.127598771047799,
+    "roles": {
+      "pareto": 7
+    },
+    "episodes": [
+      {
+        "index": 0,
+        "iteration": 74,
+        "role": "pareto",
+        "frames": 1200,
+        "raw_states": [
+          1201,
+          35
+        ],
+        "td": [
+          90,
+          3.8919538679041614
+        ],
+        "score": 6.054150461184252,
+        "terminated": false
+      },
+      {
+        "index": 1,
+        "iteration": 73,
+        "role": "pareto",
+        "frames": 1200,
+        "raw_states": [
+          1201,
+          35
+        ],
+        "td": [
+          101,
+          7.678814429692807
+        ],
+        "score": 11.480207711718949,
+        "terminated": false
+      },
+      {
+        "index": 2,
+        "iteration": 69,
+        "role": "pareto",
+        "frames": 1200,
+        "raw_states": [
+          1201,
+          35
+        ],
+        "td": [
+          125,
+          7.86114424361497
+        ],
+        "score": 11.00560194106096,
+        "terminated": false
+      },
+      {
+        "index": 3,
+        "iteration": 54,
+        "role": "pareto",
+        "frames": 1200,
+        "raw_states": [
+          1201,
+          35
+        ],
+        "td": [
+          156,
+          9.286391802796555
+        ],
+        "score": 12.262799431898014,
+        "terminated": false
+      },
+      {
+        "index": 4,
+        "iteration": 64,
+        "role": "pareto",
+        "frames": 1200,
+        "raw_states": [
+          1201,
+          35
+        ],
+        "td": [
+          174,
+          10.158725268895463
+        ],
+        "score": 13.077899196738986,
+        "terminated": false
+      },
+      {
+        "index": 5,
+        "iteration": 72,
+        "role": "pareto",
+        "frames": 1200,
+        "raw_states": [
+          1201,
+          35
+        ],
+        "td": [
+          207,
+          12.263973171611553
+        ],
+        "score": 15.2262855319042,
+        "terminated": false
+      },
+      {
+        "index": 6,
+        "iteration": 73,
+        "role": "pareto",
+        "frames": 1200,
+        "raw_states": [
+          1201,
+          35
+        ],
+        "td": [
+          281,
+          13.127598771047799
+        ],
+        "score": 15.463470438494026,
+        "terminated": false
+      }
+    ]
+  },
+  "sil": {
+    "log_iterations": 26,
+    "updates": 62,
+    "budget": 83,
+    "attempts": 70,
+    "rejected": 8,
+    "positive_frames": 1987,
+    "sampled_frames": 2448,
+    "accepted_max_mean_kl": 0.007600258570164442,
+    "accepted_max_frame_kl": 0.04713064432144165,
+    "trace_accepted": 62,
+    "trace_rejected_positive": 8
+  },
+  "runtime_checks": {
+    "preupdate_ratio_max_error": 0.0004900684580206871,
+    "invalid_agent_total": 0.0,
+    "archive_incomplete_total": 0.0,
+    "max_action_saturation_fraction": 0.0,
+    "per_iteration_contract_violations": [],
+    "warning_error_lines": [
+      "09:50:12 [__main__] WARNING: 旧 checkpoint 缺少 RNG 状态：随机序列从 seed=7 重新开始，不能视为不中断训练的逐步复现"
+    ]
+  },
+  "training_trend_last5": {
+    "old_mean_reward_per_agent": 3.8886361598968504,
+    "new_mean_reward_per_agent": 5.246044063568116,
+    "old_mean_D_per_agent_m": 9.591602828346094,
+    "new_mean_D_per_agent_m": 8.696392636387927,
+    "old_inside_fraction": 0.44849999999999995,
+    "new_inside_fraction": 0.6007083333333334,
+    "note": "Descriptive training rollouts under evolving policies, not paired frozen evaluation or SIL causality evidence"
+  },
+  "review_completed_at_utc": "2026-10-03T16:51:46.877201+00:00",
+  "evaluation": {
+    "settings": {
+      "steps_per_episode": 1200,
+      "num_agents": 8,
+      "rounds_per_mode": 1,
+      "modes": [
+        "deterministic",
+        "exploration"
+      ],
+      "seed": 20261003,
+      "jitter": 0,
+      "noise_phi": 0.85,
+      "training_updates": 0,
+      "checkpoint_files_unchanged": true
+    },
+    "checkpoint_0050": {
+      "deterministic": {
+        "episodes": 8,
+        "success_rate": 1.0,
+        "success_wilson95": [
+          0.6755843804891231,
+          1.0
+        ],
+        "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+        "fall_rate": 0.0,
+        "water_count": 0,
+        "water_rate": 0.0,
+        "leave_corridor_rate": 0.0,
+        "mean_credited_progress_m": 3.5619855257538737,
+        "credited_progress_median_m": 3.5619855257538737,
+        "credited_progress_q25_m": 3.5619855257538737,
+        "mean_cap_progress_m": 7.1239710515077475,
+        "cap_progress_median_m": 7.1239710515077475,
+        "cap_progress_q25_m": 7.1239710515077475,
+        "cap_progress_max_m": 7.1239710515077475,
+        "mean_arrival_steps": 275.0,
+        "mean_arrival_game_seconds": 2.2916666666666665,
+        "arrival_count": 8,
+        "arrival_rate": 1.0,
+        "hold_success_count": 0,
+        "hold_rate_after_arrival": 0.0,
+        "hold_incomplete_count": 0,
+        "terminal_progress_median_m": 7.1081377659459335,
+        "max_retreat_after_arrival_median_m": 4.711444036794113,
+        "reference_unconfirmed_count": 0
+      },
+      "exploration": {
+        "episodes": 8,
+        "success_rate": 1.0,
+        "success_wilson95": [
+          0.6755843804891231,
+          1.0
+        ],
+        "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+        "fall_rate": 0.625,
+        "water_count": 0,
+        "water_rate": 0.0,
+        "leave_corridor_rate": 1.0,
+        "mean_credited_progress_m": 4.584628081247738,
+        "credited_progress_median_m": 4.5710313026733,
+        "credited_progress_q25_m": 4.206828464278013,
+        "mean_cap_progress_m": 9.812992371758957,
+        "cap_progress_median_m": 9.770904232452375,
+        "cap_progress_q25_m": 9.36291142889139,
+        "cap_progress_max_m": 11.819711398034057,
+        "mean_arrival_steps": 173.25,
+        "mean_arrival_game_seconds": 1.44375,
+        "arrival_count": 8,
+        "arrival_rate": 1.0,
+        "hold_success_count": 3,
+        "hold_rate_after_arrival": 0.375,
+        "hold_incomplete_count": 0,
+        "terminal_progress_median_m": 12.67562908678941,
+        "max_retreat_after_arrival_median_m": 5.188618401724209,
+        "reference_unconfirmed_count": 0
+      }
+    },
+    "checkpoint_0076": {
+      "deterministic": {
+        "episodes": 8,
+        "success_rate": 1.0,
+        "success_wilson95": [
+          0.6755843804891231,
+          1.0
+        ],
+        "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+        "fall_rate": 0.0,
+        "water_count": 0,
+        "water_rate": 0.0,
+        "leave_corridor_rate": 1.0,
+        "mean_credited_progress_m": 2.8492395514003395,
+        "credited_progress_median_m": 2.8492395514003395,
+        "credited_progress_q25_m": 2.8492395514003395,
+        "mean_cap_progress_m": 7.060570752301978,
+        "cap_progress_median_m": 7.060570752301978,
+        "cap_progress_q25_m": 7.060570752301978,
+        "cap_progress_max_m": 7.060570752301978,
+        "mean_arrival_steps": 80.0,
+        "mean_arrival_game_seconds": 0.6666666666666666,
+        "arrival_count": 8,
+        "arrival_rate": 1.0,
+        "hold_success_count": 0,
+        "hold_rate_after_arrival": 0.0,
+        "hold_incomplete_count": 0,
+        "terminal_progress_median_m": 0.1852832016429036,
+        "max_retreat_after_arrival_median_m": 7.060570752301978,
+        "reference_unconfirmed_count": 0
+      },
+      "exploration": {
+        "episodes": 8,
+        "success_rate": 1.0,
+        "success_wilson95": [
+          0.6755843804891231,
+          1.0
+        ],
+        "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+        "fall_rate": 0.375,
+        "water_count": 0,
+        "water_rate": 0.0,
+        "leave_corridor_rate": 0.875,
+        "mean_credited_progress_m": 3.3605055329228293,
+        "credited_progress_median_m": 3.090016016504392,
+        "credited_progress_q25_m": 2.757029282369314,
+        "mean_cap_progress_m": 7.79245384500855,
+        "cap_progress_median_m": 7.7377471133992906,
+        "cap_progress_q25_m": 7.396246380511951,
+        "cap_progress_max_m": 9.956830134643855,
+        "mean_arrival_steps": 367.75,
+        "mean_arrival_game_seconds": 3.064583333333333,
+        "arrival_count": 8,
+        "arrival_rate": 1.0,
+        "hold_success_count": 1,
+        "hold_rate_after_arrival": 0.125,
+        "hold_incomplete_count": 0,
+        "terminal_progress_median_m": 4.263515411005725,
+        "max_retreat_after_arrival_median_m": 6.831008749894517,
+        "reference_unconfirmed_count": 0
+      }
+    },
+    "audits_0050": [
+      {
+        "mode": "deterministic",
+        "audit_samples": 9600.0,
+        "preupdate_ratio_max_error": 0.0,
+        "preupdate_kl": 0.0
+      },
+      {
+        "mode": "exploration",
+        "audit_samples": 9600.0,
+        "preupdate_ratio_max_error": 0.0005787127884104848,
+        "preupdate_kl": 1.0906054370707353e-09
+      }
+    ],
+    "audits_0076": [
+      {
+        "mode": "deterministic",
+        "audit_samples": 9600.0,
+        "preupdate_ratio_max_error": 0.0,
+        "preupdate_kl": 0.0
+      },
+      {
+        "mode": "exploration",
+        "audit_samples": 9600.0,
+        "preupdate_ratio_max_error": 0.0005074834334664047,
+        "preupdate_kl": 2.7354444398497436e-09
+      }
+    ],
+    "physical_initial_states_identical": true,
+    "deterministic_replicas_identical": true,
+    "note": "Deterministic agents reproduce the same trajectory and are not independent samples. Exploration comparison uses one paired trial seed; no SIL on/off causal claim."
+  },
+  "assessment": {
+    "summary": "SIL implementation/archival guards operated as designed, but checkpoint 76 does not show an overall improvement over checkpoint 50 in the frozen exact-spawn evaluation. Faster deterministic first arrival comes with worse progress retention; sampled exploration distance and hold counts are lower.",
+    "deterministic_D_m": [
+      7.1239710515077475,
+      7.060570752301978
+    ],
+    "deterministic_5m_arrival_seconds": [
+      2.2916666666666665,
+      0.6666666666666666
+    ],
+    "deterministic_terminal_projection_m": [
+      7.1081377659459335,
+      0.1852832016429036
+    ],
+    "exploration_D_median_m": [
+      9.770904232452375,
+      7.7377471133992906
+    ],
+    "exploration_5m_hold_count_out_of_8": [
+      3,
+      1
+    ],
+    "limitations": [
+      "One training seed and one paired exploration evaluation seed; no causal SIL ablation.",
+      "Exact-spawn scope only; no perturbed-start evaluation requested.",
+      "Old checkpoint 50 lacks historical RNG state; new checkpoint 76 includes RNG, optimizer and trainer state.",
+      "D denotes confirmed reference-route progress, not vertical height or full-game completion."
+    ]
+  },
+  "artifacts": {
+    "pool_plot": "td_envelope/envelope.png",
+    "pool_history_plot": "td_envelope/envelope_history.png",
+    "elite_scores": "elite_episode_scores.json",
+    "elite_motion": "elite_best/motion/best-motion.mp4",
+    "checkpoint_0050_motion": "checkpoint_0050/motion/best-motion.mp4",
+    "checkpoint_0076_motion": "checkpoint_0076/motion/best-motion.mp4"
+  }
+}

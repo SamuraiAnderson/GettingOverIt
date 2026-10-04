@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "mode": "gru_full_prefix_positive_advantage",
+  "iteration": 79,
+  "seed": 7,
+  "budget": 1,
+  "chunks": [
+    {
+      "trajectory": 3,
+      "source_iteration": 79,
+      "start": 128,
+      "end": 145,
+      "cap": 145,
+      "bootstrap": 0.9175261855125427,
+      "positive_frames": 0,
+      "accepted": false
+    }
+  ]
+}

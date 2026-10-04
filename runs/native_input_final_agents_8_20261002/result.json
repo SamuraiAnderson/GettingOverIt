@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "agents": 8,
+  "steps_per_round": 40,
+  "burn_steps": 1000,
+  "reference": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_input_final_20261002\\result.json",
+  "plugin": "f5ce41e1ac158e517d655d29d3c98cda85848f7d806f4132795021e33d55692b",
+  "production_before": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "rounds": [
+    {
+      "round": 0,
+      "agent_fixtures": [
+        "pulse",
+        "hold",
+        "reverse",
+        "random",
+        "zero",
+        "pulse",
+        "hold",
+        "reverse"
+      ],
+      "compared_agent_steps": 320,
+      "passed": true,
+      "mismatches": []
+    },
+    {
+      "round": 1,
+      "agent_fixtures": [
+        "hold",
+        "reverse",
+        "random",
+        "zero",
+        "pulse",
+        "hold",
+        "reverse",
+        "random"
+      ],
+      "compared_agent_steps": 320,
+      "passed": true,
+      "mismatches": []
+    }
+  ],
+  "errors": [],
+  "production_after": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_unchanged": true
+}

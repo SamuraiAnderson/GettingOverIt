@@ -80,3 +80,24 @@ python -m src.training.main_ppo --run-dir my_experiment --no-random-deploy --per
 效率图已删除。归档总计约 150 MB（迁移前为 2.9 GB）。
 
 各组实验的详细参数、完整指标与结论见各自目录下的 `RESULT.md` 与 `run_meta.json`。
+
+## 2026-10 归档整理
+
+保留代码、配置、种子、源文件指纹、每轮指标、评估摘要、SIL 采样审计和少量关键图。
+忽略模型、完整轨迹数组、逐帧物理诊断、截图/视频、编译产物和本机临时启动控制文件。
+忽略只影响 Git 收录，不删除本地文件，也不代表已经完成外部备份。
+最终 checkpoint 与对应完整精英池是继续训练、复现历史操作的必要资产，需另行备份。
+
+部分旧 `result.json` 内嵌大量物理状态，改为收录同目录 `result.compact.json`：
+保留标量和小型结构，超过 32 项的数组记录长度；同时保存原文件路径、大小和 SHA-256。
+完整原文件仍在本地。紧凑摘要不能替代逐帧复现所需的原始数据。
+历史实验的 `experiment_code/`、`diagnostic_source/` 和 `evidence/` 是源码证据，继续入库。
+
+### 精英动作可见回放
+
+使用 `src.tests.evaluation.replay.replay_evaluation_actions` 的 `--elite-manifest` 读取精英导出
+manifest 中的完整池，自动按最大确认路线距离选择轨迹，向 `--num-agents 8` 广播原始动作。
+`--current-desktop` 在当前可见桌面启动，保留训练的线框和自由相机；它不会切换 Windows 虚拟桌面。
+`--start-signal <path>` 等待指定文件出现（最长 300 秒），可先检查窗口再开始；使用新路径，避免旧信号立即触发。
+`--fps 30` 对 120 Hz 物理步进是四分之一速度；`--keep-game-open` 在成功后保留末尾画面。
+输出目录必须不存在；已有游戏时拒绝接管。回放记录所有玩家的状态并与归档核对，排除时间戳列。

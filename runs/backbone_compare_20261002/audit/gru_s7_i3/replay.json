@@ -1,0 +1,6 @@
+{
+  "preupdate_ratio_max_error": 8.583032467868179e-06,
+  "preupdate_kl": 2.157207745767664e-13,
+  "action_saturation_fraction": 0.0,
+  "audit_samples": 9600.0
+}

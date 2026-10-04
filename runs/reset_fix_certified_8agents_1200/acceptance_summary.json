@@ -1,0 +1,61 @@
+{
+  "scope": "Experimental fixed-start RESET against live cold startup, same agent; cross-agent divergence excluded; no production integration",
+  "timestamp_excluded": 28,
+  "results": [
+    {
+      "report": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\reset_fix_certified_zero\\result.json",
+      "status": "PASS",
+      "agents": 2,
+      "restarts": 3,
+      "conditions": 39,
+      "frames": 1599,
+      "bitwise_matching_frames": 1599,
+      "reset_latency_min_s": 0.6004689000546932,
+      "reset_latency_max_s": 0.6613304000347853,
+      "plugin_sha256": "4fade7d4cf492b757e63306b491fe0cd3424aee8a51aea585fb5c83da288bce9"
+    },
+    {
+      "report": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\reset_fix_certified_hold\\result.json",
+      "status": "PASS",
+      "agents": 2,
+      "restarts": 3,
+      "conditions": 30,
+      "frames": 1230,
+      "bitwise_matching_frames": 1230,
+      "reset_latency_min_s": 0.6057265000417829,
+      "reset_latency_max_s": 0.6563215999631211,
+      "plugin_sha256": "4fade7d4cf492b757e63306b491fe0cd3424aee8a51aea585fb5c83da288bce9"
+    },
+    {
+      "report": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\reset_fix_certified_random\\result.json",
+      "status": "PASS",
+      "agents": 2,
+      "restarts": 3,
+      "conditions": 30,
+      "frames": 1230,
+      "bitwise_matching_frames": 1230,
+      "reset_latency_min_s": 0.5907990999985486,
+      "reset_latency_max_s": 0.6648304000264034,
+      "plugin_sha256": "4fade7d4cf492b757e63306b491fe0cd3424aee8a51aea585fb5c83da288bce9"
+    },
+    {
+      "report": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\reset_fix_certified_8agents_1200\\result.json",
+      "status": "PASS",
+      "agents": 8,
+      "restarts": 1,
+      "conditions": 4,
+      "frames": 4804,
+      "bitwise_matching_frames": 4804,
+      "reset_latency_min_s": 0.819411400007084,
+      "reset_latency_max_s": 0.8498203000053763,
+      "plugin_sha256": "4fade7d4cf492b757e63306b491fe0cd3424aee8a51aea585fb5c83da288bce9"
+    }
+  ],
+  "conditions": 103,
+  "frames": 8863,
+  "bitwise_matching_frames": 8863,
+  "offline_checks_passed": 18,
+  "production_dll_sha256": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+  "production_config_sha256": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c",
+  "experimental_dll_sha256": "4fade7d4cf492b757e63306b491fe0cd3424aee8a51aea585fb5c83da288bce9"
+}

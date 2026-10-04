@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "runtime": {
+    "dll": "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll",
+    "sha256": "632067533df42c1406d4ebfc1bc5ce4207f944d99d187d67261d59c181080bfe"
+  },
+  "seeds": [
+    7,
+    17,
+    47
+  ],
+  "pairs": [
+    {
+      "seed": 7,
+      "backbone": "transformer",
+      "parameters": 1175301,
+      "common_tensor_count": 46,
+      "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\transformer_s7.pt"
+    },
+    {
+      "seed": 7,
+      "backbone": "gru",
+      "parameters": 720517,
+      "common_tensor_count": 46,
+      "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\gru_s7.pt"
+    },
+    {
+      "seed": 17,
+      "backbone": "transformer",
+      "parameters": 1175301,
+      "common_tensor_count": 46,
+      "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\transformer_s17.pt"
+    },
+    {
+      "seed": 17,
+      "backbone": "gru",
+      "parameters": 720517,
+      "common_tensor_count": 46,
+      "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\gru_s17.pt"
+    },
+    {
+      "seed": 47,
+      "backbone": "transformer",
+      "parameters": 1175301,
+      "common_tensor_count": 46,
+      "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\transformer_s47.pt"
+    },
+    {
+      "seed": 47,
+      "backbone": "gru",
+      "parameters": 720517,
+      "common_tensor_count": 46,
+      "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\gru_s47.pt"
+    }
+  ],
+  "source_sha256": {
+    "config.py": "e66d964f32b31fde6f900dddaf8c21c15066c22e9c3d2336c754c05a887546b3",
+    "experimental_policy.py": "1f7cec1fc2dd5a57d6973741bae81d034b52542f535eeffe418e57116562f610",
+    "experimental_rollout.py": "8c7bde6a93438d17d02c160691d03062cfb0a9dc3e6a048ae68a438dd2550986",
+    "decision_buffer.py": "19dbc14312385e69f20a47cf46e0bf61a6a03b62a8eefb2f28ef2f098410d219",
+    "ppo_trainer.py": "c5ee6dc2cbae2db6902e0ecfc36a6ae2b98bd868b60b36e4fe8b580eddca95a2",
+    "main_ppo.py": "104e8b538b27167280dc8eebd7c0c881caf3f375fe3236b0e519f7dfcfdab83c",
+    "local_evaluation.py": "283cabd5fb5ed247ad551b03028eedbb65698751d667046bb0871aeac4c08964"
+  },
+  "precheck_iterations": 3,
+  "screen_executed_world_steps_per_model_seed": 96000,
+  "budget_definition": "8 worlds * 1200 vector steps * 10 rollouts. Terminal agents receive zero actions; active training transitions are reported separately.",
+  "calibration_sha256": "252de0f7e7410cb7ae9776a0046d4b4836cf5c36e1ac9c43fcc57db3be1f4f1f",
+  "evaluation": {
+    "seed": 20261002,
+    "rounds": 9,
+    "agents": 2,
+    "steps": 1200,
+    "goal_m": 5,
+    "hold_steps": 120,
+    "jitter_m": 0.01,
+    "trial_zero": "duplicate reset consistency only, excluded from robustness statistics",
+    "hold_parameters_unverified": true
+  },
+  "scope": "Existing architectures under equal physical sample budget; parameter counts differ.",
+  "resumption": "Production resume restores optimizer; each invocation reseeds RNG with the paired seed."
+}

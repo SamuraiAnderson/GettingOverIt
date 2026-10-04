@@ -1,0 +1,36 @@
+{
+  "status": "COMPLETE",
+  "agents": 8,
+  "steps": 40,
+  "action_source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\policy_0269_cold_8players_20261002_visual_fix",
+  "action_mode": "shared_agent1",
+  "probe_mode": "ignore_rock2",
+  "plugin_sha256": "4608e828630f69a2536527fe5a22aa68e4d79fd40599cc055b2a5506ed4bbf59",
+  "startup_seconds": 7.70143110002391,
+  "comparisons": [
+    {
+      "agent": 2,
+      "first_divergence_from_agent1": null
+    },
+    {
+      "agent": 3,
+      "first_divergence_from_agent1": null
+    },
+    {
+      "agent": 4,
+      "first_divergence_from_agent1": null
+    },
+    {
+      "agent": 5,
+      "first_divergence_from_agent1": null
+    },
+    {
+      "agent": 6,
+      "first_divergence_from_agent1": null
+    },
+    {
+      "agent": 7,
+      "first_divergence_from_agent1": null
+    }
+  ]
+}

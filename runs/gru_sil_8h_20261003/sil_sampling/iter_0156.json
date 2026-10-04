@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "mode": "gru_full_prefix_positive_advantage",
+  "iteration": 156,
+  "seed": 7,
+  "budget": 4,
+  "chunks": [
+    {
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 0,
+      "end": 32,
+      "cap": 446,
+      "bootstrap": -1.0749449729919434,
+      "positive_frames": 32,
+      "accepted": true,
+      "kl": 0.00023006534320302308,
+      "frame_kl_max": 0.0017248988151550293,
+      "loss": 0.040730200707912445
+    },
+    {
+      "trajectory": 8,
+      "source_iteration": 138,
+      "start": 96,
+      "end": 128,
+      "cap": 152,
+      "bootstrap": -0.9952845573425293,
+      "positive_frames": 32,
+      "accepted": true,
+      "kl": 0.0018865884048864245,
+      "frame_kl_max": 0.012214124202728271,
+      "loss": 0.46808043122291565
+    },
+    {
+      "trajectory": 14,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "cap": 90,
+      "bootstrap": 0.13604821264743805,
+      "positive_frames": 0,
+      "accepted": false
+    },
+    {
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "cap": 83,
+      "bootstrap": -1.0221030712127686,
+      "positive_frames": 4,
+      "accepted": true,
+      "kl": 0.0049187131226062775,
+      "frame_kl_max": 0.03075551986694336,
+      "loss": 0.0002139849675586447
+    }
+  ]
+}

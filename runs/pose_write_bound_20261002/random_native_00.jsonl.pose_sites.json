@@ -1,0 +1,248 @@
+[{
+    "index": 0,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "lookTarget.position",
+    "targetPath": "Player/dude/LookTarget",
+    "descendantBodies": [],
+    "targetAliases": [
+        "lookTarget"
+    ]
+},{
+    "index": 1,
+    "calls": 0,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "",
+    "targetPath": "",
+    "descendantBodies": [],
+    "targetAliases": []
+},{
+    "index": 2,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "dudeMeshHub.position",
+    "targetPath": "Player/dude",
+    "descendantBodies": [],
+    "targetAliases": [
+        "dudeMeshHub"
+    ]
+},{
+    "index": 3,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "potMeshHub.position",
+    "targetPath": "Player/Pot",
+    "descendantBodies": [],
+    "targetAliases": [
+        "potMeshHub"
+    ]
+},{
+    "index": 4,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_localPosition",
+    "operation": "leftHand.localPosition",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftHand"
+    ]
+},{
+    "index": 5,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_localPosition",
+    "operation": "rightHand.localPosition",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightHand"
+    ]
+},{
+    "index": 6,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_localPosition",
+    "operation": "leftHandGripCenter.localPosition",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand/LeftHandGripCenter",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftHandGripCenter"
+    ]
+},{
+    "index": 7,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_localPosition",
+    "operation": "rightHandGripCenter.localPosition",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/RightHandGripCenter",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightHandGripCenter"
+    ]
+},{
+    "index": 8,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Animator.Update",
+    "operation": "anim.Update",
+    "targetPath": "Player/dude",
+    "descendantBodies": [],
+    "targetAliases": [
+        "anim"
+    ]
+},{
+    "index": 9,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "hammerMeshHub.position",
+    "targetPath": "Player/Hub",
+    "descendantBodies": [
+        "Player/Hub",
+        "Player/Hub/Slider",
+        "Player/Hub/Slider/Handle",
+        "Player/Hub/Slider/Handle/PoleMiddle",
+        "Player/Hub/Slider/Handle/PoleMiddle/Tip"
+    ],
+    "targetAliases": [
+        "center",
+        "hammerMeshHub"
+    ]
+},{
+    "index": 10,
+    "calls": 1143,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "leftHand.position",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftHand"
+    ]
+},{
+    "index": 11,
+    "calls": 1143,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "rightHand.position",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightHand"
+    ]
+},{
+    "index": 12,
+    "calls": 1143,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "leftElbow.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftElbow"
+    ]
+},{
+    "index": 13,
+    "calls": 1143,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "rightElbow.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightElbow"
+    ]
+},{
+    "index": 14,
+    "calls": 1143,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "leftHand.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftHand"
+    ]
+},{
+    "index": 15,
+    "calls": 1143,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "rightHand.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightHand"
+    ]
+},{
+    "index": 16,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "leftElbow.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftElbow"
+    ]
+},{
+    "index": 17,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "rightElbow.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightElbow"
+    ]
+},{
+    "index": 18,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "leftHand.position",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftHand"
+    ]
+},{
+    "index": 19,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_position",
+    "operation": "rightHand.position",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightHand"
+    ]
+},{
+    "index": 20,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "leftHand.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "leftHand"
+    ]
+},{
+    "index": 21,
+    "calls": 381,
+    "skippedCalls": 0,
+    "method": "Transform.set_rotation",
+    "operation": "rightHand.rotation",
+    "targetPath": "Player/dude/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand",
+    "descendantBodies": [],
+    "targetAliases": [
+        "rightHand"
+    ]
+}]

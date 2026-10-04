@@ -1,0 +1,28 @@
+{
+  "command": [
+    "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+    "-m",
+    "src.training.local_evaluation",
+    "--checkpoint",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\transformer_s7\\checkpoints\\ppo_iter_0010.pt",
+    "--output",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\eval\\transformer_s7_i10",
+    "--steps",
+    "1200",
+    "--rounds",
+    "9",
+    "--num-agents",
+    "2",
+    "--seed",
+    "20261002",
+    "--jitter",
+    "0.01",
+    "--goal-progress",
+    "5",
+    "--modes",
+    "deterministic"
+  ],
+  "started": 1791015439.6184597,
+  "status": "interrupted",
+  "reason": "User specified exact spawn only; remaining perturbation evaluation cancelled."
+}

@@ -1,0 +1,4088 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE",
+  "scope": "Instrumented native reference; ablations are diagnostic changes, not fixes",
+  "cases": {
+    "native_timing_buffered_20261002/random_native_00": {
+      "events": 5345,
+      "scene_bound": {
+        "sequence": 0,
+        "phase": "scene_bound",
+        "renderFrame": 70,
+        "controllers": 0,
+        "physics": 0,
+        "fixedTime": 1.3583333492279053,
+        "time": 1.379570722579956,
+        "deltaTime": 0.01665000058710575,
+        "pause": 0.0,
+        "loadFinished": false,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "opening_events": [
+        {
+          "sequence": 1,
+          "phase": "before_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 2,
+          "phase": "after_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 3,
+          "phase": "before_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 4,
+          "phase": "after_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 14,
+          "phase": "before_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 15,
+          "phase": "before_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 20,
+          "phase": "after_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 21,
+          "phase": "after_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.379570722579956,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        }
+      ],
+      "first_load_finished": {
+        "sequence": 22,
+        "phase": "after_Saviour.Update",
+        "renderFrame": 70,
+        "controllers": 2,
+        "physics": 2,
+        "fixedTime": 1.3750001192092896,
+        "time": 1.379570722579956,
+        "deltaTime": 0.01665000058710575,
+        "pause": 12.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "first_probe": {
+        "sequence": 5065,
+        "phase": "before_controller",
+        "renderFrame": 430,
+        "controllers": 724,
+        "physics": 723,
+        "fixedTime": 7.391666889190674,
+        "time": 7.391666889190674,
+        "deltaTime": 0.008333333767950535,
+        "pause": 0.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "interpolation_at_probe": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "auto_sync_at_probe": true,
+      "simulation_mode_at_probe": 0,
+      "callback_changes": {
+        "Saviour.Start": {
+          "calls": 1,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PlayerControl.Start": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 42.72588348388672,
+          "max_transform_xy_delta": 42.71900177001953,
+          "first_body_change": {
+            "before": {
+              "sequence": 3,
+              "phase": "before_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.3583333492279053,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 0.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 4,
+              "phase": "after_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.3583333492279053,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 42.72588348388672,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": false,
+              "bitwise_equal": false,
+              "position_distance_m": 42.84656755900129
+            }
+          }
+        },
+        "PoseControl.LateUpdate": {
+          "calls": 382,
+          "body_changed_calls": 103,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 16,
+              "phase": "before_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 17,
+              "phase": "after_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PoseControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 15,
+              "phase": "before_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 20,
+              "phase": "after_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 14,
+              "phase": "before_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 21,
+              "phase": "after_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "Saviour.Update": {
+          "calls": 380,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 13,
+              "phase": "before_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 22,
+              "phase": "after_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.379570722579956,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": true,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.Update": {
+          "calls": 380,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        }
+      },
+      "probe_render_frames": [
+        430,
+        431,
+        431,
+        432,
+        432,
+        433,
+        433,
+        434,
+        434,
+        435,
+        435,
+        436,
+        436,
+        437,
+        437,
+        438,
+        438,
+        439,
+        439,
+        440,
+        440,
+        441,
+        441,
+        442,
+        442,
+        443,
+        443,
+        444,
+        444,
+        445,
+        445,
+        446,
+        446,
+        447,
+        447,
+        448,
+        448,
+        449,
+        449,
+        450
+      ],
+      "physics_dt_values": [
+        0.008333333767950535
+      ],
+      "render_delta_values": [
+        0.01665000058710575,
+        0.016666699200868607,
+        0.016667600721120834,
+        0.016669200733304024,
+        0.016682099550962448,
+        0.016682200133800507,
+        0.016682300716638565,
+        0.016682399436831474,
+        0.016682500019669533,
+        0.01668260060250759,
+        0.0166826993227005,
+        0.01668279990553856,
+        0.016682900488376617,
+        0.016682999208569527,
+        0.016683099791407585,
+        0.016683299094438553,
+        0.01668339967727661,
+        0.016698600724339485,
+        0.019999999552965164,
+        0.047540098428726196
+      ]
+    },
+    "native_timing_buffered_20261002/random_native_01": {
+      "events": 5345,
+      "scene_bound": {
+        "sequence": 0,
+        "phase": "scene_bound",
+        "renderFrame": 70,
+        "controllers": 0,
+        "physics": 0,
+        "fixedTime": 1.3583333492279053,
+        "time": 1.3759002685546875,
+        "deltaTime": 0.01665000058710575,
+        "pause": 0.0,
+        "loadFinished": false,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "opening_events": [
+        {
+          "sequence": 1,
+          "phase": "before_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 2,
+          "phase": "after_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 3,
+          "phase": "before_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 4,
+          "phase": "after_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.3583333492279053,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 14,
+          "phase": "before_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 15,
+          "phase": "before_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 20,
+          "phase": "after_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 21,
+          "phase": "after_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3750001192092896,
+          "time": 1.3759002685546875,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        }
+      ],
+      "first_load_finished": {
+        "sequence": 22,
+        "phase": "after_Saviour.Update",
+        "renderFrame": 70,
+        "controllers": 2,
+        "physics": 2,
+        "fixedTime": 1.3750001192092896,
+        "time": 1.3759002685546875,
+        "deltaTime": 0.01665000058710575,
+        "pause": 12.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "first_probe": {
+        "sequence": 5065,
+        "phase": "before_controller",
+        "renderFrame": 430,
+        "controllers": 724,
+        "physics": 723,
+        "fixedTime": 7.391666889190674,
+        "time": 7.391666889190674,
+        "deltaTime": 0.008333333767950535,
+        "pause": 0.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "interpolation_at_probe": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "auto_sync_at_probe": true,
+      "simulation_mode_at_probe": 0,
+      "callback_changes": {
+        "Saviour.Start": {
+          "calls": 1,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PlayerControl.Start": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 42.72588348388672,
+          "max_transform_xy_delta": 42.71900177001953,
+          "first_body_change": {
+            "before": {
+              "sequence": 3,
+              "phase": "before_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.3583333492279053,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 0.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 4,
+              "phase": "after_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.3583333492279053,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 42.72588348388672,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": false,
+              "bitwise_equal": false,
+              "position_distance_m": 42.84656755900129
+            }
+          }
+        },
+        "PoseControl.LateUpdate": {
+          "calls": 382,
+          "body_changed_calls": 103,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 16,
+              "phase": "before_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 17,
+              "phase": "after_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PoseControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 15,
+              "phase": "before_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 20,
+              "phase": "after_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 14,
+              "phase": "before_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 21,
+              "phase": "after_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "Saviour.Update": {
+          "calls": 380,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 13,
+              "phase": "before_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 22,
+              "phase": "after_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3750001192092896,
+              "time": 1.3759002685546875,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": true,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.Update": {
+          "calls": 380,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        }
+      },
+      "probe_render_frames": [
+        430,
+        431,
+        431,
+        432,
+        432,
+        433,
+        433,
+        434,
+        434,
+        435,
+        435,
+        436,
+        436,
+        437,
+        437,
+        438,
+        438,
+        439,
+        439,
+        440,
+        440,
+        441,
+        441,
+        442,
+        442,
+        443,
+        443,
+        444,
+        444,
+        445,
+        445,
+        446,
+        446,
+        447,
+        447,
+        448,
+        448,
+        449,
+        449,
+        450
+      ],
+      "physics_dt_values": [
+        0.008333333767950535
+      ],
+      "render_delta_values": [
+        0.01665000058710575,
+        0.016666799783706665,
+        0.016666999086737633,
+        0.01666880026459694,
+        0.016671599820256233,
+        0.016682099550962448,
+        0.016682200133800507,
+        0.016682300716638565,
+        0.016682399436831474,
+        0.016682500019669533,
+        0.01668260060250759,
+        0.0166826993227005,
+        0.01668279990553856,
+        0.016682900488376617,
+        0.016682999208569527,
+        0.019999999552965164,
+        0.03334840014576912,
+        0.033791299909353256
+      ]
+    },
+    "native_timing_buffered_20261002/random_native_02": {
+      "events": 5339,
+      "scene_bound": {
+        "sequence": 0,
+        "phase": "scene_bound",
+        "renderFrame": 70,
+        "controllers": 0,
+        "physics": 0,
+        "fixedTime": 1.350000023841858,
+        "time": 1.3716315031051636,
+        "deltaTime": 0.01665000058710575,
+        "pause": 0.0,
+        "loadFinished": false,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "opening_events": [
+        {
+          "sequence": 1,
+          "phase": "before_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 2,
+          "phase": "after_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 3,
+          "phase": "before_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 4,
+          "phase": "after_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 14,
+          "phase": "before_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 15,
+          "phase": "before_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 20,
+          "phase": "after_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 21,
+          "phase": "after_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3716315031051636,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        }
+      ],
+      "first_load_finished": {
+        "sequence": 22,
+        "phase": "after_Saviour.Update",
+        "renderFrame": 70,
+        "controllers": 2,
+        "physics": 2,
+        "fixedTime": 1.3666667938232422,
+        "time": 1.3716315031051636,
+        "deltaTime": 0.01665000058710575,
+        "pause": 12.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "first_probe": {
+        "sequence": 5065,
+        "phase": "before_controller",
+        "renderFrame": 430,
+        "controllers": 724,
+        "physics": 723,
+        "fixedTime": 7.383333683013916,
+        "time": 7.383333683013916,
+        "deltaTime": 0.008333333767950535,
+        "pause": 0.0,
+        "loadFinished": true,
+        "targetFrameRate": -1,
+        "captureFramerate": 0
+      },
+      "interpolation_at_probe": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "auto_sync_at_probe": true,
+      "simulation_mode_at_probe": 0,
+      "callback_changes": {
+        "Saviour.Start": {
+          "calls": 1,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PlayerControl.Start": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 42.72588348388672,
+          "max_transform_xy_delta": 42.71900177001953,
+          "first_body_change": {
+            "before": {
+              "sequence": 3,
+              "phase": "before_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 0.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 4,
+              "phase": "after_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 42.72588348388672,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": false,
+              "bitwise_equal": false,
+              "position_distance_m": 42.84656755900129
+            }
+          }
+        },
+        "PoseControl.LateUpdate": {
+          "calls": 381,
+          "body_changed_calls": 103,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 16,
+              "phase": "before_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 17,
+              "phase": "after_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PoseControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 15,
+              "phase": "before_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 20,
+              "phase": "after_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 14,
+              "phase": "before_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 21,
+              "phase": "after_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "Saviour.Update": {
+          "calls": 379,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 13,
+              "phase": "before_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 22,
+              "phase": "after_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3716315031051636,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": true,
+              "targetFrameRate": -1,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.Update": {
+          "calls": 379,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        }
+      },
+      "probe_render_frames": [
+        430,
+        430,
+        431,
+        431,
+        432,
+        432,
+        433,
+        433,
+        434,
+        434,
+        435,
+        435,
+        436,
+        436,
+        437,
+        437,
+        438,
+        438,
+        439,
+        439,
+        440,
+        440,
+        441,
+        441,
+        442,
+        442,
+        443,
+        443,
+        444,
+        444,
+        445,
+        445,
+        446,
+        446,
+        447,
+        447,
+        448,
+        448,
+        449,
+        449
+      ],
+      "physics_dt_values": [
+        0.008333333767950535
+      ],
+      "render_delta_values": [
+        0.01665000058710575,
+        0.016666699200868607,
+        0.016666799783706665,
+        0.016666900366544724,
+        0.016666999086737633,
+        0.01666709966957569,
+        0.016667500138282776,
+        0.016668900847434998,
+        0.016669200733304024,
+        0.01666940003633499,
+        0.01667040027678013,
+        0.016672000288963318,
+        0.016678599640727043,
+        0.016679299995303154,
+        0.01668040081858635,
+        0.01668049953877926,
+        0.016680700704455376,
+        0.016681000590324402,
+        0.016681300476193428,
+        0.016681399196386337,
+        0.016681499779224396,
+        0.016681600362062454,
+        0.016681699082255363,
+        0.016681799665093422,
+        0.01668190024793148,
+        0.01668200083076954,
+        0.016682099550962448,
+        0.016682200133800507,
+        0.016682300716638565,
+        0.016682399436831474,
+        0.016682500019669533,
+        0.01668260060250759,
+        0.0166826993227005,
+        0.01668279990553856,
+        0.016682900488376617,
+        0.016682999208569527,
+        0.016683099791407585,
+        0.01668339967727661,
+        0.016683699563145638,
+        0.016683800145983696,
+        0.01668420061469078,
+        0.01668429933488369,
+        0.016684500500559807,
+        0.01668510027229786,
+        0.01668659970164299,
+        0.01668809913098812,
+        0.01669199950993061,
+        0.018148399889469147,
+        0.019999999552965164,
+        0.05717509984970093
+      ]
+    },
+    "native_timing_fps30_20261002/random_native_00": {
+      "events": 5339,
+      "scene_bound": {
+        "sequence": 0,
+        "phase": "scene_bound",
+        "renderFrame": 70,
+        "controllers": 0,
+        "physics": 0,
+        "fixedTime": 1.350000023841858,
+        "time": 1.374401330947876,
+        "deltaTime": 0.01665000058710575,
+        "pause": 0.0,
+        "loadFinished": false,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "opening_events": [
+        {
+          "sequence": 1,
+          "phase": "before_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 2,
+          "phase": "after_Saviour.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 3,
+          "phase": "before_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 4,
+          "phase": "after_PlayerControl.Start",
+          "renderFrame": 70,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 14,
+          "phase": "before_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 15,
+          "phase": "before_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 20,
+          "phase": "after_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 21,
+          "phase": "after_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 70,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.374401330947876,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        }
+      ],
+      "first_load_finished": {
+        "sequence": 22,
+        "phase": "after_Saviour.Update",
+        "renderFrame": 70,
+        "controllers": 2,
+        "physics": 2,
+        "fixedTime": 1.3666667938232422,
+        "time": 1.374401330947876,
+        "deltaTime": 0.01665000058710575,
+        "pause": 12.0,
+        "loadFinished": true,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "first_probe": {
+        "sequence": 5065,
+        "phase": "before_controller",
+        "renderFrame": 430,
+        "controllers": 724,
+        "physics": 723,
+        "fixedTime": 7.383333683013916,
+        "time": 7.383333683013916,
+        "deltaTime": 0.008333333767950535,
+        "pause": 0.0,
+        "loadFinished": true,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "interpolation_at_probe": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "auto_sync_at_probe": true,
+      "simulation_mode_at_probe": 0,
+      "callback_changes": {
+        "Saviour.Start": {
+          "calls": 1,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PlayerControl.Start": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 42.72588348388672,
+          "max_transform_xy_delta": 42.71900177001953,
+          "first_body_change": {
+            "before": {
+              "sequence": 3,
+              "phase": "before_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 0.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 4,
+              "phase": "after_PlayerControl.Start",
+              "renderFrame": 70,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 42.72588348388672,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": false,
+              "bitwise_equal": false,
+              "position_distance_m": 42.84656755900129
+            }
+          }
+        },
+        "PoseControl.LateUpdate": {
+          "calls": 381,
+          "body_changed_calls": 103,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 16,
+              "phase": "before_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 17,
+              "phase": "after_PoseControl.LateUpdate",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PoseControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 15,
+              "phase": "before_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 20,
+              "phase": "after_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 14,
+              "phase": "before_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 21,
+              "phase": "after_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "Saviour.Update": {
+          "calls": 379,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 13,
+              "phase": "before_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 22,
+              "phase": "after_Saviour.Update",
+              "renderFrame": 70,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.374401330947876,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": true,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.Update": {
+          "calls": 379,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        }
+      },
+      "probe_render_frames": [
+        430,
+        430,
+        431,
+        431,
+        432,
+        432,
+        433,
+        433,
+        434,
+        434,
+        435,
+        435,
+        436,
+        436,
+        437,
+        437,
+        438,
+        438,
+        439,
+        439,
+        440,
+        440,
+        441,
+        441,
+        442,
+        442,
+        443,
+        443,
+        444,
+        444,
+        445,
+        445,
+        446,
+        446,
+        447,
+        447,
+        448,
+        448,
+        449,
+        449
+      ],
+      "physics_dt_values": [
+        0.008333333767950535
+      ],
+      "render_delta_values": [
+        0.01665000058710575,
+        0.016666699200868607,
+        0.016666799783706665,
+        0.016666999086737633,
+        0.01666709966957569,
+        0.016667800024151802,
+        0.016668500378727913,
+        0.016668599098920822,
+        0.01666869968175888,
+        0.01666880026459694,
+        0.01668200083076954,
+        0.016682099550962448,
+        0.016682200133800507,
+        0.016682300716638565,
+        0.016682399436831474,
+        0.016682500019669533,
+        0.01668260060250759,
+        0.0166826993227005,
+        0.01668279990553856,
+        0.016682900488376617,
+        0.016682999208569527,
+        0.016683099791407585,
+        0.016683800145983696,
+        0.01668420061469078,
+        0.01668570004403591,
+        0.01669670082628727,
+        0.0166982002556324,
+        0.019999999552965164,
+        0.05501540005207062
+      ]
+    },
+    "native_timing_fps30_20261002/random_native_01": {
+      "events": 5345,
+      "scene_bound": {
+        "sequence": 0,
+        "phase": "scene_bound",
+        "renderFrame": 69,
+        "controllers": 0,
+        "physics": 0,
+        "fixedTime": 1.350000023841858,
+        "time": 1.372113823890686,
+        "deltaTime": 0.01665000058710575,
+        "pause": 0.0,
+        "loadFinished": false,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "opening_events": [
+        {
+          "sequence": 1,
+          "phase": "before_Saviour.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 2,
+          "phase": "after_Saviour.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 3,
+          "phase": "before_PlayerControl.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 4,
+          "phase": "after_PlayerControl.Start",
+          "renderFrame": 69,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 14,
+          "phase": "before_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 15,
+          "phase": "before_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 20,
+          "phase": "after_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 21,
+          "phase": "after_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 69,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.372113823890686,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        }
+      ],
+      "first_load_finished": {
+        "sequence": 22,
+        "phase": "after_Saviour.Update",
+        "renderFrame": 69,
+        "controllers": 2,
+        "physics": 2,
+        "fixedTime": 1.3666667938232422,
+        "time": 1.372113823890686,
+        "deltaTime": 0.01665000058710575,
+        "pause": 12.0,
+        "loadFinished": true,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "first_probe": {
+        "sequence": 5065,
+        "phase": "before_controller",
+        "renderFrame": 429,
+        "controllers": 724,
+        "physics": 723,
+        "fixedTime": 7.383333683013916,
+        "time": 7.383333683013916,
+        "deltaTime": 0.008333333767950535,
+        "pause": 0.0,
+        "loadFinished": true,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "interpolation_at_probe": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "auto_sync_at_probe": true,
+      "simulation_mode_at_probe": 0,
+      "callback_changes": {
+        "Saviour.Start": {
+          "calls": 1,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PlayerControl.Start": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 42.72588348388672,
+          "max_transform_xy_delta": 42.71900177001953,
+          "first_body_change": {
+            "before": {
+              "sequence": 3,
+              "phase": "before_PlayerControl.Start",
+              "renderFrame": 69,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 0.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 4,
+              "phase": "after_PlayerControl.Start",
+              "renderFrame": 69,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 42.72588348388672,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": false,
+              "bitwise_equal": false,
+              "position_distance_m": 42.84656755900129
+            }
+          }
+        },
+        "PoseControl.LateUpdate": {
+          "calls": 382,
+          "body_changed_calls": 103,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 16,
+              "phase": "before_PoseControl.LateUpdate",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 17,
+              "phase": "after_PoseControl.LateUpdate",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PoseControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 15,
+              "phase": "before_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 20,
+              "phase": "after_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 14,
+              "phase": "before_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 21,
+              "phase": "after_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "Saviour.Update": {
+          "calls": 380,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 13,
+              "phase": "before_Saviour.Update",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 22,
+              "phase": "after_Saviour.Update",
+              "renderFrame": 69,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.372113823890686,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": true,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.Update": {
+          "calls": 380,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        }
+      },
+      "probe_render_frames": [
+        429,
+        430,
+        430,
+        431,
+        431,
+        432,
+        432,
+        433,
+        433,
+        434,
+        434,
+        435,
+        435,
+        436,
+        436,
+        437,
+        437,
+        438,
+        438,
+        439,
+        439,
+        440,
+        440,
+        441,
+        441,
+        442,
+        442,
+        443,
+        443,
+        444,
+        444,
+        445,
+        445,
+        446,
+        446,
+        447,
+        447,
+        448,
+        448,
+        449
+      ],
+      "physics_dt_values": [
+        0.008333333767950535
+      ],
+      "render_delta_values": [
+        0.01665000058710575,
+        0.016666799783706665,
+        0.016666900366544724,
+        0.016668500378727913,
+        0.016680600121617317,
+        0.01668119989335537,
+        0.016681300476193428,
+        0.016681399196386337,
+        0.016681600362062454,
+        0.016681699082255363,
+        0.016681799665093422,
+        0.01668190024793148,
+        0.01668200083076954,
+        0.016682099550962448,
+        0.016682200133800507,
+        0.016682300716638565,
+        0.016682399436831474,
+        0.016682500019669533,
+        0.01668260060250759,
+        0.0166826993227005,
+        0.01668279990553856,
+        0.016682900488376617,
+        0.016682999208569527,
+        0.016683099791407585,
+        0.016683200374245644,
+        0.016683299094438553,
+        0.01668339967727661,
+        0.01668350026011467,
+        0.01668360084295273,
+        0.016683900728821754,
+        0.01668510027229786,
+        0.01668580062687397,
+        0.016698099672794342,
+        0.0167044997215271,
+        0.019999999552965164,
+        0.04750509932637215
+      ]
+    },
+    "native_timing_fps30_20261002/random_native_02": {
+      "events": 5345,
+      "scene_bound": {
+        "sequence": 0,
+        "phase": "scene_bound",
+        "renderFrame": 68,
+        "controllers": 0,
+        "physics": 0,
+        "fixedTime": 1.350000023841858,
+        "time": 1.3745903968811035,
+        "deltaTime": 0.01665000058710575,
+        "pause": 0.0,
+        "loadFinished": false,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "opening_events": [
+        {
+          "sequence": 1,
+          "phase": "before_Saviour.Start",
+          "renderFrame": 68,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 2,
+          "phase": "after_Saviour.Start",
+          "renderFrame": 68,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 3,
+          "phase": "before_PlayerControl.Start",
+          "renderFrame": 68,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 0.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 4,
+          "phase": "after_PlayerControl.Start",
+          "renderFrame": 68,
+          "controllers": 0,
+          "physics": 0,
+          "fixedTime": 1.350000023841858,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 14,
+          "phase": "before_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 68,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 15,
+          "phase": "before_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 68,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 2.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 20,
+          "phase": "after_PoseControl.PlayOpeningAnimation",
+          "renderFrame": 68,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        {
+          "sequence": 21,
+          "phase": "after_PlayerControl.PlayOpeningAnimation",
+          "renderFrame": 68,
+          "controllers": 2,
+          "physics": 2,
+          "fixedTime": 1.3666667938232422,
+          "time": 1.3745903968811035,
+          "deltaTime": 0.01665000058710575,
+          "pause": 12.0,
+          "loadFinished": false,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        }
+      ],
+      "first_load_finished": {
+        "sequence": 22,
+        "phase": "after_Saviour.Update",
+        "renderFrame": 68,
+        "controllers": 2,
+        "physics": 2,
+        "fixedTime": 1.3666667938232422,
+        "time": 1.3745903968811035,
+        "deltaTime": 0.01665000058710575,
+        "pause": 12.0,
+        "loadFinished": true,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "first_probe": {
+        "sequence": 5065,
+        "phase": "before_controller",
+        "renderFrame": 428,
+        "controllers": 724,
+        "physics": 723,
+        "fixedTime": 7.383333683013916,
+        "time": 7.383333683013916,
+        "deltaTime": 0.008333333767950535,
+        "pause": 0.0,
+        "loadFinished": true,
+        "targetFrameRate": 30,
+        "captureFramerate": 0
+      },
+      "interpolation_at_probe": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "auto_sync_at_probe": true,
+      "simulation_mode_at_probe": 0,
+      "callback_changes": {
+        "Saviour.Start": {
+          "calls": 1,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        },
+        "PlayerControl.Start": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 42.72588348388672,
+          "max_transform_xy_delta": 42.71900177001953,
+          "first_body_change": {
+            "before": {
+              "sequence": 3,
+              "phase": "before_PlayerControl.Start",
+              "renderFrame": 68,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 0.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 4,
+              "phase": "after_PlayerControl.Start",
+              "renderFrame": 68,
+              "controllers": 0,
+              "physics": 0,
+              "fixedTime": 1.350000023841858,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 42.72588348388672,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": false,
+              "bitwise_equal": false,
+              "position_distance_m": 42.84656755900129
+            }
+          }
+        },
+        "PoseControl.LateUpdate": {
+          "calls": 382,
+          "body_changed_calls": 102,
+          "max_body_component_delta": 7.152557373046875e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 16,
+              "phase": "before_PoseControl.LateUpdate",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 17,
+              "phase": "after_PoseControl.LateUpdate",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PoseControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 15,
+              "phase": "before_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 20,
+              "phase": "after_PoseControl.PlayOpeningAnimation",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.PlayOpeningAnimation": {
+          "calls": 1,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 14,
+              "phase": "before_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 21,
+              "phase": "after_PlayerControl.PlayOpeningAnimation",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "Saviour.Update": {
+          "calls": 380,
+          "body_changed_calls": 1,
+          "max_body_component_delta": 2.384185791015625e-07,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": {
+            "before": {
+              "sequence": 13,
+              "phase": "before_Saviour.Update",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 2.0,
+              "loadFinished": false,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "after": {
+              "sequence": 22,
+              "phase": "after_Saviour.Update",
+              "renderFrame": 68,
+              "controllers": 2,
+              "physics": 2,
+              "fixedTime": 1.3666667938232422,
+              "time": 1.3745903968811035,
+              "deltaTime": 0.01665000058710575,
+              "pause": 12.0,
+              "loadFinished": true,
+              "targetFrameRate": 30,
+              "captureFramerate": 0
+            },
+            "error": {
+              "errors": {
+                "position_m": 2.384185791015625e-07,
+                "angle_deg": 0.0,
+                "velocity_m_s": 0.0,
+                "angular_velocity_deg_s": 0.0
+              },
+              "within_limits": true,
+              "bitwise_equal": false,
+              "position_distance_m": 2.384185791015625e-07
+            }
+          }
+        },
+        "PlayerControl.Update": {
+          "calls": 380,
+          "body_changed_calls": 0,
+          "max_body_component_delta": 0.0,
+          "max_transform_xy_delta": 0.0,
+          "first_body_change": null
+        }
+      },
+      "probe_render_frames": [
+        428,
+        429,
+        429,
+        430,
+        430,
+        431,
+        431,
+        432,
+        432,
+        433,
+        433,
+        434,
+        434,
+        435,
+        435,
+        436,
+        436,
+        437,
+        437,
+        438,
+        438,
+        439,
+        439,
+        440,
+        440,
+        441,
+        441,
+        442,
+        442,
+        443,
+        443,
+        444,
+        444,
+        445,
+        445,
+        446,
+        446,
+        447,
+        447,
+        448
+      ],
+      "physics_dt_values": [
+        0.008333333767950535
+      ],
+      "render_delta_values": [
+        0.01665000058710575,
+        0.016666699200868607,
+        0.01666940003633499,
+        0.01668190024793148,
+        0.01668200083076954,
+        0.016682099550962448,
+        0.016682200133800507,
+        0.016682300716638565,
+        0.016682399436831474,
+        0.016682500019669533,
+        0.01668260060250759,
+        0.0166826993227005,
+        0.016683099791407585,
+        0.016688400879502296,
+        0.016691500321030617,
+        0.0166982002556324,
+        0.016700899228453636,
+        0.019999999552965164,
+        0.04679720103740692
+      ]
+    }
+  },
+  "comparisons": [
+    {
+      "left": "native_timing_buffered_20261002/random_native_00",
+      "right": "native_timing_buffered_20261002/random_native_01",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": true,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": null
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_00",
+      "right": "native_timing_buffered_20261002/random_native_02",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.152557373046875e-06,
+          "angle_deg": 0.000247955322265625,
+          "velocity_m_s": 2.3107975721359253e-05,
+          "angular_velocity_deg_s": 0.0007271915674209595
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.106231689453125e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11790084838867188,
+          "angle_deg": 3.017561435699463,
+          "velocity_m_s": 5.228170871734619,
+          "angular_velocity_deg_s": 342.6720428466797
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.1209536945118676
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3742,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_00",
+      "right": "native_timing_fps30_20261002/random_native_00",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.152557373046875e-06,
+          "angle_deg": 0.000247955322265625,
+          "velocity_m_s": 2.3107975721359253e-05,
+          "angular_velocity_deg_s": 0.0007271915674209595
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.106231689453125e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11790084838867188,
+          "angle_deg": 3.017561435699463,
+          "velocity_m_s": 5.228170871734619,
+          "angular_velocity_deg_s": 342.6720428466797
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.1209536945118676
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3742,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_00",
+      "right": "native_timing_fps30_20261002/random_native_01",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": null
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_00",
+      "right": "native_timing_fps30_20261002/random_native_02",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.62939453125e-06,
+          "angle_deg": 0.0001220703125,
+          "velocity_m_s": 3.4265685826539993e-06,
+          "angular_velocity_deg_s": 0.00010640919208526611
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.934336625362269e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 4.57763671875e-05,
+          "angle_deg": 0.001800537109375,
+          "velocity_m_s": 0.0008130073547363281,
+          "angular_velocity_deg_s": 0.45330810546875
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 4.7303111314551466e-05
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 334,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_01",
+      "right": "native_timing_buffered_20261002/random_native_02",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.152557373046875e-06,
+          "angle_deg": 0.000247955322265625,
+          "velocity_m_s": 2.3107975721359253e-05,
+          "angular_velocity_deg_s": 0.0007271915674209595
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.106231689453125e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11790084838867188,
+          "angle_deg": 3.017561435699463,
+          "velocity_m_s": 5.228170871734619,
+          "angular_velocity_deg_s": 342.6720428466797
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.1209536945118676
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3742,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_01",
+      "right": "native_timing_fps30_20261002/random_native_00",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.152557373046875e-06,
+          "angle_deg": 0.000247955322265625,
+          "velocity_m_s": 2.3107975721359253e-05,
+          "angular_velocity_deg_s": 0.0007271915674209595
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.106231689453125e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11790084838867188,
+          "angle_deg": 3.017561435699463,
+          "velocity_m_s": 5.228170871734619,
+          "angular_velocity_deg_s": 342.6720428466797
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.1209536945118676
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3742,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_01",
+      "right": "native_timing_fps30_20261002/random_native_01",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": null
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_01",
+      "right": "native_timing_fps30_20261002/random_native_02",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.62939453125e-06,
+          "angle_deg": 0.0001220703125,
+          "velocity_m_s": 3.4265685826539993e-06,
+          "angular_velocity_deg_s": 0.00010640919208526611
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.934336625362269e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 4.57763671875e-05,
+          "angle_deg": 0.001800537109375,
+          "velocity_m_s": 0.0008130073547363281,
+          "angular_velocity_deg_s": 0.45330810546875
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 4.7303111314551466e-05
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": false,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 334,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_02",
+      "right": "native_timing_fps30_20261002/random_native_00",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": true,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": null
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_02",
+      "right": "native_timing_fps30_20261002/random_native_01",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.152557373046875e-06,
+          "angle_deg": 0.000247955322265625,
+          "velocity_m_s": 2.3107975721359253e-05,
+          "angular_velocity_deg_s": 0.0007271915674209595
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.106231689453125e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11790084838867188,
+          "angle_deg": 3.017561435699463,
+          "velocity_m_s": 5.228170871734619,
+          "angular_velocity_deg_s": 342.6720428466797
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.1209536945118676
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": true,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3742,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_buffered_20261002/random_native_02",
+      "right": "native_timing_fps30_20261002/random_native_02",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.62939453125e-06,
+          "angle_deg": 0.0001678466796875,
+          "velocity_m_s": 2.6534544304013252e-05,
+          "angular_velocity_deg_s": 0.0008336007595062256
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 7.762346551942685e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11785507202148438,
+          "angle_deg": 3.0174975395202637,
+          "velocity_m_s": 5.2289838790893555,
+          "angular_velocity_deg_s": 342.6758728027344
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.12094658164987872
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": true,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3752,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 536,
+          "physics": 536,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.100008487701416,
+          "loadFinished": true,
+          "targetFrameRate": -1,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3752,
+          "phase": "after_physics",
+          "renderFrame": 334,
+          "controllers": 536,
+          "physics": 536,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.100008487701416,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 4.76837158203125e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 4.41097654402256e-07,
+            "angular_velocity_deg_s": 1.3917684555053711e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 4.76837158203125e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_fps30_20261002/random_native_00",
+      "right": "native_timing_fps30_20261002/random_native_01",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.152557373046875e-06,
+          "angle_deg": 0.000247955322265625,
+          "velocity_m_s": 2.3107975721359253e-05,
+          "angular_velocity_deg_s": 0.0007271915674209595
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.106231689453125e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11790084838867188,
+          "angle_deg": 3.017561435699463,
+          "velocity_m_s": 5.228170871734619,
+          "angular_velocity_deg_s": 342.6720428466797
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.1209536945118676
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": true,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3742,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_fps30_20261002/random_native_00",
+      "right": "native_timing_fps30_20261002/random_native_02",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.62939453125e-06,
+          "angle_deg": 0.0001678466796875,
+          "velocity_m_s": 2.6534544304013252e-05,
+          "angular_velocity_deg_s": 0.0008336007595062256
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 7.762346551942685e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 0.11785507202148438,
+          "angle_deg": 3.0174975395202637,
+          "velocity_m_s": 5.2289838790893555,
+          "angular_velocity_deg_s": 342.6758728027344
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 0.12094658164987872
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": true,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3752,
+          "phase": "after_physics",
+          "renderFrame": 336,
+          "controllers": 536,
+          "physics": 536,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.100008487701416,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3752,
+          "phase": "after_physics",
+          "renderFrame": 334,
+          "controllers": 536,
+          "physics": 536,
+          "fixedTime": 5.816667079925537,
+          "time": 5.816667079925537,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.100008487701416,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 4.76837158203125e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 4.41097654402256e-07,
+            "angular_velocity_deg_s": 1.3917684555053711e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 4.76837158203125e-07
+        }
+      }
+    },
+    {
+      "left": "native_timing_fps30_20261002/random_native_01",
+      "right": "native_timing_fps30_20261002/random_native_02",
+      "scene_bodies": {
+        "errors": {
+          "position_m": 0.0,
+          "angle_deg": 0.0,
+          "velocity_m_s": 0.0,
+          "angular_velocity_deg_s": 0.0
+        },
+        "within_limits": true,
+        "bitwise_equal": true,
+        "position_distance_m": 0.0
+      },
+      "initial_bodies": {
+        "errors": {
+          "position_m": 7.62939453125e-06,
+          "angle_deg": 0.0001220703125,
+          "velocity_m_s": 3.4265685826539993e-06,
+          "angular_velocity_deg_s": 0.00010640919208526611
+        },
+        "within_limits": true,
+        "bitwise_equal": false,
+        "position_distance_m": 8.934336625362269e-06
+      },
+      "trajectory": {
+        "errors": {
+          "position_m": 4.57763671875e-05,
+          "angle_deg": 0.001800537109375,
+          "velocity_m_s": 0.0008130073547363281,
+          "angular_velocity_deg_s": 0.45330810546875
+        },
+        "within_limits": false,
+        "bitwise_equal": false,
+        "position_distance_m": 4.7303111314551466e-05
+      },
+      "input_state_equal": true,
+      "fixed_times_equal": true,
+      "physics_event_counts": [
+        763,
+        763
+      ],
+      "first_physics_difference": {
+        "left": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 335,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "right": {
+          "sequence": 3748,
+          "phase": "after_physics",
+          "renderFrame": 334,
+          "controllers": 535,
+          "physics": 535,
+          "fixedTime": 5.808333873748779,
+          "time": 5.808333873748779,
+          "deltaTime": 0.008333333767950535,
+          "pause": 3.1166751384735107,
+          "loadFinished": true,
+          "targetFrameRate": 30,
+          "captureFramerate": 0
+        },
+        "error": {
+          "errors": {
+            "position_m": 2.384185791015625e-07,
+            "angle_deg": 1.52587890625e-05,
+            "velocity_m_s": 2.228771336376667e-07,
+            "angular_velocity_deg_s": 1.076236367225647e-05
+          },
+          "within_limits": true,
+          "bitwise_equal": false,
+          "position_distance_m": 2.384185791015625e-07
+        }
+      }
+    }
+  ]
+}

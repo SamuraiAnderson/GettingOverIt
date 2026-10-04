@@ -1,0 +1,27 @@
+{
+  "source_sha256": {
+    "src/training/config.py": "e9a8401262b2d1ad5a1dbdfe354cd161a9675e697397051ff97cac879c6533ac",
+    "src/training/main_ppo.py": "bc45a9f13fe662e4e21fd61caf34a83264a253f5bf612cac1d2addd37222c99c",
+    "src/training/dataset.py": "dee15eb13c3eb1da29515f5120113d5b186560cb94c9cbeafb3cabe02005b945",
+    "src/training/gru_sil.py": "e827e2e6e7ceb68ed217ae2bff07c8e2294163922efdc323a9cbfb55608721b4",
+    "src/training/elite_archive.py": "ff195a33d99b6daab6e1a2cfeb246363a8adce01efde02d811c1b9e3967d5abd",
+    "src/training/run_logging.py": "6f61a6c844446357e86fe81c427ea62e2ae260fb5ff4286c0eb577cbbd16f625",
+    "src/tests/training/test_gru_sil.py": "06673dcf2285900c74536415010a0baa73f123135b9b82d401864f41f0734fc3",
+    "src/tests/training/test_elite_archive.py": "ba1b893dec5d87f77887d0c707d1b135f8fc68ddf00045d50eb420300f9648b4",
+    "src/tests/training/validate_gru_sil_run.py": "9e092dac1ade86a9e4156d74172293f81837585671f665edbec111363513d4b5"
+  },
+  "source_commit": "73d0fda879977a60e7d5d371479ea8b62cc8c4b4",
+  "uncommitted_changes": true,
+  "recorded_at_utc": "2026-10-03T13:14:29.386036+00:00",
+  "purpose": "Independent GRU SIL engineering acceptance; not a continuation of the five-hour training budget",
+  "initial_checkpoint": "runs/gru_formal_5h_20261003/checkpoints/ppo_iter_0050.pt",
+  "rounds": [
+    51,
+    52,
+    53
+  ],
+  "resume_test": "Round 53 resumes checkpoint 52 with inherited GRU SIL and automatic full-episode pool restoration",
+  "regression_tests": 75,
+  "runtime_dll_sha256": "632067533df42c1406d4ebfc1bc5ce4207f944d99d187d67261d59c181080bfe",
+  "initial_checkpoint_sha256": "0ce71eba0f4b2797f0367e62052c7509b1b7a6bfeabf2e5f55ba1c3784403f6a"
+}

@@ -1,0 +1,422 @@
+{
+  "status": "COMPLETE",
+  "started_at_utc": "2026-10-02T07:35:14.020158+00:00",
+  "parameters": {
+    "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+    "out": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_start_recipe_pilot",
+    "modes": [
+      "native",
+      "candidate"
+    ],
+    "actions": [
+      "zero"
+    ],
+    "repeats": 1,
+    "steps": 40,
+    "native_warmup": 0,
+    "native_new_game": true,
+    "seed": 20261002,
+    "timeout": 90,
+    "port": 9000,
+    "require_native_parameters": true
+  },
+  "initial_body_limits": {
+    "position_m": 0.001,
+    "angle_deg": 0.05,
+    "velocity_m_s": 0.001,
+    "angular_velocity_deg_s": 0.1
+  },
+  "cases": [
+    {
+      "id": "zero_native_00",
+      "mode": "native",
+      "actions": "zero",
+      "repeat": 0,
+      "raw": "zero_native_00.jsonl",
+      "config": {
+        "mode": 0,
+        "tcpPort": 9000,
+        "stateDimension": 29,
+        "actionDimension": 2,
+        "stepFrames": 1,
+        "numDuplicates": 1,
+        "playerObjectName": "Player",
+        "minInput": 10.0,
+        "maxInput": 100.0,
+        "autoClampInput": true,
+        "normalizeInitialPose": true,
+        "initPoseSettleFrames": 120,
+        "startAnimatorInRlMode": true,
+        "initCursorUpScale": 1.0,
+        "initCursorOffsetX": 0.0,
+        "initPoseGain": 15.0,
+        "dataRoot": "GoiData",
+        "initializeDirectoriesOnStart": true,
+        "enableDebugLogs": true,
+        "dynamicsProbeMode": "native",
+        "dynamicsProbeFile": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_start_recipe_pilot\\zero_native_00.fixture.json",
+        "experimentalControlledUpdates": false,
+        "experimentalSceneReset": false,
+        "experimentalResetDiagnostics": false,
+        "experimentalNativeNewGame": false
+      },
+      "pid": 30316,
+      "status": "COMPLETE",
+      "seconds": 13.984185999957845,
+      "rows": 120
+    },
+    {
+      "id": "zero_candidate_00",
+      "mode": "candidate",
+      "actions": "zero",
+      "repeat": 0,
+      "raw": "zero_candidate_00.jsonl",
+      "config": {
+        "mode": 0,
+        "tcpPort": 9000,
+        "stateDimension": 29,
+        "actionDimension": 2,
+        "stepFrames": 1,
+        "numDuplicates": 1,
+        "playerObjectName": "Player",
+        "minInput": 10.0,
+        "maxInput": 100.0,
+        "autoClampInput": true,
+        "normalizeInitialPose": true,
+        "initPoseSettleFrames": 120,
+        "startAnimatorInRlMode": true,
+        "initCursorUpScale": 1.0,
+        "initCursorOffsetX": 0.0,
+        "initPoseGain": 15.0,
+        "dataRoot": "GoiData",
+        "initializeDirectoriesOnStart": true,
+        "enableDebugLogs": true,
+        "dynamicsProbeMode": "candidate",
+        "dynamicsProbeFile": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_start_recipe_pilot\\zero_candidate_00.fixture.json",
+        "experimentalControlledUpdates": true,
+        "experimentalSceneReset": true,
+        "experimentalResetDiagnostics": false,
+        "experimentalNativeNewGame": true
+      },
+      "pid": 16504,
+      "status": "COMPLETE",
+      "seconds": 10.824687199899927,
+      "rows": 120
+    }
+  ],
+  "errors": [],
+  "fingerprints": {
+    "script": "4e47ca808b034f5482044e805123a1ef917039bcde5dea329f07b6b2120bd6ba",
+    "plugin": "e776b17807512922bdd59dba1853c7fa1497244350eca1711cf16592cbc2b0be",
+    "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844"
+  },
+  "limitations": [
+    "Native reference still uses BepInEx and input interception; not an uninstrumented executable.",
+    "Native readiness plus zero-input warmup differs from candidate canonical initialization.",
+    "Contact and joint solver hidden caches are not observed.",
+    "Single-agent, short-horizon dynamics; does not certify task interfaces or full gameplay.",
+    "Native autosave-to-disk is suppressed. Other PlayerPrefs changes are not isolated.",
+    "Body tolerances are predefined screening thresholds, not a proof of matching solver states."
+  ],
+  "analysis": {
+    "equivalence": "NOT_CERTIFIED",
+    "comparisons": [
+      {
+        "left": "zero_native_00",
+        "right": "zero_candidate_00",
+        "kind": "cross_mode",
+        "initial_bodies": {
+          "errors": {
+            "position_m": 0.00047397613525390625,
+            "angle_deg": 0.01439666748046875,
+            "velocity_m_s": 0.00019127968698740005,
+            "angular_velocity_deg_s": 0.006005194038152695
+          },
+          "within_limits": true,
+          "bitwise_equal": false
+        },
+        "body_config_max_abs_delta": 0.0,
+        "fixed_dt_equal": true,
+        "phases": {
+          "before_control": {
+            "errors": {
+              "position_m": 0.00047397613525390625,
+              "angle_deg": 0.01439666748046875,
+              "velocity_m_s": 0.0008058901876211166,
+              "angular_velocity_deg_s": 0.04228252172470093
+            },
+            "within_limits": true,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 0.014090225100517273,
+            "motors_max_abs_delta": 0.042270660400390625
+          },
+          "after_control": {
+            "errors": {
+              "position_m": 0.00047397613525390625,
+              "angle_deg": 0.01439666748046875,
+              "velocity_m_s": 0.0008058901876211166,
+              "angular_velocity_deg_s": 0.04228252172470093
+            },
+            "within_limits": true,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 0.014090225100517273,
+            "motors_max_abs_delta": 0.042270660400390625
+          },
+          "after_physics": {
+            "errors": {
+              "position_m": 0.0004725456237792969,
+              "angle_deg": 0.0140533447265625,
+              "velocity_m_s": 0.0008058901876211166,
+              "angular_velocity_deg_s": 0.04228252172470093
+            },
+            "within_limits": true,
+            "bitwise_equal": false,
+            "controls_max_abs_delta": 0.014090225100517273,
+            "motors_max_abs_delta": 0.042270660400390625
+          }
+        },
+        "trajectory_attribution": "INITIAL_BODIES_WITHIN_LIMITS_NOT_FULL_SOLVER_STATE"
+      }
+    ],
+    "native_parameters": {
+      "passed": true,
+      "reference": "zero_native_00",
+      "expected_motor_parameters": {
+        "hinge_cap": 10000.0,
+        "slider_cap": 10000.0,
+        "hub_cap": 100.0,
+        "controller_hinge_cap": 10000.0,
+        "controller_slider_cap": 10000.0
+      },
+      "scope": "Recorded motor caps/caches, body configuration and fixed dt only; not full dynamics equivalence",
+      "cases": [
+        {
+          "id": "zero_native_00",
+          "passed": true,
+          "rows": 120,
+          "mismatches": []
+        },
+        {
+          "id": "zero_candidate_00",
+          "passed": true,
+          "rows": 120,
+          "mismatches": []
+        }
+      ]
+    },
+    "first_step": {
+      "zero_native_00": {
+        "before_control": {
+          "controls": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.005049999803304672,
+            -42.72201156616211,
+            -3.1991660594940186,
+            -0.011378576047718525,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.03413572907447815,
+            10000.0,
+            0.0,
+            10000.0,
+            0.2513236403465271,
+            -0.3536994457244873
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_control": {
+          "controls": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.009847499430179596,
+            -42.72588348388672,
+            -3.2136011123657227,
+            -0.15905112028121948,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.47715336084365845,
+            10000.0,
+            5.997166681481758e-06,
+            10000.0,
+            0.2513236403465271,
+            -0.3536994457244873
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_physics": {
+          "controls": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.009847499430179596,
+            -42.72588348388672,
+            -3.2136011123657227,
+            -0.15905112028121948,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.47715336084365845,
+            10000.0,
+            5.997166681481758e-06,
+            10000.0,
+            0.2473655492067337,
+            -0.35369837284088135
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "zero_candidate_00": {
+        "before_control": {
+          "controls": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.005049999803304672,
+            -42.722164154052734,
+            -3.1996376514434814,
+            -0.0113483602181077,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.034045081585645676,
+            10000.0,
+            0.0,
+            10000.0,
+            0.2369290143251419,
+            -0.3535095453262329
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_control": {
+          "controls": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.009847499430179596,
+            -42.72588348388672,
+            -3.2136011123657227,
+            -0.1449608951807022,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.4348827004432678,
+            10000.0,
+            5.794734079245245e-06,
+            10000.0,
+            0.2369290143251419,
+            -0.3535095453262329
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        "after_physics": {
+          "controls": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.009847499430179596,
+            -42.72588348388672,
+            -3.2136011123657227,
+            -0.1449608951807022,
+            0.0,
+            2.4000000953674316,
+            0.0
+          ],
+          "motors": [
+            -0.4348827004432678,
+            10000.0,
+            5.794734079245245e-06,
+            10000.0,
+            0.23333975672721863,
+            -0.35351115465164185
+          ],
+          "axes": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "inputBeforeInjection": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      }
+    }
+  },
+  "production_before": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_after": {
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\BepInEx\\plugins\\GameRuntime_v2.dll": "73454e3b1002409cccae1e6fe1f6e4d8a326207efccdba1b5f5897af649afb9f",
+    "C:\\Users\\Symbol\\software\\game_store\\steam\\steamapps\\common\\Getting Over It\\GoiData\\runtime_config.json": "c5a9eaf99dcd88d7ab6be9ac5385dd2ecbb975021f824ac475ace6502daa428c"
+  },
+  "production_unchanged": true,
+  "finished_at_utc": "2026-10-02T07:35:40.935976+00:00"
+}

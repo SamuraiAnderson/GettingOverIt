@@ -1,0 +1,29 @@
+{
+  "command": [
+    "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+    "-m",
+    "src.training.local_evaluation",
+    "--checkpoint",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\transformer_s7.pt",
+    "--output",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\eval\\transformer_s7_i0",
+    "--steps",
+    "1200",
+    "--rounds",
+    "9",
+    "--num-agents",
+    "2",
+    "--seed",
+    "20261002",
+    "--jitter",
+    "0.01",
+    "--goal-progress",
+    "5",
+    "--modes",
+    "deterministic"
+  ],
+  "started": 1791014380.9303546,
+  "status": "passed",
+  "returncode": 0,
+  "seconds": 1058.620705127716
+}

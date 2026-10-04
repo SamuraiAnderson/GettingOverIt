@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "iteration": 51,
+      "preupdate_ratio_max_error": 0.0005160709260962903,
+      "preupdate_kl": 1.5794879004715767e-09,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 1200.0,
+      "rng_unchanged": true
+    },
+    {
+      "iteration": 52,
+      "preupdate_ratio_max_error": 0.00042810809100046754,
+      "preupdate_kl": 1.4667856855036613e-09,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 1200.0,
+      "rng_unchanged": true
+    },
+    {
+      "iteration": 53,
+      "preupdate_ratio_max_error": 0.00035292175016365945,
+      "preupdate_kl": 1.2133529973349747e-09,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 1200.0,
+      "rng_unchanged": true
+    }
+  ]
+}

@@ -1,0 +1,3063 @@
+{
+  "source": "runs/native_input_final_reset_2agents_20261002/result.json",
+  "source_sha256": "346e3571e7d7e5bd15f40af9b16a387e2569a864007dbbe779da0e767d9f380e",
+  "source_bytes": 7298692,
+  "compaction": "Lists longer than 32 entries replaced with their lengths; scalar metrics and smaller structures retained. Raw source remains local.",
+  "result": {
+    "version": 1,
+    "status": "PASS",
+    "started_at_utc": "2026-10-02T11:06:15.857174+00:00",
+    "scope": "same-agent reset versus reference and probe; cross-agent divergence is informational",
+    "raw_state_schema": {
+      "name": "legacy33",
+      "dimension": 33
+    },
+    "parameters": {
+      "agents": 2,
+      "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+      "controlled_updates": false,
+      "reset_diagnostics": true,
+      "native_parameter_reference": "runs\\native_input_final_20261002\\result.json",
+      "native_start_reference": "runs\\native_input_final_20261002\\result.json",
+      "scene_reset": true,
+      "native_new_game": true,
+      "native_input_smoothing": true,
+      "fixed_order": false,
+      "restarts": 3,
+      "cycles": 1,
+      "burn_steps": [
+        200,
+        1000
+      ],
+      "idle_seconds": [
+        0.0,
+        0.25
+      ],
+      "probe_steps": 40,
+      "probe_kind": "hold",
+      "seed": 20261002,
+      "startup_settle": 8.0,
+      "timeout": 120.0,
+      "port": 9000,
+      "out": "runs\\native_input_final_reset_2agents_20261002",
+      "allow_moving_start": false,
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "thresholds": {
+      "position": 0.001,
+      "linear_velocity": 0.001,
+      "angular_velocity": 0.1,
+      "angle": 0.05,
+      "cursor_position": 0.001,
+      "cursor_velocity": 0.001,
+      "rest_linear_speed": 0.05,
+      "rest_angular_speed": 1.0
+    },
+    "fields": {
+      "omitted_raw_array": true,
+      "length": 35
+    },
+    "timestamp_excluded": 28,
+    "native_parameters": {
+      "hinge_cap": 10000.0,
+      "slider_cap": 10000.0,
+      "hub_cap": 100.0,
+      "controller_hinge_cap": 10000.0,
+      "controller_slider_cap": 10000.0
+    },
+    "native_start_reference": {
+      "step": 0,
+      "renderFrame": 429,
+      "controllerCalls": 1,
+      "physicsCalls": 0,
+      "phase": "before_control",
+      "mode": "native",
+      "fixedTime": 7.383333683013916,
+      "fixedDeltaTime": 0.008333333767950535,
+      "timeScale": 1.0,
+      "requested": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "inputBeforeInjection": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "bodyNames": [
+        "Player",
+        "Hub",
+        "Slider",
+        "Handle",
+        "PoleMiddle",
+        "Tip",
+        "Cursor"
+      ],
+      "axes": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bodies": {
+        "omitted_raw_array": true,
+        "length": 42
+      },
+      "bodyConfig": {
+        "omitted_raw_array": true,
+        "length": 63
+      },
+      "controls": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.005049999803304672,
+        -42.72201156616211,
+        -3.1991660594940186,
+        -0.011378576047718525,
+        0.0,
+        2.4000000953674316,
+        0.0
+      ],
+      "motors": [
+        -0.03413572907447815,
+        10000.0,
+        0.0,
+        10000.0,
+        0.2513236403465271,
+        -0.3536994457244873
+      ],
+      "contacts": {
+        "omitted_raw_array": true,
+        "length": 50
+      },
+      "motorParameters": [
+        10000.0,
+        10000.0,
+        100.0,
+        10000.0,
+        10000.0
+      ],
+      "axisReads": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "limitations": [
+      "Scene reset with diagnostics uses live state before any RESET as the cold reference; legacy mode uses first RESET.",
+      "Q diagnostics expose all body velocities and selected control fields, not the full solver state.",
+      "Without Q diagnostics, wait effects are observed only at the next STEP.",
+      "Histories run sequentially; differences are not uniquely attributed to waiting versus prior history.",
+      "Stationarity is checked separately, including common motion shared by all agents.",
+      "Thresholds are provisional acceptance criteria, not a measured numerical noise floor."
+    ],
+    "expected_cases": 27,
+    "cases": [
+      {
+        "id": "restart_00_case_000",
+        "restart": 0,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.018584300065413117,
+        "idle_actual_s": 9.399955160915852e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_00_case_001",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7850198000669479,
+        "idle_actual_s": 4.499917849898338e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.023107290267944336,
+          0.02304708957672119
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_002",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7559851000551134,
+        "idle_actual_s": 0.2504544999683276,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.972496032714844,
+          9.39615249633789
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_003",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7890453999862075,
+        "idle_actual_s": 4.09991480410099e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_00_case_004",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7736964999930933,
+        "idle_actual_s": 3.900029696524143e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.972496032714844,
+          9.39615249633789
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_005",
+        "restart": 0,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7804756000405177,
+        "idle_actual_s": 0.25045050005428493,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.023107290267944336,
+          0.02304708957672119
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_006",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_00_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7853079999331385,
+        "idle_actual_s": 4.200031980872154e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.290557861328125,
+          7.427825927734375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_007",
+        "restart": 0,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7749827000079677,
+        "idle_actual_s": 0.2503443999448791,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.290557861328125,
+          7.427825927734375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_00_case_008",
+        "restart": 0,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_00_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.795022499980405,
+        "idle_actual_s": 0.2503034999826923,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_01_case_000",
+        "restart": 1,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.015376299968920648,
+        "idle_actual_s": 4.299916326999664e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_01_case_001",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.76691609993577,
+        "idle_actual_s": 4.200031980872154e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.290557861328125,
+          7.427825927734375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_002",
+        "restart": 1,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7875797000015154,
+        "idle_actual_s": 4.100031219422817e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.023107290267944336,
+          0.02304708957672119
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_003",
+        "restart": 1,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7937995999818668,
+        "idle_actual_s": 0.25006960006430745,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.023107290267944336,
+          0.02304708957672119
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_004",
+        "restart": 1,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7423461999278516,
+        "idle_actual_s": 0.2504640999250114,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_01_case_005",
+        "restart": 1,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7933731999946758,
+        "idle_actual_s": 3.8000289350748062e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_01_case_006",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_01_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7590886000543833,
+        "idle_actual_s": 4.700035788118839e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.972496032714844,
+          9.39615249633789
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_007",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7963062999770045,
+        "idle_actual_s": 0.2501595999347046,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.972496032714844,
+          9.39615249633789
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_01_case_008",
+        "restart": 1,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_01_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7862872000550851,
+        "idle_actual_s": 0.25038290000520647,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.290557861328125,
+          7.427825927734375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_000",
+        "restart": 2,
+        "history": "cold",
+        "history_steps": 0,
+        "cycle": -1,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_000.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.017375200055539608,
+        "idle_actual_s": 3.999914042651653e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 1
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_02_case_001",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_001.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7857419999781996,
+        "idle_actual_s": 0.25035420001950115,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 2
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.972496032714844,
+          9.39615249633789
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_002",
+        "restart": 2,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_002.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.8133265000069514,
+        "idle_actual_s": 0.2503508999943733,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 3
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.023107290267944336,
+          0.02304708957672119
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_003",
+        "restart": 2,
+        "history": "hold",
+        "history_steps": 40,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_003.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.8113113000290468,
+        "idle_actual_s": 4.100031219422817e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 4
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          0.023107290267944336,
+          0.02304708957672119
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_004",
+        "restart": 2,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_004.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.782350099994801,
+        "idle_actual_s": 0.25079510000068694,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 5
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_02_case_005",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 1000,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_005.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.8115976999979466,
+        "idle_actual_s": 3.400025889277458e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 6
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.972496032714844,
+          9.39615249633789
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_006",
+        "restart": 2,
+        "history": "none",
+        "history_steps": 0,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_006.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7817124999128282,
+        "idle_actual_s": 3.900029696524143e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 7
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        }
+      },
+      {
+        "id": "restart_02_case_007",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.25,
+        "raw_file": "restart_02_case_007.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7696688000578433,
+        "idle_actual_s": 0.2502099999692291,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 8
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.290557861328125,
+          7.427825927734375
+        ],
+        "history_exercised": true
+      },
+      {
+        "id": "restart_02_case_008",
+        "restart": 2,
+        "history": "random",
+        "history_steps": 200,
+        "cycle": 0,
+        "idle_requested_s": 0.0,
+        "raw_file": "restart_02_case_008.npz",
+        "history_seed": 20261002,
+        "status": "COMPLETE",
+        "reference_origin": "live_before_first_reset",
+        "reset_seconds": 0.7847192999906838,
+        "idle_actual_s": 5.00003807246685e-06,
+        "assessment": {
+          "passed": true,
+          "alignment_required": false,
+          "matches_reference": true,
+          "agents_aligned": false,
+          "stationary": true,
+          "frames": {
+            "omitted_raw_array": true,
+            "length": 41
+          }
+        },
+        "diagnostic_assessment": {
+          "passed": true,
+          "controller_reference_matched": true,
+          "automatic_clock_paused": true,
+          "idle_stable": true,
+          "step_counts_correct": true,
+          "all_bodies_at_rest": true,
+          "body_reference_errors": {
+            "position": 0.0,
+            "angle": 0.0,
+            "linear_velocity": 0.0,
+            "angular_velocity": 0.0
+          },
+          "body_reference_matched": true,
+          "lifecycle_valid": true,
+          "world_body_count": 22,
+          "epoch": 9
+        },
+        "native_parameter_assessment": {
+          "passed": true,
+          "failures": [],
+          "agents": 2,
+          "scope": "Three native joint motor caps at reset, idle and probe end"
+        },
+        "native_start_assessment": {
+          "passed": true,
+          "checks": [
+            {
+              "phase": "after_reset",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_reset",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 0,
+              "errors": {
+                "position": 0.0004978179931640625,
+                "angle": 0.015087127685546875,
+                "linear_velocity": 5.470780888572335e-05,
+                "angular_velocity": 0.0017173998057842255
+              },
+              "passed": true
+            },
+            {
+              "phase": "after_wait",
+              "agent": 1,
+              "errors": {
+                "position": 0.00047588348388671875,
+                "angle": 0.014438629150390625,
+                "linear_velocity": 6.768666207790375e-05,
+                "angular_velocity": 0.002115696668624878
+              },
+              "passed": true
+            }
+          ],
+          "scope": "All seven body states at reset and after idle versus native NewGame readiness"
+        },
+        "history_max_position_change_per_agent_m": [
+          6.290557861328125,
+          7.427825927734375
+        ],
+        "history_exercised": true
+      }
+    ],
+    "sessions": [
+      {
+        "restart": 0,
+        "pid": 38632,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "experimentalNativeNewGame": true,
+          "experimentalNativeInputSmoothing": true,
+          "dynamicsProbeMode": "",
+          "dynamicsProbeFile": "",
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      },
+      {
+        "restart": 1,
+        "pid": 2168,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "experimentalNativeNewGame": true,
+          "experimentalNativeInputSmoothing": true,
+          "dynamicsProbeMode": "",
+          "dynamicsProbeFile": "",
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      },
+      {
+        "restart": 2,
+        "pid": 40284,
+        "runtime_config_effective": {
+          "mode": 0,
+          "tcpPort": 9000,
+          "stateDimension": 29,
+          "actionDimension": 2,
+          "stepFrames": 1,
+          "experimentalControlledUpdates": true,
+          "experimentalResetDiagnostics": true,
+          "experimentalSceneReset": true,
+          "experimentalNativeNewGame": true,
+          "experimentalNativeInputSmoothing": true,
+          "dynamicsProbeMode": "",
+          "dynamicsProbeFile": "",
+          "numDuplicates": 2,
+          "playerObjectName": "Player",
+          "minInput": 10.0,
+          "maxInput": 100.0,
+          "autoClampInput": true,
+          "normalizeInitialPose": true,
+          "initPoseSettleFrames": 120,
+          "startAnimatorInRlMode": true,
+          "initCursorUpScale": 1.0,
+          "initCursorOffsetX": 0.0,
+          "initPoseGain": 15.0,
+          "dataRoot": "GoiData",
+          "initializeDirectoriesOnStart": true,
+          "enableDebugLogs": true
+        }
+      }
+    ],
+    "errors": [],
+    "fingerprints": {
+      "script": "d4272d76e57b8c08782dfba549ee53a37de2f911d8d420e4078d56613c384c08",
+      "deployed_plugin": "f5ce41e1ac158e517d655d29d3c98cda85848f7d806f4132795021e33d55692b",
+      "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844",
+      "project_config": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+    },
+    "runtime_config_requested": {
+      "mode": 0,
+      "tcpPort": 9000,
+      "stateDimension": 29,
+      "actionDimension": 2,
+      "stepFrames": 1,
+      "numDuplicates": 2,
+      "playerObjectName": "Player",
+      "minInput": 10.0,
+      "maxInput": 100.0,
+      "autoClampInput": true,
+      "normalizeInitialPose": true,
+      "initPoseSettleFrames": 120,
+      "startAnimatorInRlMode": true,
+      "initCursorUpScale": 1.0,
+      "initCursorOffsetX": 0.0,
+      "initPoseGain": 15.0,
+      "dataRoot": "GoiData",
+      "initializeDirectoriesOnStart": true,
+      "enableDebugLogs": true,
+      "experimentalNativeNewGame": true,
+      "experimentalNativeInputSmoothing": true,
+      "experimentalResetDiagnostics": true,
+      "experimentalSceneReset": true,
+      "experimentalControlledUpdates": true
+    },
+    "reference_case": "restart_00_case_000",
+    "finished_at_utc": "2026-10-02T11:09:55.597117+00:00"
+  }
+}

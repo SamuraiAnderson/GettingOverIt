@@ -1,0 +1,418 @@
+{
+  "step_seconds": 0.008333333333333333,
+  "latest": {
+    "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\elites\\full_episodes\\elites_iter_0144.npz",
+    "n_trajectories": 14,
+    "n_comparable": 14,
+    "n_front": 11,
+    "points": [
+      {
+        "index": 0,
+        "score": 12.577290357130124,
+        "iteration": 113,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 83,
+        "D": 7.8489857115924835,
+        "seconds": 0.6916666666666667,
+        "on_front": true
+      },
+      {
+        "index": 1,
+        "score": 12.870098979755099,
+        "iteration": 135,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 97,
+        "D": 8.492514292763568,
+        "seconds": 0.8083333333333333,
+        "on_front": true
+      },
+      {
+        "index": 2,
+        "score": 13.471926995143523,
+        "iteration": 101,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 98,
+        "D": 8.920600307595036,
+        "seconds": 0.8166666666666667,
+        "on_front": true
+      },
+      {
+        "index": 3,
+        "score": 13.114057410681491,
+        "iteration": 117,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 126,
+        "D": 9.388472919010614,
+        "seconds": 1.05,
+        "on_front": true
+      },
+      {
+        "index": 4,
+        "score": 13.778421038195964,
+        "iteration": 133,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 134,
+        "D": 10.034284886512278,
+        "seconds": 1.1166666666666667,
+        "on_front": true
+      },
+      {
+        "index": 5,
+        "score": 17.205963360347056,
+        "iteration": 104,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 137,
+        "D": 12.605438397687415,
+        "seconds": 1.1416666666666666,
+        "on_front": true
+      },
+      {
+        "index": 6,
+        "score": 16.85846128923405,
+        "iteration": 138,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 152,
+        "D": 12.68557483150285,
+        "seconds": 1.2666666666666666,
+        "on_front": true
+      },
+      {
+        "index": 7,
+        "score": 16.595484710240218,
+        "iteration": 121,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 176,
+        "D": 12.923917296470258,
+        "seconds": 1.4666666666666666,
+        "on_front": true
+      },
+      {
+        "index": 8,
+        "score": 16.499596867283127,
+        "iteration": 130,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 185,
+        "D": 12.98904434232927,
+        "seconds": 1.5416666666666667,
+        "on_front": true
+      },
+      {
+        "index": 9,
+        "score": 18.41218989032433,
+        "iteration": 128,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 186,
+        "D": 14.511302201696294,
+        "seconds": 1.55,
+        "on_front": true
+      },
+      {
+        "index": 10,
+        "score": 24.343162054176418,
+        "iteration": 97,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 446,
+        "D": 21.88921426645702,
+        "seconds": 3.716666666666667,
+        "on_front": true
+      },
+      {
+        "index": 11,
+        "score": 18.13414006874042,
+        "iteration": 97,
+        "archive_role": "behavior",
+        "comparable": true,
+        "t": 586,
+        "D": 16.70850012622938,
+        "seconds": 4.883333333333333,
+        "on_front": false
+      },
+      {
+        "index": 12,
+        "score": 13.218361999471437,
+        "iteration": 108,
+        "archive_role": "behavior",
+        "comparable": true,
+        "t": 234,
+        "D": 10.89118559111379,
+        "seconds": 1.95,
+        "on_front": false
+      },
+      {
+        "index": 13,
+        "score": 6.054150461184252,
+        "iteration": 74,
+        "archive_role": "behavior",
+        "comparable": true,
+        "t": 90,
+        "D": 3.8919538679041614,
+        "seconds": 0.75,
+        "on_front": false
+      }
+    ],
+    "envelope": [
+      {
+        "index": 0,
+        "score": 12.577290357130124,
+        "iteration": 113,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 83,
+        "D": 7.8489857115924835,
+        "seconds": 0.6916666666666667,
+        "on_front": true
+      },
+      {
+        "index": 1,
+        "score": 12.870098979755099,
+        "iteration": 135,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 97,
+        "D": 8.492514292763568,
+        "seconds": 0.8083333333333333,
+        "on_front": true
+      },
+      {
+        "index": 2,
+        "score": 13.471926995143523,
+        "iteration": 101,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 98,
+        "D": 8.920600307595036,
+        "seconds": 0.8166666666666667,
+        "on_front": true
+      },
+      {
+        "index": 3,
+        "score": 13.114057410681491,
+        "iteration": 117,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 126,
+        "D": 9.388472919010614,
+        "seconds": 1.05,
+        "on_front": true
+      },
+      {
+        "index": 4,
+        "score": 13.778421038195964,
+        "iteration": 133,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 134,
+        "D": 10.034284886512278,
+        "seconds": 1.1166666666666667,
+        "on_front": true
+      },
+      {
+        "index": 5,
+        "score": 17.205963360347056,
+        "iteration": 104,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 137,
+        "D": 12.605438397687415,
+        "seconds": 1.1416666666666666,
+        "on_front": true
+      },
+      {
+        "index": 6,
+        "score": 16.85846128923405,
+        "iteration": 138,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 152,
+        "D": 12.68557483150285,
+        "seconds": 1.2666666666666666,
+        "on_front": true
+      },
+      {
+        "index": 7,
+        "score": 16.595484710240218,
+        "iteration": 121,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 176,
+        "D": 12.923917296470258,
+        "seconds": 1.4666666666666666,
+        "on_front": true
+      },
+      {
+        "index": 8,
+        "score": 16.499596867283127,
+        "iteration": 130,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 185,
+        "D": 12.98904434232927,
+        "seconds": 1.5416666666666667,
+        "on_front": true
+      },
+      {
+        "index": 9,
+        "score": 18.41218989032433,
+        "iteration": 128,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 186,
+        "D": 14.511302201696294,
+        "seconds": 1.55,
+        "on_front": true
+      },
+      {
+        "index": 10,
+        "score": 24.343162054176418,
+        "iteration": 97,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 446,
+        "D": 21.88921426645702,
+        "seconds": 3.716666666666667,
+        "on_front": true
+      }
+    ]
+  },
+  "history": [
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\elites\\full_episodes\\elites_iter_0144.npz",
+      "n_front": 11,
+      "n_comparable": 14,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 12.577290357130124,
+          "iteration": 113,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 83,
+          "D": 7.8489857115924835,
+          "seconds": 0.6916666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.870098979755099,
+          "iteration": 135,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 97,
+          "D": 8.492514292763568,
+          "seconds": 0.8083333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 13.471926995143523,
+          "iteration": 101,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 98,
+          "D": 8.920600307595036,
+          "seconds": 0.8166666666666667,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.114057410681491,
+          "iteration": 117,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 126,
+          "D": 9.388472919010614,
+          "seconds": 1.05,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 13.778421038195964,
+          "iteration": 133,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 134,
+          "D": 10.034284886512278,
+          "seconds": 1.1166666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 17.205963360347056,
+          "iteration": 104,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 137,
+          "D": 12.605438397687415,
+          "seconds": 1.1416666666666666,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 16.85846128923405,
+          "iteration": 138,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 152,
+          "D": 12.68557483150285,
+          "seconds": 1.2666666666666666,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 16.595484710240218,
+          "iteration": 121,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 176,
+          "D": 12.923917296470258,
+          "seconds": 1.4666666666666666,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 16.499596867283127,
+          "iteration": 130,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 185,
+          "D": 12.98904434232927,
+          "seconds": 1.5416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 18.41218989032433,
+          "iteration": 128,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 186,
+          "D": 14.511302201696294,
+          "seconds": 1.55,
+          "on_front": true
+        },
+        {
+          "index": 10,
+          "score": 24.343162054176418,
+          "iteration": 97,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 446,
+          "D": 21.88921426645702,
+          "seconds": 3.716666666666667,
+          "on_front": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "command": [
+    "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+    "-m",
+    "src.training.main_ppo",
+    "--resume",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\initial\\transformer_s7.pt",
+    "--run-dir",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\transformer_s7",
+    "--seed",
+    "7",
+    "--recipe",
+    "ppo-ou",
+    "--num-agents",
+    "8",
+    "--steps-per-rollout",
+    "1200",
+    "--max-iterations",
+    "3",
+    "--persist-game",
+    "--save-interval",
+    "1",
+    "--torch-threads",
+    "4",
+    "--no-random-deploy",
+    "--save-rollout-inputs"
+  ],
+  "started": 1790998111.4983828,
+  "status": "passed",
+  "returncode": 0,
+  "seconds": 716.5794224739075
+}

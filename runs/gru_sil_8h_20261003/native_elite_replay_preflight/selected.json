@@ -1,0 +1,12 @@
+{
+  "pool": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\elites\\full_episodes\\elites_iter_0184.npz",
+  "pool_sha256": "9441602ad666fdf68807862688373bcc6c63fb04c25b374ca8f573521debda2b",
+  "pool_index": 12,
+  "source_iteration": 97,
+  "distance_m": 21.88921426645702,
+  "cap_step": 446,
+  "steps": 1200,
+  "players": 8,
+  "criterion": "maximum confirmed route distance; earliest cap breaks ties",
+  "broadcast": "identical archived actions to every player"
+}

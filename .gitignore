@@ -158,3 +158,63 @@ runs/**/episode.json
 !runs/**/metrics.csv
 !runs/**/RESULT.md
 !runs/_eval/summary.csv
+
+# Native replay and physics diagnostics: keep summaries/configuration/source,
+# retain raw arrays locally or in external backups rather than Git.
+runs/**/*.npy
+runs/**/*.ppm
+runs/**/*.dll
+runs/**/*.gif
+runs/**/*.signal
+runs/**/*.done
+runs/**/launcher_pid.*
+runs/**/launcher_state.json
+runs/**/runtime_original.json
+runs/**/launch*.ps1
+runs/**/*_native_*.jsonl
+runs/**/*_candidate_*.jsonl
+runs/**/*.timeline.jsonl
+runs/**/live_trace.jsonl
+runs/**/diagnostics.json
+runs/**/diagnostics_*.json
+runs/**/*.diagnostics.json
+runs/**/worlds_epoch_*.json
+runs/**/ready_*.json
+# Keep a small set of explanatory plots; other rendered frames are reproducible.
+runs/**/*.png
+!runs/**/envelope.png
+!runs/**/envelope_history.png
+!runs/**/trajectory_vs_envelope.png
+# These legacy result files embed full physics traces; result.compact.json
+# preserves scalar metrics plus the raw file hash and omitted array lengths.
+runs/dynamics_probe_disabled_reset_regression/result.json
+runs/hub_depth_fix_reset_2agents_20261002/result.json
+runs/hub_depth_fix_reset_8agents_20261002/result.json
+runs/native_input_final_reset_2agents_20261002/result.json
+runs/native_input_final_reset_8agents_20261002/result.json
+runs/native_parameters_reset_2agents_20261002/result.json
+runs/native_parameters_reset_8agents_20261002/result.json
+runs/native_start_cursor_pilot/result.json
+runs/native_start_final_reset_2agents_20261002/result.json
+runs/native_start_final_reset_8agents_20261002/result.json
+runs/native_start_reset_2agents_20261002/result.json
+runs/native_start_reset_8agents_20261002/result.json
+runs/native_start_reset_pilot/result.json
+runs/reset_fix_camera_gate/result.json
+runs/reset_fix_certified_8agents_1200/result.json
+runs/reset_fix_certified_hold/result.json
+runs/reset_fix_certified_random/result.json
+runs/reset_fix_certified_zero/result.json
+runs/reset_fix_explicit_sync/result.json
+runs/reset_fix_flat_bodies/result.json
+runs/reset_fix_frame_barrier/result.json
+runs/reset_fix_local_world/result.json
+runs/reset_fix_native_load_gate/result.json
+runs/reset_fix_paused_clock/result.json
+runs/reset_fix_pose_gate/result.json
+runs/reset_fix_scene_cert_zero/result.json
+runs/reset_fix_world_creation_order/result.json
+runs/reset_state_20261002T034953_670974Z/result.json
+runs/**/diagnostics.jsonl
+runs/**/phases.jsonl
+runs/**/trace_epoch_*.jsonl

@@ -1,0 +1,2430 @@
+{
+  "step_seconds": 0.008333333333333333,
+  "latest": {
+    "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0076.npz",
+    "n_trajectories": 7,
+    "n_comparable": 7,
+    "n_front": 7,
+    "points": [
+      {
+        "index": 0,
+        "score": 6.054150461184252,
+        "iteration": 74,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 90,
+        "D": 3.8919538679041614,
+        "seconds": 0.75,
+        "on_front": true
+      },
+      {
+        "index": 1,
+        "score": 11.480207711718949,
+        "iteration": 73,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 101,
+        "D": 7.678814429692807,
+        "seconds": 0.8416666666666667,
+        "on_front": true
+      },
+      {
+        "index": 2,
+        "score": 11.00560194106096,
+        "iteration": 69,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 125,
+        "D": 7.86114424361497,
+        "seconds": 1.0416666666666667,
+        "on_front": true
+      },
+      {
+        "index": 3,
+        "score": 12.262799431898014,
+        "iteration": 54,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 156,
+        "D": 9.286391802796555,
+        "seconds": 1.3,
+        "on_front": true
+      },
+      {
+        "index": 4,
+        "score": 13.077899196738986,
+        "iteration": 64,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 174,
+        "D": 10.158725268895463,
+        "seconds": 1.45,
+        "on_front": true
+      },
+      {
+        "index": 5,
+        "score": 15.2262855319042,
+        "iteration": 72,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 207,
+        "D": 12.263973171611553,
+        "seconds": 1.7249999999999999,
+        "on_front": true
+      },
+      {
+        "index": 6,
+        "score": 15.463470438494026,
+        "iteration": 73,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 281,
+        "D": 13.127598771047799,
+        "seconds": 2.341666666666667,
+        "on_front": true
+      }
+    ],
+    "envelope": [
+      {
+        "index": 0,
+        "score": 6.054150461184252,
+        "iteration": 74,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 90,
+        "D": 3.8919538679041614,
+        "seconds": 0.75,
+        "on_front": true
+      },
+      {
+        "index": 1,
+        "score": 11.480207711718949,
+        "iteration": 73,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 101,
+        "D": 7.678814429692807,
+        "seconds": 0.8416666666666667,
+        "on_front": true
+      },
+      {
+        "index": 2,
+        "score": 11.00560194106096,
+        "iteration": 69,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 125,
+        "D": 7.86114424361497,
+        "seconds": 1.0416666666666667,
+        "on_front": true
+      },
+      {
+        "index": 3,
+        "score": 12.262799431898014,
+        "iteration": 54,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 156,
+        "D": 9.286391802796555,
+        "seconds": 1.3,
+        "on_front": true
+      },
+      {
+        "index": 4,
+        "score": 13.077899196738986,
+        "iteration": 64,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 174,
+        "D": 10.158725268895463,
+        "seconds": 1.45,
+        "on_front": true
+      },
+      {
+        "index": 5,
+        "score": 15.2262855319042,
+        "iteration": 72,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 207,
+        "D": 12.263973171611553,
+        "seconds": 1.7249999999999999,
+        "on_front": true
+      },
+      {
+        "index": 6,
+        "score": 15.463470438494026,
+        "iteration": 73,
+        "archive_role": "pareto",
+        "comparable": true,
+        "t": 281,
+        "D": 13.127598771047799,
+        "seconds": 2.341666666666667,
+        "on_front": true
+      }
+    ]
+  },
+  "history": [
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0051.npz",
+      "n_front": 2,
+      "n_comparable": 3,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 11.713066413683721,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 184,
+          "D": 9.210274444947883,
+          "seconds": 1.5333333333333332,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0052.npz",
+      "n_front": 3,
+      "n_comparable": 5,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 11.713066413683721,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 184,
+          "D": 9.210274444947883,
+          "seconds": 1.5333333333333332,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.184631257330079,
+          "iteration": 52,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 274,
+          "D": 10.30428692749519,
+          "seconds": 2.283333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0053.npz",
+      "n_front": 3,
+      "n_comparable": 5,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 11.713066413683721,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 184,
+          "D": 9.210274444947883,
+          "seconds": 1.5333333333333332,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0054.npz",
+      "n_front": 4,
+      "n_comparable": 6,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0055.npz",
+      "n_front": 5,
+      "n_comparable": 7,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0056.npz",
+      "n_front": 6,
+      "n_comparable": 8,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.425589317781569,
+          "iteration": 56,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 195,
+          "D": 9.889754763132268,
+          "seconds": 1.625,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0057.npz",
+      "n_front": 7,
+      "n_comparable": 8,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.425589317781569,
+          "iteration": 56,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 195,
+          "D": 9.889754763132268,
+          "seconds": 1.625,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0058.npz",
+      "n_front": 7,
+      "n_comparable": 8,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.425589317781569,
+          "iteration": 56,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 195,
+          "D": 9.889754763132268,
+          "seconds": 1.625,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0059.npz",
+      "n_front": 7,
+      "n_comparable": 8,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.425589317781569,
+          "iteration": 56,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 195,
+          "D": 9.889754763132268,
+          "seconds": 1.625,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0060.npz",
+      "n_front": 7,
+      "n_comparable": 8,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.425589317781569,
+          "iteration": 56,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 195,
+          "D": 9.889754763132268,
+          "seconds": 1.625,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0061.npz",
+      "n_front": 7,
+      "n_comparable": 9,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.425589317781569,
+          "iteration": 56,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 195,
+          "D": 9.889754763132268,
+          "seconds": 1.625,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0062.npz",
+      "n_front": 9,
+      "n_comparable": 11,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.662851834695593,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 192,
+          "D": 10.046560133312205,
+          "seconds": 1.6,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0063.npz",
+      "n_front": 10,
+      "n_comparable": 12,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.662851834695593,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 192,
+          "D": 10.046560133312205,
+          "seconds": 1.6,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0064.npz",
+      "n_front": 10,
+      "n_comparable": 11,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0065.npz",
+      "n_front": 10,
+      "n_comparable": 11,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0066.npz",
+      "n_front": 10,
+      "n_comparable": 11,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0067.npz",
+      "n_front": 10,
+      "n_comparable": 11,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0068.npz",
+      "n_front": 10,
+      "n_comparable": 11,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 10.371002956457474,
+          "iteration": 57,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 127,
+          "D": 7.441341104350842,
+          "seconds": 1.0583333333333333,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0069.npz",
+      "n_front": 10,
+      "n_comparable": 11,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.0767397507383,
+          "iteration": 51,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 425,
+          "D": 11.700240829607953,
+          "seconds": 3.5416666666666665,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.518082417432185,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 449,
+          "D": 12.163565141136374,
+          "seconds": 3.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 9,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0070.npz",
+      "n_front": 9,
+      "n_comparable": 10,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.903922406446206,
+          "iteration": 70,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 422,
+          "D": 12.431049270170124,
+          "seconds": 3.5166666666666666,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0071.npz",
+      "n_front": 9,
+      "n_comparable": 10,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 12.68842059931722,
+          "iteration": 55,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 209,
+          "D": 10.238918553116985,
+          "seconds": 1.7416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 12.733434701151271,
+          "iteration": 53,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 251,
+          "D": 10.618246212587938,
+          "seconds": 2.091666666666667,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.453597257370507,
+          "iteration": 63,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 296,
+          "D": 11.509435803993266,
+          "seconds": 2.466666666666667,
+          "on_front": true
+        },
+        {
+          "index": 7,
+          "score": 13.903922406446206,
+          "iteration": 70,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 422,
+          "D": 12.431049270170124,
+          "seconds": 3.5166666666666666,
+          "on_front": true
+        },
+        {
+          "index": 8,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0072.npz",
+      "n_front": 7,
+      "n_comparable": 8,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 8.610674321174049,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 5.759457658533635,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 15.2262855319042,
+          "iteration": 72,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 207,
+          "D": 12.263973171611553,
+          "seconds": 1.7249999999999999,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 13.903922406446206,
+          "iteration": 70,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 422,
+          "D": 12.431049270170124,
+          "seconds": 3.5166666666666666,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 13.764707925469969,
+          "iteration": 62,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 520,
+          "D": 12.5572774056919,
+          "seconds": 4.333333333333333,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0073.npz",
+      "n_front": 6,
+      "n_comparable": 7,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 11.480207711718949,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 7.678814429692807,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 15.2262855319042,
+          "iteration": 72,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 207,
+          "D": 12.263973171611553,
+          "seconds": 1.7249999999999999,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 15.463470438494026,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 281,
+          "D": 13.127598771047799,
+          "seconds": 2.341666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0074.npz",
+      "n_front": 7,
+      "n_comparable": 7,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 6.054150461184252,
+          "iteration": 74,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 90,
+          "D": 3.8919538679041614,
+          "seconds": 0.75,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.480207711718949,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 7.678814429692807,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 15.2262855319042,
+          "iteration": 72,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 207,
+          "D": 12.263973171611553,
+          "seconds": 1.7249999999999999,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 15.463470438494026,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 281,
+          "D": 13.127598771047799,
+          "seconds": 2.341666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0075.npz",
+      "n_front": 7,
+      "n_comparable": 7,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 6.054150461184252,
+          "iteration": 74,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 90,
+          "D": 3.8919538679041614,
+          "seconds": 0.75,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.480207711718949,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 7.678814429692807,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 15.2262855319042,
+          "iteration": 72,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 207,
+          "D": 12.263973171611553,
+          "seconds": 1.7249999999999999,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 15.463470438494026,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 281,
+          "D": 13.127598771047799,
+          "seconds": 2.341666666666667,
+          "on_front": true
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_formal_5h_20261003_archive\\elites\\full_episodes\\elites_iter_0076.npz",
+      "n_front": 7,
+      "n_comparable": 7,
+      "envelope": [
+        {
+          "index": 0,
+          "score": 6.054150461184252,
+          "iteration": 74,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 90,
+          "D": 3.8919538679041614,
+          "seconds": 0.75,
+          "on_front": true
+        },
+        {
+          "index": 1,
+          "score": 11.480207711718949,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 101,
+          "D": 7.678814429692807,
+          "seconds": 0.8416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 2,
+          "score": 11.00560194106096,
+          "iteration": 69,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 125,
+          "D": 7.86114424361497,
+          "seconds": 1.0416666666666667,
+          "on_front": true
+        },
+        {
+          "index": 3,
+          "score": 12.262799431898014,
+          "iteration": 54,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 156,
+          "D": 9.286391802796555,
+          "seconds": 1.3,
+          "on_front": true
+        },
+        {
+          "index": 4,
+          "score": 13.077899196738986,
+          "iteration": 64,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 174,
+          "D": 10.158725268895463,
+          "seconds": 1.45,
+          "on_front": true
+        },
+        {
+          "index": 5,
+          "score": 15.2262855319042,
+          "iteration": 72,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 207,
+          "D": 12.263973171611553,
+          "seconds": 1.7249999999999999,
+          "on_front": true
+        },
+        {
+          "index": 6,
+          "score": 15.463470438494026,
+          "iteration": 73,
+          "archive_role": "pareto",
+          "comparable": true,
+          "t": 281,
+          "D": 13.127598771047799,
+          "seconds": 2.341666666666667,
+          "on_front": true
+        }
+      ]
+    }
+  ]
+}

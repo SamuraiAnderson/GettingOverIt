@@ -1,0 +1,227 @@
+{
+  "verdict": "FAIL_NATIVE_DYNAMICS_PRESERVATION",
+  "collection_complete": true,
+  "cold_starts": 27,
+  "physics_steps": 1080,
+  "phase_records": 3240,
+  "production_dll_and_config_unchanged": true,
+  "probe_plugin_sha256": "b62fb6688974dc5111ca0caa46b044682ca3ea38e41c7ec62c3c39065ac6a2b1",
+  "motor_limits": {
+    "native": {
+      "hinge": [
+        10000.0
+      ],
+      "slider": [
+        10000.0
+      ]
+    },
+    "native_dual": {
+      "hinge": [
+        10000.0
+      ],
+      "slider": [
+        10000.0
+      ]
+    },
+    "candidate": {
+      "hinge": [
+        10000.0
+      ],
+      "slider": [
+        4300.0
+      ]
+    }
+  },
+  "self_repeat_max_errors": {
+    "native": {
+      "position_m": 0.0244293212890625,
+      "angle_deg": 0.4888916015625,
+      "velocity_m_s": 7.446892261505127,
+      "angular_velocity_deg_s": 60.75533676147461,
+      "all_body_frames_bitwise_equal": false
+    },
+    "native_dual": {
+      "position_m": 0.02449798583984375,
+      "angle_deg": 0.4546966552734375,
+      "velocity_m_s": 6.348363548517227,
+      "angular_velocity_deg_s": 51.62566375732422,
+      "all_body_frames_bitwise_equal": false
+    },
+    "candidate": {
+      "position_m": 0.0,
+      "angle_deg": 0.0,
+      "velocity_m_s": 0.0,
+      "angular_velocity_deg_s": 0.0,
+      "all_body_frames_bitwise_equal": true
+    }
+  },
+  "cross_mode_initial_ranges": {
+    "position_m": [
+      0.06859588623046875,
+      0.06859588623046875
+    ],
+    "angle_deg": [
+      2.422255538403988,
+      2.4222556464374065
+    ],
+    "velocity_m_s": [
+      0.0007184685673564672,
+      0.0010763083328129142
+    ],
+    "angular_velocity_deg_s": [
+      0.18924572691321373,
+      0.1893104687333107
+    ]
+  },
+  "input_examples": {
+    "native": {
+      "hold": [
+        [
+          48.0,
+          36.0
+        ],
+        [
+          72.0,
+          54.0
+        ],
+        [
+          84.0,
+          63.0
+        ]
+      ],
+      "pulse": [
+        [
+          48.0,
+          36.0
+        ],
+        [
+          24.0,
+          18.0
+        ],
+        [
+          12.0,
+          9.0
+        ]
+      ]
+    },
+    "native_dual": {
+      "hold": [
+        [
+          68.0,
+          51.0
+        ],
+        [
+          68.0,
+          51.0
+        ],
+        [
+          68.0,
+          51.0
+        ]
+      ],
+      "pulse": [
+        [
+          68.0,
+          51.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    "candidate": {
+      "hold": [
+        [
+          68.0,
+          51.0
+        ],
+        [
+          68.0,
+          51.0
+        ],
+        [
+          68.0,
+          51.0
+        ]
+      ],
+      "pulse": [
+        [
+          68.0,
+          51.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    }
+  },
+  "interpretation": [
+    "Reset reproducibility against the modified cold start and native-dynamics preservation are separate claims.",
+    "The slider motor cap is 10000 in native and native_dual, but 4300 in candidate at every recorded phase. This is a 57 percent reduction in cap, not a claim that actual applied force is always 57 percent lower.",
+    "Saviour.Start IL reads hinge.motor into stillSliderMotor then assigns it to slider.motor. The candidate disables Saviour before Start; PlayerControl.Start instead caches the serialized slider cap. This explains the effective initialization discrepancy.",
+    "native_dual changes only the pre-controller mouseInput write during the measured probe, with native clocks and initialization retained. It reproduces candidate input smoothing. That write is also present in the parent of reset commit 5666382, so it is a pre-existing input-interface difference.",
+    "Initial native/candidate bodies differ. Full trajectory deltas cannot uniquely attribute effects to scene worlds, reparenting, animation gates, or force caps.",
+    "All recorded body mass/inertia/gravity/drag/config arrays and fixed timestep agree across modes. This does not cover every joint, collider, callback, or hidden solver state.",
+    "This validation did not change production deployment or repair the discrepancies it found."
+  ],
+  "all_native_candidate_initial_bodies_fail_limits": true,
+  "recorded_body_config_equal": true,
+  "fixed_dt_values": [
+    0.008333333767950535
+  ],
+  "raw_sha256": {
+    "zero_native_00.jsonl": "88e2f90b6a2c89bd6f8fc7f372eb7a4b954f2ff6890bfacc309971c58678124d",
+    "zero_native_dual_00.jsonl": "745337e5d1e49315b98309f8e8ebb4ab21e5c7491fd5e48c987bb76c62f21f87",
+    "zero_candidate_00.jsonl": "1276a278f8f8b9706e7f697a2291501eeaee4f10069e4fb0aa2fedeaaf203d65",
+    "zero_native_01.jsonl": "05a12307c80ffec282627ddf05845f502c465d8a9804edfa390b15542a1b9de7",
+    "zero_native_dual_01.jsonl": "334d9fa712c112ac9d3a15442f214bad2e2f91c1edba26b6a9757d6d64638021",
+    "zero_candidate_01.jsonl": "3c473d26bbc2b91ac06049a42b36321d6df77689e66a5e1f9ee4bc5946f995ae",
+    "zero_native_02.jsonl": "873d954bdcec123e47658881e3b5c76ee3663fa1f7b618c9a93bc33558f84ed3",
+    "zero_native_dual_02.jsonl": "3d221a142fa86557783d43333defa08d8b8aa5bf6b83cba1fc30c3853026e874",
+    "zero_candidate_02.jsonl": "fa66e2771c17f868512bbcbb1d76b5f0eff6abdf8ab7ea57fbeed38a303ad309",
+    "hold_native_00.jsonl": "68c06ccd1b37d508c58a4308f97f3c40b9c29687a7be40d8517ad44f8bdac7e6",
+    "hold_native_dual_00.jsonl": "d9af29fde0a467b9dced4494a8b3303d713688234dadbac3520b1bb04abb05c1",
+    "hold_candidate_00.jsonl": "ea84c0d57f635b820225d7c8d25f1de5e3999c2689b0452c9b7614feb8436ed4",
+    "hold_native_01.jsonl": "f72a7db5b337b113767e78d80defaa2a7ee1884a58352f14e94b083c35299e84",
+    "hold_native_dual_01.jsonl": "8a0bf0fec0f4dab97c7653f23dd15430155a51783220ed2f200ccfbea2c8a52b",
+    "hold_candidate_01.jsonl": "6f8e4ef9aabb196cd42672803135452ec73ac476b4cc385154b7b73ce7a570d1",
+    "hold_native_02.jsonl": "62310b7e4dc1b3bc8fe7c52380c2951ce06659a987b61e7c50b9a3428bf13a7c",
+    "hold_native_dual_02.jsonl": "10a6937e14fbb6f7b3912448d01990588c9cbaa64b1b046437440c7fdfe857b1",
+    "hold_candidate_02.jsonl": "10af9c1c96518223c0db79ff53708c2291207aedecb2b93ca71141d6c4acf43e",
+    "pulse_native_00.jsonl": "5f7984e084f3640a482649054faa88ede0d27a8223219b46baf7bf494c9025e5",
+    "pulse_native_dual_00.jsonl": "f79afc7576fcb13f3e593f38dcce37142c3a9289ba61c3a024631709586b1009",
+    "pulse_candidate_00.jsonl": "d82a772c4c6c33ea6786c70740a112a7a034681e781ff3fb26e8d56a17dfa65b",
+    "pulse_native_01.jsonl": "d7c28f3b358bbf3ffb2cd8b273dc82538eb7c1891caec024e51bc63ad83938bd",
+    "pulse_native_dual_01.jsonl": "3104f6c13ec17adb738d115e3ddbce2e49880c77d42aa468edeb20d4e88f481d",
+    "pulse_candidate_01.jsonl": "c341f3c55113c929e9920f28b12c0457ead94b1aca80c3fc901afc4be5be63ca",
+    "pulse_native_02.jsonl": "95040e2cacd21c428295b2ea09d4d3972176fbd455d7dd304ba968fc02f79e7f",
+    "pulse_native_dual_02.jsonl": "edc8760d6f172bc4ec7cd3e203a2223aed06b23c4a802b0ca1ebe174d3b4dc78",
+    "pulse_candidate_02.jsonl": "2c4667c79234424ea42434202416fea554a565340d7e8fa31868143c526498f7"
+  },
+  "instrumentation_disabled_regression": {
+    "status": "PASS",
+    "cases": 4,
+    "body_observation_frames": 164,
+    "bitwise_equal_to_previous_certified_cold_probe_without_timestamp": true,
+    "report": "../dynamics_probe_disabled_reset_regression/result.json"
+  },
+  "offline_checks": {
+    "native_dynamics": 9,
+    "reset_state": 18,
+    "all_passed": true
+  },
+  "cleanup": {
+    "test_processes_and_listener_absent": true,
+    "experimental_dll_restored_sha256": "4fade7d4cf492b757e63306b491fe0cd3424aee8a51aea585fb5c83da288bce9"
+  }
+}

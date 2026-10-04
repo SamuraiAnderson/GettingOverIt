@@ -1,0 +1,81 @@
+{
+  "run": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_validation_20261003",
+  "iterations": [
+    {
+      "iteration": 51,
+      "preupdate_ratio_max_error": 0.0005863377591595054,
+      "preupdate_kl": 4.4890498429595025e-09,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 1200.0,
+      "gru_sil_updates": 3.0,
+      "gru_sil_budget": 4.0,
+      "gru_sil_attempts": 4.0,
+      "gru_sil_positive_frames": 128.0,
+      "gru_sil_sampled_frames": 128.0,
+      "gru_sil_rejected_steps": 1.0,
+      "gru_sil_kl": 0.005174505989998579,
+      "gru_sil_frame_kl_max": 0.014540314674377441,
+      "gru_sil_attempted_kl_max": 0.01220550574362278,
+      "gru_sil_loss": 0.19847306857506433
+    },
+    {
+      "iteration": 52,
+      "preupdate_ratio_max_error": 0.0006787856109440327,
+      "preupdate_kl": 3.777399892139025e-09,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 1200.0,
+      "gru_sil_updates": 3.0,
+      "gru_sil_budget": 4.0,
+      "gru_sil_attempts": 4.0,
+      "gru_sil_positive_frames": 104.0,
+      "gru_sil_sampled_frames": 128.0,
+      "gru_sil_rejected_steps": 1.0,
+      "gru_sil_kl": 0.00625320291146636,
+      "gru_sil_frame_kl_max": 0.015301883220672607,
+      "gru_sil_attempted_kl_max": 0.012295141816139221,
+      "gru_sil_loss": 0.05430831294506788
+    }
+  ],
+  "elite_inputs": [
+    {
+      "source_iteration": 51,
+      "frames": 601,
+      "max_errors": {
+        "dynamics": 0.0,
+        "patches": 0.0,
+        "act_history": 0.0,
+        "contour_tokens": 0.0,
+        "contour_mask": 0.0,
+        "relation_tokens": 0.0,
+        "relation_mask": 0.0
+      }
+    },
+    {
+      "source_iteration": 51,
+      "frames": 601,
+      "max_errors": {
+        "dynamics": 0.0,
+        "patches": 0.0,
+        "act_history": 0.0,
+        "contour_tokens": 0.0,
+        "contour_mask": 0.0,
+        "relation_tokens": 0.0,
+        "relation_mask": 0.0
+      }
+    },
+    {
+      "source_iteration": 52,
+      "frames": 601,
+      "max_errors": {
+        "dynamics": 0.0,
+        "patches": 0.0,
+        "act_history": 0.0,
+        "contour_tokens": 0.0,
+        "contour_mask": 0.0,
+        "relation_tokens": 0.0,
+        "relation_mask": 0.0
+      }
+    }
+  ],
+  "passed": true
+}

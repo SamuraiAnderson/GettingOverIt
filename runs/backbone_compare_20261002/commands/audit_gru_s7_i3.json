@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\Symbol\\code_tool\\miniconda\\envs\\getting-over-it-analysis\\python.exe",
+    "-m",
+    "src.training.local_evaluation",
+    "--checkpoint",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\gru_s7\\checkpoints\\rollouts\\behavior_0003.pt",
+    "--replay",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\gru_s7\\checkpoints\\rollouts\\iter_0003.npz",
+    "--output",
+    "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\backbone_compare_20261002\\audit\\gru_s7_i3"
+  ],
+  "started": 1790999398.344219,
+  "status": "passed",
+  "returncode": 0,
+  "seconds": 6.482653856277466
+}

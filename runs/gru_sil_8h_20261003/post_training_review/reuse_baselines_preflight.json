@@ -1,0 +1,13 @@
+{
+  "validated_source_unchanged": true,
+  "source_mismatches": [],
+  "runtime_unchanged": true,
+  "reference_unchanged": true,
+  "geometry_unchanged": true,
+  "baseline_seeds_match": true,
+  "baseline_iterations": [
+    50,
+    76
+  ],
+  "final_iteration": 184
+}

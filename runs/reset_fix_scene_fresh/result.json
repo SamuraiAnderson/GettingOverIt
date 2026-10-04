@@ -1,0 +1,2935 @@
+{
+  "version": 1,
+  "status": "FAIL",
+  "started_at_utc": "2026-10-02T04:33:17.634207+00:00",
+  "scope": "visible reset state plus zero-action probe; not PPO or full solver restoration",
+  "raw_state_schema": {
+    "name": "legacy33",
+    "dimension": 33
+  },
+  "parameters": {
+    "agents": 2,
+    "game_exe": "artifacts\\reset_game\\GettingOverIt.exe",
+    "controlled_updates": false,
+    "reset_diagnostics": true,
+    "scene_reset": true,
+    "fixed_order": true,
+    "restarts": 1,
+    "cycles": 1,
+    "burn_steps": [
+      200
+    ],
+    "idle_seconds": [
+      0.0,
+      1.0
+    ],
+    "probe_steps": 1,
+    "seed": 20261002,
+    "startup_settle": 8.0,
+    "timeout": 120.0,
+    "port": 9000,
+    "out": "runs\\reset_fix_scene_fresh",
+    "allow_moving_start": false,
+    "position": 0.001,
+    "linear_velocity": 0.001,
+    "angular_velocity": 0.1,
+    "angle": 0.05,
+    "cursor_position": 0.001,
+    "cursor_velocity": 0.001,
+    "rest_linear_speed": 0.05,
+    "rest_angular_speed": 1.0
+  },
+  "thresholds": {
+    "position": 0.001,
+    "linear_velocity": 0.001,
+    "angular_velocity": 0.1,
+    "angle": 0.05,
+    "cursor_position": 0.001,
+    "cursor_velocity": 0.001,
+    "rest_linear_speed": 0.05,
+    "rest_angular_speed": 1.0
+  },
+  "fields": [
+    "player_x",
+    "player_y",
+    "player_vx",
+    "player_vy",
+    "player_w",
+    "hub_x",
+    "hub_y",
+    "hub_vx",
+    "hub_vy",
+    "hub_angle",
+    "slider_x",
+    "slider_y",
+    "slider_vx",
+    "slider_vy",
+    "slider_angle",
+    "handle_x",
+    "handle_y",
+    "handle_vx",
+    "handle_vy",
+    "pole_x",
+    "pole_y",
+    "pole_vx",
+    "pole_vy",
+    "tip_x",
+    "tip_y",
+    "tip_vx",
+    "tip_vy",
+    "hammer_angle",
+    "timestamp",
+    "cursor_x",
+    "cursor_y",
+    "cursor_vx",
+    "cursor_vy",
+    "anchor_x",
+    "anchor_y"
+  ],
+  "timestamp_excluded": 28,
+  "limitations": [
+    "The first reset is a comparison reference, not an assumed clean or stationary state.",
+    "Only player angular velocity is exposed; other rigidbody angular velocities and solver state are not certified.",
+    "Wait effects are observed at the next zero STEP, not through a live read during idle.",
+    "Histories run sequentially; differences are not uniquely attributed to waiting versus prior history.",
+    "Stationarity is checked separately, including common motion shared by all agents.",
+    "Thresholds are provisional acceptance criteria, not a measured numerical noise floor."
+  ],
+  "expected_cases": 7,
+  "cases": [
+    {
+      "id": "restart_00_case_000",
+      "restart": 0,
+      "history": "cold",
+      "history_steps": 0,
+      "cycle": -1,
+      "idle_requested_s": 0.0,
+      "raw_file": "restart_00_case_000.npz",
+      "history_seed": 20261002,
+      "status": "COMPLETE",
+      "reset_seconds": 0.5886966000543907,
+      "idle_actual_s": 5.100038833916187e-06,
+      "assessment": {
+        "passed": false,
+        "matches_reference": true,
+        "agents_aligned": false,
+        "stationary": true,
+        "frames": [
+          {
+            "step_after_reset": 0,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31505584716797,
+                  "expected": -44.31505584716797
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": -1.3331048194231698e-06,
+                  "expected": -1.3331048194231698e-06
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 8.725132647668943e-05,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05093789100646973,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8655009269714355,
+                  "expected": -1.9164388179779053
+                },
+                "linear_velocity": {
+                  "max_error": 0.0009590629815647844,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009482202003709972,
+                  "expected": 1.0842781193787232e-05
+                },
+                "angular_velocity": {
+                  "max_error": 8.723168778601575e-05,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.963869067367341e-08,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.471343994140625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9955139160156,
+                  "expected": 324.524169921875
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  1.3747074584411605e-06,
+                  3.122348699374368e-10
+                ],
+                "hub": [
+                  1.981738163747102e-06,
+                  4.668890647956922e-10
+                ],
+                "slider": [
+                  4.200915386598104e-06,
+                  4.668891757087496e-10
+                ],
+                "handle": [
+                  0.0006407706788229393,
+                  0.00021838624686860435
+                ],
+                "pole": [
+                  0.0003141117923014852,
+                  0.0004950959741363835
+                ],
+                "tip": [
+                  4.1354539765518954e-05,
+                  0.0011511416133880787
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                8.725132647668943e-05,
+                1.963869067367341e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          },
+          {
+            "step_after_reset": 1,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31504440307617,
+                  "expected": -44.31504440307617
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": 0.0009507085778750479,
+                  "expected": 0.0009507085778750479
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": -0.06122589483857155,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05094313621520996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8654987812042236,
+                  "expected": -1.9164419174194336
+                },
+                "linear_velocity": {
+                  "max_error": 0.001449037175898782,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "hub_vx",
+                  "index": 7,
+                  "actual": -5.311270867558449e-10,
+                  "expected": 0.0014490366447716951
+                },
+                "angular_velocity": {
+                  "max_error": 0.061225917575796984,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 2.2737225435776054e-08,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.469879150390625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9952392578125,
+                  "expected": 324.5253601074219
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  0.0009794716020282875,
+                  3.6154320928827716e-10
+                ],
+                "hub": [
+                  0.001464716293644011,
+                  5.405858494984228e-10
+                ],
+                "slider": [
+                  0.0014243490336577952,
+                  5.408908485568617e-10
+                ],
+                "handle": [
+                  0.0009017921135054198,
+                  0.00021832594193071838
+                ],
+                "pole": [
+                  0.0006593302394815803,
+                  0.0004707337362123345
+                ],
+                "tip": [
+                  0.00047620083126914193,
+                  0.0011043235156884188
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                0.06122589483857155,
+                2.2737225435776054e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "restart_00_case_001",
+      "restart": 0,
+      "history": "none",
+      "history_steps": 0,
+      "cycle": 0,
+      "idle_requested_s": 0.0,
+      "raw_file": "restart_00_case_001.npz",
+      "history_seed": 20261002,
+      "status": "COMPLETE",
+      "reset_seconds": 0.666449400014244,
+      "idle_actual_s": 3.999914042651653e-06,
+      "assessment": {
+        "passed": false,
+        "matches_reference": true,
+        "agents_aligned": false,
+        "stationary": true,
+        "frames": [
+          {
+            "step_after_reset": 0,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31505584716797,
+                  "expected": -44.31505584716797
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": -1.3331048194231698e-06,
+                  "expected": -1.3331048194231698e-06
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 8.725132647668943e-05,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05093789100646973,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8655009269714355,
+                  "expected": -1.9164388179779053
+                },
+                "linear_velocity": {
+                  "max_error": 0.0009590629815647844,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009482202003709972,
+                  "expected": 1.0842781193787232e-05
+                },
+                "angular_velocity": {
+                  "max_error": 8.723168778601575e-05,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.963869067367341e-08,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.471343994140625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9955139160156,
+                  "expected": 324.524169921875
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  1.3747074584411605e-06,
+                  3.122348699374368e-10
+                ],
+                "hub": [
+                  1.981738163747102e-06,
+                  4.668890647956922e-10
+                ],
+                "slider": [
+                  4.200915386598104e-06,
+                  4.668891757087496e-10
+                ],
+                "handle": [
+                  0.0006407706788229393,
+                  0.00021838624686860435
+                ],
+                "pole": [
+                  0.0003141117923014852,
+                  0.0004950959741363835
+                ],
+                "tip": [
+                  4.1354539765518954e-05,
+                  0.0011511416133880787
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                8.725132647668943e-05,
+                1.963869067367341e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          },
+          {
+            "step_after_reset": 1,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31504440307617,
+                  "expected": -44.31504440307617
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": 0.0009507085778750479,
+                  "expected": 0.0009507085778750479
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": -0.06122589483857155,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05094313621520996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8654987812042236,
+                  "expected": -1.9164419174194336
+                },
+                "linear_velocity": {
+                  "max_error": 0.001449037175898782,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "hub_vx",
+                  "index": 7,
+                  "actual": -5.311270867558449e-10,
+                  "expected": 0.0014490366447716951
+                },
+                "angular_velocity": {
+                  "max_error": 0.061225917575796984,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 2.2737225435776054e-08,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.469879150390625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9952392578125,
+                  "expected": 324.5253601074219
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  0.0009794716020282875,
+                  3.6154320928827716e-10
+                ],
+                "hub": [
+                  0.001464716293644011,
+                  5.405858494984228e-10
+                ],
+                "slider": [
+                  0.0014243490336577952,
+                  5.408908485568617e-10
+                ],
+                "handle": [
+                  0.0009017921135054198,
+                  0.00021832594193071838
+                ],
+                "pole": [
+                  0.0006593302394815803,
+                  0.0004707337362123345
+                ],
+                "tip": [
+                  0.00047620083126914193,
+                  0.0011043235156884188
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                0.06122589483857155,
+                2.2737225435776054e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "restart_00_case_002",
+      "restart": 0,
+      "history": "none",
+      "history_steps": 0,
+      "cycle": 0,
+      "idle_requested_s": 1.0,
+      "raw_file": "restart_00_case_002.npz",
+      "history_seed": 20261002,
+      "status": "COMPLETE",
+      "reset_seconds": 0.6452122000046074,
+      "idle_actual_s": 1.0005830000154674,
+      "assessment": {
+        "passed": false,
+        "matches_reference": true,
+        "agents_aligned": false,
+        "stationary": true,
+        "frames": [
+          {
+            "step_after_reset": 0,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31505584716797,
+                  "expected": -44.31505584716797
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": -1.3331048194231698e-06,
+                  "expected": -1.3331048194231698e-06
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 8.725132647668943e-05,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05093789100646973,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8655009269714355,
+                  "expected": -1.9164388179779053
+                },
+                "linear_velocity": {
+                  "max_error": 0.0009590629815647844,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009482202003709972,
+                  "expected": 1.0842781193787232e-05
+                },
+                "angular_velocity": {
+                  "max_error": 8.723168778601575e-05,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.963869067367341e-08,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.471343994140625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9955139160156,
+                  "expected": 324.524169921875
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  1.3747074584411605e-06,
+                  3.122348699374368e-10
+                ],
+                "hub": [
+                  1.981738163747102e-06,
+                  4.668890647956922e-10
+                ],
+                "slider": [
+                  4.200915386598104e-06,
+                  4.668891757087496e-10
+                ],
+                "handle": [
+                  0.0006407706788229393,
+                  0.00021838624686860435
+                ],
+                "pole": [
+                  0.0003141117923014852,
+                  0.0004950959741363835
+                ],
+                "tip": [
+                  4.1354539765518954e-05,
+                  0.0011511416133880787
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                8.725132647668943e-05,
+                1.963869067367341e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          },
+          {
+            "step_after_reset": 1,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 3.814697265625e-06,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "pole_x",
+                  "index": 19,
+                  "actual": -43.579429626464844,
+                  "expected": -43.57943344116211
+                },
+                "linear_velocity": {
+                  "max_error": 1.827138476073742e-07,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009098853915929794,
+                  "expected": -0.0009097026777453721
+                },
+                "angular_velocity": {
+                  "max_error": 9.795198252504633e-08,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.2068920796082239e-07,
+                  "expected": 2.2737225435776054e-08
+                },
+                "angle": {
+                  "max_error": 3.814697265625e-06,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "hammer_angle",
+                  "index": 27,
+                  "actual": -35.2216682434082,
+                  "expected": -35.22167205810547
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05094313621520996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8654987812042236,
+                  "expected": -1.9164419174194336
+                },
+                "linear_velocity": {
+                  "max_error": 0.0014490391296468896,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "hub_vx",
+                  "index": 7,
+                  "actual": -2.484875194497249e-09,
+                  "expected": 0.0014490366447716951
+                },
+                "angular_velocity": {
+                  "max_error": 0.06122601552777951,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.2068920796082239e-07,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.469879150390625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9952392578125,
+                  "expected": 324.5253601074219
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  0.0009794716020282875,
+                  1.87128998240467e-09
+                ],
+                "hub": [
+                  0.001464716293644011,
+                  2.7241535165102225e-09
+                ],
+                "slider": [
+                  0.0014243490336577952,
+                  6.0184848651080556e-09
+                ],
+                "handle": [
+                  0.0009017921135054198,
+                  0.00021830029103837747
+                ],
+                "pole": [
+                  0.0006593302394815803,
+                  0.00047085644480012774
+                ],
+                "tip": [
+                  0.00047620083126914193,
+                  0.0011045617095716972
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                0.06122589483857155,
+                1.2068920796082239e-07
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "restart_00_case_003",
+      "restart": 0,
+      "history": "hold",
+      "history_steps": 40,
+      "cycle": 0,
+      "idle_requested_s": 0.0,
+      "raw_file": "restart_00_case_003.npz",
+      "history_seed": 20261002,
+      "status": "COMPLETE",
+      "reset_seconds": 0.6114535999950022,
+      "idle_actual_s": 3.5999109968543053e-06,
+      "assessment": {
+        "passed": false,
+        "matches_reference": true,
+        "agents_aligned": false,
+        "stationary": true,
+        "frames": [
+          {
+            "step_after_reset": 0,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31505584716797,
+                  "expected": -44.31505584716797
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": -1.3331048194231698e-06,
+                  "expected": -1.3331048194231698e-06
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 8.725132647668943e-05,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05093789100646973,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8655009269714355,
+                  "expected": -1.9164388179779053
+                },
+                "linear_velocity": {
+                  "max_error": 0.0009590629815647844,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009482202003709972,
+                  "expected": 1.0842781193787232e-05
+                },
+                "angular_velocity": {
+                  "max_error": 8.723168778601575e-05,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.963869067367341e-08,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.471343994140625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9955139160156,
+                  "expected": 324.524169921875
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  1.3747074584411605e-06,
+                  3.122348699374368e-10
+                ],
+                "hub": [
+                  1.981738163747102e-06,
+                  4.668890647956922e-10
+                ],
+                "slider": [
+                  4.200915386598104e-06,
+                  4.668891757087496e-10
+                ],
+                "handle": [
+                  0.0006407706788229393,
+                  0.00021838624686860435
+                ],
+                "pole": [
+                  0.0003141117923014852,
+                  0.0004950959741363835
+                ],
+                "tip": [
+                  4.1354539765518954e-05,
+                  0.0011511416133880787
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                8.725132647668943e-05,
+                1.963869067367341e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          },
+          {
+            "step_after_reset": 1,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31504440307617,
+                  "expected": -44.31504440307617
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": 0.0009507085778750479,
+                  "expected": 0.0009507085778750479
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": -0.06122589483857155,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05094313621520996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8654987812042236,
+                  "expected": -1.9164419174194336
+                },
+                "linear_velocity": {
+                  "max_error": 0.001449037175898782,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "hub_vx",
+                  "index": 7,
+                  "actual": -5.311270867558449e-10,
+                  "expected": 0.0014490366447716951
+                },
+                "angular_velocity": {
+                  "max_error": 0.061225917575796984,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 2.2737225435776054e-08,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.469879150390625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9952392578125,
+                  "expected": 324.5253601074219
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  0.0009794716020282875,
+                  3.6154320928827716e-10
+                ],
+                "hub": [
+                  0.001464716293644011,
+                  5.405858494984228e-10
+                ],
+                "slider": [
+                  0.0014243490336577952,
+                  5.408908485568617e-10
+                ],
+                "handle": [
+                  0.0009017921135054198,
+                  0.00021832594193071838
+                ],
+                "pole": [
+                  0.0006593302394815803,
+                  0.0004707337362123345
+                ],
+                "tip": [
+                  0.00047620083126914193,
+                  0.0011043235156884188
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                0.06122589483857155,
+                2.2737225435776054e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          }
+        ]
+      },
+      "history_max_position_change_per_agent_m": [
+        2.914717674255371,
+        2.866187810897827
+      ],
+      "history_exercised": true
+    },
+    {
+      "id": "restart_00_case_004",
+      "restart": 0,
+      "history": "hold",
+      "history_steps": 40,
+      "cycle": 0,
+      "idle_requested_s": 1.0,
+      "raw_file": "restart_00_case_004.npz",
+      "history_seed": 20261002,
+      "status": "COMPLETE",
+      "reset_seconds": 0.6706816999940202,
+      "idle_actual_s": 1.000095700030215,
+      "assessment": {
+        "passed": false,
+        "matches_reference": true,
+        "agents_aligned": false,
+        "stationary": true,
+        "frames": [
+          {
+            "step_after_reset": 0,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31505584716797,
+                  "expected": -44.31505584716797
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": -1.3331048194231698e-06,
+                  "expected": -1.3331048194231698e-06
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 8.725132647668943e-05,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05093789100646973,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8655009269714355,
+                  "expected": -1.9164388179779053
+                },
+                "linear_velocity": {
+                  "max_error": 0.0009590629815647844,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009482202003709972,
+                  "expected": 1.0842781193787232e-05
+                },
+                "angular_velocity": {
+                  "max_error": 8.723168778601575e-05,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.963869067367341e-08,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.471343994140625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9955139160156,
+                  "expected": 324.524169921875
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  1.3747074584411605e-06,
+                  3.122348699374368e-10
+                ],
+                "hub": [
+                  1.981738163747102e-06,
+                  4.668890647956922e-10
+                ],
+                "slider": [
+                  4.200915386598104e-06,
+                  4.668891757087496e-10
+                ],
+                "handle": [
+                  0.0006407706788229393,
+                  0.00021838624686860435
+                ],
+                "pole": [
+                  0.0003141117923014852,
+                  0.0004950959741363835
+                ],
+                "tip": [
+                  4.1354539765518954e-05,
+                  0.0011511416133880787
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                8.725132647668943e-05,
+                1.963869067367341e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          },
+          {
+            "step_after_reset": 1,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 3.814697265625e-06,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "pole_x",
+                  "index": 19,
+                  "actual": -43.579429626464844,
+                  "expected": -43.57943344116211
+                },
+                "linear_velocity": {
+                  "max_error": 1.827138476073742e-07,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009098853915929794,
+                  "expected": -0.0009097026777453721
+                },
+                "angular_velocity": {
+                  "max_error": 9.795198252504633e-08,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.2068920796082239e-07,
+                  "expected": 2.2737225435776054e-08
+                },
+                "angle": {
+                  "max_error": 3.814697265625e-06,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "hammer_angle",
+                  "index": 27,
+                  "actual": -35.2216682434082,
+                  "expected": -35.22167205810547
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05094313621520996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8654987812042236,
+                  "expected": -1.9164419174194336
+                },
+                "linear_velocity": {
+                  "max_error": 0.0014490391296468896,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "hub_vx",
+                  "index": 7,
+                  "actual": -2.484875194497249e-09,
+                  "expected": 0.0014490366447716951
+                },
+                "angular_velocity": {
+                  "max_error": 0.06122601552777951,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.2068920796082239e-07,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.469879150390625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9952392578125,
+                  "expected": 324.5253601074219
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  0.0009794716020282875,
+                  1.87128998240467e-09
+                ],
+                "hub": [
+                  0.001464716293644011,
+                  2.7241535165102225e-09
+                ],
+                "slider": [
+                  0.0014243490336577952,
+                  6.0184848651080556e-09
+                ],
+                "handle": [
+                  0.0009017921135054198,
+                  0.00021830029103837747
+                ],
+                "pole": [
+                  0.0006593302394815803,
+                  0.00047085644480012774
+                ],
+                "tip": [
+                  0.00047620083126914193,
+                  0.0011045617095716972
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                0.06122589483857155,
+                1.2068920796082239e-07
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          }
+        ]
+      },
+      "history_max_position_change_per_agent_m": [
+        2.914717674255371,
+        2.8661861419677734
+      ],
+      "history_exercised": true
+    },
+    {
+      "id": "restart_00_case_005",
+      "restart": 0,
+      "history": "random",
+      "history_steps": 200,
+      "cycle": 0,
+      "idle_requested_s": 0.0,
+      "raw_file": "restart_00_case_005.npz",
+      "history_seed": 20261002,
+      "status": "COMPLETE",
+      "reset_seconds": 0.6022863000398502,
+      "idle_actual_s": 2.700020559132099e-06,
+      "assessment": {
+        "passed": false,
+        "matches_reference": true,
+        "agents_aligned": false,
+        "stationary": true,
+        "frames": [
+          {
+            "step_after_reset": 0,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31505584716797,
+                  "expected": -44.31505584716797
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": -1.3331048194231698e-06,
+                  "expected": -1.3331048194231698e-06
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 8.725132647668943e-05,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05093789100646973,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8655009269714355,
+                  "expected": -1.9164388179779053
+                },
+                "linear_velocity": {
+                  "max_error": 0.0009590629815647844,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009482202003709972,
+                  "expected": 1.0842781193787232e-05
+                },
+                "angular_velocity": {
+                  "max_error": 8.723168778601575e-05,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.963869067367341e-08,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.471343994140625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9955139160156,
+                  "expected": 324.524169921875
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  1.3747074584411605e-06,
+                  3.122348699374368e-10
+                ],
+                "hub": [
+                  1.981738163747102e-06,
+                  4.668890647956922e-10
+                ],
+                "slider": [
+                  4.200915386598104e-06,
+                  4.668891757087496e-10
+                ],
+                "handle": [
+                  0.0006407706788229393,
+                  0.00021838624686860435
+                ],
+                "pole": [
+                  0.0003141117923014852,
+                  0.0004950959741363835
+                ],
+                "tip": [
+                  4.1354539765518954e-05,
+                  0.0011511416133880787
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                8.725132647668943e-05,
+                1.963869067367341e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          },
+          {
+            "step_after_reset": 1,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31504440307617,
+                  "expected": -44.31504440307617
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": 0.0009507085778750479,
+                  "expected": 0.0009507085778750479
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": -0.06122589483857155,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05094313621520996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8654987812042236,
+                  "expected": -1.9164419174194336
+                },
+                "linear_velocity": {
+                  "max_error": 0.001449037175898782,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "hub_vx",
+                  "index": 7,
+                  "actual": -5.311270867558449e-10,
+                  "expected": 0.0014490366447716951
+                },
+                "angular_velocity": {
+                  "max_error": 0.061225917575796984,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 2.2737225435776054e-08,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.469879150390625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9952392578125,
+                  "expected": 324.5253601074219
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  0.0009794716020282875,
+                  3.6154320928827716e-10
+                ],
+                "hub": [
+                  0.001464716293644011,
+                  5.405858494984228e-10
+                ],
+                "slider": [
+                  0.0014243490336577952,
+                  5.408908485568617e-10
+                ],
+                "handle": [
+                  0.0009017921135054198,
+                  0.00021832594193071838
+                ],
+                "pole": [
+                  0.0006593302394815803,
+                  0.0004707337362123345
+                ],
+                "tip": [
+                  0.00047620083126914193,
+                  0.0011043235156884188
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                0.06122589483857155,
+                2.2737225435776054e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          }
+        ]
+      },
+      "history_max_position_change_per_agent_m": [
+        5.092761993408203,
+        5.1208038330078125
+      ],
+      "history_exercised": true
+    },
+    {
+      "id": "restart_00_case_006",
+      "restart": 0,
+      "history": "random",
+      "history_steps": 200,
+      "cycle": 0,
+      "idle_requested_s": 1.0,
+      "raw_file": "restart_00_case_006.npz",
+      "history_seed": 20261002,
+      "status": "COMPLETE",
+      "reset_seconds": 0.6384751000441611,
+      "idle_actual_s": 1.000198800000362,
+      "assessment": {
+        "passed": false,
+        "matches_reference": true,
+        "agents_aligned": false,
+        "stationary": true,
+        "frames": [
+          {
+            "step_after_reset": 0,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_x",
+                  "index": 0,
+                  "actual": -44.31505584716797,
+                  "expected": -44.31505584716797
+                },
+                "linear_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_vx",
+                  "index": 2,
+                  "actual": -1.3331048194231698e-06,
+                  "expected": -1.3331048194231698e-06
+                },
+                "angular_velocity": {
+                  "max_error": 0.0,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 8.725132647668943e-05,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.0,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "hub_angle",
+                  "index": 9,
+                  "actual": 0.0,
+                  "expected": 0.0
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": true
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05093789100646973,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8655009269714355,
+                  "expected": -1.9164388179779053
+                },
+                "linear_velocity": {
+                  "max_error": 0.0009590629815647844,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009482202003709972,
+                  "expected": 1.0842781193787232e-05
+                },
+                "angular_velocity": {
+                  "max_error": 8.723168778601575e-05,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.963869067367341e-08,
+                  "expected": 8.725132647668943e-05
+                },
+                "angle": {
+                  "max_error": 0.471343994140625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9955139160156,
+                  "expected": 324.524169921875
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  1.3747074584411605e-06,
+                  3.122348699374368e-10
+                ],
+                "hub": [
+                  1.981738163747102e-06,
+                  4.668890647956922e-10
+                ],
+                "slider": [
+                  4.200915386598104e-06,
+                  4.668891757087496e-10
+                ],
+                "handle": [
+                  0.0006407706788229393,
+                  0.00021838624686860435
+                ],
+                "pole": [
+                  0.0003141117923014852,
+                  0.0004950959741363835
+                ],
+                "tip": [
+                  4.1354539765518954e-05,
+                  0.0011511416133880787
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                8.725132647668943e-05,
+                1.963869067367341e-08
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          },
+          {
+            "step_after_reset": 1,
+            "vs_cold_reference": {
+              "passed": true,
+              "groups": {
+                "position": {
+                  "max_error": 3.814697265625e-06,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "pole_x",
+                  "index": 19,
+                  "actual": -43.579429626464844,
+                  "expected": -43.57943344116211
+                },
+                "linear_velocity": {
+                  "max_error": 1.827138476073742e-07,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "tip_vy",
+                  "index": 26,
+                  "actual": -0.0009098853915929794,
+                  "expected": -0.0009097026777453721
+                },
+                "angular_velocity": {
+                  "max_error": 9.795198252504633e-08,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.2068920796082239e-07,
+                  "expected": 2.2737225435776054e-08
+                },
+                "angle": {
+                  "max_error": 3.814697265625e-06,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "hammer_angle",
+                  "index": 27,
+                  "actual": -35.2216682434082,
+                  "expected": -35.22167205810547
+                },
+                "cursor_position": {
+                  "max_error": 0.0,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_x",
+                  "index": 29,
+                  "actual": -42.65896987915039,
+                  "expected": -42.65896987915039
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "cross_agent": {
+              "passed": false,
+              "groups": {
+                "position": {
+                  "max_error": 0.05094313621520996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "handle_y",
+                  "index": 16,
+                  "actual": -1.8654987812042236,
+                  "expected": -1.9164419174194336
+                },
+                "linear_velocity": {
+                  "max_error": 0.0014490391296468896,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "hub_vx",
+                  "index": 7,
+                  "actual": -2.484875194497249e-09,
+                  "expected": 0.0014490366447716951
+                },
+                "angular_velocity": {
+                  "max_error": 0.06122601552777951,
+                  "unit": "deg/s",
+                  "limit": 0.1,
+                  "passed": true,
+                  "agent": 1,
+                  "field": "player_w",
+                  "index": 4,
+                  "actual": 1.2068920796082239e-07,
+                  "expected": -0.06122589483857155
+                },
+                "angle": {
+                  "max_error": 0.469879150390625,
+                  "unit": "deg",
+                  "limit": 0.05,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "slider_angle",
+                  "index": 14,
+                  "actual": 324.9952392578125,
+                  "expected": 324.5253601074219
+                },
+                "cursor_position": {
+                  "max_error": 0.04770827293395996,
+                  "unit": "m",
+                  "limit": 0.001,
+                  "passed": false,
+                  "agent": 1,
+                  "field": "cursor_y",
+                  "index": 30,
+                  "actual": -3.163217067718506,
+                  "expected": -3.210925340652466
+                },
+                "cursor_velocity": {
+                  "max_error": 0.0,
+                  "unit": "m/s",
+                  "limit": 0.001,
+                  "passed": true,
+                  "agent": 0,
+                  "field": "cursor_vx",
+                  "index": 31,
+                  "actual": 0.0,
+                  "expected": 0.0
+                }
+              },
+              "bitwise_equal_without_timestamp": false
+            },
+            "stationarity": {
+              "passed": true,
+              "linear_speeds_m_s": {
+                "player": [
+                  0.0009794716020282875,
+                  1.87128998240467e-09
+                ],
+                "hub": [
+                  0.001464716293644011,
+                  2.7241535165102225e-09
+                ],
+                "slider": [
+                  0.0014243490336577952,
+                  6.0184848651080556e-09
+                ],
+                "handle": [
+                  0.0009017921135054198,
+                  0.00021830029103837747
+                ],
+                "pole": [
+                  0.0006593302394815803,
+                  0.00047085644480012774
+                ],
+                "tip": [
+                  0.00047620083126914193,
+                  0.0011045617095716972
+                ],
+                "cursor": [
+                  0.0,
+                  0.0
+                ]
+              },
+              "player_angular_speeds_deg_s": [
+                0.06122589483857155,
+                1.2068920796082239e-07
+              ],
+              "linear_limit": 0.05,
+              "angular_limit": 1.0
+            }
+          }
+        ]
+      },
+      "history_max_position_change_per_agent_m": [
+        5.098812103271484,
+        5.120815277099609
+      ],
+      "history_exercised": true
+    }
+  ],
+  "sessions": [
+    {
+      "restart": 0,
+      "pid": 35876,
+      "runtime_config_effective": {
+        "mode": 0,
+        "tcpPort": 9000,
+        "stateDimension": 29,
+        "actionDimension": 2,
+        "stepFrames": 1,
+        "experimentalControlledUpdates": true,
+        "experimentalResetDiagnostics": true,
+        "experimentalSceneReset": true,
+        "numDuplicates": 2,
+        "playerObjectName": "Player",
+        "minInput": 10.0,
+        "maxInput": 100.0,
+        "autoClampInput": true,
+        "normalizeInitialPose": true,
+        "initPoseSettleFrames": 120,
+        "startAnimatorInRlMode": true,
+        "initCursorUpScale": 1.0,
+        "initCursorOffsetX": 0.0,
+        "initPoseGain": 15.0,
+        "dataRoot": "GoiData",
+        "initializeDirectoriesOnStart": true,
+        "enableDebugLogs": true
+      }
+    }
+  ],
+  "errors": [],
+  "fingerprints": {
+    "script": "194fc036a36a306fdb06f44b447d824f8c22a6ad95480527c2b6f1ae35442686",
+    "deployed_plugin": "123a3534c8610da3ed3a5a05d5df6516d8a0cc06abd5332c9351a04a00ebb458",
+    "game_assembly": "6236626b8aca7d6b093ca39c15c583c01ea42ffee384e8755d2b2608b552d844",
+    "project_config": "9e2d35b960552d3131cc142164dbd4b35a3891db7ef58aba07337ea767a24c19"
+  },
+  "runtime_config_requested": {
+    "mode": 0,
+    "tcpPort": 9000,
+    "stateDimension": 29,
+    "actionDimension": 2,
+    "stepFrames": 1,
+    "numDuplicates": 2,
+    "playerObjectName": "Player",
+    "minInput": 10.0,
+    "maxInput": 100.0,
+    "autoClampInput": true,
+    "normalizeInitialPose": true,
+    "initPoseSettleFrames": 120,
+    "startAnimatorInRlMode": true,
+    "initCursorUpScale": 1.0,
+    "initCursorOffsetX": 0.0,
+    "initPoseGain": 15.0,
+    "dataRoot": "GoiData",
+    "initializeDirectoriesOnStart": true,
+    "enableDebugLogs": true,
+    "experimentalResetDiagnostics": true,
+    "experimentalSceneReset": true,
+    "experimentalControlledUpdates": true
+  },
+  "reference_case": "restart_00_case_000",
+  "finished_at_utc": "2026-10-02T04:33:50.181275+00:00"
+}

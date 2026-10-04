@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "backbone": "transformer",
+      "critic_warmup_preserved_policy": true,
+      "ppo_changed_policy": true,
+      "finite_metrics": true,
+      "previous_action_alignment": true,
+      "preupdate_ratio_max_error": 3.814704541582614e-06,
+      "preupdate_kl": 9.189686049163962e-15,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 9600.0
+    },
+    {
+      "backbone": "gru",
+      "critic_warmup_preserved_policy": true,
+      "ppo_changed_policy": true,
+      "finite_metrics": true,
+      "previous_action_alignment": true,
+      "preupdate_ratio_max_error": 8.583032467868179e-06,
+      "preupdate_kl": 2.157207745767664e-13,
+      "action_saturation_fraction": 0.0,
+      "audit_samples": 9600.0
+    }
+  ]
+}

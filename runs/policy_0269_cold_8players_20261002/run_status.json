@@ -1,0 +1,13 @@
+{
+  "status": "ERROR",
+  "checkpoint": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\optimizer_momentum_fix_20261001\\checkpoints\\ppo_iter_0269.pt",
+  "checkpoint_sha256": "d29e3f764e1d3a0a506216fceac0912b5b88a5871ab793876cd7bac9bf9f37fe",
+  "agents": 8,
+  "selection": "Latest checkpoint of optimizer_momentum_fix; not certified best under corrected dynamics",
+  "initialization": "live cold start; no reset, warmup, snapshot or teleport before policy",
+  "steps": 1200,
+  "game_pid": 20432,
+  "error": "AssertionError: ",
+  "checkpoint_unchanged": true,
+  "game_left_open": true
+}

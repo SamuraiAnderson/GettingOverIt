@@ -1,0 +1,14 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\farthest_route_iter_0144\\episode.json",
+  "physical_steps": 1200,
+  "physical_seconds": 10.0,
+  "rendered_frames": 301,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording",
+  "trail": "pot_transform_point_b",
+  "credited_progress_m": 13.005401142133751,
+  "displayed_progress_m": 21.88921426645702,
+  "displayed_progress_name": "\u786e\u8ba4\u7ec8\u70b9 D",
+  "credited_state_index": 446,
+  "credited_seconds": 3.716666666666667
+}
