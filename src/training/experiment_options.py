@@ -11,6 +11,7 @@ EXPERIMENT_FIELDS = (
     "geometry_query_radius", "action_segment_steps", "segment_interrupt_contacts",
     "sparse_geometry", "sparse_window_cells", "sparse_window_meters",
     "sparse_max_contour_tokens", "sparse_relation_k", "sparse_mlp_hidden",
+    "reference_guidance_sigma",
 )
 
 

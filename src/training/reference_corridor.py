@@ -88,6 +88,9 @@ class ReferenceCorridor:
                 raise ValueError(f"{name} must be finite and nonnegative")
         if not 0 <= config.reference_interpolated_weight <= 1:
             raise ValueError("reference_interpolated_weight must be in [0, 1]")
+        sigma = getattr(config, "reference_guidance_sigma", None)
+        if sigma is not None and (not np.isfinite(sigma) or sigma <= 0):
+            raise ValueError("reference_guidance_sigma must be finite and positive")
 
     @classmethod
     def from_file(cls, path: str | Path, config) -> ReferenceCorridor:
@@ -158,10 +161,12 @@ class ReferenceCorridor:
         """Cache one ordered corridor field per continuous segment in the existing grid.
 
         This is observation context only, not a second reward. Each map is zero
-        beyond three corridor radii and increases along the reference direction.
+        beyond three guidance sigmas and increases along the reference direction.
+        None preserves the old observation exactly; the reward radius is unchanged.
         """
         maps = []
-        radius = self.config.reference_corridor_radius
+        radius = getattr(self.config, "reference_guidance_sigma", None)
+        radius = self.config.reference_corridor_radius if radius is None else radius
         for segment in self.segments:
             arr = np.zeros(shape, dtype=np.float32)
             low = np.floor((segment.points.min(axis=0) - 3 * radius) / resolution).astype(int)

@@ -37,7 +37,9 @@ class TrainConfig:
                    recurrent_seq_len=32, random_deploy=False,
                    contact_heads_enabled=False, sil_enabled=False,
                    explore_boost_enabled=False, phase_weighting_enabled=False,
-                   sil_advantage_weighting_enabled=False)
+                   sil_advantage_weighting_enabled=False,
+                   gru_sil_sampling_mode="quality_dynamics_v3",
+                   gru_sil_max_updates=16, gru_sil_budget_ratio=1.0)
 
     # ── 环境 ──
     game_root: str = field(default_factory=_default_game_root)
@@ -343,13 +345,17 @@ class TrainConfig:
     sil_enabled: bool = True
     # Stateful SIL uses complete reset-to-end archives, independently of legacy windows.
     gru_sil_enabled: bool = False
-    gru_sil_max_updates: int = 4
-    gru_sil_budget_ratio: float = 0.25
+    # CPU observations only; 0 retains round-local caching. Entries are not checkpointed.
+    gru_sil_cache_mb: int = 1024
+    gru_sil_max_updates: int = 4       # historical fallback; fresh PPO uses 16
+    gru_sil_budget_ratio: float = 0.25 # historical fallback; fresh PPO uses 1.0
     gru_sil_loss_coef: float = 0.1
     gru_sil_value_coef: float = 0.05
     gru_sil_target_kl: float = 0.01
     gru_sil_max_frame_kl: float = 0.1
     gru_sil_seed: int = 0
+    gru_sil_sampling_mode: str = "trajectory_uniform"  # legacy fallback; fresh PPO uses quality/dynamics weighting
+    gru_sil_phase_rules: dict | None = None  # versioned geometric proxy rules; no native branch claim
     training_seed: int = 0  # Initial stream seed; resume restores RNG positions separately.
     sil_start_iter: int = 5             # 对齐 value_warmup_iters：critic 预热完再开 SIL
     sil_traj_cap: int = 20             # 精英池容量。map_elites 仍可按分数兜底；td_pareto 不按 score 截断
@@ -408,6 +414,7 @@ class TrainConfig:
     # ── 视频参考走廊（显式启用；替代 PPO 高度/向右/效率图奖励）──
     reference_trajectory: str | None = None
     reference_corridor_radius: float = 1.5  # 半宽，世界米；走廊内不惩罚偏离中心线
+    reference_guidance_sigma: float | None = None  # observation only; None preserves historical radius
     reference_progress_weight: float = 1.0  # 走廊内新增路线进度，每米奖励
     reference_deviation_weight: float = 0.01  # 走廊外每步弱惩罚的上限
     reference_projection_window: float = 4.0  # 局部投影搜索半径，沿线米

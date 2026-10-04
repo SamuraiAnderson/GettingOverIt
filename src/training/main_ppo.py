@@ -217,6 +217,8 @@ def save_efficiency_map(
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PPO 训练 — 策略梯度迭代循环")
+    parser.add_argument("--experiment-config", type=str, default=None,
+                        help="Hash-locked tree-climb ablation recipe; --dry-run validates without launching")
     add_experiment_arguments(parser)
     parser.add_argument("--num-agents", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None,
@@ -254,6 +256,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--elite-archive-capacity", type=int, default=None)
     parser.add_argument("--gru-sil", action=argparse.BooleanOptionalAction, default=None,
                         help="Positive-advantage recurrent SIL from complete elite episodes; enables full archive")
+    from training.gru_sil import SAMPLING_PHASE_PROBABILITY
+    parser.add_argument("--gru-sil-cache-mb", type=int, default=None,
+                        help="Cross-round GRU SIL observation cache limit in MiB; 0 disables cross-round reuse")
+    parser.add_argument("--gru-sil-max-updates", type=int, default=None,
+                        help="Maximum GRU SIL candidate chunks per round; explicit override also applies on resume")
+    parser.add_argument("--gru-sil-budget-ratio", type=float, default=None,
+                        help="GRU SIL candidate budget / actual PPO updates, in (0, 1]; also applies on resume")
+    parser.add_argument("--gru-sil-sampling-mode", choices=tuple(SAMPLING_PHASE_PROBABILITY), default=None,
+                        help="Override recurrent SIL sampling; old resumes retain their saved/legacy mode unless specified")
     parser.add_argument("--elite-archive-resume", type=str, default=None,
                         help="Restore a full-episode archive; otherwise use the resumed checkpoint's matching snapshot")
     parser.add_argument("--stop-file", type=str, default=None,
@@ -451,6 +462,11 @@ def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoin
         config.explore_boost_enabled = False
 
 
+def reference_reward_settings(values):
+    """Observation-only additions must not restart an old checkpoint's critic warmup."""
+    return {k: v for k, v in values.items() if k.startswith("reference_") and k != "reference_guidance_sigma"}
+
+
 def configure_sil_sampling(config: TrainConfig, args: argparse.Namespace, resume_state: dict) -> None:
     """Resolve sampling mode, horizon, K, and seed. Old resumes stay on the legacy sampler."""
     from training.reference_corridor import PROGRESS_MODE_V2
@@ -594,6 +610,11 @@ def run_sil_only(
 def main() -> None:
     _setup_logging()
     args = parse_args()
+    experiment = experiment_config = None
+    if args.experiment_config:
+        from training.climb_experiment import load_recipe, configure_arguments
+        experiment, experiment_config = load_recipe(args.experiment_config)
+        configure_arguments(args, parse_args([]), experiment)
     if args.torch_threads is not None:
         torch.set_num_threads(args.torch_threads)
     logger.info("PyTorch CPU threads: %d", torch.get_num_threads())
@@ -603,9 +624,13 @@ def main() -> None:
 
     resume_state = torch.load(args.resume, map_location="cpu", weights_only=False) if args.resume else {}
     config = ppo_config(resume_state, legacy_bc=bool(args.resume_bc))
+    if experiment_config is not None:
+        config = experiment_config
     if args.init_from and (args.resume or args.resume_bc):
         raise ValueError("--init-from is mutually exclusive with --resume / --resume-bc")
     init_state = torch.load(args.init_from, map_location="cpu", weights_only=False) if args.init_from else {}
+    if experiment and init_state["config"] != experiment["baseline_config"]:
+        raise ValueError("Recipe baseline_config differs from its actual checkpoint")
     restore_initialization_shape(config, init_state)
     if args.resume and "reference_progress_mode" not in resume_state.get("config", {}):
         from training.reference_corridor import PROGRESS_MODE_V1
@@ -694,6 +719,15 @@ def main() -> None:
         config.elite_archive_capacity = args.elite_archive_capacity
     if args.gru_sil is not None:
         config.gru_sil_enabled = args.gru_sil
+    if args.gru_sil_sampling_mode is not None:
+        config.gru_sil_sampling_mode = args.gru_sil_sampling_mode
+    if args.gru_sil_cache_mb is not None:
+        config.gru_sil_cache_mb = args.gru_sil_cache_mb
+    for name in ("gru_sil_max_updates", "gru_sil_budget_ratio"):
+        if getattr(args, name) is not None:
+            setattr(config, name, getattr(args, name))
+    if config.gru_sil_cache_mb < 0:
+        raise ValueError("--gru-sil-cache-mb must be nonnegative")
     if config.gru_sil_enabled:
         from training.gru_sil import validate_gru_sil
         validate_gru_sil(config)
@@ -720,6 +754,8 @@ def main() -> None:
             "random_deploy": config.random_deploy,
             "sil_enabled": config.sil_enabled,
             "gru_sil_enabled": config.gru_sil_enabled,
+            "gru_sil_cache_mb": config.gru_sil_cache_mb,
+            "gru_sil_sampling_mode": config.gru_sil_sampling_mode,
             "gru_sil_max_updates": config.gru_sil_max_updates,
             "gru_sil_budget_ratio": config.gru_sil_budget_ratio,
             "gru_sil_target_kl": config.gru_sil_target_kl,
@@ -740,6 +776,9 @@ def main() -> None:
             "max_iterations": config.max_iterations,
             "resume_iteration": int(resume_state.get("iteration", 0)) if resume_state else 0,
         }
+        if experiment:
+            payload["experiment"] = experiment["arm"]
+            payload["resolved_config"] = asdict(config)
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
     # 走廊模式 SIL 已迁移到走廊口径（剪枝/排序/bd/BC 截断全部基于 credited 进度，
@@ -840,15 +879,17 @@ def main() -> None:
         model.load_from_bc(bc_state)
         logger.info("从 BC checkpoint 迁移 backbone 权重: %s", args.resume_bc)
 
-    old_reference_config = {
-        k: v for k, v in resume_state.get("config", {}).items() if k.startswith("reference_")
-    }
+    if experiment:
+        from training.climb_experiment import reset_experiment_critic
+        reset_experiment_critic(model)
+
+    old_reference_config = reference_reward_settings(resume_state.get("config", {}))
     # Collection and update must use the same device from the first rollout.
     model = model.to(ppo_trainer.device)
     reference_changed = bool(args.resume) and (
         bool(old_reference_config.get("reference_trajectory")) != bool(config.reference_trajectory)
         or (bool(config.reference_trajectory) and (
-            old_reference_config != {k: v for k, v in asdict(config).items() if k.startswith("reference_")}
+            old_reference_config != reference_reward_settings(asdict(config))
             or resume_state.get("reference_corridor", {}).get("sha256") != reference_meta["sha256"]
         ))
     )
@@ -1309,6 +1350,10 @@ def main() -> None:
                             gru_metrics["gru_sil_positive_frames"], gru_metrics["gru_sil_sampled_frames"],
                             gru_metrics["gru_sil_kl"], gru_metrics["gru_sil_rejected_steps"])
                 recorder.save_sil_sampling(iteration + 1, ppo_trainer.last_gru_sil_sampling)
+                logger.info("GRU SIL cache: hits=%d misses=%d retained=%.1f MiB build=%.3fs",
+                            gru_metrics["gru_sil_cache_hits"], gru_metrics["gru_sil_cache_misses"],
+                            gru_metrics["gru_sil_cache_bytes"] / 1024**2,
+                            gru_metrics["gru_sil_cache_build_seconds"])
 
             # Phase 2.55: σ 退火（M2 修复）：巩固进展 → 探索噪声线性退火，
             # 下限 ppo_log_std_min；预热轮不动（策略未训练）。forward 内 clamp 兜底。

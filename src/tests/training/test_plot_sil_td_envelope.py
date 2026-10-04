@@ -1,5 +1,6 @@
 """(t, D) envelope viewer uses the training Pareto helper and writes plots."""
 from pathlib import Path
+from dataclasses import replace
 import tempfile
 import unittest
 
@@ -56,3 +57,31 @@ class SILTdEnvelopePlotTests(unittest.TestCase):
             self.assertTrue((out / "envelope.png").is_file())
             self.assertFalse((out / "envelope_history.png").exists())
             self.assertGreater((out / "envelope.png").stat().st_size, 1000)
+
+    def test_sampling_frame_mass_uses_actual_chunk_length_and_writes_both_views(self):
+        from src.tests.training.test_gru_sil import GRUSILSamplingTests
+        trajs = GRUSILSamplingTests().trajectories()
+        cfg = replace(plot.TrainConfig(), recurrent_seq_len=32)
+        data = plot.sampling_catalog(trajs, cfg, draws=3000, seed=7)
+        from src.tests.evaluation.present.render_episode_motion import sampling_path_probabilities
+        aligned = sampling_path_probabilities(data, trajs)
+        for mode, arrays in aligned.items():
+            for row in data["modes"][mode]["chunks"]:
+                np.testing.assert_array_equal(arrays[row["trajectory"]][row["start"]:row["end"]], row["probability"])
+                np.testing.assert_array_equal(arrays[row["trajectory"]][row["cap"]:], 0.)
+        import copy
+        missing = copy.deepcopy(data)
+        missing["modes"][data["comparison_modes"][0]]["chunks"].pop()
+        with self.assertRaises(ValueError): sampling_path_probabilities(missing, trajs)
+        for mode in data["modes"].values():
+            self.assertAlmostEqual(sum(mode["expected_phase_frame_share"].values()), 1.)
+            self.assertAlmostEqual(sum(mode["sampled_phase_frame_share"].values()), 1.)
+            self.assertEqual(sum(r["observed_draws"] for r in mode["chunks"]), 3000)
+            # Includes a final 31-step chunk: expected frame mass is not a chunk histogram.
+            denominator = sum(r["probability"]*(r["end"]-r["start"]) for r in mode["chunks"])
+            numerator = sum(r["probability"]*r["phase_counts"].get("tree_support",0) for r in mode["chunks"])
+            self.assertAlmostEqual(mode["expected_phase_frame_share"]["tree_support"], numerator/denominator)
+        data["source_pool"] = {"path": "synthetic_test_pool.npz"}
+        with tempfile.TemporaryDirectory() as folder:
+            for path in plot.plot_sampling(data, Path(folder)):
+                self.assertGreater(path.stat().st_size, 1000)

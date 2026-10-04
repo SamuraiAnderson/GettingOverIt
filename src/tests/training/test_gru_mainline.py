@@ -29,6 +29,7 @@ class GRUMainlineTests(unittest.TestCase):
         self.assertTrue(cfg.normalize_action_history)
         self.assertFalse(cfg.random_deploy)
         self.assertFalse(cfg.sil_enabled)
+        self.assertEqual((cfg.gru_sil_max_updates, cfg.gru_sil_budget_ratio), (16, 1.0))
 
     def test_legacy_checkpoint_missing_new_fields_loads_strictly(self):
         old = TrainConfig(d_model=16, nhead=2, num_layers=1, sparse_geometry=False)

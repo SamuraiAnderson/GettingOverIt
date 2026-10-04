@@ -61,8 +61,11 @@ class TrainingConsistencyTests(unittest.TestCase):
                            lr=1e-5, reference_trajectory="fixture", gru_sil_enabled=True,
                            training_seed=7, gru_sil_seed=7, max_grad_norm_adaptive=True,
                            ppo_target_kl_adaptive=True, feature_step_seconds=.02)
+        self.encoder = self.make_encoder()
+
+    def make_encoder(self):
         terrain = np.ones((100, 100), np.float32)
-        self.encoder = TrajectoryDataset(self.cfg, terrain, terrain, reference_maps=[terrain])
+        return TrajectoryDataset(self.cfg, terrain, terrain, reference_maps=[terrain])
 
     def model(self):
         model = create_actor_critic(self.cfg).eval()
@@ -94,6 +97,9 @@ class TrainingConsistencyTests(unittest.TestCase):
         sil = gru_sil_update(trainer, model, archive, self.encoder, buffer,
                              budget_updates=metrics["n_updates"], iteration=iteration)
         self.assertGreater(sil["gru_sil_updates"], 0)
+        # Cache counters/timers intentionally differ for warm, cold and disabled
+        # caches; every learning metric and sampled chunk must still be exact.
+        sil = {k: v for k, v in sil.items() if not k.startswith("gru_sil_cache_")}
         return copy.deepcopy((buffer.episodes, metrics, sil, trainer.last_gru_sil_sampling,
                               model.state_dict(), trainer.optimizer.state_dict(), trainer.checkpoint_state()))
 
@@ -108,6 +114,7 @@ class TrainingConsistencyTests(unittest.TestCase):
                         trainer=trainer, deployment_rng=worker._rng)
         archive.save(1)
         continuous = self.round(model, trainer, worker, archive, 2)
+        self.assertEqual(self.encoder._gru_sil_observation_cache.stats["misses"], 0)
         continuous_rng = capture_random_state(worker._rng)
         saved = torch.load(self.root / "ppo_iter_0001.pt", map_location="cpu", weights_only=False)
         model2, trainer2, worker2, archive2 = self.model(), self.trainer(), self.worker(), self.archive()
@@ -115,10 +122,30 @@ class TrainingConsistencyTests(unittest.TestCase):
         trainer2.set_pending_optimizer_state(saved["optimizer"])
         trainer2.restore_checkpoint_state(saved["trainer_state"], model2)
         archive2.restore(self.root / "elites/elites_iter_0001.npz")
+        self.encoder = self.make_encoder()  # A restarted process has no observation cache.
         restore_random_state(saved["rng_state"], worker2._rng)
         resumed = self.round(model2, trainer2, worker2, archive2, 2)
+        self.assertEqual(self.encoder._gru_sil_observation_cache.stats["misses"], 1)
         assert_same(self, continuous, resumed)
         assert_same(self, continuous_rng, capture_random_state(worker2._rng))
+
+    def test_cache_enabled_and_disabled_ppo_sil_rounds_are_tensor_and_rng_exact(self):
+        results = []
+        for cache_mb in (0, 1024):
+            seed_training(7)
+            self.cfg.gru_sil_cache_mb = cache_mb
+            self.encoder = self.make_encoder()
+            model, trainer, worker, archive = self.model(), self.trainer(), self.worker(), self.archive()
+            traj = episode(t=8, tail=3)
+            traj.step_rewards[:] = .5
+            traj.actions[:] = [30., -20.]
+            archive.ingest([traj], 1)
+            rows = [self.round(model, trainer, worker, archive, i) for i in (1, 2, 3)]
+            results.append((rows, capture_random_state(worker._rng)))
+            cache = self.encoder._gru_sil_observation_cache
+            self.assertEqual(cache.stats["misses"], int(cache_mb == 0))
+            self.assertFalse(cache._round_local)
+        assert_same(self, *results)
 
     def test_audit_and_deterministic_collection_leave_training_rng_unchanged(self):
         model, worker = self.model(), self.worker()

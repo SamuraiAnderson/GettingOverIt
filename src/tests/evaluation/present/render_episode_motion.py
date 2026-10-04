@@ -1,5 +1,6 @@
 """Render one archived physical trajectory, without launching or simulating the game."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -204,6 +205,278 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
     return meta
 
 
+def sampling_path_probabilities(data, trajectories):
+    """Map action t's inclusion probability to the physical segment state[t:t+2]."""
+    from training.reference_corridor import trajectory_endpoint
+    if data.get("kind") != "offline_sampling_preview_before_advantage_and_KL":
+        raise ValueError("Expected an offline SIL sampling report")
+    result = {}
+    for mode in data.get("comparison_modes", ("trajectory_uniform", "phase_mixture_v1")):
+        arrays = [np.zeros(len(t.actions), np.float64) for t in trajectories]
+        covered = [np.zeros(len(t.actions), bool) for t in trajectories]
+        total = 0.
+        for row in data["modes"][mode]["chunks"]:
+            i, start, end, cap = (int(row[k]) for k in ("trajectory", "start", "end", "cap"))
+            p = float(row["probability"])
+            if (not 0 <= i < len(trajectories) or not np.isfinite(p) or not 0 <= p <= 1
+                    or not 0 <= start < end <= cap <= len(trajectories[i].actions)
+                    or cap != trajectory_endpoint(trajectories[i]).t_cap):
+                raise ValueError("Sampling chunk does not match the physical trajectory")
+            if covered[i][start:end].any():
+                raise ValueError("Overlapping sampling chunks")
+            arrays[i][start:end] = p
+            covered[i][start:end] = True
+            total += p
+        for i, traj in enumerate(trajectories):
+            cap = trajectory_endpoint(traj).t_cap
+            if not covered[i][:cap].all():
+                raise ValueError("Sampling report is missing a trajectory prefix")
+        if not np.isclose(total, 1., rtol=0, atol=1e-10):
+            raise ValueError("Sampling probabilities must sum to one across chunks")
+        result[mode] = arrays
+    return result
+
+
+def render_sampling_paths(pool, sampling_report, output, trajectories, order, terrain, route, low, high, focus=None):
+    """Put the existing sampling audit directly on archived pot-center trajectories."""
+    from training.reference_corridor import trajectory_endpoint
+    from matplotlib.collections import LineCollection
+    from matplotlib.colors import Normalize
+    from matplotlib.lines import Line2D
+    from training.climb_experiment import identity
+    data = json.loads(sampling_report.read_text(encoding="utf-8"))
+    if data["source_pool"]["sha256"] != hashlib.sha256(pool.read_bytes()).hexdigest():
+        raise ValueError("Sampling report was produced from a different elite pool")
+    probabilities = sampling_path_probabilities(data, trajectories)
+    if focus is not None and (not 0 <= focus[0] < len(trajectories)
+                             or not 0 <= focus[1] < trajectory_endpoint(trajectories[focus[0]]).t_cap):
+        raise ValueError("Sampling focus must be an eligible pool index and pre-cap action")
+    modes = data.get("comparison_modes", ("trajectory_uniform", "phase_mixture_v1"))
+    from .plot_sil_td_envelope import SAMPLING_NAMES
+    names = SAMPLING_NAMES
+    vmax = max(float(p.max())*100 for arrays in probabilities.values() for p in arrays)
+    norm = Normalize(0, vmax)
+    cmap = plt.get_cmap("YlGnBu")
+    font = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
+    legends = [Line2D([], [], color="#a5a5a5", ls="--", label="封顶后尾段：不采样"),
+               Line2D([], [], color="#6b9576", ls=":", label="参考路线"),
+               Line2D([], [], marker="o", mfc="white", mec="#333333", ls="", label="出生点"),
+               Line2D([], [], marker="*", color="#bd8610", ls="", label="封顶点"),
+               Line2D([], [], marker="s", color="#333333", ls="", label="完整轨迹末端")]
+
+    def draw(ax, index, rank, mode, *, annotate=False):
+        trail = path_xy(trajectories[index].raw_states)
+        endpoint = trajectory_endpoint(trajectories[index]); cap = endpoint.t_cap
+        for poly in terrain:
+            if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):
+                ax.fill(poly[:, 0], poly[:, 1], color="#ebe7df", edgecolor="#c9c3b9", lw=.4, zorder=0)
+        for segment in route.segments:
+            ax.plot(*segment.points.T, color="#6b9576", lw=.9, ls=":", alpha=.7, zorder=1)
+        ax.plot(*trail[cap:].T, color="#999999", lw=1., ls="--", alpha=.65, zorder=2)
+        # A thin dark outline keeps low-probability yellow segments visible against terrain.
+        ax.plot(*trail[:cap+1].T, color="#555555", lw=3.5, alpha=.75, zorder=3)
+        segments = np.stack((trail[:cap], trail[1:cap+1]), axis=1)
+        collection = LineCollection(segments, cmap=cmap, norm=norm, linewidths=2.6, zorder=4)
+        collection.set_array(probabilities[mode][index][:cap]*100)
+        ax.add_collection(collection)
+        ax.plot(*trail[0], marker="o", mfc="white", mec="#333333", ms=4, zorder=6)
+        ax.plot(*trail[cap], marker="*", color="#bd8610", ms=11, mec="white", mew=.5, zorder=6)
+        ax.plot(*trail[-1], marker="s", color="#333333", ms=4, zorder=6)
+        if annotate:
+            chunks = [c for c in data["modes"][modes[1]]["chunks"] if c["trajectory"] == index]
+            # Label the same two high-probability chunks in both views for direct comparison.
+            chosen = sorted(chunks, key=lambda c: (-c["probability"], c["start"]))[:2]
+            if focus is not None and index == focus[0]:
+                focal = next(c for c in chunks if c["start"] <= focus[1] < c["end"])
+                chosen = [focal, *[c for c in chosen if c is not focal]][:2]
+            for j, row in enumerate(chosen):
+                start, end = row["start"], row["end"]
+                focused = focus is not None and index == focus[0] and start <= focus[1] < end
+                xy = trail[focus[1] if focused else (start+end)//2]
+                if focused: ax.plot(*xy, "o", ms=5, mfc="white", mec="#b53f37", zorder=8)
+                ax.annotate(f"{start}–{end-1} 步\n{probabilities[mode][index][start]*100:.2f}%",
+                            xy, xytext=((-42, 26) if j == 0 else (12, -35)), textcoords="offset points",
+                            fontproperties=font, fontsize=8,
+                            bbox=dict(boxstyle="round,pad=.2", fc="white", ec="#a0a0a0", alpha=.93),
+                            arrowprops=dict(arrowstyle="-", color="#555555", lw=.7), zorder=8)
+        ax.set_title(f"{rank:02d} · 池 {index:02d} · D={endpoint.distance:.2f} m · {names[mode]}\n"
+                     f"封顶 t={cap} 步；第 {trajectories[index].iteration} 轮精英", fontproperties=font, fontsize=10)
+        ax.set(xlim=(low[0], high[0]), ylim=(low[1], high[1]), xlabel="World x (m)", ylabel="World y (m)")
+        ax.set_aspect("equal"); ax.tick_params(labelsize=8); ax.grid(alpha=.1)
+        return collection
+
+    def decorate(fig, axes, title):
+        fig.suptitle(title, fontproperties=font, fontsize=17)
+        scalar = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap)
+        bar = fig.colorbar(scalar, ax=np.asarray(axes).ravel().tolist(), shrink=.8, pad=.02)
+        bar.set_label("单次抽片段包含该动作的概率（%，越深越常采）", fontproperties=font)
+        fig.supxlabel("锅心真实空间轨迹；每段颜色对应动作 t 导致的状态 t → t+1，所有小图同坐标和色标。\n"
+                      "灰虚线仍完整保存；颜色为筛选前的采样机会，非已接受更新或策略成功率。\n"
+                      f"来源：{pool.name}；完整池 {len(trajectories)} 条；几何与参考路线同此前轨迹图。",
+                      fontproperties=font, fontsize=9)
+
+    rows = int(np.ceil(len(order)/4))
+    fig, axes = plt.subplots(rows, 4, figsize=(18, rows*2.7+1.2), squeeze=False, layout="constrained", facecolor="#faf9f6")
+    for rank, index in enumerate(order, 1):
+        draw(axes.flat[rank-1], index, rank, modes[1])
+    for ax in list(axes.flat)[len(order):]: ax.set_visible(False)
+    decorate(fig, axes, f"精英池空间轨迹上的 SIL 采样机会 · {names[modes[1]]}")
+    fig.legend(handles=legends, loc="outside upper center", bbox_to_anchor=(.48,.971), ncol=5, prop=font, frameon=False)
+    fig.get_layout_engine().set(rect=(0,0,1,.95))
+    gallery = output/"all_elite_sampling.png"
+    fig.savefig(gallery, dpi=150); plt.close(fig)
+
+    # Paired detail views retain the exact same physical path, terrain and color normalization.
+    entries = []
+    for rank, index in enumerate(order, 1):
+        fig, axes = plt.subplots(1, 2, figsize=(13, 5.1), layout="constrained", facecolor="#faf9f6")
+        for ax, mode in zip(axes, modes): draw(ax, index, rank, mode, annotate=True)
+        decorate(fig, axes, f"第 {rank} 条精英：只改变采样机会，物理轨迹相同")
+        fig.legend(handles=legends, loc="outside upper center", bbox_to_anchor=(.47,.936), ncol=3, prop=font, frameon=False)
+        fig.get_layout_engine().set(rect=(0,0,1,.85))
+        path = output/f"elite_{index:02d}_sampling.png"
+        fig.savefig(path, dpi=150); plt.close(fig)
+        entries.append({"rank":rank, "pool_index":index, "image":path.name,
+                        "cap_step":trajectory_endpoint(trajectories[index]).t_cap})
+    meta = {"source_pool":identity(pool), "sampling_report":identity(sampling_report), "renderer":identity(Path(__file__)),
+            "kind":"archived_spatial_trajectory_with_expected_sampling_probability",
+            "comparison_modes": modes,
+            "focus_pool_index_action": focus,
+            "probability_units":"percent inclusion per chunk draw before advantage/KL filters",
+            "segment_alignment":"action t -> states[t] to states[t+1]", "vmin":0, "vmax":vmax,
+            "shared_bounds":[low.tolist(),high.tolist()], "reference_sha256":route.metadata["sha256"],
+            "gallery":gallery.name, "entries":entries}
+    (output/"sampling_trajectories.json").write_text(json.dumps(meta,ensure_ascii=False,indent=2),encoding="utf-8")
+    print(gallery, flush=True)
+    print(output/entries[0]["image"], flush=True)
+
+
+def render_elite_pool(pool: Path, manifest_path: Path, output: Path, *, video=False, sampling_report=None,
+                      sampling_focus=None):
+    """Plot every complete elite on common world axes, retaining its entire tail."""
+    from training.elite_archive import EliteTrajectoryArchive
+    from training.reference_fingerprint import reference_fingerprint
+    from training.reference_corridor import trajectory_endpoint
+    from training.state_schema import schema_from_raw_width
+    from matplotlib.lines import Line2D
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+    cfg = TrainConfig(**manifest["config"])
+    route = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg)
+    if route.metadata["sha256"] != manifest["reference"]["sha256"]:
+        raise ValueError("Reference file differs from the archived manifest")
+    with np.load(pool) as data:
+        width = data["t0_states"].shape[1]
+    fingerprint = reference_fingerprint(cfg, route_meta=route.metadata,
+                                        schema_id=schema_from_raw_width(width).schema_id, raw_dim=width)
+    archive = EliteTrajectoryArchive(cfg, pool.parent, fingerprint)
+    archive.restore(pool)
+    trajectories = archive.trajectories
+    if not trajectories:
+        raise ValueError("Elite pool is empty")
+    order = sorted(range(len(trajectories)), key=lambda i: (
+        -trajectory_endpoint(trajectories[i]).distance, trajectory_endpoint(trajectories[i]).t_cap, i))
+    env, _ = load_colliders(Path(cfg.game_root))
+    terrain = extract_polygons(env)
+    trails = [path_xy(t.raw_states) for t in trajectories]
+    points = np.concatenate(trails + [t.raw_states[:, 23:25] for t in trajectories])
+    low, high = points.min(axis=0) - 1.5, points.max(axis=0) + 1.5
+    font = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
+    output.mkdir(parents=True, exist_ok=True)
+    if sampling_report is not None:
+        if video:
+            raise ValueError("Sampling overlay is a static view; omit --pool-video")
+        return render_sampling_paths(pool, sampling_report, output, trajectories, order, terrain, route, low, high,
+                                     focus=sampling_focus)
+    colors = {"prefix": "#226a91", "tail": "#a75e42", "route": "#6b9576"}
+    legends = [Line2D([], [], color=colors["prefix"], label="最远确认前"),
+               Line2D([], [], color=colors["tail"], label="最远确认后（完整保留）"),
+               Line2D([], [], color=colors["route"], label="参考路线"),
+               Line2D([], [], marker="*", color="#c69716", ls="", label="最远确认点"),
+               Line2D([], [], marker="s", color="#303a43", ls="", label="轨迹末端")]
+
+    def panel(ax, index, rank):
+        traj, trail = trajectories[index], trails[index]
+        endpoint = trajectory_endpoint(traj)
+        cap = endpoint.t_cap
+        for poly in terrain:
+            if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):
+                ax.fill(poly[:, 0], poly[:, 1], color="#e4e0d9", edgecolor="#c4bdb3", lw=.4)
+        for segment in route.segments:
+            ax.plot(segment.points[:, 0], segment.points[:, 1], color=colors["route"], lw=.8, alpha=.8)
+        ax.plot(trail[:cap + 1, 0], trail[:cap + 1, 1], color=colors["prefix"], lw=1.3)
+        ax.plot(trail[cap:, 0], trail[cap:, 1], color=colors["tail"], lw=1., alpha=.75)
+        ax.plot(*trail[0], marker="o", color=colors["prefix"], ms=3)
+        ax.plot(*trail[cap], marker="*", color="#c69716", ms=9, mec="white", mew=.4, zorder=5)
+        ax.plot(*trail[-1], marker="s", color="#303a43", ms=3, zorder=5)
+        role = "前沿" if traj.archive_role == "pareto" else "多样性"
+        ax.set_title(f"{rank:02d} · 池索引 {index} · 第 {traj.iteration} 轮 · {role}\n"
+                     f"D={endpoint.distance:.2f} m · t={cap} 步 / {cap*cfg.feature_step_seconds:.2f} s",
+                     fontproperties=font, fontsize=9)
+        ax.set(xlim=(low[0], high[0]), ylim=(low[1], high[1]), xlabel="World x (m)", ylabel="World y (m)")
+        ax.set_aspect("equal")
+        ax.tick_params(labelsize=7)
+        ax.grid(alpha=.12)
+        return endpoint
+
+    cols = 4
+    rows = int(np.ceil(len(order)/cols))
+    fig, axes = plt.subplots(rows, cols, figsize=(16, rows*3.6), squeeze=False, facecolor="#faf9f6")
+    fig.subplots_adjust(top=.90, bottom=.055, left=.045, right=.99, hspace=.48, wspace=.30)
+    title = fig.suptitle(f"完整精英池 · {len(order)} 条运动轨迹", fontproperties=font, fontsize=20, y=.986)
+    fig.text(.5, .959, f"{pool.name} · 按确认距离 D 降序 · 所有小图同尺度 · D 为路线进度，不是高度",
+             ha="center", fontproperties=font, fontsize=10)
+    fig.legend(handles=legends, loc="upper center", bbox_to_anchor=(.5, .948), ncol=5, prop=font, frameon=False)
+    fig.text(.5, .018, "保存状态重建；线条为锅心轨迹。每条完整 1200 步 = 10 秒；与当前策略评估能力分开解读。"
+             if all(len(t.actions)==1200 for t in trajectories) else "保存状态重建；线条为锅心轨迹，末端停留到共同时间轴结束。",
+             ha="center", fontproperties=font, fontsize=9)
+    entries, moving = [], []
+    for rank, index in enumerate(order, 1):
+        ax = axes.flat[rank-1]
+        endpoint = panel(ax, index, rank)
+        traj = trajectories[index]
+        entries.append({"rank":rank, "pool_index":index, "source_iteration":int(traj.iteration),
+                        "role":traj.archive_role, "distance_m":endpoint.distance, "cap_step":endpoint.t_cap,
+                        "steps":len(traj.actions), "image":f"elite_{index:02d}.png"})
+        single, single_ax = plt.subplots(figsize=(8, 7))
+        panel(single_ax, index, rank)
+        single.legend(handles=legends, loc="lower center", ncol=3, prop=font, frameon=False)
+        single.subplots_adjust(bottom=.16, top=.89)
+        single.savefig(output/f"elite_{index:02d}.png", dpi=150)
+        plt.close(single)
+        dot, = ax.plot([], [], "o", color="#122b3b", ms=4, zorder=7)
+        shaft, = ax.plot([], [], color="#122b3b", lw=1.7, zorder=6)
+        moving.append((dot, shaft, traj))
+    for ax in list(axes.flat)[len(order):]:
+        ax.set_visible(False)
+    fig.savefig(output/"all_elite_trajectories.png", dpi=170)
+    if video:
+        ffmpeg = shutil.which("ffmpeg")
+        if not ffmpeg:
+            raise RuntimeError("ffmpeg is required for pool video")
+        matplotlib.rcParams["animation.ffmpeg_path"] = ffmpeg
+        end = max(len(t.actions) for t in trajectories)
+        stride = max(1, round(1/(30*cfg.feature_step_seconds)))
+        frames = sorted(set([*range(0, end+1, stride), end]))
+        writer = FFMpegWriter(fps=30, codec="libx264", bitrate=2800, extra_args=["-pix_fmt", "yuv420p"])
+        with writer.saving(fig, str(output/"all_elite_motion.mp4"), dpi=80):
+            for step in frames:
+                for dot, shaft, traj in moving:
+                    row = traj.raw_states[min(step, len(traj.actions))]
+                    xy = row[33:35] if len(row)==35 else row[:2]
+                    dot.set_data([xy[0]], [xy[1]])
+                    shaft.set_data([row[15], row[23]], [row[16], row[24]])
+                title.set_text(f"完整精英池 · {len(order)} 条运动轨迹 · {step*cfg.feature_step_seconds:.2f} / {end*cfg.feature_step_seconds:.2f} 秒")
+                writer.grab_frame()
+    plt.close(fig)
+    metadata = {"source_pool":str(pool.resolve()), "source_sha256":hashlib.sha256(pool.read_bytes()).hexdigest(),
+                "manifest":str(manifest_path.resolve()), "type":"archived_state_reconstruction_not_game_recording",
+                "trail":"pot_transform_point_b" if width==35 else "player_origin", "unpruned":True,
+                "reference_sha256":route.metadata["sha256"], "shared_bounds":[low.tolist(),high.tolist()], "entries":entries}
+    (output/"index.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(output/"all_elite_trajectories.png", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--episode", type=Path)
@@ -212,7 +485,23 @@ def main():
     parser.add_argument("--top", type=int, default=10)
     parser.add_argument("--mark-prune", action="store_true", help="按走廊 credited 封顶口径标出裁剪点")
     parser.add_argument("--mark-cap", action="store_true", help="标出最远确认点，保留完整轨迹显示")
+    parser.add_argument("--elite-pool", type=Path, help="绘制完整精英池的全部运动轨迹")
+    parser.add_argument("--manifest", type=Path, help="精英池模式所需的 config/reference manifest")
+    parser.add_argument("--pool-video", action="store_true", help="额外生成所有精英同步运动的视频")
+    parser.add_argument("--sampling-report", type=Path, help="将 sampling.json 的采样概率标在完整精英空间轨迹上")
+    parser.add_argument("--sampling-focus", nargs=2, type=int, metavar=("POOL_INDEX", "ACTION"),
+                        help="在并排图上额外标注指定池索引和动作所在的采样片段")
     args = parser.parse_args()
+    if args.sampling_focus and not args.sampling_report:
+        parser.error("--sampling-focus 需要 --sampling-report")
+    if args.elite_pool:
+        if args.manifest is None or args.episode or args.ranking:
+            parser.error("--elite-pool 需要 --manifest，且不能与 --episode/--ranking 同用")
+        render_elite_pool(args.elite_pool, args.manifest, args.output, video=args.pool_video,
+                          sampling_report=args.sampling_report, sampling_focus=args.sampling_focus)
+        return
+    if args.sampling_report:
+        parser.error("--sampling-report 需要 --elite-pool")
     if args.ranking is None and args.episode is None:
         parser.error("需要 --episode 或 --ranking")
     if args.ranking is not None:
