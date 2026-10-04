@@ -1,0 +1,1470 @@
+diff --git a/.gitignore b/.gitignore
+index 742717c..f7c9eab 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -185,6 +185,15 @@ runs/**/*.png
+ !runs/**/envelope.png
+ !runs/**/envelope_history.png
+ !runs/**/trajectory_vs_envelope.png
++!runs/**/sampling_coverage.png
++!runs/**/sampling_phases.png
++!runs/**/all_elite_sampling.png
++!runs/gru_sil_sampling_20261004/trajectories/elite_12_sampling.png
++!runs/gru_sil_event_sampling_20261004/trajectories/elite_12_sampling.png
++!runs/**/sampling_trajectory_mass.png
++!runs/**/sampling_dynamics.png
++!runs/gru_sil_dynamics_sampling_20261004/trajectories/elite_12_sampling.png
++!runs/gru_sil_dynamics_sampling_20261004/trajectories/elite_13_sampling.png
+ # These legacy result files embed full physics traces; result.compact.json
+ # preserves scalar metrics plus the raw file hash and omitted array lengths.
+ runs/dynamics_probe_disabled_reset_regression/result.json
+diff --git a/doc/training.md b/doc/training.md
+index d6402d6..f41e18a 100644
+--- a/doc/training.md
++++ b/doc/training.md
+@@ -13,6 +13,36 @@
+ 及对照实现的说明。GRU 在线逐帧编码、隐藏状态跨帧保留，episode/reset 时清零；
+ 训练按完整前缀无梯度重建状态，再对 32 步块反传。
+ 
++2026-10-04 起，新建 PPO 在启用 GRU SIL 时默认使用 `quality_dynamics_v3`。
++先按确认进度 D 的降序平均排名 r 分配轨迹份额：10% 均匀 + 90% softmax(-r/τ)，
++其中 τ=max(1, N/4)。同 D 同份额，不奖励较短的失败轨迹，也不按固定池索引加权。
++轨迹内部保留 10% 均匀抽片段，其余 90% 按片段内动作重要性的总和分配。没有
++动力学事件的轨迹内部回退到均匀。片段长度不会改变轨迹总份额。
++
++动作重要性来自六个动态刚体的质量加权速度，以避免将空中甩锤的内部动量交换
++误判为外部加速。以重力与线性阻力预测下一帧速度，再把观测偏差分成速度增长和
++转向两项合成强度；强度同时受实际质心加速度限制，静止支撑抵消重力不获高权重。
++核心需几何接触，阈值 5 m/s²、饱和 150 m/s²；非锤头接触中明显吸能且速度低于
++自由预测速度一半的冲击排除。保留前 12 步准备和后 6 步响应，以衰减核扩展；
++重叠取最大，不累计标签次数，也不一直扩展到腾空峰值。自然弹道飞行通常只保留
++小额均匀机会；同一 32 步块仍可能夹带少量空中帧。
++
++质量/阻力取自原生物理探针，重力 (0,-30) m/s² 在当前归档的自由飞行段复核；
++常量及速度字段索引在 `climb_diagnostics.DYNAMICS_SPEC` 中版本化。更换游戏物理
++参数时必须重新标定。该指标是控制机会代理，不能单凭速度推断动作因果价值。
++只改变抽样概率，SIL loss 不重复乘该权重；未来归档状态不输入在线策略。
++日志分别保存轨迹概率、条件片段概率、动作重要性与核心/上下文/纯飞行帧数。
++旧 checkpoint 缺少采样字段时仍用原规则；显式切换使用
++`--gru-sil-sampling-mode quality_dynamics_v3`。v1/v2 及原随机序列保留供历史复查。
++此改动尚需训练实验验证，离线覆盖变化不是学习收益。
++
++SIL 抽的是轨迹中连续的至多 32 步，目标仍为逐帧浮点鼠标位移 `(dx,dy)`，没有动作
++离散化。对片段 `[s,e)`，先用当前权重无梯度重放 `[0,s)`，再在片段内反传；动作前
++状态 `o_t` 和上一执行动作 `a_(t-1)` 对应目标 `a_t`。收益使用完整尾部，不在 32 步
++边界截断；仅对确认进度封顶之前的片段训练，正优势和 KL 回滚约束不变。当前 SIL
++是正优势加权的动作均值回归，精英动作含 OU 噪声，不能作为旧数据的 PPO 概率样本。
++前缀重建保留历史信息，但梯度仍截断在片段内；它也不保证当前策略能到达精英中的状态。
++
+ 存在两条并行训练管线，共享同一套环境接口、观测构建逻辑与投放机制。观测构建（dynamics 特征、4ch 粗图、稀疏几何 token、定长窗口填充/mask）在离线数据集与在线采集之间**收敛为单一实现**（`dataset.build_dynamics`/`build_patch`/`sparse_geometry.build_sparse_geometry`/`left_pad_sequence`），从结构上保证训练与推理逐窗口一致，不依赖文档手动对齐：
+ 
+ | 管线 | 入口 | 算法 |
+diff --git a/src/tests/analysis/campaign/README.md b/src/tests/analysis/campaign/README.md
+index c88dc81..8265b37 100644
+--- a/src/tests/analysis/campaign/README.md
++++ b/src/tests/analysis/campaign/README.md
+@@ -1,5 +1,59 @@
+ # 战役编排
+ 
++## 树下攀爬诊断与单变量配置
++
++`prepare_tree_climb.py` 离线读取实际 GRU checkpoint、完整精英池和冻结评估，
++重算奖励/确认进度，审计存档行为概率，检查观测重建和隐藏态前缀，追踪历史
++SIL 片段到当轮精英池，并生成 `REPORT.md`、JSON 证据及独立实验配置。
++不启动游戏、不执行 optimizer 更新。
++
++```powershell
++conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.analysis.campaign.prepare_tree_climb --output runs/tree_climb_preflight_v2
++conda run --no-capture-output -n getting-over-it-analysis python -m src.training.main_ppo --experiment-config runs/tree_climb_preflight_v2/recipes/precheck_control_s7.json --dry-run
++```
++
++配置完整继承源 checkpoint，而非关闭 SIL 的评估配置。四组分别为原行为、
++独立引导扩散宽度、轨迹价值与质心动力学采样的 GRU SIL（sil_mixed）、较长奖励折扣；同一组种子内仅
++改变一个因素。共用原 actor/GRU/归一化/std，重新初始化 critic，使用新优化器，
++两轮仅预热 critic。预检三轮和筛选十轮是各自从源模型开始的实验，不能重复计数。
++共同设置 `sil_start_iter=2`，第三轮首次 PPO 更新后即检查 GRU SIL（原始起始轮次 5
++不适合三轮工程预检）；若 PPO 实际更新预算不足以执行 SIL，在线验收必须报未覆盖。
++`--dry-run` 是纯检查；去掉它会训练，准备脚本不会自动这样做。
++
++阶段标签使用动作前状态和几何接触代理。高处锤头接触只是树枝接触候选，未标定
++为游戏物理真值。历史日志没有逐帧优势，报告明确留空；最终模型复算的优势不是
++当时梯度。所有新配置仍需游戏内采样/更新/恢复预检，前缀回放后的策略接管入口
++尚未实现。旧 checkpoint 缺少采样字段时继续采用 `trajectory_uniform`；
++新建 PPO 的 GRU SIL 使用 `quality_dynamics_v3`，确认进度排名决定轨迹份额，
++轨迹内按非重力接触加速/转向及前后短上下文分配。两个层次分别保留 10% 均匀机会。
++恢复旧模型时通过 `--gru-sil-sampling-mode quality_dynamics_v3` 显式切换；未指定就保留原行为。
++对照组固定为原采样，`reference_guidance_sigma=None` 保持旧观测行为。
++
++源码改变后旧配置的哈希检查会拒绝执行。可用 `--configs-only --output <新目录>`
++核对模型/精英池/路线/插件身份并重新生成 24 份配置。这只通过配置预检，不能代替
++全量离线审计或游戏内预检；旧报告保留为当时的证据。
++
++## 绘制精英池采样情况
++
++复用现有包络绘图入口，保留历史规则并比较 v2 软阶段事件与 v3 轨迹价值/动力学：
++
++```powershell
++conda run --no-capture-output -n getting-over-it-analysis python -m src.tests.evaluation.present.plot_sil_td_envelope --pool runs/gru_sil_8h_20261003/elites/full_episodes/elites_iter_0184.npz --sampling-checkpoint runs/gru_sil_8h_20261003/checkpoints/ppo_iter_0184.pt --output runs/gru_sil_dynamics_sampling_20261004
++```
++
++热图使用训练采样器的精确片段概率，阶段图再对照 20,000 次离线抽样频率；
++`sampling.json` 保存每个片段的概率分量、事件重叠范围、抽样次数、阶段覆盖及输入身份。按实际片段长度
++统计帧占比，不把抽样次数当成正优势帧数或接受更新量。此入口不创建模型、不启动游戏。
++`sampling_trajectory_mass.png` 分开显示整条轨迹份额；`sampling_dynamics.png` 显示
++前两条轨迹的质心速度变化、核心与上下文重要性、实际片段概率，方便检查价值判断。
++
++要把同一组概率标在锅心的空间轨迹上，使用已有运动轨迹入口的
++`--elite-pool <pool.npz> --manifest <manifest.json> --sampling-report <sampling.json>`。
++它核对池文件 SHA-256，生成完整池总览和每条精英的 v2 / v3 规则并排图；
++也支持历史报告的原规则 / 旧混合规则图。
++动作 t 的概率对应状态 t→t+1 线段，封顶后尾段用灰虚线表示。
++可加 `--sampling-focus 12 192`，在池索引 12 的并排图上标明第 192 步所在片段。
++
+ 历史对照的一次性控制器已删除，结论留在对应的 `runs/` 报告里。
+ 
+ - `prepare_v2_formal.py` — 检查稀疏几何权重和 v2 精英池，写出当时那次迁移的第一段参数。不启动游戏。
+diff --git a/src/tests/evaluation/present/plot_sil_td_envelope.py b/src/tests/evaluation/present/plot_sil_td_envelope.py
+index 7a98403..22740f3 100644
+--- a/src/tests/evaluation/present/plot_sil_td_envelope.py
++++ b/src/tests/evaluation/present/plot_sil_td_envelope.py
+@@ -8,6 +8,7 @@ is the same `sil_archive.pareto_front` used in training.
+ from __future__ import annotations
+ 
+ import argparse
++from collections import Counter
+ import json
+ from pathlib import Path
+ import sys
+@@ -238,12 +239,247 @@ def plot_trajectory_comparison(trajs: list[Trajectory], index: int, catalog: dic
+     return path
+ 
+ 
++SAMPLING_NAMES = {"trajectory_uniform": "原采样", "phase_mixture_v1": "旧版：多数阶段混合",
++                  "phase_event_mixture_v2": "v2：软阶段 + 起跳事件", "quality_dynamics_v3": "v3：轨迹价值 + 接触动力学",
++                  "phase_balanced_v1": "纯阶段均衡"}
++PHASE_NAMES = {
++    "approach_support": "前段支撑 / 其他", "takeoff_preparation": "起跳准备（不限区域）",
++    "approach_air_ascent": "前段腾空上升", "approach_air_other": "前段腾空其他",
++    "tree_support": "树区支撑 / 其他", "tree_air_ascent": "树区腾空上升",
++    "tree_air_other": "树区腾空其他", "elevated_tip_contact_candidate": "高处锤头接触候选",
++}
++
++
++def sampling_catalog(trajs, cfg, *, draws=20000, seed=7):
++    """Exact marginals + draws from the SAME sampler as training; no network update."""
++    from training.gru_sil import GRUSILSamplingPlan, eligible_sil_trajectories, DYNAMICS_SAMPLING_MODE
++    from training.climb_diagnostics import PhaseRules, classify_motion, phase_counts, launch_event_windows
++    from training.reference_corridor import trajectory_endpoint
++    if type(draws) is not int or draws < 1 or type(seed) is not int or seed < 0:
++        raise ValueError("Sampling preview needs positive draws and nonnegative seed")
++    candidates = eligible_sil_trajectories(trajs)
++    rules = PhaseRules(**(cfg.gru_sil_phase_rules or {}))
++    labels = {i: classify_motion(trajs[i].raw_states, trajs[i].contact, rules)[0] for i in candidates}
++    events = {i: launch_event_windows(trajs[i].raw_states, trajs[i].contact,
++                                     trajectory_endpoint(trajs[i]).cap + 1, rules) for i in candidates}
++    event_masks = {i: np.zeros(len(trajs[i].actions), bool) for i in candidates}
++    for i in candidates:
++        for event in events[i]: event_masks[i][event["start"]:event["end"]] = True
++    dynamics_plan = GRUSILSamplingPlan(trajs, candidates, cfg.recurrent_seq_len, DYNAMICS_SAMPLING_MODE,
++                                       rules, step_seconds=cfg.feature_step_seconds)
++    dynamics = dynamics_plan.dynamics
++    chunks_phases = {}
++    data = {"kind": "offline_sampling_preview_before_advantage_and_KL", "draws_per_mode": draws,
++            "seed": seed, "sampling_iteration": 0, "seq_len": cfg.recurrent_seq_len,
++            "step_seconds": cfg.feature_step_seconds, "phase_rules": vars(rules),
++            "comparison_modes": ["phase_event_mixture_v2", DYNAMICS_SAMPLING_MODE],
++            "dynamics": {i: {k: v.tolist() if isinstance(v, np.ndarray) else v for k,v in d.items()}
++                         for i,d in dynamics.items()},
++            "launch_events": events,
++            "trajectories": [{"index": i, "D_m": trajectory_endpoint(trajs[i]).distance,
++                              "cap": trajectory_endpoint(trajs[i]).cap + 1, "steps": len(trajs[i].actions),
++                              "source_iteration": int(trajs[i].iteration)} for i in candidates], "modes": {}}
++    for mode in SAMPLING_NAMES:
++        plan = (dynamics_plan if mode == DYNAMICS_SAMPLING_MODE else
++                GRUSILSamplingPlan(trajs, candidates, cfg.recurrent_seq_len, mode, rules))
++        probabilities = plan.probabilities()
++        np.testing.assert_allclose(sum(probabilities.values()), 1., rtol=0, atol=1e-12)
++        rng = np.random.default_rng(np.random.SeedSequence([seed, 0, 714]))
++        observed, branches = Counter(), Counter()
++        for _ in range(draws):
++            ti, a, b, cap, phase, branch = plan.draw(rng)
++            observed[(ti, a, b, cap)] += 1
++            branches[branch] += 1
++        expected_frames, sampled_frames = Counter(), Counter()
++        expected_event_frames = 0.
++        dynamics_frames, trajectory_mass = Counter(), Counter()
++        records = []
++        for chunk, probability in probabilities.items():
++            ti, a, b, cap = chunk
++            if chunk not in chunks_phases:
++                chunks_phases[chunk] = phase_counts(labels[ti][a:b])
++            phases = chunks_phases[chunk]
++            expected_frames.update({name: n * probability for name, n in phases.items()})
++            sampled_frames.update({name: n * observed[chunk] for name, n in phases.items()})
++            expected_event_frames += probability * int(event_masks[ti][a:b].sum())
++            d = dynamics[ti]
++            masks = {"core": d["core"], "context": (d["priority"]>0)&~d["core"],
++                     "free_flight": d["free_flight"], "all_air": ~d["contact"]}
++            dynamics_frames.update({k: probability*int(mask[a:b].sum()) for k,mask in masks.items()})
++            trajectory_mass[ti] += probability
++            records.append({"trajectory": ti, "start": a, "end": b, "cap": cap,
++                            "probability": probability, "observed_draws": observed[chunk], "phase_counts": phases,
++                            "weighting": plan.chunk_details.get(chunk)})
++        total_expected, total_sampled = sum(expected_frames.values()), sum(sampled_frames.values())
++        tree = lambda key: key.startswith("tree_") or key == "elevated_tip_contact_candidate"
++        data["modes"][mode] = {"chunks": records, "branch_draws": dict(branches),
++            "weighting": getattr(plan, "distribution_summary", None),
++            "trajectory_probabilities": dict(trajectory_mass),
++            "expected_dynamics_frame_share": {k: v/total_expected for k,v in dynamics_frames.items()},
++            "expected_launch_event_frame_share": expected_event_frames / total_expected,
++            "expected_phase_frame_share": {k: v / total_expected for k, v in expected_frames.items()},
++            "sampled_phase_frame_share": {k: v / total_sampled for k, v in sampled_frames.items()},
++            "expected_tree_frame_share": sum(v for k, v in expected_frames.items() if tree(k)) / total_expected,
++            "sampled_tree_frame_share": sum(v for k, v in sampled_frames.items() if tree(k)) / total_sampled,
++            "max_chunk_probability": max(probabilities.values()),
++            "max_chunk_frequency_error": max(abs(observed[c] / draws - p) for c, p in probabilities.items()),
++            "phase_groups": {k: {"chunks": len(v), "trajectories": len({c[0] for c in v})}
++                             for k, v in plan.groups.items()}}
++    return data
++
++
++def plot_sampling(data, output):
++    """Probability to include each action in one SIL chunk draw, before filtering."""
++    order = sorted(data["trajectories"], key=lambda row: (-row["D_m"], row["cap"], row["index"]))
++    positions = {row["index"]: i for i, row in enumerate(order)}
++    horizon = max(row["cap"] for row in order)
++    modes = data.get("comparison_modes", ("trajectory_uniform", "phase_mixture_v1"))
++    matrices = []
++    for mode in modes:
++        matrix = np.full((len(order), horizon), np.nan)
++        for row in data["modes"][mode]["chunks"]:
++            matrix[positions[row["trajectory"]], row["start"]:row["end"]] = row["probability"] * 100
++        matrices.append(matrix)
++    vmax = max(float(np.nanmax(m)) for m in matrices)
++    fig, axes = plt.subplots(2, 1, figsize=(13.5, 11), layout="constrained", facecolor="#faf9f6")
++    cmap = plt.get_cmap("YlGnBu").copy(); cmap.set_bad("#e9e9e9")
++    tick_labels = [f"{rank:02d}  池 {r['index']:02d}  D={r['D_m']:.2f} m" for rank, r in enumerate(order, 1)]
++    for ax, mode, matrix in zip(axes, modes, matrices):
++        im = ax.imshow(matrix, aspect="auto", interpolation="nearest", vmin=0, vmax=vmax, cmap=cmap,
++                       extent=(0, horizon, len(order)-.5, -.5))
++        ax.set_yticks(range(len(order)), tick_labels, fontproperties=FONT, fontsize=9)
++        ax.set_ylabel("精英按确认进度排序（保留原池索引）", fontproperties=FONT)
++        ax.set_xlabel("动作时间 t（环境步；120 步 = 1 秒）", fontproperties=FONT)
++        share = data["modes"][mode]["expected_tree_frame_share"]
++        ax.set_title(f"{SAMPLING_NAMES[mode]}：树区 / 高处接触候选的期望帧占比 {share:.1%}", fontproperties=FONT, fontsize=12)
++        for y, row in enumerate(order):
++            ax.plot([row["cap"]-.5]*2, [y-.38,y+.38], color="#333333", linewidth=1)
++        ax.set_xlim(0, horizon)
++    bar = fig.colorbar(im, ax=axes, shrink=.85, pad=.02)
++    bar.set_label("单次抽片段包含该动作的概率（%）", fontproperties=FONT)
++    fig.suptitle("当前完整精英池的 SIL 采样机会：加权规则比较", fontproperties=FONT, fontsize=15)
++    fig.supxlabel("黑短线为封顶边界；灰区不采样；只展示可采前缀（完整轨迹仍保留）。\n"
++                  "同一色标、按真实连续片段概率展开；尚未经过正优势 / KL 筛选，不是训练效果。\n"
++                  f"来源：{Path(data['source_pool']['path']).name}；{len(order)} 条精英；片段长度最多 {data['seq_len']} 步。",
++                  fontproperties=FONT, fontsize=9)
++    heatmap = output / "sampling_coverage.png"
++    fig.savefig(heatmap, dpi=150); plt.close(fig)
++
++    fig, ax = plt.subplots(figsize=(12.5, 8), facecolor="#faf9f6", layout="constrained")
++    ax.set_facecolor("#faf9f6")
++    phases = list(PHASE_NAMES)
++    colors = ("#8a939b", "#d3b185", "#ca8a37", "#226f9a", "#afbbc1")
++    available = [m for m in SAMPLING_NAMES if m in data["modes"]]
++    width = .8 / len(available)
++    for j, (mode, color) in enumerate(zip(available, colors)):
++        report = data["modes"][mode]
++        y = np.arange(len(phases)) + (j-(len(available)-1)/2)*width
++        expected = [100*report["expected_phase_frame_share"].get(p, 0) for p in phases]
++        sampled = [100*report["sampled_phase_frame_share"].get(p, 0) for p in phases]
++        ax.barh(y, expected, height=width*.92, color=color, label=SAMPLING_NAMES[mode])
++        ax.scatter(sampled, y, marker="|", s=65, color="#171717", zorder=4,
++                   label="离线抽样频率" if j == 0 else None)
++    ax.set_yticks(range(len(phases)), [PHASE_NAMES[p] for p in phases], fontproperties=FONT, fontsize=10)
++    ax.invert_yaxis(); ax.set_axisbelow(True); ax.grid(axis="x", alpha=.2)
++    ax.set_xlabel("被采训练帧的阶段占比（%，按片段实际长度加权）", fontproperties=FONT)
++    ax.set_ylabel("动作前状态的几何阶段", fontproperties=FONT)
++    ax.set_title("SIL 阶段覆盖：精确期望与生产采样器的离线抽样", fontproperties=FONT, fontsize=14)
++    ax.legend(prop=FONT, loc="lower right")
++    fig.supxlabel(f"每模式 {data['draws_per_mode']:,} 次抽样，seed={data['seed']}；柱为精确期望，黑线为抽样观测。\n"
++                  "阶段由几何代理定义；起跳准备跨区域；树区腾空其他包含下落，不能全部视为成功突破。\n"
++                  f"来源：{Path(data['source_pool']['path']).name}；未执行模型更新。", fontproperties=FONT, fontsize=9)
++    phases_path = output / "sampling_phases.png"
++    fig.savefig(phases_path, dpi=150); plt.close(fig)
++    return heatmap, phases_path, *plot_dynamics_sampling(data, output)
++
++
++def plot_dynamics_sampling(data, output):
++    """Separate trajectory value, physical opportunity, and actual chunk probability."""
++    if "dynamics" not in data: return ()
++    modes = data["comparison_modes"]
++    order = sorted(data["trajectories"], key=lambda r: (-r["D_m"], r["index"]))
++    colors = ("#bd8a43", "#226f9a")
++    fig, ax = plt.subplots(figsize=(13,6), layout="constrained", facecolor="#faf9f6")
++    x = np.arange(len(order))
++    for j,(mode,color) in enumerate(zip(modes,colors)):
++        mass = data["modes"][mode]["trajectory_probabilities"]
++        values = [100*mass.get(row["index"], mass.get(str(row["index"]),0)) for row in order]
++        bars = ax.bar(x+(j-.5)*.36,values,.34,color=color,label=SAMPLING_NAMES[mode])
++        ax.bar_label(bars,fmt="%.1f",fontsize=8)
++    ax.set_xticks(x,[f"{i+1}\nD={r['D_m']:.1f}" for i,r in enumerate(order)],fontsize=9)
++    ax.set_xlabel("精英按确认进度排序（D：米）",fontproperties=FONT)
++    ax.set_ylabel("一次 SIL 抽样选择该轨迹的概率（%）",fontproperties=FONT)
++    ax.set_title("先决定哪些轨迹值得多练：确认进度排名决定总份额",fontproperties=FONT,fontsize=14)
++    ax.legend(prop=FONT);ax.grid(axis="y",alpha=.15);ax.set_axisbelow(True)
++    fig.supxlabel(f"整条轨迹的所有可采片段概率之和；轨迹长不会稀释其总份额。\n"
++                  f"来源：{Path(data['source_pool']['path']).name}；这些是筛选前机会，尚未训练。",fontproperties=FONT,fontsize=9)
++    mass_path=output/"sampling_trajectory_mass.png";fig.savefig(mass_path,dpi=150);plt.close(fig)
++
++    top=order[:2]
++    fig,axes=plt.subplots(3,len(top),figsize=(15,10),sharex="col",squeeze=False,
++                           layout="constrained",facecolor="#faf9f6")
++    for column,row in enumerate(top):
++        i,cap=row["index"],row["cap"]
++        d=data["dynamics"].get(i,data["dynamics"].get(str(i)))
++        t=np.arange(cap);core=np.asarray(d["core"]);priority=np.asarray(d["priority"])
++        axes[0,column].plot(t,d["speed_gain_acceleration"],color="#226f9a",lw=1,label="速度增长分量")
++        axes[0,column].plot(t,d["turning_acceleration"],color="#ba7541",lw=1,label="转向分量")
++        axes[0,column].set_yscale("symlog",linthresh=5)
++        axes[0,column].set_ylabel("扣除重力与阻力（m/s²；对称对数）",fontproperties=FONT)
++        axes[0,column].set_title(f"轨迹 {column+1} · 池 {i} · D={row['D_m']:.2f} m",fontproperties=FONT,fontsize=12)
++        axes[0,column].legend(prop=FONT,loc="upper right")
++        axes[1,column].fill_between(t,priority,step="post",color="#dfbd81",label="准备 / 响应上下文")
++        axes[1,column].fill_between(t,np.where(core,priority,0),step="post",color="#226f9a",label="接触加速 / 转向核心")
++        axes[1,column].set(ylim=(0,1.05))
++        axes[1,column].set_ylabel("动作重要性（0–1；采样前代理）",fontproperties=FONT)
++        axes[1,column].legend(prop=FONT,loc="upper right")
++        for mode,color in zip(modes,colors):
++            values=np.zeros(cap)
++            for chunk in data["modes"][mode]["chunks"]:
++                if chunk["trajectory"]==i: values[chunk["start"]:chunk["end"]]=100*chunk["probability"]
++            axes[2,column].step(t,values,where="post",color=color,label=SAMPLING_NAMES[mode])
++        axes[2,column].set_ylabel("该动作被抽入训练片段的概率（%）",fontproperties=FONT)
++        axes[2,column].set_xlabel("动作 t（环境步；120 步 = 1 秒）",fontproperties=FONT)
++        axes[2,column].legend(prop=FONT,loc="upper right")
++        for ax in axes[:,column]: ax.set_xlim(0,cap);ax.grid(alpha=.15)
++    fig.suptitle("轨迹 1、2：质心动力学 → 动作重要性 → 实际连续片段概率",fontproperties=FONT,fontsize=15)
++    fig.supxlabel("动力学基于六个刚体的质量加权速度；第一行是原始分量，第二行已筛掉静止支撑与纯锅体吸能碰撞。\n"
++                  "核心需接触代理；前 12 步与后 6 步衰减，不延伸到腾空峰值。片段长最多 32 步，可能包含少量空中帧。\n"
++                  f"来源：{Path(data['source_pool']['path']).name}；未执行模型更新，不能据此断言动作的因果价值。",
++                  fontproperties=FONT,fontsize=9)
++    detail_path=output/"sampling_dynamics.png";fig.savefig(detail_path,dpi=150);plt.close(fig)
++    return mass_path,detail_path
++
++
++def write_sampling_preview(pool, checkpoint, output, draws, seed):
++    import torch
++    from training.climb_experiment import identity
++    from training.elite_archive import EliteTrajectoryArchive
++    from training.reference_fingerprint import reference_fingerprint, sidecar_path
++    from training.reference_corridor import ReferenceCorridor
++    cfg = TrainConfig(**torch.load(checkpoint, map_location="cpu", weights_only=False)["config"])
++    route = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg)
++    fp = reference_fingerprint(cfg, route_meta=route.metadata, schema_id="anchor35", raw_dim=35)
++    archive = EliteTrajectoryArchive(cfg, pool.parent, fp); archive.restore(pool)
++    data = sampling_catalog(archive.trajectories, cfg, draws=draws, seed=seed)
++    data.update(source_pool=identity(pool), checkpoint=identity(checkpoint), pool_fingerprint=identity(sidecar_path(pool)),
++                source_files=[identity(ROOT/"src/training/gru_sil.py"),
++                              identity(ROOT/"src/training/climb_diagnostics.py"), identity(Path(__file__))])
++    paths = plot_sampling(data, output)
++    path = output / "sampling.json"
++    path.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
++    return *paths, path
++
++
+ def parse_args(argv=None):
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--pool", type=Path, help="单个 elites_iter_*.npz")
+     parser.add_argument("--elites-dir", type=Path, help="含 elites_iter_*.npz 的目录")
+     parser.add_argument("--output", type=Path, required=True)
+     parser.add_argument("--trajectory-index", type=int, help="叠加最后一个池快照中指定轨迹的完整 D_t 曲线")
++    parser.add_argument("--sampling-checkpoint", type=Path, help="离线比较原 / 多数阶段 / 软阶段事件加权的采样机会；不训练")
++    parser.add_argument("--sampling-draws", type=int, default=20000)
++    parser.add_argument("--sampling-seed", type=int, default=7)
+     args = parser.parse_args(argv)
+     if args.pool is None and args.elites_dir is None:
+         parser.error("需要 --pool 或 --elites-dir")
+@@ -269,6 +505,10 @@ def main(argv=None):
+     if args.trajectory_index is not None:
+         print(plot_trajectory_comparison(load_trajectories(pools[-1]), args.trajectory_index,
+                                          catalogs[-1], args.output), flush=True)
++    if args.sampling_checkpoint:
++        for path in write_sampling_preview(pools[-1], args.sampling_checkpoint, args.output,
++                                           args.sampling_draws, args.sampling_seed):
++            print(path, flush=True)
+     print(snapshot, flush=True)
+     if history is not None:
+         print(history, flush=True)
+diff --git a/src/tests/evaluation/present/render_episode_motion.py b/src/tests/evaluation/present/render_episode_motion.py
+index d8e4b53..03604da 100644
+--- a/src/tests/evaluation/present/render_episode_motion.py
++++ b/src/tests/evaluation/present/render_episode_motion.py
+@@ -1,5 +1,6 @@
+ """Render one archived physical trajectory, without launching or simulating the game."""
+ import argparse
++import hashlib
+ import json
+ from pathlib import Path
+ import shutil
+@@ -204,6 +205,278 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
+     return meta
+ 
+ 
++def sampling_path_probabilities(data, trajectories):
++    """Map action t's inclusion probability to the physical segment state[t:t+2]."""
++    from training.reference_corridor import trajectory_endpoint
++    if data.get("kind") != "offline_sampling_preview_before_advantage_and_KL":
++        raise ValueError("Expected an offline SIL sampling report")
++    result = {}
++    for mode in data.get("comparison_modes", ("trajectory_uniform", "phase_mixture_v1")):
++        arrays = [np.zeros(len(t.actions), np.float64) for t in trajectories]
++        covered = [np.zeros(len(t.actions), bool) for t in trajectories]
++        total = 0.
++        for row in data["modes"][mode]["chunks"]:
++            i, start, end, cap = (int(row[k]) for k in ("trajectory", "start", "end", "cap"))
++            p = float(row["probability"])
++            if (not 0 <= i < len(trajectories) or not np.isfinite(p) or not 0 <= p <= 1
++                    or not 0 <= start < end <= cap <= len(trajectories[i].actions)
++                    or cap != trajectory_endpoint(trajectories[i]).t_cap):
++                raise ValueError("Sampling chunk does not match the physical trajectory")
++            if covered[i][start:end].any():
++                raise ValueError("Overlapping sampling chunks")
++            arrays[i][start:end] = p
++            covered[i][start:end] = True
++            total += p
++        for i, traj in enumerate(trajectories):
++            cap = trajectory_endpoint(traj).t_cap
++            if not covered[i][:cap].all():
++                raise ValueError("Sampling report is missing a trajectory prefix")
++        if not np.isclose(total, 1., rtol=0, atol=1e-10):
++            raise ValueError("Sampling probabilities must sum to one across chunks")
++        result[mode] = arrays
++    return result
++
++
++def render_sampling_paths(pool, sampling_report, output, trajectories, order, terrain, route, low, high, focus=None):
++    """Put the existing sampling audit directly on archived pot-center trajectories."""
++    from training.reference_corridor import trajectory_endpoint
++    from matplotlib.collections import LineCollection
++    from matplotlib.colors import Normalize
++    from matplotlib.lines import Line2D
++    from training.climb_experiment import identity
++    data = json.loads(sampling_report.read_text(encoding="utf-8"))
++    if data["source_pool"]["sha256"] != hashlib.sha256(pool.read_bytes()).hexdigest():
++        raise ValueError("Sampling report was produced from a different elite pool")
++    probabilities = sampling_path_probabilities(data, trajectories)
++    if focus is not None and (not 0 <= focus[0] < len(trajectories)
++                             or not 0 <= focus[1] < trajectory_endpoint(trajectories[focus[0]]).t_cap):
++        raise ValueError("Sampling focus must be an eligible pool index and pre-cap action")
++    modes = data.get("comparison_modes", ("trajectory_uniform", "phase_mixture_v1"))
++    from .plot_sil_td_envelope import SAMPLING_NAMES
++    names = SAMPLING_NAMES
++    vmax = max(float(p.max())*100 for arrays in probabilities.values() for p in arrays)
++    norm = Normalize(0, vmax)
++    cmap = plt.get_cmap("YlGnBu")
++    font = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
++    legends = [Line2D([], [], color="#a5a5a5", ls="--", label="封顶后尾段：不采样"),
++               Line2D([], [], color="#6b9576", ls=":", label="参考路线"),
++               Line2D([], [], marker="o", mfc="white", mec="#333333", ls="", label="出生点"),
++               Line2D([], [], marker="*", color="#bd8610", ls="", label="封顶点"),
++               Line2D([], [], marker="s", color="#333333", ls="", label="完整轨迹末端")]
++
++    def draw(ax, index, rank, mode, *, annotate=False):
++        trail = path_xy(trajectories[index].raw_states)
++        endpoint = trajectory_endpoint(trajectories[index]); cap = endpoint.t_cap
++        for poly in terrain:
++            if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):
++                ax.fill(poly[:, 0], poly[:, 1], color="#ebe7df", edgecolor="#c9c3b9", lw=.4, zorder=0)
++        for segment in route.segments:
++            ax.plot(*segment.points.T, color="#6b9576", lw=.9, ls=":", alpha=.7, zorder=1)
++        ax.plot(*trail[cap:].T, color="#999999", lw=1., ls="--", alpha=.65, zorder=2)
++        # A thin dark outline keeps low-probability yellow segments visible against terrain.
++        ax.plot(*trail[:cap+1].T, color="#555555", lw=3.5, alpha=.75, zorder=3)
++        segments = np.stack((trail[:cap], trail[1:cap+1]), axis=1)
++        collection = LineCollection(segments, cmap=cmap, norm=norm, linewidths=2.6, zorder=4)
++        collection.set_array(probabilities[mode][index][:cap]*100)
++        ax.add_collection(collection)
++        ax.plot(*trail[0], marker="o", mfc="white", mec="#333333", ms=4, zorder=6)
++        ax.plot(*trail[cap], marker="*", color="#bd8610", ms=11, mec="white", mew=.5, zorder=6)
++        ax.plot(*trail[-1], marker="s", color="#333333", ms=4, zorder=6)
++        if annotate:
++            chunks = [c for c in data["modes"][modes[1]]["chunks"] if c["trajectory"] == index]
++            # Label the same two high-probability chunks in both views for direct comparison.
++            chosen = sorted(chunks, key=lambda c: (-c["probability"], c["start"]))[:2]
++            if focus is not None and index == focus[0]:
++                focal = next(c for c in chunks if c["start"] <= focus[1] < c["end"])
++                chosen = [focal, *[c for c in chosen if c is not focal]][:2]
++            for j, row in enumerate(chosen):
++                start, end = row["start"], row["end"]
++                focused = focus is not None and index == focus[0] and start <= focus[1] < end
++                xy = trail[focus[1] if focused else (start+end)//2]
++                if focused: ax.plot(*xy, "o", ms=5, mfc="white", mec="#b53f37", zorder=8)
++                ax.annotate(f"{start}–{end-1} 步\n{probabilities[mode][index][start]*100:.2f}%",
++                            xy, xytext=((-42, 26) if j == 0 else (12, -35)), textcoords="offset points",
++                            fontproperties=font, fontsize=8,
++                            bbox=dict(boxstyle="round,pad=.2", fc="white", ec="#a0a0a0", alpha=.93),
++                            arrowprops=dict(arrowstyle="-", color="#555555", lw=.7), zorder=8)
++        ax.set_title(f"{rank:02d} · 池 {index:02d} · D={endpoint.distance:.2f} m · {names[mode]}\n"
++                     f"封顶 t={cap} 步；第 {trajectories[index].iteration} 轮精英", fontproperties=font, fontsize=10)
++        ax.set(xlim=(low[0], high[0]), ylim=(low[1], high[1]), xlabel="World x (m)", ylabel="World y (m)")
++        ax.set_aspect("equal"); ax.tick_params(labelsize=8); ax.grid(alpha=.1)
++        return collection
++
++    def decorate(fig, axes, title):
++        fig.suptitle(title, fontproperties=font, fontsize=17)
++        scalar = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap)
++        bar = fig.colorbar(scalar, ax=np.asarray(axes).ravel().tolist(), shrink=.8, pad=.02)
++        bar.set_label("单次抽片段包含该动作的概率（%，越深越常采）", fontproperties=font)
++        fig.supxlabel("锅心真实空间轨迹；每段颜色对应动作 t 导致的状态 t → t+1，所有小图同坐标和色标。\n"
++                      "灰虚线仍完整保存；颜色为筛选前的采样机会，非已接受更新或策略成功率。\n"
++                      f"来源：{pool.name}；完整池 {len(trajectories)} 条；几何与参考路线同此前轨迹图。",
++                      fontproperties=font, fontsize=9)
++
++    rows = int(np.ceil(len(order)/4))
++    fig, axes = plt.subplots(rows, 4, figsize=(18, rows*2.7+1.2), squeeze=False, layout="constrained", facecolor="#faf9f6")
++    for rank, index in enumerate(order, 1):
++        draw(axes.flat[rank-1], index, rank, modes[1])
++    for ax in list(axes.flat)[len(order):]: ax.set_visible(False)
++    decorate(fig, axes, f"精英池空间轨迹上的 SIL 采样机会 · {names[modes[1]]}")
++    fig.legend(handles=legends, loc="outside upper center", bbox_to_anchor=(.48,.971), ncol=5, prop=font, frameon=False)
++    fig.get_layout_engine().set(rect=(0,0,1,.95))
++    gallery = output/"all_elite_sampling.png"
++    fig.savefig(gallery, dpi=150); plt.close(fig)
++
++    # Paired detail views retain the exact same physical path, terrain and color normalization.
++    entries = []
++    for rank, index in enumerate(order, 1):
++        fig, axes = plt.subplots(1, 2, figsize=(13, 5.1), layout="constrained", facecolor="#faf9f6")
++        for ax, mode in zip(axes, modes): draw(ax, index, rank, mode, annotate=True)
++        decorate(fig, axes, f"第 {rank} 条精英：只改变采样机会，物理轨迹相同")
++        fig.legend(handles=legends, loc="outside upper center", bbox_to_anchor=(.47,.936), ncol=3, prop=font, frameon=False)
++        fig.get_layout_engine().set(rect=(0,0,1,.85))
++        path = output/f"elite_{index:02d}_sampling.png"
++        fig.savefig(path, dpi=150); plt.close(fig)
++        entries.append({"rank":rank, "pool_index":index, "image":path.name,
++                        "cap_step":trajectory_endpoint(trajectories[index]).t_cap})
++    meta = {"source_pool":identity(pool), "sampling_report":identity(sampling_report), "renderer":identity(Path(__file__)),
++            "kind":"archived_spatial_trajectory_with_expected_sampling_probability",
++            "comparison_modes": modes,
++            "focus_pool_index_action": focus,
++            "probability_units":"percent inclusion per chunk draw before advantage/KL filters",
++            "segment_alignment":"action t -> states[t] to states[t+1]", "vmin":0, "vmax":vmax,
++            "shared_bounds":[low.tolist(),high.tolist()], "reference_sha256":route.metadata["sha256"],
++            "gallery":gallery.name, "entries":entries}
++    (output/"sampling_trajectories.json").write_text(json.dumps(meta,ensure_ascii=False,indent=2),encoding="utf-8")
++    print(gallery, flush=True)
++    print(output/entries[0]["image"], flush=True)
++
++
++def render_elite_pool(pool: Path, manifest_path: Path, output: Path, *, video=False, sampling_report=None,
++                      sampling_focus=None):
++    """Plot every complete elite on common world axes, retaining its entire tail."""
++    from training.elite_archive import EliteTrajectoryArchive
++    from training.reference_fingerprint import reference_fingerprint
++    from training.reference_corridor import trajectory_endpoint
++    from training.state_schema import schema_from_raw_width
++    from matplotlib.lines import Line2D
++
++    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
++    cfg = TrainConfig(**manifest["config"])
++    route = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg)
++    if route.metadata["sha256"] != manifest["reference"]["sha256"]:
++        raise ValueError("Reference file differs from the archived manifest")
++    with np.load(pool) as data:
++        width = data["t0_states"].shape[1]
++    fingerprint = reference_fingerprint(cfg, route_meta=route.metadata,
++                                        schema_id=schema_from_raw_width(width).schema_id, raw_dim=width)
++    archive = EliteTrajectoryArchive(cfg, pool.parent, fingerprint)
++    archive.restore(pool)
++    trajectories = archive.trajectories
++    if not trajectories:
++        raise ValueError("Elite pool is empty")
++    order = sorted(range(len(trajectories)), key=lambda i: (
++        -trajectory_endpoint(trajectories[i]).distance, trajectory_endpoint(trajectories[i]).t_cap, i))
++    env, _ = load_colliders(Path(cfg.game_root))
++    terrain = extract_polygons(env)
++    trails = [path_xy(t.raw_states) for t in trajectories]
++    points = np.concatenate(trails + [t.raw_states[:, 23:25] for t in trajectories])
++    low, high = points.min(axis=0) - 1.5, points.max(axis=0) + 1.5
++    font = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
++    output.mkdir(parents=True, exist_ok=True)
++    if sampling_report is not None:
++        if video:
++            raise ValueError("Sampling overlay is a static view; omit --pool-video")
++        return render_sampling_paths(pool, sampling_report, output, trajectories, order, terrain, route, low, high,
++                                     focus=sampling_focus)
++    colors = {"prefix": "#226a91", "tail": "#a75e42", "route": "#6b9576"}
++    legends = [Line2D([], [], color=colors["prefix"], label="最远确认前"),
++               Line2D([], [], color=colors["tail"], label="最远确认后（完整保留）"),
++               Line2D([], [], color=colors["route"], label="参考路线"),
++               Line2D([], [], marker="*", color="#c69716", ls="", label="最远确认点"),
++               Line2D([], [], marker="s", color="#303a43", ls="", label="轨迹末端")]
++
++    def panel(ax, index, rank):
++        traj, trail = trajectories[index], trails[index]
++        endpoint = trajectory_endpoint(traj)
++        cap = endpoint.t_cap
++        for poly in terrain:
++            if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):
++                ax.fill(poly[:, 0], poly[:, 1], color="#e4e0d9", edgecolor="#c4bdb3", lw=.4)
++        for segment in route.segments:
++            ax.plot(segment.points[:, 0], segment.points[:, 1], color=colors["route"], lw=.8, alpha=.8)
++        ax.plot(trail[:cap + 1, 0], trail[:cap + 1, 1], color=colors["prefix"], lw=1.3)
++        ax.plot(trail[cap:, 0], trail[cap:, 1], color=colors["tail"], lw=1., alpha=.75)
++        ax.plot(*trail[0], marker="o", color=colors["prefix"], ms=3)
++        ax.plot(*trail[cap], marker="*", color="#c69716", ms=9, mec="white", mew=.4, zorder=5)
++        ax.plot(*trail[-1], marker="s", color="#303a43", ms=3, zorder=5)
++        role = "前沿" if traj.archive_role == "pareto" else "多样性"
++        ax.set_title(f"{rank:02d} · 池索引 {index} · 第 {traj.iteration} 轮 · {role}\n"
++                     f"D={endpoint.distance:.2f} m · t={cap} 步 / {cap*cfg.feature_step_seconds:.2f} s",
++                     fontproperties=font, fontsize=9)
++        ax.set(xlim=(low[0], high[0]), ylim=(low[1], high[1]), xlabel="World x (m)", ylabel="World y (m)")
++        ax.set_aspect("equal")
++        ax.tick_params(labelsize=7)
++        ax.grid(alpha=.12)
++        return endpoint
++
++    cols = 4
++    rows = int(np.ceil(len(order)/cols))
++    fig, axes = plt.subplots(rows, cols, figsize=(16, rows*3.6), squeeze=False, facecolor="#faf9f6")
++    fig.subplots_adjust(top=.90, bottom=.055, left=.045, right=.99, hspace=.48, wspace=.30)
++    title = fig.suptitle(f"完整精英池 · {len(order)} 条运动轨迹", fontproperties=font, fontsize=20, y=.986)
++    fig.text(.5, .959, f"{pool.name} · 按确认距离 D 降序 · 所有小图同尺度 · D 为路线进度，不是高度",
++             ha="center", fontproperties=font, fontsize=10)
++    fig.legend(handles=legends, loc="upper center", bbox_to_anchor=(.5, .948), ncol=5, prop=font, frameon=False)
++    fig.text(.5, .018, "保存状态重建；线条为锅心轨迹。每条完整 1200 步 = 10 秒；与当前策略评估能力分开解读。"
++             if all(len(t.actions)==1200 for t in trajectories) else "保存状态重建；线条为锅心轨迹，末端停留到共同时间轴结束。",
++             ha="center", fontproperties=font, fontsize=9)
++    entries, moving = [], []
++    for rank, index in enumerate(order, 1):
++        ax = axes.flat[rank-1]
++        endpoint = panel(ax, index, rank)
++        traj = trajectories[index]
++        entries.append({"rank":rank, "pool_index":index, "source_iteration":int(traj.iteration),
++                        "role":traj.archive_role, "distance_m":endpoint.distance, "cap_step":endpoint.t_cap,
++                        "steps":len(traj.actions), "image":f"elite_{index:02d}.png"})
++        single, single_ax = plt.subplots(figsize=(8, 7))
++        panel(single_ax, index, rank)
++        single.legend(handles=legends, loc="lower center", ncol=3, prop=font, frameon=False)
++        single.subplots_adjust(bottom=.16, top=.89)
++        single.savefig(output/f"elite_{index:02d}.png", dpi=150)
++        plt.close(single)
++        dot, = ax.plot([], [], "o", color="#122b3b", ms=4, zorder=7)
++        shaft, = ax.plot([], [], color="#122b3b", lw=1.7, zorder=6)
++        moving.append((dot, shaft, traj))
++    for ax in list(axes.flat)[len(order):]:
++        ax.set_visible(False)
++    fig.savefig(output/"all_elite_trajectories.png", dpi=170)
++    if video:
++        ffmpeg = shutil.which("ffmpeg")
++        if not ffmpeg:
++            raise RuntimeError("ffmpeg is required for pool video")
++        matplotlib.rcParams["animation.ffmpeg_path"] = ffmpeg
++        end = max(len(t.actions) for t in trajectories)
++        stride = max(1, round(1/(30*cfg.feature_step_seconds)))
++        frames = sorted(set([*range(0, end+1, stride), end]))
++        writer = FFMpegWriter(fps=30, codec="libx264", bitrate=2800, extra_args=["-pix_fmt", "yuv420p"])
++        with writer.saving(fig, str(output/"all_elite_motion.mp4"), dpi=80):
++            for step in frames:
++                for dot, shaft, traj in moving:
++                    row = traj.raw_states[min(step, len(traj.actions))]
++                    xy = row[33:35] if len(row)==35 else row[:2]
++                    dot.set_data([xy[0]], [xy[1]])
++                    shaft.set_data([row[15], row[23]], [row[16], row[24]])
++                title.set_text(f"完整精英池 · {len(order)} 条运动轨迹 · {step*cfg.feature_step_seconds:.2f} / {end*cfg.feature_step_seconds:.2f} 秒")
++                writer.grab_frame()
++    plt.close(fig)
++    metadata = {"source_pool":str(pool.resolve()), "source_sha256":hashlib.sha256(pool.read_bytes()).hexdigest(),
++                "manifest":str(manifest_path.resolve()), "type":"archived_state_reconstruction_not_game_recording",
++                "trail":"pot_transform_point_b" if width==35 else "player_origin", "unpruned":True,
++                "reference_sha256":route.metadata["sha256"], "shared_bounds":[low.tolist(),high.tolist()], "entries":entries}
++    (output/"index.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
++    print(output/"all_elite_trajectories.png", flush=True)
++
++
+ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--episode", type=Path)
+@@ -212,7 +485,23 @@ def main():
+     parser.add_argument("--top", type=int, default=10)
+     parser.add_argument("--mark-prune", action="store_true", help="按走廊 credited 封顶口径标出裁剪点")
+     parser.add_argument("--mark-cap", action="store_true", help="标出最远确认点，保留完整轨迹显示")
++    parser.add_argument("--elite-pool", type=Path, help="绘制完整精英池的全部运动轨迹")
++    parser.add_argument("--manifest", type=Path, help="精英池模式所需的 config/reference manifest")
++    parser.add_argument("--pool-video", action="store_true", help="额外生成所有精英同步运动的视频")
++    parser.add_argument("--sampling-report", type=Path, help="将 sampling.json 的采样概率标在完整精英空间轨迹上")
++    parser.add_argument("--sampling-focus", nargs=2, type=int, metavar=("POOL_INDEX", "ACTION"),
++                        help="在并排图上额外标注指定池索引和动作所在的采样片段")
+     args = parser.parse_args()
++    if args.sampling_focus and not args.sampling_report:
++        parser.error("--sampling-focus 需要 --sampling-report")
++    if args.elite_pool:
++        if args.manifest is None or args.episode or args.ranking:
++            parser.error("--elite-pool 需要 --manifest，且不能与 --episode/--ranking 同用")
++        render_elite_pool(args.elite_pool, args.manifest, args.output, video=args.pool_video,
++                          sampling_report=args.sampling_report, sampling_focus=args.sampling_focus)
++        return
++    if args.sampling_report:
++        parser.error("--sampling-report 需要 --elite-pool")
+     if args.ranking is None and args.episode is None:
+         parser.error("需要 --episode 或 --ranking")
+     if args.ranking is not None:
+diff --git a/src/tests/training/test_gru_sil.py b/src/tests/training/test_gru_sil.py
+index 8e03237..97567ed 100644
+--- a/src/tests/training/test_gru_sil.py
++++ b/src/tests/training/test_gru_sil.py
+@@ -3,7 +3,9 @@ import contextlib
+ import copy
+ import io
+ import json
++import math
+ import sys
++import tempfile
+ import unittest
+ from dataclasses import asdict, replace
+ from pathlib import Path
+@@ -20,7 +22,10 @@ from training.decision_buffer import DecisionRolloutBuffer
+ from training.experimental_policy import create_actor_critic
+ from training.experiment_options import ppo_config
+ from training.gru_sil import (conditional_kl, discounted_returns, gru_sil_update,
+-                              rollout_distributions, sequence_features, sequence_predictions, validate_gru_sil)
++                              rollout_distributions, sequence_features, sequence_predictions, validate_gru_sil,
++                              GRUSILSamplingPlan)
++from training.gru_sil import EVENT_SAMPLING_MODE, bounded_target_distribution
++from training.climb_diagnostics import launch_event_windows
+ from training.main_ppo import main
+ from training.ppo_trainer import PPOTrainer
+ from src.tests.training.test_elite_archive import episode
+@@ -34,7 +39,7 @@ class GRUSILTests(unittest.TestCase):
+                            reference_trajectory="test", recurrent_seq_len=3, gru_sil_enabled=True,
+                            gru_sil_seed=7, lr=1e-4, weight_decay=1e-4)
+         self.traj = episode(t=8, tail=3)
+-        self.traj.actions[:] = [30., -20.]
++        self.traj.actions[:] = [30.125, -20.875]
+         self.traj.step_rewards[:] = .5
+         terrain = np.ones((100, 100), np.float32)
+         self.encoder = TrajectoryDataset(self.cfg, terrain, terrain, reference_maps=[terrain])
+@@ -104,6 +109,17 @@ class GRUSILTests(unittest.TestCase):
+         rebuilt.sum().backward()
+         self.assertGreater(float(self.model.gru.weight_hh_l0.grad.abs().sum()), 0)
+ 
++    def test_fractional_actions_remain_ordered_and_targets_use_previous_action_history(self):
++        n=len(self.traj.actions)
++        self.traj.actions[:,0]=np.linspace(-31.125,42.875,n)
++        self.traj.actions[:,1]=np.linspace(9.375,-20.625,n)
++        frames=self.encoder.encode_sequence(self.traj)
++        start,end=3,8
++        np.testing.assert_array_equal(frames["act_history"][start:end],self.traj.actions[start-1:end-1])
++        raw=torch.atanh(torch.as_tensor(self.traj.actions[start:end])/self.cfg.action_scale)
++        reconstructed=torch.tanh(raw)*self.cfg.action_scale
++        torch.testing.assert_close(reconstructed,torch.as_tensor(self.traj.actions[start:end]),atol=1e-5,rtol=1e-6)
++
+     def test_returns_include_tail_and_distinguish_terminal_from_truncation(self):
+         np.testing.assert_allclose(discounted_returns([1, 2], [False, False], 5, .5), [3.25, 4.5])
+         np.testing.assert_allclose(discounted_returns([1, 2], [False, True], 5, .5), [2, 2])
+@@ -142,6 +158,43 @@ class GRUSILTests(unittest.TestCase):
+             self.assertEqual(metrics["gru_sil_updates"], 0)
+             self.assert_state_equal(before, (self.model.state_dict(), self.trainer.optimizer.state_dict()))
+ 
++    def test_phase_sampling_preserves_recurrent_update_budget_and_records_weights(self):
++        self.cfg.gru_sil_sampling_mode = "phase_balanced_v1"
++        result = self.update(budget=8)
++        self.assertEqual(result["gru_sil_updates"], 2)
++        record = self.trainer.last_gru_sil_sampling
++        self.assertEqual(record["sampling_mode"], "phase_balanced_v1")
++        for row in record["chunks"]:
++            self.assertEqual(sum(row["phase_counts"].values()), row["end"]-row["start"])
++            self.assertEqual(sum(row["positive_by_phase"].values()), row["positive_frames"])
++            self.assertGreater(sum(row["advantage_sum_by_phase"].values()), 0)
++            self.assertIsNotNone(row["selected_phase"])
++            self.assertLessEqual(row["end"], row["cap"])
++
++    def test_event_weighting_preserves_update_budget_and_audits_each_draw(self):
++        self.cfg.gru_sil_sampling_mode = EVENT_SAMPLING_MODE
++        result = self.update(budget=8)
++        self.assertEqual(result["gru_sil_updates"], 2)
++        record = self.trainer.last_gru_sil_sampling
++        self.assertEqual(record["weighting"]["version"], EVENT_SAMPLING_MODE)
++        for row in record["chunks"]:
++            weight = row["sampling_weight"]
++            self.assertGreater(weight["probability"], 0)
++            self.assertGreaterEqual(weight["probability_ratio"], .5-1e-12)
++            self.assertLessEqual(weight["probability_ratio"], 4+1e-12)
++            self.assertEqual(sum(row["phase_counts"].values()), row["end"]-row["start"])
++
++    def test_dynamics_weighting_audits_joint_and_conditional_probabilities(self):
++        self.cfg.gru_sil_sampling_mode = "quality_dynamics_v3"
++        result = self.update(budget=8)
++        self.assertEqual(result["gru_sil_updates"], 2)
++        record = self.trainer.last_gru_sil_sampling
++        self.assertEqual(record["weighting"]["version"], "quality_dynamics_v3")
++        for row in record["chunks"]:
++            weight = row["sampling_weight"]
++            self.assertAlmostEqual(weight["probability"], weight["trajectory_probability"]*weight["conditional_chunk_probability"])
++            self.assertLessEqual(weight["core_frames"]+weight["context_frames"]+weight["free_flight_frames"], row["end"]-row["start"])
++
+     def test_kl_rejection_restores_parameters_and_populated_optimizer_exactly(self):
+         self.assertGreater(self.update(8)["gru_sil_updates"], 0)
+         for group in self.trainer.optimizer.param_groups:
+@@ -199,6 +252,7 @@ class GRUSILTests(unittest.TestCase):
+         self.assertTrue(data["gru_sil_enabled"])
+         self.assertTrue(data["elite_archive_enabled"])
+         self.assertFalse(data["sil_enabled"])
++        self.assertEqual(data["gru_sil_sampling_mode"], "quality_dynamics_v3")
+         restored = ppo_config({"config": asdict(self.cfg), "model": {}})
+         self.assertTrue(restored.gru_sil_enabled)
+         self.assertEqual(restored.gru_sil_seed, 7)
+@@ -209,6 +263,143 @@ class GRUSILTests(unittest.TestCase):
+         with patch.object(sys, "argv", argv + ["--no-elite-archive"]), self.assertRaises(ValueError):
+             main()
+ 
++    def test_old_resume_requires_explicit_sampler_change_and_keeps_seed(self):
++        saved = asdict(self.cfg); saved.pop("gru_sil_sampling_mode")
++        saved["training_seed"] = 7
++        self.assertEqual(ppo_config({"config": saved}).gru_sil_sampling_mode, "trajectory_uniform")
++        with tempfile.TemporaryDirectory() as folder:
++            checkpoint = Path(folder)/"source.pt"
++            torch.save({"config": saved, "model": {}}, checkpoint)
++            base = ["main_ppo", "--dry-run", "--resume", str(checkpoint), "--run-dir", "runs/test"]
++            for extra, expected in (([], "trajectory_uniform"),
++                                    (["--gru-sil-sampling-mode", "quality_dynamics_v3"], "quality_dynamics_v3")):
++                output = io.StringIO()
++                with patch.object(sys, "argv", base+extra), contextlib.redirect_stdout(output):
++                    main()
++                data = json.loads(output.getvalue())
++                self.assertEqual(data["gru_sil_sampling_mode"], expected)
++                self.assertEqual(data["training_seed"], 7)
++
++
++class GRUSILSamplingTests(unittest.TestCase):
++    def trajectories(self):
++        trajs = [episode(t=95, tail=5), episode(t=160, tail=5)]
++        for t in trajs:
++            t.raw_states[:, 33] = -40
++            t.raw_states[64:, 33] = -30
++            t.raw_states[:, 24] = -2
++            t.contact[:] = 1
++            t.contact[32:60] = 0
++            t.raw_states[32:60, 3] = 2
++            t.raw_states[32:60, 34] = np.linspace(0, 1, 28)
++        trajs[1].raw_states[96:, 23:25] = [-30, 2]
++        return trajs
++
++    def test_legacy_rng_draws_are_exactly_preserved(self):
++        plan = GRUSILSamplingPlan(self.trajectories(), [0, 1], 32, "trajectory_uniform")
++        old_rng, new_rng = np.random.default_rng(7), np.random.default_rng(7)
++        for _ in range(100):
++            ti = int(old_rng.choice([0, 1])); cap = [95, 160][ti]
++            a = int(old_rng.integers(math.ceil(cap/32))) * 32
++            self.assertEqual(plan.draw(new_rng), (ti, a, min(a+32, cap), cap, None, "trajectory_uniform"))
++
++    def test_mixture_probabilities_and_actual_draws_obey_contiguous_caps(self):
++        trajs = self.trajectories()
++        modes = ("trajectory_uniform", "phase_balanced_v1", "phase_mixture_v1")
++        plans = [GRUSILSamplingPlan(trajs, [0, 1], 32, mode) for mode in modes]
++        old, phase, mixed = [p.probabilities() for p in plans]
++        self.assertEqual(old.keys(), mixed.keys()); self.assertEqual(phase.keys(), mixed.keys())
++        self.assertAlmostEqual(sum(mixed.values()), 1.)
++        for key in mixed:
++            self.assertAlmostEqual(mixed[key], .5*(old[key]+phase[key]))
++        from collections import Counter
++        counts, branches = Counter(), Counter()
++        rng = np.random.default_rng(7)
++        for _ in range(10000):
++            ti, a, b, cap, selected_phase, branch = plans[-1].draw(rng)
++            self.assertTrue(0 <= a < b <= cap <= len(trajs[ti].actions))
++            self.assertLessEqual(b-a, 32)
++            counts[(ti, a, b, cap)] += 1; branches[branch] += 1
++            self.assertEqual(selected_phase is None, branch == "trajectory_uniform")
++        self.assertAlmostEqual(branches["phase_balanced"]/10000, .5, delta=.015)
++        self.assertLess(max(abs(counts[k]/10000-p) for k,p in mixed.items()), .015)
++
++    def test_event_window_recovers_supported_push_across_chunk_boundary(self):
++        traj = episode(t=150, tail=20)
++        traj.raw_states[:] = 0
++        traj.raw_states[:, 33] = -40
++        traj.contact[:] = 0
++        traj.contact[50:100, 3] = 1
++        traj.raw_states[80:100, 3] = 2
++        traj.raw_states[100:141, 34] = np.linspace(0, 2, 41)
++        traj.raw_states[100:141, 3] = 2
++        traj.raw_states[141:, 34] = 2
++        events = launch_event_windows(traj.raw_states, traj.contact, 150)
++        self.assertEqual(len(events), 1)
++        # Rising contact starts at 80; 12 context states plus the entering action.
++        self.assertEqual((events[0]["start"], events[0]["end"]), (67, 140))
++        self.assertEqual(events[0]["release_state"], 100)
++        self.assertEqual(launch_event_windows(traj.raw_states, traj.contact, 120)[0]["end"], 120)
++        self.assertEqual(launch_event_windows(traj.raw_states, traj.contact, 99), [])
++        plan = GRUSILSamplingPlan([traj], [0], 32, EVENT_SAMPLING_MODE)
++        detail = plan.chunk_details[(0, 64, 96, 150)]
++        self.assertGreater(detail["event_probability"], 0)
++        self.assertEqual(detail["event_overlaps"][0]["overlap_steps"], 29)
++
++    def test_soft_membership_preserves_a_minority_phase(self):
++        traj = episode(t=96, tail=5)
++        traj.raw_states[:] = 0
++        traj.raw_states[:, 33] = -40
++        traj.contact[:] = 1
++        # Just one elevated-contact frame in the middle chunk, no majority change.
++        traj.raw_states[40, 23:25] = [-30, 2]
++        new = GRUSILSamplingPlan([traj], [0], 32, EVENT_SAMPLING_MODE)
++        old = GRUSILSamplingPlan([traj], [0], 32, "phase_mixture_v1")
++        self.assertAlmostEqual(old.probabilities()[(0, 32, 64, 96)], 1/3)
++        self.assertGreater(new.probabilities()[(0, 32, 64, 96)], 1/3)
++        self.assertEqual(new.distribution_summary["event_count"], 0)
++        for chunk, row in new.chunk_details.items():
++            self.assertAlmostEqual(row["event_probability"], row["base_probability"])
++
++    def test_rare_event_mass_is_bounded_and_redistributed(self):
++        base = np.array([.001, .099, .4, .5])
++        target = np.array([.9, .05, .025, .025])
++        bounded = bounded_target_distribution(target, base)
++        mixed = .5*(base+bounded)
++        self.assertAlmostEqual(bounded.sum(), 1)
++        self.assertAlmostEqual(mixed.sum(), 1)
++        self.assertAlmostEqual(mixed[0]/base[0], 4.)
++        self.assertTrue(np.all(mixed/base >= .5))
++        self.assertTrue(np.all(mixed/base <= 4.+1e-12))
++        self.assertTrue(np.all(bounded[1:] > target[1:]))
++
++    def test_event_groups_do_not_let_many_approach_jumps_dilute_tree_events(self):
++        first = self.trajectories()[0]
++        trajs = [copy.deepcopy(first) for _ in range(3)]
++        trajs[2].raw_states[:, 33] = -30
++        plan = GRUSILSamplingPlan(trajs, [0,1,2], 32, EVENT_SAMPLING_MODE)
++        self.assertEqual(plan.distribution_summary["event_groups"], {"approach_only": 2, "tree_connected": 1})
++        event_mass = [sum(row["event_probability"] for chunk, row in plan.chunk_details.items() if chunk[0] == i)
++                      for i in range(3)]
++        np.testing.assert_allclose(event_mass, [.25, .25, .5], rtol=0, atol=1e-12)
++
++    def test_event_draws_match_marginals_are_reproducible_and_respect_short_cap(self):
++        from collections import Counter
++        plan = GRUSILSamplingPlan(self.trajectories(), [0, 1], 32, EVENT_SAMPLING_MODE)
++        rng, repeated = np.random.default_rng(47), np.random.default_rng(47)
++        counts = Counter()
++        for _ in range(20000):
++            draw = plan.draw(rng)
++            self.assertEqual(draw, plan.draw(repeated))
++            ti, a, b, cap, phase, branch = draw
++            self.assertTrue(0 <= a < b <= cap and b-a <= 32)
++            counts[(ti,a,b,cap)] += 1
++        self.assertGreater(counts[(0,64,95,95)], 0)
++        for chunk, p in plan.probabilities().items():
++            self.assertAlmostEqual(counts[chunk]/20000, p, delta=.012)
++            self.assertTrue(.5-1e-12 <= p/plan.chunk_details[chunk]["base_probability"] <= 4+1e-12)
++        self.assertAlmostEqual(sum(plan.probabilities().values()), 1.)
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/src/tests/training/test_plot_sil_td_envelope.py b/src/tests/training/test_plot_sil_td_envelope.py
+index 09972b0..786b37b 100644
+--- a/src/tests/training/test_plot_sil_td_envelope.py
++++ b/src/tests/training/test_plot_sil_td_envelope.py
+@@ -1,5 +1,6 @@
+ """(t, D) envelope viewer uses the training Pareto helper and writes plots."""
+ from pathlib import Path
++from dataclasses import replace
+ import tempfile
+ import unittest
+ 
+@@ -56,3 +57,31 @@ class SILTdEnvelopePlotTests(unittest.TestCase):
+             self.assertTrue((out / "envelope.png").is_file())
+             self.assertFalse((out / "envelope_history.png").exists())
+             self.assertGreater((out / "envelope.png").stat().st_size, 1000)
++
++    def test_sampling_frame_mass_uses_actual_chunk_length_and_writes_both_views(self):
++        from src.tests.training.test_gru_sil import GRUSILSamplingTests
++        trajs = GRUSILSamplingTests().trajectories()
++        cfg = replace(plot.TrainConfig(), recurrent_seq_len=32)
++        data = plot.sampling_catalog(trajs, cfg, draws=3000, seed=7)
++        from src.tests.evaluation.present.render_episode_motion import sampling_path_probabilities
++        aligned = sampling_path_probabilities(data, trajs)
++        for mode, arrays in aligned.items():
++            for row in data["modes"][mode]["chunks"]:
++                np.testing.assert_array_equal(arrays[row["trajectory"]][row["start"]:row["end"]], row["probability"])
++                np.testing.assert_array_equal(arrays[row["trajectory"]][row["cap"]:], 0.)
++        import copy
++        missing = copy.deepcopy(data)
++        missing["modes"][data["comparison_modes"][0]]["chunks"].pop()
++        with self.assertRaises(ValueError): sampling_path_probabilities(missing, trajs)
++        for mode in data["modes"].values():
++            self.assertAlmostEqual(sum(mode["expected_phase_frame_share"].values()), 1.)
++            self.assertAlmostEqual(sum(mode["sampled_phase_frame_share"].values()), 1.)
++            self.assertEqual(sum(r["observed_draws"] for r in mode["chunks"]), 3000)
++            # Includes a final 31-step chunk: expected frame mass is not a chunk histogram.
++            denominator = sum(r["probability"]*(r["end"]-r["start"]) for r in mode["chunks"])
++            numerator = sum(r["probability"]*r["phase_counts"].get("tree_support",0) for r in mode["chunks"])
++            self.assertAlmostEqual(mode["expected_phase_frame_share"]["tree_support"], numerator/denominator)
++        data["source_pool"] = {"path": "synthetic_test_pool.npz"}
++        with tempfile.TemporaryDirectory() as folder:
++            for path in plot.plot_sampling(data, Path(folder)):
++                self.assertGreater(path.stat().st_size, 1000)
+diff --git a/src/training/config.py b/src/training/config.py
+index 9b3e27f..eed2821 100644
+--- a/src/training/config.py
++++ b/src/training/config.py
+@@ -37,7 +37,8 @@ class TrainConfig:
+                    recurrent_seq_len=32, random_deploy=False,
+                    contact_heads_enabled=False, sil_enabled=False,
+                    explore_boost_enabled=False, phase_weighting_enabled=False,
+-                   sil_advantage_weighting_enabled=False)
++                   sil_advantage_weighting_enabled=False,
++                   gru_sil_sampling_mode="quality_dynamics_v3")
+ 
+     # ── 环境 ──
+     game_root: str = field(default_factory=_default_game_root)
+@@ -350,6 +351,8 @@ class TrainConfig:
+     gru_sil_target_kl: float = 0.01
+     gru_sil_max_frame_kl: float = 0.1
+     gru_sil_seed: int = 0
++    gru_sil_sampling_mode: str = "trajectory_uniform"  # legacy fallback; fresh PPO uses quality/dynamics weighting
++    gru_sil_phase_rules: dict | None = None  # versioned geometric proxy rules; no native branch claim
+     training_seed: int = 0  # Initial stream seed; resume restores RNG positions separately.
+     sil_start_iter: int = 5             # 对齐 value_warmup_iters：critic 预热完再开 SIL
+     sil_traj_cap: int = 20             # 精英池容量。map_elites 仍可按分数兜底；td_pareto 不按 score 截断
+@@ -408,6 +411,7 @@ class TrainConfig:
+     # ── 视频参考走廊（显式启用；替代 PPO 高度/向右/效率图奖励）──
+     reference_trajectory: str | None = None
+     reference_corridor_radius: float = 1.5  # 半宽，世界米；走廊内不惩罚偏离中心线
++    reference_guidance_sigma: float | None = None  # observation only; None preserves historical radius
+     reference_progress_weight: float = 1.0  # 走廊内新增路线进度，每米奖励
+     reference_deviation_weight: float = 0.01  # 走廊外每步弱惩罚的上限
+     reference_projection_window: float = 4.0  # 局部投影搜索半径，沿线米
+diff --git a/src/training/experiment_options.py b/src/training/experiment_options.py
+index acb2588..600ce20 100644
+--- a/src/training/experiment_options.py
++++ b/src/training/experiment_options.py
+@@ -11,6 +11,7 @@ EXPERIMENT_FIELDS = (
+     "geometry_query_radius", "action_segment_steps", "segment_interrupt_contacts",
+     "sparse_geometry", "sparse_window_cells", "sparse_window_meters",
+     "sparse_max_contour_tokens", "sparse_relation_k", "sparse_mlp_hidden",
++    "reference_guidance_sigma",
+ )
+ 
+ 
+diff --git a/src/training/gru_sil.py b/src/training/gru_sil.py
+index 395c17e..1483336 100644
+--- a/src/training/gru_sil.py
++++ b/src/training/gru_sil.py
+@@ -16,12 +16,45 @@ from .decision_buffer import DecisionRolloutBuffer
+ from .elite_archive import EliteTrajectoryArchive
+ from .policy_features import feature_layout
+ from .reference_corridor import PROGRESS_MODE_V2, trajectory_endpoint
++from .climb_diagnostics import (PhaseRules, classify_motion, phase_counts, launch_event_windows,
++                                contact_dynamics_importance, DYNAMICS_SPEC)
+ 
+ _INPUTS = ("dynamics", "patches", "act_history")
+ _SPARSE = ("contour_tokens", "contour_mask", "relation_tokens", "relation_mask")
++EVENT_SAMPLING_MODE = "phase_event_mixture_v2"
++DYNAMICS_SAMPLING_MODE = "quality_dynamics_v3"
++SAMPLING_PHASE_PROBABILITY = {"trajectory_uniform": 0., "phase_balanced_v1": 1.,
++                              "phase_mixture_v1": .5, EVENT_SAMPLING_MODE: .5, DYNAMICS_SAMPLING_MODE: 0.}
++DYNAMICS_SAMPLING_SPEC = {"version": DYNAMICS_SAMPLING_MODE, "trajectory_uniform_fraction": .1,
++                         "distance_rank_temperature_fraction": .25, "chunk_uniform_fraction": .1,
++                         "no_dynamics_fallback": "uniform_chunks_in_selected_trajectory"}
++EVENT_SAMPLING_SPEC = {"version": EVENT_SAMPLING_MODE, "base_probability": .5,
++                       "target_soft_phase_fraction": .5, "target_event_fraction": .5,
++                       "max_probability_ratio": 4., "support_lookback_states": 64,
++                       "event_normalization": "uniform_approach_or_tree_group_then_event_then_overlap",
++                       "no_event_fallback": "trajectory_uniform"}
++
++
++def bounded_target_distribution(target, base):
++    """Cap target at 7*base, so the final 50/50 mixture lies in [.5, 4]*base.
++
++    Redistribute removed mass proportionally to remaining base-weighted capacity.
++    This is a probability cap, not an additional multiplier on the SIL loss.
++    """
++    ceiling = (2 * EVENT_SAMPLING_SPEC["max_probability_ratio"] - 1) * base
++    result = np.minimum(target, ceiling)
++    missing = 1. - result.sum()
++    if missing > 0:
++        slack = ceiling - result
++        result += missing * slack / slack.sum()
++    return result
+ 
+ 
+ def validate_gru_sil(config):
++    if config.gru_sil_sampling_mode not in SAMPLING_PHASE_PROBABILITY:
++        raise ValueError("Unknown GRU SIL sampling mode")
++    if config.gru_sil_phase_rules is not None:
++        PhaseRules(**config.gru_sil_phase_rules)
+     if (config.policy_backbone != "gru" or config.action_segment_steps != 1
+             or feature_layout(config)[1] or config.contact_heads_enabled):
+         raise ValueError("GRU SIL requires the base GRU, single head and one action per frame")
+@@ -109,6 +142,175 @@ def conditional_kl(baseline, current):
+             / (2 * std1.square()) - 0.5).sum(-1).clamp_min(0)
+ 
+ 
++def phase_chunk_groups(trajectories, candidates, length, rules):
++    """Uniform phase, then uniform chunk. Labels use raw context; no cached neural states."""
++    groups = {}
++    for ti in candidates:
++        traj = trajectories[ti]
++        labels, _ = classify_motion(traj.raw_states, traj.contact, rules)
++        cap = min(trajectory_endpoint(traj).cap + 1, len(traj.actions))
++        for start in range(0, cap, length):
++            end = min(start + length, cap)
++            counts = phase_counts(labels[start:end])
++            phase = min(counts, key=lambda name: (-counts[name], name))
++            groups.setdefault(phase, []).append((ti, start, end, cap))
++    return groups
++
++
++def eligible_sil_trajectories(trajectories):
++    return [i for i, t in enumerate(trajectories)
++            if EliteTrajectoryArchive._complete(t) and t.trajectory_valid
++            and trajectory_endpoint(t).valid and trajectory_endpoint(t).cap >= 0]
++
++
++class GRUSILSamplingPlan:
++    """One sampling implementation for training, exact probabilities and offline plots.
++
++    The v1/v2 mixture selects its branch with probability 1/2, not a per-round quota.
++    The v3 distribution separates trajectory quality from local dynamics priority.
++    Chunks remain contiguous and never cross the confirmed cap. The legacy mode
++    deliberately keeps the same two RNG draws as before this sampler was added.
++    """
++    def __init__(self, trajectories, candidates, length, mode, rules=None, step_seconds=1/120):
++        if mode not in SAMPLING_PHASE_PROBABILITY or type(length) is not int or length < 1:
++            raise ValueError("Invalid GRU SIL sampling plan")
++        self.mode, self.length = mode, length
++        self.phase_probability = SAMPLING_PHASE_PROBABILITY[mode]
++        self.candidates = list(candidates)
++        if not self.candidates or len(set(self.candidates)) != len(self.candidates):
++            raise ValueError("Sampling plan requires unique eligible trajectories")
++        self.caps = {i: min(trajectory_endpoint(trajectories[i]).cap + 1, len(trajectories[i].actions))
++                     for i in self.candidates}
++        if min(self.caps.values()) < 1:
++            raise ValueError("Sampling plan contains an empty prefix")
++        rules = rules or PhaseRules()
++        self.groups = (phase_chunk_groups(trajectories, candidates, length, rules)
++                       if self.phase_probability and mode != EVENT_SAMPLING_MODE else {})
++        self.phase_names = sorted(self.groups)
++        self.events, self.chunk_details = {}, {}
++        self.dynamics = {}
++        if mode == EVENT_SAMPLING_MODE:
++            self._build_event_distribution(trajectories, rules)
++        elif mode == DYNAMICS_SAMPLING_MODE:
++            self._build_dynamics_distribution(trajectories, step_seconds)
++
++    def _build_dynamics_distribution(self, trajectories, step_seconds):
++        spec = DYNAMICS_SAMPLING_SPEC
++        distances = np.maximum([trajectory_endpoint(trajectories[i]).distance for i in self.candidates], 0.)
++        # Average ranks preserve equal treatment of tied distances. Soft ranking
++        # emphasizes far-reaching demonstrations without letting one D outlier
++        # consume most of the pool, or rewarding a short time-to-failure.
++        rank = np.array([(distances > d).sum()+.5*((distances == d).sum()-1) for d in distances])
++        quality = np.exp(-rank/max(1., len(rank)*spec["distance_rank_temperature_fraction"]))
++        quality /= quality.sum()
++        traj_p = spec["trajectory_uniform_fraction"]/len(quality) + (1-spec["trajectory_uniform_fraction"])*quality
++        self.trajectory_probabilities = dict(zip(self.candidates, traj_p.tolist()))
++        self.chunks, marginal = [], []
++        for i, cap in self.caps.items():
++            traj = trajectories[i]
++            diag = contact_dynamics_importance(traj.raw_states, traj.contact, cap, step_seconds)
++            self.dynamics[i] = diag
++            chunks = [(i, a, min(a+self.length, cap), cap) for a in range(0, cap, self.length)]
++            salience = np.array([diag["priority"][a:b].sum() for _,a,b,_ in chunks])
++            targeted = salience/salience.sum() if salience.sum() else np.full(len(chunks), 1/len(chunks))
++            conditional = spec["chunk_uniform_fraction"]/len(chunks) + (1-spec["chunk_uniform_fraction"])*targeted
++            for chunk, local_p, value in zip(chunks, conditional, salience):
++                _, a, b, _ = chunk
++                p = self.trajectory_probabilities[i] * local_p
++                self.chunks.append(chunk); marginal.append(p)
++                self.chunk_details[chunk] = {
++                    "trajectory_probability": self.trajectory_probabilities[i],
++                    "conditional_chunk_probability": float(local_p), "probability": float(p),
++                    "priority_mass": float(value), "core_frames": int(diag["core"][a:b].sum()),
++                    "free_flight_frames": int(diag["free_flight"][a:b].sum()),
++                    "context_frames": int(((diag["priority"][a:b]>0)&~diag["core"][a:b]).sum())}
++        self.marginal = np.asarray(marginal)
++        self.distribution_summary = dict(spec, dynamics_spec=DYNAMICS_SPEC, step_seconds=step_seconds,
++                                         trajectory_probabilities=self.trajectory_probabilities)
++
++    def _build_event_distribution(self, trajectories, rules):
++        self.chunks = [(i, a, min(a+self.length, cap), cap)
++                       for i, cap in self.caps.items() for a in range(0, cap, self.length)]
++        base = np.array([1. / len(self.candidates) / math.ceil(cap/self.length)
++                         for i, a, b, cap in self.chunks])
++        labels = {i: classify_motion(trajectories[i].raw_states, trajectories[i].contact, rules)[0]
++                  for i in self.candidates}
++        memberships = [phase_counts(labels[i][a:b]) for i, a, b, cap in self.chunks]
++        names = sorted({k for row in memberships for k in row})
++        # Every phase present in a chunk contributes; no majority label or tie breaker.
++        soft = np.array([[row.get(k, 0)/(b-a) for k in names]
++                         for row, (_, a, b, _) in zip(memberships, self.chunks)])
++        phase = (soft / soft.sum(axis=0)).mean(axis=1)
++        self.events = {i: launch_event_windows(trajectories[i].raw_states, trajectories[i].contact, cap, rules)
++                       for i, cap in self.caps.items()}
++        with_events = [i for i in self.candidates if self.events[i]]
++        n_events = sum(map(len, self.events.values()))
++        event_groups = {}
++        for windows in self.events.values():
++            for window in windows:
++                name = window["event_group"]
++                event_groups[name] = event_groups.get(name, 0) + 1
++        event = np.zeros(len(self.chunks))
++        if with_events:
++            for j, (i, a, b, cap) in enumerate(self.chunks):
++                for window in self.events[i]:
++                    overlap = max(0, min(b, window["end"]) - max(a, window["start"]))
++                    event[j] += (overlap / (window["end"]-window["start"])
++                                 / len(event_groups) / event_groups[window["event_group"]])
++        else:
++            event = base.copy()
++        raw_target = .5 * phase + .5 * event
++        self.target = bounded_target_distribution(raw_target, base)
++        self.marginal = .5 * base + .5 * self.target
++        self.distribution_summary = dict(EVENT_SAMPLING_SPEC,
++            event_count=n_events, event_trajectories=len(with_events), event_groups=event_groups,
++            clipped_chunks=int(np.count_nonzero(raw_target > 7*base)),
++            redistributed_target_mass=float(np.maximum(raw_target-7*base, 0).sum()))
++        for j, chunk in enumerate(self.chunks):
++            i, a, b, cap = chunk
++            self.chunk_details[chunk] = {
++                "base_probability": float(base[j]), "soft_phase_probability": float(phase[j]),
++                "event_probability": float(event[j]), "raw_target_probability": float(raw_target[j]),
++                "target_probability": float(self.target[j]), "probability": float(self.marginal[j]),
++                "probability_ratio": float(self.marginal[j]/base[j]),
++                "event_overlaps": [dict(window, overlap_steps=max(0, min(b, window["end"])-max(a, window["start"])))
++                                   for window in self.events[i] if a < window["end"] and b > window["start"]]}
++
++    def draw(self, rng):
++        if self.mode == DYNAMICS_SAMPLING_MODE:
++            chunk = self.chunks[int(rng.choice(len(self.chunks), p=self.marginal))]
++            return (*chunk, None, "quality_dynamics")
++        choose_phase = (self.phase_probability == 1 or
++                        (self.phase_probability > 0 and rng.random() < self.phase_probability))
++        if choose_phase:
++            if self.mode == EVENT_SAMPLING_MODE:
++                chunk = self.chunks[int(rng.choice(len(self.chunks), p=self.target))]
++                return (*chunk, None, "phase_event_weighted")
++            phase = str(rng.choice(self.phase_names))
++            group = self.groups[phase]
++            chunk = group[int(rng.integers(len(group)))]
++            return (*chunk, phase, "phase_balanced")
++        ti = int(rng.choice(self.candidates))
++        cap = self.caps[ti]
++        start = int(rng.integers(math.ceil(cap / self.length))) * self.length
++        return ti, start, min(start + self.length, cap), cap, None, "trajectory_uniform"
++
++    def probabilities(self):
++        """Marginal probability of each chunk before advantage/KL filtering."""
++        if self.mode in (EVENT_SAMPLING_MODE, DYNAMICS_SAMPLING_MODE):
++            return dict(zip(self.chunks, self.marginal.tolist()))
++        result = {}
++        for ti, cap in self.caps.items():
++            chunks = math.ceil(cap / self.length)
++            for start in range(0, cap, self.length):
++                result[(ti, start, min(start + self.length, cap), cap)] = (
++                    (1 - self.phase_probability) / len(self.candidates) / chunks)
++        for group in self.groups.values():
++            for chunk in group:
++                result[chunk] += self.phase_probability / len(self.groups) / len(group)
++        return result
++
++
+ def gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates, iteration):
+     cfg = trainer.config
+     validate_gru_sil(cfg)
+@@ -121,12 +323,13 @@ def gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
+                "gru_sil_positive_frames": 0, "gru_sil_sampled_frames": 0,
+                "gru_sil_rejected_steps": 0, "gru_sil_kl": 0., "gru_sil_frame_kl_max": 0.,
+                "gru_sil_attempted_kl_max": 0., "gru_sil_loss": 0.}
++    rules = PhaseRules(**(cfg.gru_sil_phase_rules or {}))
+     record = {"version": 1, "mode": "gru_full_prefix_positive_advantage", "iteration": iteration,
+-              "seed": cfg.gru_sil_seed, "budget": limit, "chunks": []}
++              "seed": cfg.gru_sil_seed, "budget": limit, "chunks": [],
++              "sampling_mode": cfg.gru_sil_sampling_mode, "phase_rules": vars(rules),
++              "phase_branch_probability": SAMPLING_PHASE_PROBABILITY[cfg.gru_sil_sampling_mode]}
+     trainer.last_gru_sil_sampling = record
+-    candidates = [i for i, t in enumerate(archive.trajectories)
+-                  if EliteTrajectoryArchive._complete(t) and t.trajectory_valid
+-                  and trajectory_endpoint(t).valid and trajectory_endpoint(t).cap >= 0]
++    candidates = eligible_sil_trajectories(archive.trajectories)
+     if not limit or not candidates:
+         return metrics
+     if trainer.optimizer is None:
+@@ -136,13 +339,14 @@ def gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
+     baseline = rollout_distributions(model, buffer)
+     rng = np.random.default_rng(np.random.SeedSequence([cfg.gru_sil_seed, iteration, 714]))
+     cache = {}  # Only this call's selected trajectories; no stale neural embeddings/values.
++    plan = GRUSILSamplingPlan(archive.trajectories, candidates, cfg.recurrent_seq_len,
++                              cfg.gru_sil_sampling_mode, rules, step_seconds=cfg.feature_step_seconds)
++    if cfg.gru_sil_sampling_mode in (EVENT_SAMPLING_MODE, DYNAMICS_SAMPLING_MODE):
++        record["weighting"] = plan.distribution_summary
++    phase_cache = {}
+     for _ in range(limit):
+-        ti = int(rng.choice(candidates))
++        ti, start, end, cap, selected_phase, branch = plan.draw(rng)
+         traj = archive.trajectories[ti]
+-        cap = min(trajectory_endpoint(traj).cap + 1, len(traj.actions))
+-        length = cfg.recurrent_seq_len
+-        start = int(rng.integers(math.ceil(cap / length))) * length
+-        end = min(start + length, cap)
+         if ti not in cache:
+             cache[ti] = encoder.encode_sequence(traj)
+         frames = cache[ti]
+@@ -157,7 +361,20 @@ def gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
+         positive = advantage > 0
+         count = int(positive.sum())
+         row = {"trajectory": ti, "source_iteration": traj.iteration, "start": start, "end": end,
+-               "cap": cap, "bootstrap": bootstrap, "positive_frames": count, "accepted": False}
++               "cap": cap, "bootstrap": bootstrap, "positive_frames": count, "accepted": False,
++               "sampling_branch": branch}
++        if plan.chunk_details:
++            row["sampling_weight"] = plan.chunk_details[(ti, start, end, cap)]
++        # Older/synthetic 33D pools still support legacy sampling; phase ablation requires 35D.
++        if traj.raw_states.shape[1] == 35:
++            if ti not in phase_cache:
++                phase_cache[ti] = classify_motion(traj.raw_states, traj.contact, rules)[0]
++            labels = phase_cache[ti][start:end]
++            pos = positive.detach().cpu().numpy()
++            weights = advantage.detach().cpu().numpy()
++            row.update(selected_phase=selected_phase, phase_counts=phase_counts(labels),
++                       positive_by_phase=phase_counts(labels[pos]),
++                       advantage_sum_by_phase={name: float(weights[labels == name].sum()) for name in np.unique(labels)})
+         record["chunks"].append(row)
+         metrics["gru_sil_sampled_frames"] += end - start
+         metrics["gru_sil_positive_frames"] += count
+diff --git a/src/training/main_ppo.py b/src/training/main_ppo.py
+index 0fcdefd..51ce245 100644
+--- a/src/training/main_ppo.py
++++ b/src/training/main_ppo.py
+@@ -217,6 +217,8 @@ def save_efficiency_map(
+ 
+ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+     parser = argparse.ArgumentParser(description="PPO 训练 — 策略梯度迭代循环")
++    parser.add_argument("--experiment-config", type=str, default=None,
++                        help="Hash-locked tree-climb ablation recipe; --dry-run validates without launching")
+     add_experiment_arguments(parser)
+     parser.add_argument("--num-agents", type=int, default=None)
+     parser.add_argument("--seed", type=int, default=None,
+@@ -254,6 +256,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+     parser.add_argument("--elite-archive-capacity", type=int, default=None)
+     parser.add_argument("--gru-sil", action=argparse.BooleanOptionalAction, default=None,
+                         help="Positive-advantage recurrent SIL from complete elite episodes; enables full archive")
++    from training.gru_sil import SAMPLING_PHASE_PROBABILITY
++    parser.add_argument("--gru-sil-sampling-mode", choices=tuple(SAMPLING_PHASE_PROBABILITY), default=None,
++                        help="Override recurrent SIL sampling; old resumes retain their saved/legacy mode unless specified")
+     parser.add_argument("--elite-archive-resume", type=str, default=None,
+                         help="Restore a full-episode archive; otherwise use the resumed checkpoint's matching snapshot")
+     parser.add_argument("--stop-file", type=str, default=None,
+@@ -451,6 +456,11 @@ def configure_reference(config: TrainConfig, args: argparse.Namespace, checkpoin
+         config.explore_boost_enabled = False
+ 
+ 
++def reference_reward_settings(values):
++    """Observation-only additions must not restart an old checkpoint's critic warmup."""
++    return {k: v for k, v in values.items() if k.startswith("reference_") and k != "reference_guidance_sigma"}
++
++
+ def configure_sil_sampling(config: TrainConfig, args: argparse.Namespace, resume_state: dict) -> None:
+     """Resolve sampling mode, horizon, K, and seed. Old resumes stay on the legacy sampler."""
+     from training.reference_corridor import PROGRESS_MODE_V2
+@@ -594,6 +604,11 @@ def run_sil_only(
+ def main() -> None:
+     _setup_logging()
+     args = parse_args()
++    experiment = experiment_config = None
++    if args.experiment_config:
++        from training.climb_experiment import load_recipe, configure_arguments
++        experiment, experiment_config = load_recipe(args.experiment_config)
++        configure_arguments(args, parse_args([]), experiment)
+     if args.torch_threads is not None:
+         torch.set_num_threads(args.torch_threads)
+     logger.info("PyTorch CPU threads: %d", torch.get_num_threads())
+@@ -603,9 +618,13 @@ def main() -> None:
+ 
+     resume_state = torch.load(args.resume, map_location="cpu", weights_only=False) if args.resume else {}
+     config = ppo_config(resume_state, legacy_bc=bool(args.resume_bc))
++    if experiment_config is not None:
++        config = experiment_config
+     if args.init_from and (args.resume or args.resume_bc):
+         raise ValueError("--init-from is mutually exclusive with --resume / --resume-bc")
+     init_state = torch.load(args.init_from, map_location="cpu", weights_only=False) if args.init_from else {}
++    if experiment and init_state["config"] != experiment["baseline_config"]:
++        raise ValueError("Recipe baseline_config differs from its actual checkpoint")
+     restore_initialization_shape(config, init_state)
+     if args.resume and "reference_progress_mode" not in resume_state.get("config", {}):
+         from training.reference_corridor import PROGRESS_MODE_V1
+@@ -694,6 +713,8 @@ def main() -> None:
+         config.elite_archive_capacity = args.elite_archive_capacity
+     if args.gru_sil is not None:
+         config.gru_sil_enabled = args.gru_sil
++    if args.gru_sil_sampling_mode is not None:
++        config.gru_sil_sampling_mode = args.gru_sil_sampling_mode
+     if config.gru_sil_enabled:
+         from training.gru_sil import validate_gru_sil
+         validate_gru_sil(config)
+@@ -720,6 +741,7 @@ def main() -> None:
+             "random_deploy": config.random_deploy,
+             "sil_enabled": config.sil_enabled,
+             "gru_sil_enabled": config.gru_sil_enabled,
++            "gru_sil_sampling_mode": config.gru_sil_sampling_mode,
+             "gru_sil_max_updates": config.gru_sil_max_updates,
+             "gru_sil_budget_ratio": config.gru_sil_budget_ratio,
+             "gru_sil_target_kl": config.gru_sil_target_kl,
+@@ -740,6 +762,9 @@ def main() -> None:
+             "max_iterations": config.max_iterations,
+             "resume_iteration": int(resume_state.get("iteration", 0)) if resume_state else 0,
+         }
++        if experiment:
++            payload["experiment"] = experiment["arm"]
++            payload["resolved_config"] = asdict(config)
+         print(json.dumps(payload, ensure_ascii=False, indent=2))
+         return
+     # 走廊模式 SIL 已迁移到走廊口径（剪枝/排序/bd/BC 截断全部基于 credited 进度，
+@@ -840,15 +865,17 @@ def main() -> None:
+         model.load_from_bc(bc_state)
+         logger.info("从 BC checkpoint 迁移 backbone 权重: %s", args.resume_bc)
+ 
+-    old_reference_config = {
+-        k: v for k, v in resume_state.get("config", {}).items() if k.startswith("reference_")
+-    }
++    if experiment:
++        from training.climb_experiment import reset_experiment_critic
++        reset_experiment_critic(model)
++
++    old_reference_config = reference_reward_settings(resume_state.get("config", {}))
+     # Collection and update must use the same device from the first rollout.
+     model = model.to(ppo_trainer.device)
+     reference_changed = bool(args.resume) and (
+         bool(old_reference_config.get("reference_trajectory")) != bool(config.reference_trajectory)
+         or (bool(config.reference_trajectory) and (
+-            old_reference_config != {k: v for k, v in asdict(config).items() if k.startswith("reference_")}
++            old_reference_config != reference_reward_settings(asdict(config))
+             or resume_state.get("reference_corridor", {}).get("sha256") != reference_meta["sha256"]
+         ))
+     )
+diff --git a/src/training/reference_corridor.py b/src/training/reference_corridor.py
+index 90c9a01..21419cf 100644
+--- a/src/training/reference_corridor.py
++++ b/src/training/reference_corridor.py
+@@ -88,6 +88,9 @@ class ReferenceCorridor:
+                 raise ValueError(f"{name} must be finite and nonnegative")
+         if not 0 <= config.reference_interpolated_weight <= 1:
+             raise ValueError("reference_interpolated_weight must be in [0, 1]")
++        sigma = getattr(config, "reference_guidance_sigma", None)
++        if sigma is not None and (not np.isfinite(sigma) or sigma <= 0):
++            raise ValueError("reference_guidance_sigma must be finite and positive")
+ 
+     @classmethod
+     def from_file(cls, path: str | Path, config) -> ReferenceCorridor:
+@@ -158,10 +161,12 @@ class ReferenceCorridor:
+         """Cache one ordered corridor field per continuous segment in the existing grid.
+ 
+         This is observation context only, not a second reward. Each map is zero
+-        beyond three corridor radii and increases along the reference direction.
++        beyond three guidance sigmas and increases along the reference direction.
++        None preserves the old observation exactly; the reward radius is unchanged.
+         """
+         maps = []
+-        radius = self.config.reference_corridor_radius
++        radius = getattr(self.config, "reference_guidance_sigma", None)
++        radius = self.config.reference_corridor_radius if radius is None else radius
+         for segment in self.segments:
+             arr = np.zeros(shape, dtype=np.float32)
+             low = np.floor((segment.points.min(axis=0) - 3 * radius) / resolution).astype(int)

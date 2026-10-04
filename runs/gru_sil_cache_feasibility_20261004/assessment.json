@@ -1,0 +1,252 @@
+{
+  "status": "completed",
+  "memory": {
+    "entry_bytes": 28636644,
+    "entry_mib": 27.31003189086914,
+    "bytes_per_frame": 23844,
+    "fields": {
+      "dynamics": {
+        "shape": [
+          1201,
+          39
+        ],
+        "dtype": "float32",
+        "bytes": 187356
+      },
+      "patches": {
+        "shape": [
+          1201,
+          4,
+          32,
+          32
+        ],
+        "dtype": "float32",
+        "bytes": 19677184
+      },
+      "act_history": {
+        "shape": [
+          1201,
+          2
+        ],
+        "dtype": "float32",
+        "bytes": 9608
+      },
+      "contour_tokens": {
+        "shape": [
+          1201,
+          128,
+          11
+        ],
+        "dtype": "float32",
+        "bytes": 6764032
+      },
+      "contour_mask": {
+        "shape": [
+          1201,
+          128
+        ],
+        "dtype": "float32",
+        "bytes": 614912
+      },
+      "relation_tokens": {
+        "shape": [
+          1201,
+          24,
+          11
+        ],
+        "dtype": "float32",
+        "bytes": 1268256
+      },
+      "relation_mask": {
+        "shape": [
+          1201,
+          24
+        ],
+        "dtype": "float32",
+        "bytes": 115296
+      }
+    },
+    "current_pool_mib": 464.2705421447754,
+    "capacity_20_equal_length_mib": 546.2006378173828,
+    "system_total_gib": 31.843002319335938,
+    "available_gib_at_start": 15.520126342773438
+  },
+  "simulations": [
+    {
+      "limit_mib": 128,
+      "clear_on_run": true,
+      "accesses": 76,
+      "hits": 23,
+      "builds": 53,
+      "current_round_local_builds": 72,
+      "avoided_builds": 19,
+      "avoided_build_fraction": 0.2638888888888889,
+      "peak_resident_mib": 109.24012756347656,
+      "evictions": 45,
+      "obsolete_removals": 0
+    },
+    {
+      "limit_mib": 256,
+      "clear_on_run": true,
+      "accesses": 76,
+      "hits": 44,
+      "builds": 32,
+      "current_round_local_builds": 72,
+      "avoided_builds": 40,
+      "avoided_build_fraction": 0.5555555555555556,
+      "peak_resident_mib": 245.79028701782227,
+      "evictions": 14,
+      "obsolete_removals": 0
+    },
+    {
+      "limit_mib": 512,
+      "clear_on_run": true,
+      "accesses": 76,
+      "hits": 47,
+      "builds": 29,
+      "current_round_local_builds": 72,
+      "avoided_builds": 43,
+      "avoided_build_fraction": 0.5972222222222222,
+      "peak_resident_mib": 464.2705421447754,
+      "evictions": 0,
+      "obsolete_removals": 0
+    },
+    {
+      "limit_mib": 1024,
+      "clear_on_run": true,
+      "accesses": 76,
+      "hits": 47,
+      "builds": 29,
+      "current_round_local_builds": 72,
+      "avoided_builds": 43,
+      "avoided_build_fraction": 0.5972222222222222,
+      "peak_resident_mib": 464.2705421447754,
+      "evictions": 0,
+      "obsolete_removals": 0
+    },
+    {
+      "limit_mib": 128,
+      "clear_on_run": false,
+      "accesses": 76,
+      "hits": 23,
+      "builds": 53,
+      "current_round_local_builds": 72,
+      "avoided_builds": 19,
+      "avoided_build_fraction": 0.2638888888888889,
+      "peak_resident_mib": 109.24012756347656,
+      "evictions": 49,
+      "obsolete_removals": 0
+    },
+    {
+      "limit_mib": 256,
+      "clear_on_run": false,
+      "accesses": 76,
+      "hits": 50,
+      "builds": 26,
+      "current_round_local_builds": 72,
+      "avoided_builds": 46,
+      "avoided_build_fraction": 0.6388888888888888,
+      "peak_resident_mib": 245.79028701782227,
+      "evictions": 17,
+      "obsolete_removals": 0
+    },
+    {
+      "limit_mib": 512,
+      "clear_on_run": false,
+      "accesses": 76,
+      "hits": 57,
+      "builds": 19,
+      "current_round_local_builds": 72,
+      "avoided_builds": 53,
+      "avoided_build_fraction": 0.7361111111111112,
+      "peak_resident_mib": 464.2705421447754,
+      "evictions": 0,
+      "obsolete_removals": 2
+    },
+    {
+      "limit_mib": 1024,
+      "clear_on_run": false,
+      "accesses": 76,
+      "hits": 57,
+      "builds": 19,
+      "current_round_local_builds": 72,
+      "avoided_builds": 53,
+      "avoided_build_fraction": 0.7361111111111112,
+      "peak_resident_mib": 464.2705421447754,
+      "evictions": 0,
+      "obsolete_removals": 2
+    }
+  ],
+  "historical_timings_seconds": {
+    "gru_sil_dynamics_1h_20261004": {
+      "rollout_total_seconds": 2717.2313708998263,
+      "rollout_patch_seconds": 2180.7646031151526,
+      "update_and_sil_seconds": 1000.7055487998296
+    },
+    "gru_sil_dynamics_1h2_20261004": {
+      "rollout_total_seconds": 2715.0237724999897,
+      "rollout_patch_seconds": 2316.6740432181396,
+      "update_and_sil_seconds": 904.0125126000494
+    }
+  },
+  "per_run_512": [
+    {
+      "run": "gru_sil_dynamics_1h_20261004",
+      "limit_mib": 512,
+      "clear_on_run": true,
+      "accesses": 51,
+      "hits": 34,
+      "builds": 17,
+      "current_round_local_builds": 47,
+      "avoided_builds": 30,
+      "avoided_build_fraction": 0.6382978723404256,
+      "peak_resident_mib": 464.2705421447754,
+      "evictions": 0,
+      "obsolete_removals": 0
+    },
+    {
+      "run": "gru_sil_dynamics_1h2_20261004",
+      "limit_mib": 512,
+      "clear_on_run": true,
+      "accesses": 25,
+      "hits": 13,
+      "builds": 12,
+      "current_round_local_builds": 25,
+      "avoided_builds": 13,
+      "avoided_build_fraction": 0.52,
+      "peak_resident_mib": 327.7203826904297,
+      "evictions": 0,
+      "obsolete_removals": 0
+    }
+  ],
+  "limitations": [
+    "Shadow simulation counts builds using recorded draws, not a live training benchmark.",
+    "Single-trajectory build timing is current machine timing, not the historical cost of every sampled trajectory.",
+    "Resident cache budget excludes temporary build buffers, current rollout, models and Python container overhead.",
+    "Cache alone does not increase per-round SIL budget or prove better closed-loop behavior."
+  ],
+  "benchmark": {
+    "frames": 1201,
+    "D": 21.88921426645702,
+    "production_encode_seconds": 31.657063900027424,
+    "patch_seconds": 1.3830195018090308,
+    "sparse_seconds": 30.259950494393706,
+    "hashed_ram_lookup_median_seconds": 8.899997919797897e-05,
+    "hashed_ram_lookup_p95_seconds": 9.592513088136912e-05,
+    "fresh_equals_previously_validated_inputs": true,
+    "content_key_mutation_checks": {
+      "raw_states": true,
+      "actions": true,
+      "contact": true,
+      "guidance_index": true,
+      "terminated": true
+    },
+    "schema_note": "Prototype key covers trajectory inputs. Production integration also requires immutable/versioned observation context."
+  },
+  "evidence": {
+    "checkpoint_sha256": "94fdf38399ca8a8d6185e6800e779de57a8c8fbe70df0ed362becc5e14eb91c1",
+    "source_sha256": "23166a1dc6eefa065b0fce5539601b19c958e1a8bdf817c60b655eaecb2fe782",
+    "observations_file": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_consistency_audit_20261004\\elite_d2b4ed6c19b3f1ebee7f3b6993f32db9e5023ccd60582dc94d56d1e8034b0775_frames.npz",
+    "observations_sha256": "d4fc1484dba314411dd03ecec73f02f7cbbaf307f3ed070dec31709ff94bdb9a"
+  }
+}

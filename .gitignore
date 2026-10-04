@@ -168,6 +168,7 @@ runs/**/*.gif
 runs/**/*.signal
 runs/**/*.done
 runs/**/launcher_pid.*
+runs/**/launcher.pid
 runs/**/launcher_state.json
 runs/**/runtime_original.json
 runs/**/launch*.ps1
@@ -185,6 +186,15 @@ runs/**/*.png
 !runs/**/envelope.png
 !runs/**/envelope_history.png
 !runs/**/trajectory_vs_envelope.png
+!runs/**/sampling_coverage.png
+!runs/**/sampling_phases.png
+!runs/**/all_elite_sampling.png
+!runs/gru_sil_sampling_20261004/trajectories/elite_12_sampling.png
+!runs/gru_sil_event_sampling_20261004/trajectories/elite_12_sampling.png
+!runs/**/sampling_trajectory_mass.png
+!runs/**/sampling_dynamics.png
+!runs/gru_sil_dynamics_sampling_20261004/trajectories/elite_12_sampling.png
+!runs/gru_sil_dynamics_sampling_20261004/trajectories/elite_13_sampling.png
 # These legacy result files embed full physics traces; result.compact.json
 # preserves scalar metrics plus the raw file hash and omitted array lengths.
 runs/dynamics_probe_disabled_reset_regression/result.json

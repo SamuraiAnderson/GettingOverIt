@@ -1,0 +1,58 @@
+{
+  "199": {
+    "deterministic": {
+      "cap_progress_median_m": 9.313260454796058,
+      "cap_progress_max_m": 9.313260454796058,
+      "terminal_progress_median_m": 9.164187405799964,
+      "arrival_count": 8,
+      "hold_success_count": 0,
+      "max_retreat_after_arrival_median_m": 4.425897393297393,
+      "mean_outside_fraction": 0.7675,
+      "episodes_with_takeoff": 8,
+      "episodes_with_tree_takeoff": 0,
+      "episodes_with_elevated_tip_contact": 0,
+      "takeoff_count": 16
+    },
+    "exploration": {
+      "cap_progress_median_m": 10.222630314758046,
+      "cap_progress_max_m": 12.793064612960023,
+      "terminal_progress_median_m": 13.022244237215729,
+      "arrival_count": 8,
+      "hold_success_count": 1,
+      "max_retreat_after_arrival_median_m": 4.958505797872236,
+      "mean_outside_fraction": 0.6257291666666667,
+      "episodes_with_takeoff": 8,
+      "episodes_with_tree_takeoff": 3,
+      "episodes_with_elevated_tip_contact": 1,
+      "takeoff_count": 23
+    }
+  },
+  "209": {
+    "deterministic": {
+      "cap_progress_median_m": 9.903021110014846,
+      "cap_progress_max_m": 9.903021110014846,
+      "terminal_progress_median_m": 10.952932201201481,
+      "arrival_count": 8,
+      "hold_success_count": 0,
+      "max_retreat_after_arrival_median_m": 4.02214626259347,
+      "mean_outside_fraction": 0.8041666666666667,
+      "episodes_with_takeoff": 8,
+      "episodes_with_tree_takeoff": 0,
+      "episodes_with_elevated_tip_contact": 0,
+      "takeoff_count": 16
+    },
+    "exploration": {
+      "cap_progress_median_m": 9.237709330256386,
+      "cap_progress_max_m": 10.280373969505307,
+      "terminal_progress_median_m": 8.216014395853035,
+      "arrival_count": 8,
+      "hold_success_count": 1,
+      "max_retreat_after_arrival_median_m": 5.453301344374651,
+      "mean_outside_fraction": 0.5666666666666667,
+      "episodes_with_takeoff": 7,
+      "episodes_with_tree_takeoff": 2,
+      "episodes_with_elevated_tip_contact": 0,
+      "takeoff_count": 21
+    }
+  }
+}

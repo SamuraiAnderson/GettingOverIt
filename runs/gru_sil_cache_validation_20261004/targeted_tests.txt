@@ -1,0 +1,23 @@
+..............16:08:59 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:08:59 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:08:59 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.16:08:59 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:08:59 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.........16:08:59 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:08:59 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.......C:\Users\Symbol\aCodes\GettingOverIt\src\tests\training\test_gru_sil.py:294: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:837.)
+  self.assertGreater(float((old["gru.weight_hh_l0"]-self.model.gru.weight_hh_l0).abs().sum()), 0)
+.16:09:00 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpj8tphz6o\ppo_iter_0001.pt
+.....16:09:02 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpslmhvfnp\ppo_iter_0001.pt
+16:09:03 [training.ppo_trainer] INFO: 已恢复 optimizer state
+...16:09:03 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpk8djt4o7\ppo_iter_0001.pt
+16:09:03 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:09:03 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:09:03 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.16:09:04 [training.ppo_trainer] INFO: 已恢复 optimizer state
+.
+----------------------------------------------------------------------
+Ran 42 tests in 7.446s
+
+OK

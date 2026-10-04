@@ -1,0 +1,4506 @@
+{
+  "totals": {
+    "selected_chunks": 332,
+    "positive_frames_recorded": 7433,
+    "accepted": 259,
+    "kl_rejected_chunk": 13,
+    "zero_advantage_chunk": 60
+  },
+  "frame_counts": {
+    "selected": {
+      "approach_air_ascent": 2530,
+      "approach_support": 2837,
+      "takeoff_preparation": 1276,
+      "approach_air_other": 2264,
+      "tree_air_other": 154,
+      "tree_air_ascent": 262,
+      "elevated_tip_contact_candidate": 218,
+      "tree_support": 8
+    },
+    "accepted": {
+      "approach_air_ascent": 2234,
+      "approach_support": 2410,
+      "takeoff_preparation": 1215,
+      "approach_air_other": 1644,
+      "tree_air_ascent": 229,
+      "elevated_tip_contact_candidate": 216,
+      "tree_air_other": 107,
+      "tree_support": 8
+    },
+    "zero_advantage_chunk": {
+      "approach_air_other": 486,
+      "tree_air_other": 47,
+      "approach_support": 325,
+      "tree_air_ascent": 33,
+      "approach_air_ascent": 177,
+      "elevated_tip_contact_candidate": 2
+    },
+    "kl_rejected_chunk": {
+      "approach_support": 102,
+      "takeoff_preparation": 61,
+      "approach_air_ascent": 119,
+      "approach_air_other": 134
+    },
+    "eligible_pool_opportunities": {
+      "approach_air_ascent": 61469,
+      "approach_air_other": 67186,
+      "approach_support": 67186,
+      "takeoff_preparation": 24483,
+      "tree_air_other": 7867,
+      "tree_air_ascent": 14144,
+      "elevated_tip_contact_candidate": 8810,
+      "tree_support": 2024
+    }
+  },
+  "expected_selected_frames_original_sampler": {
+    "approach_air_ascent": 2590.9998824628224,
+    "approach_support": 2712.0609581529716,
+    "takeoff_preparation": 1016.8227060326551,
+    "approach_air_other": 2620.887447240008,
+    "tree_air_other": 177.62422201858305,
+    "tree_air_ascent": 328.3672095417111,
+    "elevated_tip_contact_candidate": 131.9106207806393,
+    "tree_support": 26.530700074778974
+  },
+  "records": [
+    {
+      "iteration": 77,
+      "trajectory": 5,
+      "source_iteration": 72,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 11,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 77,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 77,
+      "trajectory": 4,
+      "source_iteration": 64,
+      "start": 0,
+      "end": 32,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_support": 23,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 78,
+      "trajectory": 5,
+      "source_iteration": 72,
+      "start": 192,
+      "end": 207,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 10,
+        "tree_air_other": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 79,
+      "trajectory": 3,
+      "source_iteration": 79,
+      "start": 128,
+      "end": 145,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_support": 17
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 80,
+      "trajectory": 2,
+      "source_iteration": 69,
+      "start": 96,
+      "end": 125,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 12,
+        "approach_support": 17
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 80,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 192,
+      "end": 207,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 10,
+        "tree_air_other": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 80,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 192,
+      "end": 207,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 10,
+        "tree_air_other": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 81,
+      "trajectory": 4,
+      "source_iteration": 54,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 26,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 81,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 81,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 96,
+      "end": 128,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 11,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 82,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 82,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 25,
+        "approach_air_other": 5,
+        "approach_support": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 82,
+      "trajectory": 3,
+      "source_iteration": 79,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 15,
+        "approach_support": 17
+      },
+      "positive_frames": 30
+    },
+    {
+      "iteration": 82,
+      "trajectory": 3,
+      "source_iteration": 79,
+      "start": 32,
+      "end": 64,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 26,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 83,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 83,
+      "trajectory": 2,
+      "source_iteration": 69,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "approach_support": 19,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 83,
+      "trajectory": 5,
+      "source_iteration": 64,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 22,
+        "approach_air_other": 9,
+        "takeoff_preparation": 1
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 83,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 160,
+      "end": 192,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_air_other": 22
+      },
+      "positive_frames": 6
+    },
+    {
+      "iteration": 84,
+      "trajectory": 3,
+      "source_iteration": 79,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 29,
+        "takeoff_preparation": 3
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 84,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 85,
+      "trajectory": 7,
+      "source_iteration": 81,
+      "start": 160,
+      "end": 192,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "approach_air_other": 1,
+        "approach_support": 19,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 85,
+      "trajectory": 4,
+      "source_iteration": 54,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 16,
+        "approach_air_other": 16
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 86,
+      "trajectory": 6,
+      "source_iteration": 81,
+      "start": 224,
+      "end": 225,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "tree_air_ascent": 1
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 87,
+      "trajectory": 1,
+      "source_iteration": 73,
+      "start": 96,
+      "end": 101,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 87,
+      "trajectory": 3,
+      "source_iteration": 86,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 6,
+        "approach_support": 26
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 88,
+      "trajectory": 3,
+      "source_iteration": 86,
+      "start": 128,
+      "end": 145,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 17
+      },
+      "positive_frames": 4
+    },
+    {
+      "iteration": 89,
+      "trajectory": 4,
+      "source_iteration": 64,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 8,
+        "approach_support": 15,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 89,
+      "trajectory": 1,
+      "source_iteration": 73,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 22,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 89,
+      "trajectory": 6,
+      "source_iteration": 81,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 23
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 89,
+      "trajectory": 1,
+      "source_iteration": 73,
+      "start": 96,
+      "end": 101,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 90,
+      "trajectory": 3,
+      "source_iteration": 86,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 5,
+        "approach_support": 16,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 90,
+      "trajectory": 3,
+      "source_iteration": 86,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 90,
+      "trajectory": 1,
+      "source_iteration": 73,
+      "start": 96,
+      "end": 101,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 90,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 20,
+        "approach_support": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 91,
+      "trajectory": 8,
+      "source_iteration": 81,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_air_other": 7,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 91,
+      "trajectory": 4,
+      "source_iteration": 91,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 24,
+        "approach_support": 3,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 23
+    },
+    {
+      "iteration": 91,
+      "trajectory": 1,
+      "source_iteration": 73,
+      "start": 96,
+      "end": 101,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 91,
+      "trajectory": 5,
+      "source_iteration": 64,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 8,
+        "approach_support": 15,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 92,
+      "trajectory": 8,
+      "source_iteration": 81,
+      "start": 160,
+      "end": 192,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "approach_air_other": 1,
+        "approach_support": 19,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 92,
+      "trajectory": 5,
+      "source_iteration": 64,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 23,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 92,
+      "trajectory": 5,
+      "source_iteration": 64,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 23,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 93,
+      "trajectory": 1,
+      "source_iteration": 73,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 22,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 93,
+      "trajectory": 9,
+      "source_iteration": 64,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 24,
+        "approach_support": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 93,
+      "trajectory": 8,
+      "source_iteration": 81,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 93,
+      "trajectory": 8,
+      "source_iteration": 81,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 23
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 94,
+      "trajectory": 9,
+      "source_iteration": 64,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 8,
+        "approach_support": 15,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 94,
+      "trajectory": 6,
+      "source_iteration": 90,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 25,
+        "takeoff_preparation": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 94,
+      "trajectory": 6,
+      "source_iteration": 90,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 27,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 94,
+      "trajectory": 4,
+      "source_iteration": 91,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 22,
+        "approach_support": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 95,
+      "trajectory": 2,
+      "source_iteration": 69,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 95,
+      "trajectory": 6,
+      "source_iteration": 90,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 8,
+        "approach_support": 12,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 95,
+      "trajectory": 4,
+      "source_iteration": 91,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 13,
+        "approach_support": 12,
+        "takeoff_preparation": 4
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 95,
+      "trajectory": 8,
+      "source_iteration": 81,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_air_other": 7,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 96,
+      "trajectory": 9,
+      "source_iteration": 64,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 24,
+        "approach_support": 8
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 96,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 96,
+      "trajectory": 8,
+      "source_iteration": 81,
+      "start": 192,
+      "end": 224,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "tree_air_ascent": 30
+      },
+      "positive_frames": 23
+    },
+    {
+      "iteration": 96,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 28
+    },
+    {
+      "iteration": 97,
+      "trajectory": 9,
+      "source_iteration": 97,
+      "start": 320,
+      "end": 352,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 13,
+        "tree_air_ascent": 19
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 98,
+      "trajectory": 3,
+      "source_iteration": 86,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 4,
+        "approach_air_other": 28
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 98,
+      "trajectory": 5,
+      "source_iteration": 93,
+      "start": 128,
+      "end": 160,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 20,
+        "approach_air_other": 12
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 98,
+      "trajectory": 5,
+      "source_iteration": 93,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 25,
+        "takeoff_preparation": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 98,
+      "trajectory": 6,
+      "source_iteration": 90,
+      "start": 160,
+      "end": 192,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 25,
+        "approach_air_other": 7
+      },
+      "positive_frames": 6
+    },
+    {
+      "iteration": 99,
+      "trajectory": 1,
+      "source_iteration": 73,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 30,
+        "takeoff_preparation": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 99,
+      "trajectory": 5,
+      "source_iteration": 93,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 5,
+        "approach_support": 15,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 100,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 100,
+      "trajectory": 4,
+      "source_iteration": 91,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 13,
+        "approach_support": 12,
+        "takeoff_preparation": 4
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 100,
+      "trajectory": 6,
+      "source_iteration": 90,
+      "start": 160,
+      "end": 192,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 25,
+        "approach_air_other": 7
+      },
+      "positive_frames": 6
+    },
+    {
+      "iteration": 101,
+      "trajectory": 9,
+      "source_iteration": 97,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_support": 2,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 101,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 102,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "approach_air_other": 3,
+        "takeoff_preparation": 1
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 102,
+      "trajectory": 6,
+      "source_iteration": 72,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 20,
+        "approach_support": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 102,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 24,
+        "approach_air_other": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 102,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 384,
+      "end": 416,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 18,
+        "tree_air_ascent": 6,
+        "tree_air_other": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 103,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 1,
+        "approach_support": 20,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 104,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 104,
+      "trajectory": 4,
+      "source_iteration": 97,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 24,
+        "approach_air_other": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 104,
+      "trajectory": 5,
+      "source_iteration": 97,
+      "start": 352,
+      "end": 384,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 14,
+        "approach_support": 18
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 105,
+      "trajectory": 2,
+      "source_iteration": 104,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_air_other": 20,
+        "approach_support": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 105,
+      "trajectory": 3,
+      "source_iteration": 81,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_air_other": 7,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 105,
+      "trajectory": 6,
+      "source_iteration": 102,
+      "start": 192,
+      "end": 199,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 4
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 105,
+      "trajectory": 6,
+      "source_iteration": 102,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "approach_air_other": 31
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 106,
+      "trajectory": 3,
+      "source_iteration": 81,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_air_other": 14,
+        "approach_support": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 107,
+      "trajectory": 4,
+      "source_iteration": 97,
+      "start": 192,
+      "end": 224,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 1,
+        "approach_support": 21,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 107,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "approach_air_other": 3,
+        "takeoff_preparation": 1
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 107,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 64,
+      "end": 96,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 108,
+      "trajectory": 2,
+      "source_iteration": 104,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 18
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 109,
+      "trajectory": 4,
+      "source_iteration": 97,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 1,
+        "approach_support": 20,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 109,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 110,
+      "trajectory": 2,
+      "source_iteration": 104,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 18
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 110,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 23
+    },
+    {
+      "iteration": 110,
+      "trajectory": 5,
+      "source_iteration": 97,
+      "start": 0,
+      "end": 32,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 26
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 111,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 111,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 111,
+      "trajectory": 6,
+      "source_iteration": 97,
+      "start": 512,
+      "end": 544,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 30,
+        "tree_support": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 111,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 112,
+      "trajectory": 4,
+      "source_iteration": 81,
+      "start": 224,
+      "end": 225,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "tree_air_ascent": 1
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 112,
+      "trajectory": 0,
+      "source_iteration": 74,
+      "start": 32,
+      "end": 64,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 13,
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 112,
+      "trajectory": 6,
+      "source_iteration": 97,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 8,
+        "approach_air_other": 11,
+        "approach_support": 8,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 112,
+      "trajectory": 6,
+      "source_iteration": 97,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 5,
+        "approach_air_other": 4,
+        "approach_support": 23
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 113,
+      "trajectory": 3,
+      "source_iteration": 111,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 113,
+      "trajectory": 4,
+      "source_iteration": 81,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_air_other": 7,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 113,
+      "trajectory": 3,
+      "source_iteration": 111,
+      "start": 96,
+      "end": 128,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_other": 12,
+        "approach_support": 13,
+        "takeoff_preparation": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 114,
+      "trajectory": 6,
+      "source_iteration": 97,
+      "start": 416,
+      "end": 446,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 30
+      },
+      "positive_frames": 25
+    },
+    {
+      "iteration": 114,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 114,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 114,
+      "trajectory": 3,
+      "source_iteration": 111,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 27,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 115,
+      "trajectory": 6,
+      "source_iteration": 97,
+      "start": 192,
+      "end": 224,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 1,
+        "approach_support": 21,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 115,
+      "trajectory": 3,
+      "source_iteration": 111,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 27,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 116,
+      "trajectory": 2,
+      "source_iteration": 104,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_support": 5,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 116,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 116,
+      "trajectory": 6,
+      "source_iteration": 97,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 116,
+      "trajectory": 9,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 19
+    },
+    {
+      "iteration": 117,
+      "trajectory": 7,
+      "source_iteration": 97,
+      "start": 256,
+      "end": 288,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 12,
+        "tree_air_ascent": 16,
+        "tree_air_other": 4
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 117,
+      "trajectory": 2,
+      "source_iteration": 117,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 4,
+        "approach_air_other": 23,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 117,
+      "trajectory": 7,
+      "source_iteration": 97,
+      "start": 160,
+      "end": 192,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 118,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 5,
+        "approach_air_other": 4,
+        "approach_support": 23
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 118,
+      "trajectory": 4,
+      "source_iteration": 111,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 27,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 118,
+      "trajectory": 9,
+      "source_iteration": 108,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 4,
+        "approach_air_other": 6,
+        "approach_support": 12,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 118,
+      "trajectory": 9,
+      "source_iteration": 108,
+      "start": 192,
+      "end": 224,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 20
+    },
+    {
+      "iteration": 119,
+      "trajectory": 2,
+      "source_iteration": 117,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 4,
+        "approach_air_other": 23,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 119,
+      "trajectory": 10,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 119,
+      "trajectory": 6,
+      "source_iteration": 81,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 23
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 119,
+      "trajectory": 3,
+      "source_iteration": 104,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 16,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 120,
+      "trajectory": 2,
+      "source_iteration": 117,
+      "start": 96,
+      "end": 126,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_support": 20
+      },
+      "positive_frames": 10
+    },
+    {
+      "iteration": 120,
+      "trajectory": 4,
+      "source_iteration": 111,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 29,
+        "takeoff_preparation": 3
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 120,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 120,
+      "trajectory": 6,
+      "source_iteration": 81,
+      "start": 192,
+      "end": 224,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "tree_air_ascent": 30
+      },
+      "positive_frames": 27
+    },
+    {
+      "iteration": 121,
+      "trajectory": 4,
+      "source_iteration": 121,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 20,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 121,
+      "trajectory": 2,
+      "source_iteration": 117,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_support": 20,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 121,
+      "trajectory": 6,
+      "source_iteration": 114,
+      "start": 192,
+      "end": 206,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 2,
+        "tree_air_other": 12
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 122,
+      "trajectory": 11,
+      "source_iteration": 74,
+      "start": 32,
+      "end": 64,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 13,
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 122,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "approach_air_other": 3,
+        "takeoff_preparation": 1
+      },
+      "positive_frames": 16
+    },
+    {
+      "iteration": 122,
+      "trajectory": 2,
+      "source_iteration": 117,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 20,
+        "approach_air_other": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 122,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 123,
+      "trajectory": 5,
+      "source_iteration": 111,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 123,
+      "trajectory": 3,
+      "source_iteration": 104,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 18
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 123,
+      "trajectory": 11,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 123,
+      "trajectory": 9,
+      "source_iteration": 97,
+      "start": 256,
+      "end": 288,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_air_other": 25
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 124,
+      "trajectory": 2,
+      "source_iteration": 117,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_support": 20,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 124,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 64,
+      "end": 83,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 19
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 124,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 256,
+      "end": 288,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 12,
+        "tree_air_ascent": 16,
+        "tree_air_other": 4
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 125,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 24,
+        "approach_air_other": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 125,
+      "trajectory": 4,
+      "source_iteration": 121,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 20,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 125,
+      "trajectory": 5,
+      "source_iteration": 111,
+      "start": 160,
+      "end": 192,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 27,
+        "tree_air_ascent": 3,
+        "tree_air_other": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 125,
+      "trajectory": 6,
+      "source_iteration": 114,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 126,
+      "trajectory": 10,
+      "source_iteration": 108,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 126,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 64,
+      "end": 96,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 126,
+      "trajectory": 3,
+      "source_iteration": 104,
+      "start": 128,
+      "end": 137,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "tree_air_ascent": 8
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 126,
+      "trajectory": 11,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 4
+    },
+    {
+      "iteration": 127,
+      "trajectory": 6,
+      "source_iteration": 114,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "approach_air_other": 25,
+        "approach_support": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 127,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 160,
+      "end": 192,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 127,
+      "trajectory": 3,
+      "source_iteration": 104,
+      "start": 128,
+      "end": 137,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "tree_air_ascent": 8
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 127,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 5
+    },
+    {
+      "iteration": 128,
+      "trajectory": 9,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 9
+    },
+    {
+      "iteration": 128,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 64,
+      "end": 83,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 19
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 128,
+      "trajectory": 3,
+      "source_iteration": 104,
+      "start": 128,
+      "end": 137,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "tree_air_ascent": 8
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 128,
+      "trajectory": 1,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 129,
+      "trajectory": 7,
+      "source_iteration": 97,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 5,
+        "approach_air_other": 4,
+        "approach_support": 23
+      },
+      "positive_frames": 27
+    },
+    {
+      "iteration": 129,
+      "trajectory": 8,
+      "source_iteration": 108,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 18
+      },
+      "positive_frames": 29
+    },
+    {
+      "iteration": 129,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 5
+    },
+    {
+      "iteration": 130,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 5
+    },
+    {
+      "iteration": 130,
+      "trajectory": 4,
+      "source_iteration": 121,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 32
+      },
+      "positive_frames": 22
+    },
+    {
+      "iteration": 130,
+      "trajectory": 4,
+      "source_iteration": 121,
+      "start": 160,
+      "end": 176,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "tree_air_ascent": 1,
+        "tree_air_other": 13
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 130,
+      "trajectory": 5,
+      "source_iteration": 130,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 21,
+        "approach_air_other": 5,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 131,
+      "trajectory": 5,
+      "source_iteration": 130,
+      "start": 160,
+      "end": 185,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 12,
+        "tree_air_ascent": 6,
+        "tree_air_other": 7
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 131,
+      "trajectory": 10,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 9
+    },
+    {
+      "iteration": 132,
+      "trajectory": 7,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 132,
+      "trajectory": 5,
+      "source_iteration": 130,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 30,
+        "takeoff_preparation": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 132,
+      "trajectory": 7,
+      "source_iteration": 97,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 1,
+        "approach_support": 20,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 132,
+      "trajectory": 5,
+      "source_iteration": 130,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 133,
+      "trajectory": 8,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 133,
+      "trajectory": 6,
+      "source_iteration": 130,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 21,
+        "approach_air_other": 5,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 133,
+      "trajectory": 5,
+      "source_iteration": 121,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_air_other": 9,
+        "approach_support": 9,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 134,
+      "trajectory": 3,
+      "source_iteration": 133,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 12,
+        "approach_support": 12,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 135,
+      "trajectory": 5,
+      "source_iteration": 104,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 16,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 136,
+      "trajectory": 12,
+      "source_iteration": 74,
+      "start": 32,
+      "end": 64,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 13,
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 136,
+      "trajectory": 9,
+      "source_iteration": 97,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 13,
+        "approach_air_other": 17,
+        "approach_support": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 136,
+      "trajectory": 9,
+      "source_iteration": 97,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 24,
+        "approach_air_other": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 136,
+      "trajectory": 5,
+      "source_iteration": 104,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 16,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 137,
+      "trajectory": 3,
+      "source_iteration": 117,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 20,
+        "approach_air_other": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 137,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 137,
+      "trajectory": 10,
+      "source_iteration": 97,
+      "start": 512,
+      "end": 544,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 30,
+        "tree_support": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 137,
+      "trajectory": 6,
+      "source_iteration": 121,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 20,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 138,
+      "trajectory": 6,
+      "source_iteration": 138,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_air_other": 17,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 138,
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 512,
+      "end": 544,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 30,
+        "tree_support": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 138,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 138,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "approach_air_other": 4,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 11
+    },
+    {
+      "iteration": 139,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 139,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 96,
+      "end": 97,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 1
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 139,
+      "trajectory": 10,
+      "source_iteration": 97,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 139,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "approach_air_other": 3,
+        "takeoff_preparation": 1
+      },
+      "positive_frames": 8
+    },
+    {
+      "iteration": 140,
+      "trajectory": 8,
+      "source_iteration": 130,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 8,
+        "approach_support": 19,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 140,
+      "trajectory": 7,
+      "source_iteration": 121,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 140,
+      "trajectory": 12,
+      "source_iteration": 108,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 14,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 140,
+      "trajectory": 3,
+      "source_iteration": 117,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 4,
+        "approach_air_other": 23,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 141,
+      "trajectory": 5,
+      "source_iteration": 104,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 16,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 141,
+      "trajectory": 5,
+      "source_iteration": 104,
+      "start": 128,
+      "end": 137,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "tree_air_ascent": 8
+      },
+      "positive_frames": 3
+    },
+    {
+      "iteration": 141,
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 20,
+        "approach_support": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 141,
+      "trajectory": 13,
+      "source_iteration": 74,
+      "start": 32,
+      "end": 64,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 13,
+        "approach_support": 5
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 142,
+      "trajectory": 7,
+      "source_iteration": 121,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 26,
+        "approach_air_other": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 142,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 143,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 143,
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 256,
+      "end": 288,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_air_other": 25
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 143,
+      "trajectory": 7,
+      "source_iteration": 121,
+      "start": 160,
+      "end": 176,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "tree_air_ascent": 1,
+        "tree_air_other": 13
+      },
+      "positive_frames": 6
+    },
+    {
+      "iteration": 143,
+      "trajectory": 12,
+      "source_iteration": 108,
+      "start": 128,
+      "end": 160,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 18
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 144,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 144,
+      "trajectory": 10,
+      "source_iteration": 97,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 11,
+        "approach_air_other": 14,
+        "approach_support": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 144,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 144,
+      "trajectory": 5,
+      "source_iteration": 104,
+      "start": 0,
+      "end": 32,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 16,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 145,
+      "trajectory": 7,
+      "source_iteration": 121,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 20,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 145,
+      "trajectory": 3,
+      "source_iteration": 117,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 4,
+        "approach_air_other": 23,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 145,
+      "trajectory": 10,
+      "source_iteration": 97,
+      "start": 192,
+      "end": 224,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 1,
+        "approach_support": 21,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 146,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 146,
+      "trajectory": 6,
+      "source_iteration": 138,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_air_other": 17,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 146,
+      "trajectory": 5,
+      "source_iteration": 104,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 16,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 146,
+      "trajectory": 8,
+      "source_iteration": 128,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_support": 3,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 147,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 64,
+      "end": 96,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 147,
+      "trajectory": 12,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 2
+    },
+    {
+      "iteration": 147,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 148,
+      "trajectory": 8,
+      "source_iteration": 128,
+      "start": 160,
+      "end": 186,
+      "outcome": "accepted",
+      "phase_counts": {
+        "tree_air_ascent": 14,
+        "tree_air_other": 12
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 148,
+      "trajectory": 10,
+      "source_iteration": 97,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 5,
+        "approach_air_other": 4,
+        "approach_support": 23
+      },
+      "positive_frames": 28
+    },
+    {
+      "iteration": 149,
+      "trajectory": 9,
+      "source_iteration": 97,
+      "start": 224,
+      "end": 256,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 30,
+        "takeoff_preparation": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 149,
+      "trajectory": 4,
+      "source_iteration": 133,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 24,
+        "approach_support": 2,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 28
+    },
+    {
+      "iteration": 149,
+      "trajectory": 4,
+      "source_iteration": 133,
+      "start": 64,
+      "end": 96,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_other": 12,
+        "approach_support": 12,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 150,
+      "trajectory": 9,
+      "source_iteration": 128,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 150,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "approach_air_other": 4,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 21
+    },
+    {
+      "iteration": 150,
+      "trajectory": 4,
+      "source_iteration": 117,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 4,
+        "approach_air_other": 23,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 150,
+      "trajectory": 5,
+      "source_iteration": 133,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 12,
+        "approach_support": 12,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 151,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 64,
+      "end": 96,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 151,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 6
+    },
+    {
+      "iteration": 151,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 96,
+      "end": 97,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 1
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 151,
+      "trajectory": 3,
+      "source_iteration": 150,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 5,
+        "approach_air_other": 27
+      },
+      "positive_frames": 26
+    },
+    {
+      "iteration": 152,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "approach_air_other": 4,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 17
+    },
+    {
+      "iteration": 152,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 153,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 29
+      },
+      "positive_frames": 6
+    },
+    {
+      "iteration": 153,
+      "trajectory": 6,
+      "source_iteration": 104,
+      "start": 128,
+      "end": 137,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "tree_air_ascent": 8
+      },
+      "positive_frames": 7
+    },
+    {
+      "iteration": 154,
+      "trajectory": 9,
+      "source_iteration": 128,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 154,
+      "trajectory": 7,
+      "source_iteration": 138,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 154,
+      "trajectory": 3,
+      "source_iteration": 150,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_air_other": 8,
+        "approach_support": 1,
+        "takeoff_preparation": 4
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 154,
+      "trajectory": 13,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 155,
+      "trajectory": 8,
+      "source_iteration": 138,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_air_other": 17,
+        "approach_support": 5
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 155,
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 156,
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 156,
+      "trajectory": 8,
+      "source_iteration": 138,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 156,
+      "trajectory": 14,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 156,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 4
+    },
+    {
+      "iteration": 157,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_air_other": 26
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 157,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 157,
+      "trajectory": 3,
+      "source_iteration": 150,
+      "start": 96,
+      "end": 121,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 6,
+        "approach_support": 15,
+        "takeoff_preparation": 4
+      },
+      "positive_frames": 21
+    },
+    {
+      "iteration": 158,
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 320,
+      "end": 352,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 13,
+        "tree_air_ascent": 19
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 158,
+      "trajectory": 14,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 159,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 64,
+      "end": 96,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 159,
+      "trajectory": 4,
+      "source_iteration": 117,
+      "start": 96,
+      "end": 126,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_support": 20
+      },
+      "positive_frames": 14
+    },
+    {
+      "iteration": 160,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 25,
+        "takeoff_preparation": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 160,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 14,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 160,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_air_other": 26
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 160,
+      "trajectory": 13,
+      "source_iteration": 160,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_support": 19,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 161,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 25,
+        "takeoff_preparation": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 161,
+      "trajectory": 13,
+      "source_iteration": 160,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 13,
+        "approach_air_other": 2,
+        "approach_support": 5,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 28
+    },
+    {
+      "iteration": 161,
+      "trajectory": 10,
+      "source_iteration": 128,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_support": 3,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 162,
+      "trajectory": 10,
+      "source_iteration": 128,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 11,
+        "approach_air_other": 20,
+        "approach_support": 1
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 162,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 163,
+      "trajectory": 12,
+      "source_iteration": 97,
+      "start": 416,
+      "end": 448,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 8,
+        "takeoff_preparation": 12,
+        "tree_air_ascent": 9,
+        "tree_air_other": 1,
+        "tree_support": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 163,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 128,
+      "end": 134,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 4
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 163,
+      "trajectory": 11,
+      "source_iteration": 97,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 8
+    },
+    {
+      "iteration": 163,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 24,
+        "approach_support": 2,
+        "takeoff_preparation": 6
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 164,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 164,
+      "trajectory": 10,
+      "source_iteration": 128,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "tree_air_ascent": 4
+      },
+      "positive_frames": 13
+    },
+    {
+      "iteration": 165,
+      "trajectory": 5,
+      "source_iteration": 155,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 29,
+        "approach_support": 3
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 165,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "approach_air_other": 3,
+        "takeoff_preparation": 1
+      },
+      "positive_frames": 8
+    },
+    {
+      "iteration": 166,
+      "trajectory": 14,
+      "source_iteration": 160,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_support": 19,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 166,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 166,
+      "trajectory": 15,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 166,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "approach_air_other": 4,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 9
+    },
+    {
+      "iteration": 167,
+      "trajectory": 11,
+      "source_iteration": 128,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_support": 3,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 167,
+      "trajectory": 13,
+      "source_iteration": 97,
+      "start": 192,
+      "end": 224,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 7,
+        "approach_support": 25
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 167,
+      "trajectory": 15,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 167,
+      "trajectory": 12,
+      "source_iteration": 97,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_air_other": 1,
+        "approach_support": 20,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 168,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 168,
+      "trajectory": 8,
+      "source_iteration": 138,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 168,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 64,
+      "end": 96,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 168,
+      "trajectory": 11,
+      "source_iteration": 128,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "tree_air_ascent": 4
+      },
+      "positive_frames": 5
+    },
+    {
+      "iteration": 169,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 64,
+      "end": 83,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 19
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 169,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 14,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 169,
+      "trajectory": 13,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 20,
+        "approach_support": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 169,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 170,
+      "trajectory": 10,
+      "source_iteration": 146,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 26,
+        "approach_support": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 171,
+      "trajectory": 5,
+      "source_iteration": 155,
+      "start": 128,
+      "end": 131,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 3
+      },
+      "positive_frames": 3
+    },
+    {
+      "iteration": 171,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "approach_air_other": 4,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 12
+    },
+    {
+      "iteration": 172,
+      "trajectory": 13,
+      "source_iteration": 97,
+      "start": 480,
+      "end": 512,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 11,
+        "tree_air_other": 21
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 172,
+      "trajectory": 4,
+      "source_iteration": 117,
+      "start": 96,
+      "end": 126,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_support": 20
+      },
+      "positive_frames": 14
+    },
+    {
+      "iteration": 173,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "approach_air_other": 3,
+        "takeoff_preparation": 1
+      },
+      "positive_frames": 9
+    },
+    {
+      "iteration": 173,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_frames": 30
+    },
+    {
+      "iteration": 173,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 12,
+        "approach_support": 12,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 173,
+      "trajectory": 10,
+      "source_iteration": 146,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 174,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 96,
+      "end": 97,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 1
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 174,
+      "trajectory": 9,
+      "source_iteration": 166,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 11,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 175,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 25,
+        "takeoff_preparation": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 175,
+      "trajectory": 10,
+      "source_iteration": 146,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 10,
+        "approach_air_other": 16,
+        "approach_support": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 175,
+      "trajectory": 12,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 175,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 25,
+        "takeoff_preparation": 7
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 176,
+      "trajectory": 14,
+      "source_iteration": 160,
+      "start": 128,
+      "end": 157,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "approach_air_other": 1
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 176,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 176,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "approach_air_other": 4,
+        "takeoff_preparation": 5
+      },
+      "positive_frames": 12
+    },
+    {
+      "iteration": 176,
+      "trajectory": 3,
+      "source_iteration": 150,
+      "start": 96,
+      "end": 121,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 6,
+        "approach_support": 15,
+        "takeoff_preparation": 4
+      },
+      "positive_frames": 13
+    },
+    {
+      "iteration": 177,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 177,
+      "trajectory": 10,
+      "source_iteration": 146,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 26,
+        "approach_support": 6
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 178,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 96,
+      "end": 98,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 179,
+      "trajectory": 7,
+      "source_iteration": 104,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_support": 5,
+        "takeoff_preparation": 8
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 179,
+      "trajectory": 14,
+      "source_iteration": 160,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 15,
+        "approach_air_other": 13,
+        "approach_support": 4
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 179,
+      "trajectory": 15,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 179,
+      "trajectory": 4,
+      "source_iteration": 117,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_support": 20,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 180,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_air_other": 26
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 180,
+      "trajectory": 5,
+      "source_iteration": 155,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_support": 30,
+        "takeoff_preparation": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 180,
+      "trajectory": 5,
+      "source_iteration": 155,
+      "start": 64,
+      "end": 96,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_other": 29,
+        "approach_support": 3
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 181,
+      "trajectory": 6,
+      "source_iteration": 133,
+      "start": 128,
+      "end": 134,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 4
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 181,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_air_other": 15
+      },
+      "positive_frames": 7
+    },
+    {
+      "iteration": 181,
+      "trajectory": 11,
+      "source_iteration": 128,
+      "start": 96,
+      "end": 128,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 17,
+        "approach_support": 3,
+        "takeoff_preparation": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 181,
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 64,
+      "end": 96,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 32
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 182,
+      "trajectory": 15,
+      "source_iteration": 74,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 9,
+        "approach_support": 12,
+        "takeoff_preparation": 11
+      },
+      "positive_frames": 1
+    },
+    {
+      "iteration": 182,
+      "trajectory": 11,
+      "source_iteration": 128,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 28,
+        "tree_air_ascent": 4
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 182,
+      "trajectory": 1,
+      "source_iteration": 135,
+      "start": 96,
+      "end": 97,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 1
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 182,
+      "trajectory": 10,
+      "source_iteration": 146,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 6,
+        "approach_support": 26
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 183,
+      "trajectory": 9,
+      "source_iteration": 166,
+      "start": 128,
+      "end": 160,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 23,
+        "tree_air_ascent": 7,
+        "tree_air_other": 2
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 183,
+      "trajectory": 4,
+      "source_iteration": 117,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 20,
+        "approach_air_other": 12
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 183,
+      "trajectory": 12,
+      "source_iteration": 97,
+      "start": 320,
+      "end": 352,
+      "outcome": "accepted",
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 13,
+        "tree_air_ascent": 19
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 183,
+      "trajectory": 8,
+      "source_iteration": 138,
+      "start": 64,
+      "end": 96,
+      "outcome": "kl_rejected_chunk",
+      "phase_counts": {
+        "approach_air_ascent": 1,
+        "approach_air_other": 30,
+        "approach_support": 1
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 184,
+      "trajectory": 15,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 184,
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 64,
+      "end": 83,
+      "outcome": "zero_advantage_chunk",
+      "phase_counts": {
+        "approach_air_other": 19
+      },
+      "positive_frames": 0
+    },
+    {
+      "iteration": 184,
+      "trajectory": 4,
+      "source_iteration": 117,
+      "start": 0,
+      "end": 32,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 3,
+        "approach_support": 20,
+        "takeoff_preparation": 9
+      },
+      "positive_frames": 32
+    },
+    {
+      "iteration": 184,
+      "trajectory": 14,
+      "source_iteration": 160,
+      "start": 32,
+      "end": 64,
+      "outcome": "accepted",
+      "phase_counts": {
+        "approach_air_ascent": 19,
+        "approach_air_other": 13
+      },
+      "positive_frames": 29
+    }
+  ],
+  "historical_positive_frames_by_phase": null,
+  "historical_gradient_weights_by_phase": null,
+  "limitation": "Old logs contain positive counts per chunk, not per-frame advantages; those cannot be reconstructed as historical truth.",
+  "stage_labels": "offline geometry proxies; accepted frame count does not mean every frame had a positive gradient"
+}

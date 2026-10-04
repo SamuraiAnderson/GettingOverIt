@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "mode": "gru_full_prefix_positive_advantage",
+  "iteration": 205,
+  "seed": 7,
+  "budget": 2,
+  "chunks": [
+    {
+      "trajectory": 0,
+      "source_iteration": 113,
+      "start": 0,
+      "end": 32,
+      "cap": 83,
+      "bootstrap": -1.1929974555969238,
+      "positive_frames": 20,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.011518542039967872,
+        "conditional_chunk_probability": 0.9194867682078829,
+        "probability": 0.010591146994796694,
+        "priority_mass": 19.438588747083912,
+        "core_frames": 21,
+        "free_flight_frames": 0,
+        "context_frames": 11
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "approach_air_ascent": 2,
+        "approach_support": 20,
+        "takeoff_preparation": 10
+      },
+      "positive_by_phase": {
+        "approach_support": 18,
+        "takeoff_preparation": 2
+      },
+      "advantage_sum_by_phase": {
+        "approach_air_ascent": 0.0,
+        "approach_support": 9.66565227508545,
+        "takeoff_preparation": 0.11621809005737305
+      },
+      "kl": 0.00019715717644430697,
+      "frame_kl_max": 0.0021210312843322754,
+      "loss": 0.026363555341959
+    },
+    {
+      "trajectory": 14,
+      "source_iteration": 97,
+      "start": 512,
+      "end": 544,
+      "cap": 586,
+      "bootstrap": -0.23792241513729095,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.15779805761256666,
+        "conditional_chunk_probability": 0.12459471834051866,
+        "probability": 0.01966080454291868,
+        "priority_mass": 21.376938181137568,
+        "core_frames": 30,
+        "free_flight_frames": 0,
+        "context_frames": 2
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 30,
+        "tree_support": 2
+      },
+      "positive_by_phase": {
+        "elevated_tip_contact_candidate": 30,
+        "tree_support": 2
+      },
+      "advantage_sum_by_phase": {
+        "elevated_tip_contact_candidate": 68.07774353027344,
+        "tree_support": 3.6449246406555176
+      },
+      "kl": 0.001204158179461956,
+      "frame_kl_max": 0.00896453857421875,
+      "loss": 0.5123974084854126
+    }
+  ],
+  "sampling_mode": "quality_dynamics_v3",
+  "phase_rules": {
+    "version": "tree_motion_proxy_v1",
+    "tree_x_min": -33.0,
+    "tree_x_max": -27.0,
+    "elevated_tip_y": 0.0,
+    "upward_speed": 0.5,
+    "minimum_flight_steps": 8,
+    "minimum_flight_rise_m": 0.25,
+    "preparation_steps": 12,
+    "hold_steps": 120
+  },
+  "phase_branch_probability": 0.0,
+  "weighting": {
+    "version": "quality_dynamics_v3",
+    "trajectory_uniform_fraction": 0.1,
+    "distance_rank_temperature_fraction": 0.25,
+    "chunk_uniform_fraction": 0.1,
+    "no_dynamics_fallback": "uniform_chunks_in_selected_trajectory",
+    "dynamics_spec": {
+      "version": "com_contact_dynamics_v1",
+      "body_names": [
+        "Player",
+        "Hub",
+        "Slider",
+        "Handle",
+        "PoleMiddle",
+        "Tip"
+      ],
+      "velocity_indices": [
+        2,
+        7,
+        12,
+        17,
+        21,
+        25
+      ],
+      "masses": [
+        52.0,
+        10.0,
+        7.0,
+        3.0,
+        3.0,
+        4.0
+      ],
+      "linear_drag": [
+        0.2,
+        0.2,
+        0.2,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "gravity_xy": [
+        0.0,
+        -30.0
+      ],
+      "minimum_acceleration_m_s2": 5.0,
+      "saturation_acceleration_m_s2": 150.0,
+      "passive_impact_speed_retention": 0.5,
+      "preparation_steps": 12,
+      "response_steps": 6,
+      "provenance": "native_dynamics_validation_20261002 bodyConfig; gravity checked against archived COM free flight"
+    },
+    "step_seconds": 0.008333333333333333,
+    "trajectory_probabilities": {
+      "0": 0.011518542039967872,
+      "1": 0.013013715105514866,
+      "2": 0.014905528960920488,
+      "3": 0.017299204814220683,
+      "4": 0.02032787704552958,
+      "5": 0.02415999803720641,
+      "6": 0.029008707363703496,
+      "7": 0.03514368644811193,
+      "8": 0.05272786471829719,
+      "9": 0.0651550821560398,
+      "10": 0.08087900246640128,
+      "11": 0.10077417780756032,
+      "12": 0.12594716228234373,
+      "13": 0.1980983857025098,
+      "14": 0.15779805761256666,
+      "15": 0.04290615803213656,
+      "16": 0.010336849406969432
+    }
+  }
+}

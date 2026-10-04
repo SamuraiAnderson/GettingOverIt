@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "mode": "gru_full_prefix_positive_advantage",
+  "iteration": 188,
+  "seed": 7,
+  "budget": 4,
+  "chunks": [
+    {
+      "trajectory": 15,
+      "source_iteration": 74,
+      "start": 32,
+      "end": 64,
+      "cap": 90,
+      "bootstrap": -0.0780659168958664,
+      "positive_frames": 0,
+      "accepted": false,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.011019248096452848,
+        "conditional_chunk_probability": 0.30851584598072523,
+        "probability": 0.0033996126485486464,
+        "priority_mass": 7.505575313418387,
+        "core_frames": 4,
+        "free_flight_frames": 6,
+        "context_frames": 22
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "approach_air_ascent": 14,
+        "approach_air_other": 13,
+        "approach_support": 5
+      },
+      "positive_by_phase": {},
+      "advantage_sum_by_phase": {
+        "approach_air_ascent": 0.0,
+        "approach_air_other": 0.0,
+        "approach_support": 0.0
+      }
+    },
+    {
+      "trajectory": 10,
+      "source_iteration": 146,
+      "start": 96,
+      "end": 128,
+      "cap": 176,
+      "bootstrap": 0.42344045639038086,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.10204290873714618,
+        "conditional_chunk_probability": 0.36778492860205114,
+        "probability": 0.03752984390423693,
+        "priority_mass": 17.077756482325828,
+        "core_frames": 21,
+        "free_flight_frames": 2,
+        "context_frames": 9
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "positive_by_phase": {
+        "approach_air_ascent": 7,
+        "approach_support": 13,
+        "takeoff_preparation": 12
+      },
+      "advantage_sum_by_phase": {
+        "approach_air_ascent": 11.380294799804688,
+        "approach_support": 41.561805725097656,
+        "takeoff_preparation": 29.599843978881836
+      },
+      "kl": 6.246818520594388e-05,
+      "frame_kl_max": 0.00017076730728149414,
+      "loss": 0.3289305567741394
+    },
+    {
+      "trajectory": 12,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "cap": 446,
+      "bootstrap": -0.9800180792808533,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.2090435893879149,
+        "conditional_chunk_probability": 0.18181304145796678,
+        "probability": 0.038006850783907156,
+        "priority_mass": 17.305675742566706,
+        "core_frames": 19,
+        "free_flight_frames": 1,
+        "context_frames": 12
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "positive_by_phase": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "advantage_sum_by_phase": {
+        "elevated_tip_contact_candidate": 79.05890655517578,
+        "tree_air_ascent": 11.883438110351562,
+        "tree_air_other": 40.709922790527344
+      },
+      "kl": 5.452057303045876e-05,
+      "frame_kl_max": 0.0006716251373291016,
+      "loss": 0.6756806373596191
+    },
+    {
+      "trajectory": 13,
+      "source_iteration": 97,
+      "start": 544,
+      "end": 576,
+      "cap": 586,
+      "bootstrap": -0.2600644528865814,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.16418580621716908,
+        "conditional_chunk_probability": 0.07209011941586972,
+        "probability": 0.011836174376586564,
+        "priority_mass": 11.971316053640141,
+        "core_frames": 22,
+        "free_flight_frames": 0,
+        "context_frames": 10
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 23,
+        "tree_support": 9
+      },
+      "positive_by_phase": {
+        "elevated_tip_contact_candidate": 23,
+        "tree_support": 9
+      },
+      "advantage_sum_by_phase": {
+        "elevated_tip_contact_candidate": 34.972957611083984,
+        "tree_support": 4.3267035484313965
+      },
+      "kl": 0.0004511388251557946,
+      "frame_kl_max": 0.004089295864105225,
+      "loss": 0.1451702117919922
+    }
+  ],
+  "sampling_mode": "quality_dynamics_v3",
+  "phase_rules": {
+    "version": "tree_motion_proxy_v1",
+    "tree_x_min": -33.0,
+    "tree_x_max": -27.0,
+    "elevated_tip_y": 0.0,
+    "upward_speed": 0.5,
+    "minimum_flight_steps": 8,
+    "minimum_flight_rise_m": 0.25,
+    "preparation_steps": 12,
+    "hold_steps": 120
+  },
+  "phase_branch_probability": 0.0,
+  "weighting": {
+    "version": "quality_dynamics_v3",
+    "trajectory_uniform_fraction": 0.1,
+    "distance_rank_temperature_fraction": 0.25,
+    "chunk_uniform_fraction": 0.1,
+    "no_dynamics_fallback": "uniform_chunks_in_selected_trajectory",
+    "dynamics_spec": {
+      "version": "com_contact_dynamics_v1",
+      "body_names": [
+        "Player",
+        "Hub",
+        "Slider",
+        "Handle",
+        "PoleMiddle",
+        "Tip"
+      ],
+      "velocity_indices": [
+        2,
+        7,
+        12,
+        17,
+        21,
+        25
+      ],
+      "masses": [
+        52.0,
+        10.0,
+        7.0,
+        3.0,
+        3.0,
+        4.0
+      ],
+      "linear_drag": [
+        0.2,
+        0.2,
+        0.2,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "gravity_xy": [
+        0.0,
+        -30.0
+      ],
+      "minimum_acceleration_m_s2": 5.0,
+      "saturation_acceleration_m_s2": 150.0,
+      "passive_impact_speed_retention": 0.5,
+      "preparation_steps": 12,
+      "response_steps": 6,
+      "provenance": "native_dynamics_validation_20261002 bodyConfig; gravity checked against archived COM free flight"
+    },
+    "step_seconds": 0.008333333333333333,
+    "trajectory_probabilities": {
+      "0": 0.012373835774335087,
+      "1": 0.014113160781867909,
+      "2": 0.01634649829942065,
+      "3": 0.019214160436000667,
+      "4": 0.022896311505842495,
+      "5": 0.02762428706760335,
+      "6": 0.0336951278583828,
+      "7": 0.05149936607720037,
+      "8": 0.06435133613213337,
+      "9": 0.08085359233717708,
+      "10": 0.10204290873714618,
+      "11": 0.1292505295569449,
+      "12": 0.2090435893879149,
+      "13": 0.16418580621716908,
+      "14": 0.041490241734408316,
+      "15": 0.011019248096452848
+    }
+  }
+}

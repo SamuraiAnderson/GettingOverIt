@@ -1,0 +1,2472 @@
+{
+  "status": "completed",
+  "start_iteration": 184,
+  "final_iteration": 199,
+  "rounds": 15,
+  "physical_steps": 144000,
+  "finished_at": "2026-10-04T17:50:31.7859008+00:00",
+  "final_checkpoint_sha256": "90aeee87ee116b07a9e3b1c29719f9f8a5d09333a08ae3a1f38113647a8a3f17",
+  "runtime_checks": {
+    "checkpoint_zip_crc_validated": 15,
+    "pool_snapshots_validated": 15,
+    "finite_model_optimizer_tensors": 2865,
+    "contract_violations": [],
+    "reproduced_sampling_draws": 51,
+    "preupdate_ratio_max_error": 0.0005332460859790444,
+    "max_action_saturation_fraction": 0.0,
+    "warning_error_lines": [],
+    "all_source_hashes_match_launch": true
+  },
+  "sil": {
+    "budget": 52,
+    "attempted": 49,
+    "accepted": 47,
+    "rejected": 2,
+    "accepted_max_mean_kl": 0.009278178215026855,
+    "accepted_max_frame_kl": 0.07758158445358276,
+    "sampled": {
+      "chunks": 51,
+      "frames": 1623,
+      "positive_frames": 1456,
+      "phase_frames": {
+        "approach_air_ascent": 282,
+        "approach_air_other": 216,
+        "approach_support": 572,
+        "takeoff_preparation": 337,
+        "elevated_tip_contact_candidate": 110,
+        "tree_air_ascent": 51,
+        "tree_air_other": 35,
+        "tree_support": 20
+      },
+      "positive_phase_frames": {
+        "approach_air_ascent": 212,
+        "approach_air_other": 192,
+        "approach_support": 530,
+        "takeoff_preparation": 310,
+        "elevated_tip_contact_candidate": 110,
+        "tree_air_ascent": 47,
+        "tree_air_other": 35,
+        "tree_support": 20
+      },
+      "dynamics_frames": {
+        "core_frames": 821,
+        "context_frames": 552,
+        "free_flight_frames": 250
+      },
+      "starts": {
+        "0_to_119": 38,
+        "120_to_299": 10,
+        "300_plus": 3
+      },
+      "top_two_historical_trajectories": 16,
+      "farthest_trajectory_192_chunk": 2,
+      "source_iterations": {
+        "97": 16,
+        "104": 3,
+        "160": 3,
+        "128": 9,
+        "166": 2,
+        "74": 1,
+        "146": 4,
+        "155": 1,
+        "191": 5,
+        "135": 1,
+        "150": 1,
+        "138": 1,
+        "117": 1,
+        "113": 1,
+        "101": 1,
+        "133": 1
+      }
+    },
+    "accepted_samples": {
+      "chunks": 47,
+      "frames": 1495,
+      "positive_frames": 1398,
+      "phase_frames": {
+        "approach_air_ascent": 243,
+        "approach_air_other": 180,
+        "approach_support": 544,
+        "takeoff_preparation": 312,
+        "elevated_tip_contact_candidate": 110,
+        "tree_air_ascent": 51,
+        "tree_air_other": 35,
+        "tree_support": 20
+      },
+      "positive_phase_frames": {
+        "approach_air_ascent": 195,
+        "approach_air_other": 180,
+        "approach_support": 515,
+        "takeoff_preparation": 296,
+        "elevated_tip_contact_candidate": 110,
+        "tree_air_ascent": 47,
+        "tree_air_other": 35,
+        "tree_support": 20
+      },
+      "dynamics_frames": {
+        "core_frames": 781,
+        "context_frames": 490,
+        "free_flight_frames": 224
+      },
+      "starts": {
+        "0_to_119": 34,
+        "120_to_299": 10,
+        "300_plus": 3
+      },
+      "top_two_historical_trajectories": 15,
+      "farthest_trajectory_192_chunk": 2,
+      "source_iterations": {
+        "104": 3,
+        "97": 15,
+        "160": 3,
+        "128": 8,
+        "166": 2,
+        "146": 4,
+        "155": 1,
+        "191": 5,
+        "135": 1,
+        "150": 1,
+        "138": 1,
+        "117": 1,
+        "113": 1,
+        "101": 1
+      }
+    },
+    "zero_positive_chunks": 2
+  },
+  "pool": {
+    "size": 17,
+    "max_D": 21.88921426645702,
+    "entries": [
+      {
+        "index": 0,
+        "source_iteration": 113,
+        "D": 7.8489857115924835,
+        "t": 83,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 53,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.9308333333333333,
+          "credited_progress_m": 3.9244928557962417,
+          "cap_progress_m": 7.8489857115924835,
+          "cap_action": 82,
+          "t_cap": 83,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 12.68557483150285,
+          "max_retreat_after_arrival_m": 2.0895306478383944,
+          "terminal_same_segment_progress_m": 12.68557483150285,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 1,
+        "source_iteration": 135,
+        "D": 8.492514292763568,
+        "t": 97,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 59,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.8091666666666667,
+          "credited_progress_m": 4.246257146381785,
+          "cap_progress_m": 8.492514292763568,
+          "cap_action": 96,
+          "t_cap": 97,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 12.618902622027864,
+          "max_retreat_after_arrival_m": 3.9041476392241767,
+          "terminal_same_segment_progress_m": 12.618902622027864,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 2,
+        "source_iteration": 101,
+        "D": 8.920600307595036,
+        "t": 98,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 61,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.925,
+          "credited_progress_m": 3.7739066313901954,
+          "cap_progress_m": 8.920600307595036,
+          "cap_action": 97,
+          "t_cap": 98,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 12.989015722583993,
+          "max_retreat_after_arrival_m": 0.9161364739906386,
+          "terminal_same_segment_progress_m": 12.989015722583993,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 3,
+        "source_iteration": 150,
+        "D": 9.000711809799839,
+        "t": 121,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 72,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.5066666666666667,
+          "credited_progress_m": 4.500355904899919,
+          "cap_progress_m": 9.000711809799839,
+          "cap_action": 120,
+          "t_cap": 121,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 7.939833279938,
+          "max_retreat_after_arrival_m": 7.301407677212796,
+          "terminal_same_segment_progress_m": 7.939833279938,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 4,
+        "source_iteration": 117,
+        "D": 9.388472919010614,
+        "t": 126,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 84,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.795,
+          "credited_progress_m": 4.694236459505307,
+          "cap_progress_m": 9.388472919010614,
+          "cap_action": 125,
+          "t_cap": 126,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 12.25101923143865,
+          "max_retreat_after_arrival_m": 6.603202428995185,
+          "terminal_same_segment_progress_m": 12.25101923143865,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 5,
+        "source_iteration": 155,
+        "D": 9.644758202648903,
+        "t": 131,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 77,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.04,
+          "credited_progress_m": 4.822379101324452,
+          "cap_progress_m": 9.644758202648903,
+          "cap_action": 130,
+          "t_cap": 131,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 4.8967545908837815,
+          "max_retreat_after_arrival_m": 5.100694949618735,
+          "terminal_same_segment_progress_m": 4.8967545908837815,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 6,
+        "source_iteration": 133,
+        "D": 10.034284886512278,
+        "t": 134,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 93,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.8225,
+          "credited_progress_m": 5.017142443256139,
+          "cap_progress_m": 10.034284886512278,
+          "cap_action": 133,
+          "t_cap": 134,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 12.68557483150285,
+          "max_retreat_after_arrival_m": 6.390781419145385,
+          "terminal_same_segment_progress_m": 12.68557483150285,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 7,
+        "source_iteration": 104,
+        "D": 12.605438397687415,
+        "t": 137,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 62,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.8858333333333334,
+          "credited_progress_m": 7.218527440822241,
+          "cap_progress_m": 12.605438397687415,
+          "cap_action": 136,
+          "t_cap": 137,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 13.270318654572966,
+          "max_retreat_after_arrival_m": 1.972314132229533,
+          "terminal_same_segment_progress_m": 13.270318654572966,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 8,
+        "source_iteration": 138,
+        "D": 12.68557483150285,
+        "t": 152,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 79,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.8733333333333333,
+          "credited_progress_m": 7.344406601817972,
+          "cap_progress_m": 12.68557483150285,
+          "cap_action": 151,
+          "t_cap": 152,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 14.238887874486629,
+          "max_retreat_after_arrival_m": 0.0,
+          "terminal_same_segment_progress_m": 14.238887874486629,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 9,
+        "source_iteration": 166,
+        "D": 13.080037502177678,
+        "t": 171,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 76,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.7908333333333334,
+          "credited_progress_m": 7.676315394530764,
+          "cap_progress_m": 13.080037502177678,
+          "cap_action": 170,
+          "t_cap": 171,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 11.451232106171759,
+          "max_retreat_after_arrival_m": 6.922778845584838,
+          "terminal_same_segment_progress_m": 11.451232106171759,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 10,
+        "source_iteration": 146,
+        "D": 13.162699548265822,
+        "t": 176,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 105,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.25,
+          "credited_progress_m": 7.803549627815227,
+          "cap_progress_m": 13.162699548265822,
+          "cap_action": 175,
+          "t_cap": 176,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 4.891280407769815,
+          "max_retreat_after_arrival_m": 9.37149427030376,
+          "terminal_same_segment_progress_m": 4.891280407769815,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 11,
+        "source_iteration": 128,
+        "D": 14.511302201696294,
+        "t": 186,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 88,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.83,
+          "credited_progress_m": 9.0657094061394,
+          "cap_progress_m": 14.511302201696294,
+          "cap_action": 185,
+          "t_cap": 186,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": true,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 13.469646746086237,
+          "max_retreat_after_arrival_m": 3.2128967207183496,
+          "terminal_same_segment_progress_m": 13.469646746086237,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 12,
+        "source_iteration": 191,
+        "D": 14.636949509180775,
+        "t": 278,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 128,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.7458333333333333,
+          "credited_progress_m": 5.066232047122066,
+          "cap_progress_m": 14.636949509180775,
+          "cap_action": 277,
+          "t_cap": 278,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 9.388556986553368,
+          "max_retreat_after_arrival_m": 6.830304102469692,
+          "terminal_same_segment_progress_m": 9.388556986553368,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 13,
+        "source_iteration": 97,
+        "D": 21.88921426645702,
+        "t": 446,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 159,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.6758333333333333,
+          "credited_progress_m": 13.005401142133751,
+          "cap_progress_m": 21.88921426645702,
+          "cap_action": 445,
+          "t_cap": 446,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": true,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 18.92035505760135,
+          "max_retreat_after_arrival_m": 3.918528454654293,
+          "terminal_same_segment_progress_m": 18.92035505760135,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 14,
+        "source_iteration": 97,
+        "D": 16.70850012622938,
+        "t": 586,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 145,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.6241666666666666,
+          "credited_progress_m": 7.26942054783739,
+          "cap_progress_m": 16.70850012622938,
+          "cap_action": 585,
+          "t_cap": 586,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": true,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 15.659957885898752,
+          "max_retreat_after_arrival_m": 1.0605144060647813,
+          "terminal_same_segment_progress_m": 15.659957885898752,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 15,
+        "source_iteration": 160,
+        "D": 10.116257558396814,
+        "t": 157,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 58,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.8433333333333334,
+          "credited_progress_m": 5.058128779198407,
+          "cap_progress_m": 10.116257558396814,
+          "cap_action": 156,
+          "t_cap": 157,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": true,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 12.68557483150285,
+          "max_retreat_after_arrival_m": 2.183786198953271,
+          "terminal_same_segment_progress_m": 12.68557483150285,
+          "continued_on_later_segment": false
+        }
+      },
+      {
+        "index": 16,
+        "source_iteration": 74,
+        "D": 3.8919538679041614,
+        "t": 90,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": false,
+          "arrival_steps": null,
+          "fell": false,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.6775,
+          "credited_progress_m": 1.9459769339520807,
+          "cap_progress_m": 3.8919538679041614,
+          "cap_action": 89,
+          "t_cap": 90,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 0.0,
+          "max_retreat_after_arrival_m": null,
+          "terminal_same_segment_progress_m": -0.026144191323367334,
+          "continued_on_later_segment": false
+        }
+      }
+    ],
+    "new_entries": [
+      {
+        "index": 12,
+        "source_iteration": 191,
+        "D": 14.636949509180775,
+        "t": 278,
+        "frames": 1200,
+        "complete": true,
+        "metrics": {
+          "success": true,
+          "arrival_steps": 128,
+          "fell": true,
+          "watered": false,
+          "left_corridor": true,
+          "outside_fraction": 0.7458333333333333,
+          "credited_progress_m": 5.066232047122066,
+          "cap_progress_m": 14.636949509180775,
+          "cap_action": 277,
+          "t_cap": 278,
+          "start_segment": 0,
+          "start_progress_m": 0.026144191323367334,
+          "steps": 1200,
+          "hold_success": false,
+          "hold_incomplete": false,
+          "reference_unconfirmed": false,
+          "terminal_progress_m": 9.388556986553368,
+          "max_retreat_after_arrival_m": 6.830304102469692,
+          "terminal_same_segment_progress_m": 9.388556986553368,
+          "continued_on_later_segment": false
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Training buffers were not persisted: runtime preupdate audits and sampling RNG/probabilities are checked; no full post-hoc replay of every training log probability.",
+    "Positive frames are logged by old motion phase, not by new dynamics core/context; do not equate sampled core frames with positive-advantage core frames."
+  ],
+  "evaluation": {
+    "protocol": "Exact spawn, 8 agents x 1200 steps, seed 20261003; deterministic/exploration one trial each; frozen weights",
+    "summaries": {
+      "184": {
+        "deterministic": {
+          "episodes": 8,
+          "success_rate": 1.0,
+          "success_wilson95": [
+            0.6755843804891231,
+            1.0
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.0,
+          "water_count": 0,
+          "water_rate": 0.0,
+          "leave_corridor_rate": 1.0,
+          "mean_credited_progress_m": 5.130463204724378,
+          "credited_progress_median_m": 5.130463204724378,
+          "credited_progress_q25_m": 5.130463204724378,
+          "mean_cap_progress_m": 10.260926409448754,
+          "cap_progress_median_m": 10.260926409448754,
+          "cap_progress_q25_m": 10.260926409448754,
+          "cap_progress_max_m": 10.260926409448754,
+          "mean_arrival_steps": 105.0,
+          "mean_arrival_game_seconds": 0.875,
+          "arrival_count": 8,
+          "arrival_rate": 1.0,
+          "hold_success_count": 0,
+          "hold_rate_after_arrival": 0.0,
+          "hold_incomplete_count": 0,
+          "terminal_progress_median_m": 13.069637348327516,
+          "max_retreat_after_arrival_median_m": 4.087082315967029,
+          "reference_unconfirmed_count": 0
+        },
+        "exploration": {
+          "episodes": 8,
+          "success_rate": 1.0,
+          "success_wilson95": [
+            0.6755843804891231,
+            1.0
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.625,
+          "water_count": 0,
+          "water_rate": 0.0,
+          "leave_corridor_rate": 1.0,
+          "mean_credited_progress_m": 5.080127124618585,
+          "credited_progress_median_m": 4.990684127367334,
+          "credited_progress_q25_m": 4.285802615057919,
+          "mean_cap_progress_m": 10.60173900040466,
+          "cap_progress_median_m": 9.982603992927196,
+          "cap_progress_q25_m": 9.806300993079,
+          "cap_progress_max_m": 13.222342776920804,
+          "mean_arrival_steps": 104.75,
+          "mean_arrival_game_seconds": 0.8729166666666667,
+          "arrival_count": 8,
+          "arrival_rate": 1.0,
+          "hold_success_count": 1,
+          "hold_rate_after_arrival": 0.125,
+          "hold_incomplete_count": 0,
+          "terminal_progress_median_m": 11.9551725137017,
+          "max_retreat_after_arrival_median_m": 5.88891723494709,
+          "reference_unconfirmed_count": 0
+        }
+      },
+      "199": {
+        "deterministic": {
+          "episodes": 8,
+          "success_rate": 1.0,
+          "success_wilson95": [
+            0.6755843804891231,
+            1.0
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.0,
+          "water_count": 0,
+          "water_rate": 0.0,
+          "leave_corridor_rate": 1.0,
+          "mean_credited_progress_m": 4.65663022739803,
+          "credited_progress_median_m": 4.65663022739803,
+          "credited_progress_q25_m": 4.65663022739803,
+          "mean_cap_progress_m": 9.313260454796058,
+          "cap_progress_median_m": 9.313260454796058,
+          "cap_progress_q25_m": 9.313260454796058,
+          "cap_progress_max_m": 9.313260454796058,
+          "mean_arrival_steps": 104.0,
+          "mean_arrival_game_seconds": 0.8666666666666667,
+          "arrival_count": 8,
+          "arrival_rate": 1.0,
+          "hold_success_count": 0,
+          "hold_rate_after_arrival": 0.0,
+          "hold_incomplete_count": 0,
+          "terminal_progress_median_m": 9.164187405799964,
+          "max_retreat_after_arrival_median_m": 4.425897393297393,
+          "reference_unconfirmed_count": 0
+        },
+        "exploration": {
+          "episodes": 8,
+          "success_rate": 1.0,
+          "success_wilson95": [
+            0.6755843804891231,
+            1.0
+          ],
+          "interval_note": "Descriptive only: agents share trial seeds; episodes are not independent.",
+          "fall_rate": 0.375,
+          "water_count": 0,
+          "water_rate": 0.0,
+          "leave_corridor_rate": 1.0,
+          "mean_credited_progress_m": 4.574740613151745,
+          "credited_progress_median_m": 5.079224916798289,
+          "credited_progress_q25_m": 3.9318404713160073,
+          "mean_cap_progress_m": 10.356895045280542,
+          "cap_progress_median_m": 10.222630314758046,
+          "cap_progress_q25_m": 9.52253151692899,
+          "cap_progress_max_m": 12.793064612960023,
+          "mean_arrival_steps": 110.625,
+          "mean_arrival_game_seconds": 0.921875,
+          "arrival_count": 8,
+          "arrival_rate": 1.0,
+          "hold_success_count": 1,
+          "hold_rate_after_arrival": 0.125,
+          "hold_incomplete_count": 0,
+          "terminal_progress_median_m": 13.022244237215729,
+          "max_retreat_after_arrival_median_m": 4.958505797872236,
+          "reference_unconfirmed_count": 0
+        }
+      }
+    },
+    "audits": [
+      {
+        "mode": "deterministic",
+        "trial": 0,
+        "preupdate_ratio_max_error": 0.0,
+        "preupdate_kl": 0.0,
+        "action_saturation_fraction": 0.0,
+        "audit_samples": 9600.0,
+        "rollout_patch_seconds": 125.88649609987624,
+        "rollout_contact_seconds": 4.5266428019385785,
+        "rollout_features_seconds": 0.3352633002214134,
+        "rollout_inference_seconds": 14.573850101558492,
+        "rollout_env_seconds": 8.911207596072927,
+        "rollout_bootstrap_seconds": 0.35710470005869865,
+        "rollout_diagnostics_seconds": 0.0,
+        "rollout_total_seconds": 162.10227890009992,
+        "rollout_samples_per_second": 59.22186945882648,
+        "rollout_environment_steps": 9600.0,
+        "rollout_decisions": 9600.0,
+        "rollout_mean_segment_steps": 1.0,
+        "rollout_contact_interruptions": 0.0,
+        "rollout_patch_storage_bytes": 157417472.0,
+        "rollout_cnn_frame_evaluations": 9608.0,
+        "executed_action_saturation_fraction": 0.0,
+        "observation_embedding_rms": 0.8381447792053223,
+        "action_embedding_rms": 0.4639696776866913,
+        "action_history_rms": 37.456424713134766,
+        "normalized_action_history_rms": 0.3745642304420471
+      },
+      {
+        "mode": "exploration",
+        "trial": 0,
+        "preupdate_ratio_max_error": 0.0006358984974212945,
+        "preupdate_kl": 1.6438795095533957e-09,
+        "action_saturation_fraction": 0.0,
+        "audit_samples": 9600.0,
+        "rollout_patch_seconds": 151.63322080019861,
+        "rollout_contact_seconds": 4.567331802798435,
+        "rollout_features_seconds": 0.3397924080491066,
+        "rollout_inference_seconds": 13.054944799747318,
+        "rollout_env_seconds": 8.826467798324302,
+        "rollout_bootstrap_seconds": 0.33430329989641905,
+        "rollout_diagnostics_seconds": 0.0,
+        "rollout_total_seconds": 186.25244670012034,
+        "rollout_samples_per_second": 51.542947059679065,
+        "rollout_environment_steps": 9600.0,
+        "rollout_decisions": 9600.0,
+        "rollout_mean_segment_steps": 1.0,
+        "rollout_contact_interruptions": 0.0,
+        "rollout_patch_storage_bytes": 157417472.0,
+        "rollout_cnn_frame_evaluations": 9608.0,
+        "executed_action_saturation_fraction": 0.0,
+        "observation_embedding_rms": 0.8547122478485107,
+        "action_embedding_rms": 0.47007423639297485,
+        "action_history_rms": 39.54998016357422,
+        "normalized_action_history_rms": 0.3954997956752777
+      }
+    ],
+    "baseline_reuse_checks": {
+      "seed": true,
+      "criterion": true,
+      "offsets": true,
+      "geometry_sha256": true,
+      "contact_source": true,
+      "native_diagnostics_requested": true,
+      "initialization": true,
+      "reference": true
+    },
+    "source_checks": {
+      "actor_critic": true,
+      "experimental_policy": true,
+      "experimental_rollout": true,
+      "dataset": true,
+      "rollout": true,
+      "local_evaluation": true,
+      "policy_features": true,
+      "policy_audit": true
+    },
+    "config_differences": {
+      "gru_sil_sampling_mode": [
+        null,
+        "quality_dynamics_v3"
+      ],
+      "log_dir": [
+        "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\logs",
+        "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_dynamics_1h_20261004\\logs"
+      ],
+      "checkpoint_dir": [
+        "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\checkpoints",
+        "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_dynamics_1h_20261004\\checkpoints"
+      ]
+    },
+    "physical_initial_state_checks": [
+      {
+        "episode": "deterministic_000_agent0.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "deterministic_000_agent1.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "deterministic_000_agent2.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "deterministic_000_agent3.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "deterministic_000_agent4.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "deterministic_000_agent5.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "deterministic_000_agent6.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "deterministic_000_agent7.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent0.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent1.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent2.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent3.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent4.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent5.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent6.json",
+        "max_abs_state_delta": 0.0
+      },
+      {
+        "episode": "exploration_000_agent7.json",
+        "max_abs_state_delta": 0.0
+      }
+    ],
+    "checkpoint_unchanged": true,
+    "behavior_model_identical": true,
+    "baseline_reference_source_note": "Only added optional guidance sigma; None takes the same old corridor radius. No scoring or policy-input change is active.",
+    "motion": {
+      "184": [
+        {
+          "episode": "deterministic_000_agent0.json",
+          "mode": "deterministic",
+          "agent": 0,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "deterministic_000_agent1.json",
+          "mode": "deterministic",
+          "agent": 1,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "deterministic_000_agent2.json",
+          "mode": "deterministic",
+          "agent": 2,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "deterministic_000_agent3.json",
+          "mode": "deterministic",
+          "agent": 3,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "deterministic_000_agent4.json",
+          "mode": "deterministic",
+          "agent": 4,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "deterministic_000_agent5.json",
+          "mode": "deterministic",
+          "agent": 5,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "deterministic_000_agent6.json",
+          "mode": "deterministic",
+          "agent": 6,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "deterministic_000_agent7.json",
+          "mode": "deterministic",
+          "agent": 7,
+          "phase_frames": {
+            "approach_air_ascent": 48,
+            "approach_air_other": 41,
+            "approach_support": 118,
+            "takeoff_preparation": 24,
+            "tree_air_ascent": 56,
+            "tree_air_other": 172,
+            "tree_support": 741
+          },
+          "takeoffs": [
+            {
+              "start_state": 112,
+              "end_state_exclusive": 170,
+              "peak_state": 149,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.4441327452659607,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 395,
+              "end_state_exclusive": 427,
+              "peak_state": 413,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3476952314376831,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 982,
+          "final_anchor": [
+            -29.781665802001953,
+            -1.7076715230941772
+          ],
+          "max_anchor_y": -0.5425788760185242,
+          "max_anchor_y_in_tree": -0.5789614319801331
+        },
+        {
+          "episode": "exploration_000_agent0.json",
+          "mode": "exploration",
+          "agent": 0,
+          "phase_frames": {
+            "approach_air_ascent": 127,
+            "approach_air_other": 145,
+            "approach_support": 541,
+            "takeoff_preparation": 36,
+            "tree_air_ascent": 8,
+            "tree_air_other": 59,
+            "tree_support": 284
+          },
+          "takeoffs": [
+            {
+              "start_state": 124,
+              "end_state_exclusive": 220,
+              "peak_state": 178,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 2.772329568862915,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 410,
+              "end_state_exclusive": 418,
+              "peak_state": 417,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.27447569370269775,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 599,
+              "end_state_exclusive": 608,
+              "peak_state": 607,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.2974884510040283,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 351,
+          "final_anchor": [
+            -35.345096588134766,
+            -1.3261154890060425
+          ],
+          "max_anchor_y": 1.083662986755371,
+          "max_anchor_y_in_tree": -0.6219003796577454
+        },
+        {
+          "episode": "exploration_000_agent1.json",
+          "mode": "exploration",
+          "agent": 1,
+          "phase_frames": {
+            "approach_air_ascent": 47,
+            "approach_air_other": 60,
+            "approach_support": 100,
+            "takeoff_preparation": 19,
+            "tree_air_ascent": 22,
+            "tree_air_other": 98,
+            "tree_support": 854
+          },
+          "takeoffs": [
+            {
+              "start_state": 23,
+              "end_state_exclusive": 73,
+              "peak_state": 39,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3153350353240967,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 209,
+              "end_state_exclusive": 249,
+              "peak_state": 228,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.4141417145729065,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 975,
+          "final_anchor": [
+            -29.93709373474121,
+            -1.4640083312988281
+          ],
+          "max_anchor_y": -0.5352835655212402,
+          "max_anchor_y_in_tree": -0.5352835655212402
+        },
+        {
+          "episode": "exploration_000_agent2.json",
+          "mode": "exploration",
+          "agent": 2,
+          "phase_frames": {
+            "approach_air_ascent": 153,
+            "approach_air_other": 309,
+            "approach_support": 437,
+            "takeoff_preparation": 75,
+            "tree_air_ascent": 46,
+            "tree_air_other": 53,
+            "tree_support": 127
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 73,
+              "peak_state": 37,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.2745475769042969,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 210,
+              "end_state_exclusive": 279,
+              "peak_state": 243,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.8657205104827881,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 337,
+              "end_state_exclusive": 377,
+              "peak_state": 361,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5230512619018555,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 599,
+              "end_state_exclusive": 696,
+              "peak_state": 631,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.7972096800804138,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 720,
+              "end_state_exclusive": 793,
+              "peak_state": 748,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.9785455465316772,
+              "tree_at_release": true
+            },
+            {
+              "start_state": 835,
+              "end_state_exclusive": 884,
+              "peak_state": 859,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.624731719493866,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 912,
+              "end_state_exclusive": 947,
+              "peak_state": 932,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.42664259672164917,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 251,
+          "final_anchor": [
+            -32.02703857421875,
+            -1.2853243350982666
+          ],
+          "max_anchor_y": 1.2445659637451172,
+          "max_anchor_y_in_tree": -0.23052871227264404
+        },
+        {
+          "episode": "exploration_000_agent3.json",
+          "mode": "exploration",
+          "agent": 3,
+          "phase_frames": {
+            "approach_air_ascent": 34,
+            "approach_air_other": 60,
+            "approach_support": 1094,
+            "takeoff_preparation": 12
+          },
+          "takeoffs": [
+            {
+              "start_state": 36,
+              "end_state_exclusive": 105,
+              "peak_state": 69,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.192171037197113,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -39.136131286621094,
+            -3.0194904804229736
+          ],
+          "max_anchor_y": -0.19226878881454468,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "exploration_000_agent4.json",
+          "mode": "exploration",
+          "agent": 4,
+          "phase_frames": {
+            "approach_air_ascent": 189,
+            "approach_air_other": 266,
+            "approach_support": 692,
+            "takeoff_preparation": 53
+          },
+          "takeoffs": [
+            {
+              "start_state": 26,
+              "end_state_exclusive": 79,
+              "peak_state": 37,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.29994356632232666,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 119,
+              "end_state_exclusive": 191,
+              "peak_state": 169,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.7457796931266785,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 239,
+              "end_state_exclusive": 258,
+              "peak_state": 257,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.25092601776123047,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 882,
+              "end_state_exclusive": 928,
+              "peak_state": 898,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.3052924871444702,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 1058,
+              "end_state_exclusive": 1123,
+              "peak_state": 1105,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.204490303993225,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -41.8123893737793,
+            -1.6875059604644775
+          ],
+          "max_anchor_y": -0.009357750415802002,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "exploration_000_agent5.json",
+          "mode": "exploration",
+          "agent": 5,
+          "phase_frames": {
+            "approach_air_ascent": 103,
+            "approach_air_other": 205,
+            "approach_support": 457,
+            "takeoff_preparation": 31,
+            "tree_air_ascent": 8,
+            "tree_air_other": 46,
+            "tree_support": 350
+          },
+          "takeoffs": [
+            {
+              "start_state": 121,
+              "end_state_exclusive": 129,
+              "peak_state": 128,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.33194637298583984,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 493,
+              "end_state_exclusive": 544,
+              "peak_state": 529,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.515089988708496,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 788,
+              "end_state_exclusive": 826,
+              "peak_state": 805,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.4229190945625305,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 405,
+          "final_anchor": [
+            -29.75332260131836,
+            -1.6334245204925537
+          ],
+          "max_anchor_y": -0.42761683464050293,
+          "max_anchor_y_in_tree": -0.6117814183235168
+        },
+        {
+          "episode": "exploration_000_agent6.json",
+          "mode": "exploration",
+          "agent": 6,
+          "phase_frames": {
+            "approach_air_ascent": 97,
+            "approach_air_other": 99,
+            "approach_support": 200,
+            "takeoff_preparation": 47,
+            "tree_air_ascent": 47,
+            "tree_air_other": 121,
+            "tree_support": 589
+          },
+          "takeoffs": [
+            {
+              "start_state": 23,
+              "end_state_exclusive": 82,
+              "peak_state": 39,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5426309108734131,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 98,
+              "end_state_exclusive": 108,
+              "peak_state": 107,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.32642340660095215,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 376,
+              "end_state_exclusive": 475,
+              "peak_state": 433,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 2.4737963676452637,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 512,
+              "end_state_exclusive": 563,
+              "peak_state": 534,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5264806747436523,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 770,
+          "final_anchor": [
+            -30.219940185546875,
+            -1.3162338733673096
+          ],
+          "max_anchor_y": 1.1565742492675781,
+          "max_anchor_y_in_tree": 1.1565742492675781
+        },
+        {
+          "episode": "exploration_000_agent7.json",
+          "mode": "exploration",
+          "agent": 7,
+          "phase_frames": {
+            "approach_air_ascent": 73,
+            "approach_air_other": 102,
+            "approach_support": 298,
+            "takeoff_preparation": 12,
+            "tree_air_ascent": 38,
+            "tree_air_other": 132,
+            "tree_support": 545
+          },
+          "takeoffs": [
+            {
+              "start_state": 129,
+              "end_state_exclusive": 226,
+              "peak_state": 183,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 2.4046137928962708,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 716,
+          "final_anchor": [
+            -31.586606979370117,
+            -2.548722267150879
+          ],
+          "max_anchor_y": 0.7223036885261536,
+          "max_anchor_y_in_tree": -0.5243377089500427
+        }
+      ],
+      "199": [
+        {
+          "episode": "deterministic_000_agent0.json",
+          "mode": "deterministic",
+          "agent": 0,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "deterministic_000_agent1.json",
+          "mode": "deterministic",
+          "agent": 1,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "deterministic_000_agent2.json",
+          "mode": "deterministic",
+          "agent": 2,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "deterministic_000_agent3.json",
+          "mode": "deterministic",
+          "agent": 3,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "deterministic_000_agent4.json",
+          "mode": "deterministic",
+          "agent": 4,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "deterministic_000_agent5.json",
+          "mode": "deterministic",
+          "agent": 5,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "deterministic_000_agent6.json",
+          "mode": "deterministic",
+          "agent": 6,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "deterministic_000_agent7.json",
+          "mode": "deterministic",
+          "agent": 7,
+          "phase_frames": {
+            "approach_air_ascent": 27,
+            "approach_air_other": 44,
+            "approach_support": 1106,
+            "takeoff_preparation": 23
+          },
+          "takeoffs": [
+            {
+              "start_state": 24,
+              "end_state_exclusive": 72,
+              "peak_state": 36,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.282723069190979,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 110,
+              "end_state_exclusive": 125,
+              "peak_state": 124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5725971460342407,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -33.278141021728516,
+            -2.9159622192382812
+          ],
+          "max_anchor_y": -0.9015116691589355,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "exploration_000_agent0.json",
+          "mode": "exploration",
+          "agent": 0,
+          "phase_frames": {
+            "approach_air_ascent": 88,
+            "approach_air_other": 88,
+            "approach_support": 1013,
+            "takeoff_preparation": 11
+          },
+          "takeoffs": [
+            {
+              "start_state": 124,
+              "end_state_exclusive": 211,
+              "peak_state": 176,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 2.272508978843689,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 0,
+          "final_anchor": [
+            -39.37128448486328,
+            -3.132327079772949
+          ],
+          "max_anchor_y": 0.5803756713867188,
+          "max_anchor_y_in_tree": null
+        },
+        {
+          "episode": "exploration_000_agent1.json",
+          "mode": "exploration",
+          "agent": 1,
+          "phase_frames": {
+            "approach_air_ascent": 55,
+            "approach_air_other": 78,
+            "approach_support": 97,
+            "elevated_tip_contact_candidate": 4,
+            "takeoff_preparation": 12,
+            "tree_air_ascent": 19,
+            "tree_air_other": 185,
+            "tree_support": 750
+          },
+          "takeoffs": [
+            {
+              "start_state": 195,
+              "end_state_exclusive": 251,
+              "peak_state": 235,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.3676396608352661,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [
+            [
+              251,
+              255
+            ]
+          ],
+          "tree_state_count": 959,
+          "final_anchor": [
+            -29.521408081054688,
+            -1.2696738243103027
+          ],
+          "max_anchor_y": 0.22684800624847412,
+          "max_anchor_y_in_tree": 0.16817426681518555
+        },
+        {
+          "episode": "exploration_000_agent2.json",
+          "mode": "exploration",
+          "agent": 2,
+          "phase_frames": {
+            "approach_air_ascent": 152,
+            "approach_air_other": 256,
+            "approach_support": 453,
+            "takeoff_preparation": 48,
+            "tree_air_ascent": 14,
+            "tree_air_other": 49,
+            "tree_support": 228
+          },
+          "takeoffs": [
+            {
+              "start_state": 99,
+              "end_state_exclusive": 139,
+              "peak_state": 122,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5163313150405884,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 362,
+              "end_state_exclusive": 427,
+              "peak_state": 396,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.7633733749389648,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 554,
+              "end_state_exclusive": 612,
+              "peak_state": 578,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.7055502235889435,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 1094,
+              "end_state_exclusive": 1152,
+              "peak_state": 1124,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.0835785567760468,
+              "tree_at_release": true
+            },
+            {
+              "start_state": 1181,
+              "end_state_exclusive": 1201,
+              "peak_state": 1196,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.26652902364730835,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 303,
+          "final_anchor": [
+            -36.72775650024414,
+            -0.40953564643859863
+          ],
+          "max_anchor_y": -0.15874984860420227,
+          "max_anchor_y_in_tree": -0.8739287853240967
+        },
+        {
+          "episode": "exploration_000_agent3.json",
+          "mode": "exploration",
+          "agent": 3,
+          "phase_frames": {
+            "approach_air_ascent": 152,
+            "approach_air_other": 133,
+            "approach_support": 495,
+            "takeoff_preparation": 30,
+            "tree_air_ascent": 4,
+            "tree_air_other": 14,
+            "tree_support": 372
+          },
+          "takeoffs": [
+            {
+              "start_state": 35,
+              "end_state_exclusive": 129,
+              "peak_state": 94,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 2.204728841781616,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 210,
+              "end_state_exclusive": 263,
+              "peak_state": 232,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5498120784759521,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 438,
+              "end_state_exclusive": 503,
+              "peak_state": 482,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.1175224781036377,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 391,
+          "final_anchor": [
+            -31.376358032226562,
+            -1.4643100500106812
+          ],
+          "max_anchor_y": 0.9583677053451538,
+          "max_anchor_y_in_tree": -1.0734546184539795
+        },
+        {
+          "episode": "exploration_000_agent4.json",
+          "mode": "exploration",
+          "agent": 4,
+          "phase_frames": {
+            "approach_air_ascent": 60,
+            "approach_air_other": 81,
+            "approach_support": 34,
+            "takeoff_preparation": 46,
+            "tree_air_ascent": 82,
+            "tree_air_other": 296,
+            "tree_support": 601
+          },
+          "takeoffs": [
+            {
+              "start_state": 26,
+              "end_state_exclusive": 87,
+              "peak_state": 40,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.35704493522644043,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 109,
+              "end_state_exclusive": 171,
+              "peak_state": 133,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.9186630249023438,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 193,
+              "end_state_exclusive": 272,
+              "peak_state": 234,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.8853569030761719,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 668,
+              "end_state_exclusive": 703,
+              "peak_state": 683,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.26106762886047363,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 990,
+          "final_anchor": [
+            -29.603811264038086,
+            -1.3264039754867554
+          ],
+          "max_anchor_y": 0.6019171476364136,
+          "max_anchor_y_in_tree": 0.6019171476364136
+        },
+        {
+          "episode": "exploration_000_agent5.json",
+          "mode": "exploration",
+          "agent": 5,
+          "phase_frames": {
+            "approach_air_ascent": 95,
+            "approach_air_other": 128,
+            "approach_support": 215,
+            "takeoff_preparation": 43,
+            "tree_air_ascent": 62,
+            "tree_air_other": 132,
+            "tree_support": 525
+          },
+          "takeoffs": [
+            {
+              "start_state": 254,
+              "end_state_exclusive": 310,
+              "peak_state": 266,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.2746025323867798,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 334,
+              "end_state_exclusive": 350,
+              "peak_state": 349,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.32635676860809326,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 451,
+              "end_state_exclusive": 497,
+              "peak_state": 477,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.7444256842136383,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 525,
+              "end_state_exclusive": 566,
+              "peak_state": 546,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.43871307373046875,
+              "tree_at_release": true
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 732,
+          "final_anchor": [
+            -29.534618377685547,
+            -1.4259717464447021
+          ],
+          "max_anchor_y": -0.3702941834926605,
+          "max_anchor_y_in_tree": -0.3702941834926605
+        },
+        {
+          "episode": "exploration_000_agent6.json",
+          "mode": "exploration",
+          "agent": 6,
+          "phase_frames": {
+            "approach_air_ascent": 44,
+            "approach_air_other": 31,
+            "approach_support": 33,
+            "takeoff_preparation": 20,
+            "tree_air_ascent": 60,
+            "tree_air_other": 215,
+            "tree_support": 797
+          },
+          "takeoffs": [
+            {
+              "start_state": 30,
+              "end_state_exclusive": 91,
+              "peak_state": 57,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.5034691095352173,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 114,
+              "end_state_exclusive": 178,
+              "peak_state": 146,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 1.1341671347618103,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 1073,
+          "final_anchor": [
+            -29.55069923400879,
+            -1.4233083724975586
+          ],
+          "max_anchor_y": 0.19517260789871216,
+          "max_anchor_y_in_tree": 0.19517260789871216
+        },
+        {
+          "episode": "exploration_000_agent7.json",
+          "mode": "exploration",
+          "agent": 7,
+          "phase_frames": {
+            "approach_air_ascent": 108,
+            "approach_air_other": 124,
+            "approach_support": 858,
+            "takeoff_preparation": 35,
+            "tree_support": 75
+          },
+          "takeoffs": [
+            {
+              "start_state": 20,
+              "end_state_exclusive": 49,
+              "peak_state": 41,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.32875800132751465,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 129,
+              "end_state_exclusive": 219,
+              "peak_state": 182,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 2.3222697377204895,
+              "tree_at_release": false
+            },
+            {
+              "start_state": 307,
+              "end_state_exclusive": 362,
+              "peak_state": 337,
+              "observed_release": true,
+              "takeoff_candidate": true,
+              "rise_from_release_m": 0.9413473010063171,
+              "tree_at_release": false
+            }
+          ],
+          "elevated_contact_runs": [],
+          "tree_state_count": 80,
+          "final_anchor": [
+            -39.376556396484375,
+            -3.134995698928833
+          ],
+          "max_anchor_y": 0.6725971102714539,
+          "max_anchor_y_in_tree": -1.1588748693466187
+        }
+      ]
+    },
+    "motion_limitations": "Geometric contacts and tree box x=[-33,-27] are proxies; takeoff candidates are not proof of deliberate jumping or branch gripping.",
+    "game_and_route_hashes_match_launch": true
+  },
+  "review_completed_at_utc": "2026-10-04T18:08:58.979070+00:00",
+  "assessment": {
+    "conclusion": "新采样机制按设计执行，尚未显示稳定策略改善。确定性确认进度和末端位置退步；探索中位数略升，但最大确认进度下降，保持能力不变。",
+    "sampling": "51 次片段抽样，接触动力学核心及上下文占 84.60%，纯自由飞行占 15.40%。47 次更新被接受，实际参与已接受更新的正优势帧 1398；2 次零正优势跳过、2 次 KL 回滚。",
+    "coverage": "已接受的 47 个片段中 34 个起于前 120 步；最远两条历史轨迹合计 15 个，最远轨迹第 192–223 步片段 2 个。覆盖目标片段不等于已学会对应动作。",
+    "motion": "确定性策略有短起跳，最终停在树区入口左侧；本次无树区起跳或高处锤头接触候选。探索模式 3/8 出现树区起跳候选，1/8 出现高处锤头接触候选，均不能证明稳定勾树。",
+    "elite": "精英池由 16 条增至 17 条，新轨迹来自第 191 轮，D=14.64m、t=278；历史最远 21.89m 未刷新，来自第 97 轮。",
+    "retention": "确定性末端路线投影中位数 13.07→9.16m；探索 11.96→13.02m。投影位置不能当作已确认进度，5m 到达均为 8/8，随后 1s 保持分别仍为 0/8、1/8。",
+    "scope": "单个训练种子、每模式一轮评估，且确定性 8 个 agent 轨迹相同；不能据此证明新采样权重或 SIL 的因果收益。"
+  },
+  "artifacts": {
+    "elite_paths": "all_elite_motion/all_elite_trajectories.png",
+    "elite_envelope": "elite_envelope/envelope.png",
+    "actual_sampling": "actual_sampling.json",
+    "deterministic_video": "checkpoint_0199/motion_deterministic/best-motion.mp4",
+    "exploration_best_video": "checkpoint_0199/motion_exploration_best/best-motion.mp4"
+  }
+}

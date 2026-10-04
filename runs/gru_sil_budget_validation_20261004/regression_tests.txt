@@ -1,0 +1,51 @@
+.......16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:29 [training.main_ppo] INFO: PyTorch CPU threads: 2
+...........16:18:31 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:31 [training.main_ppo] INFO: PyTorch CPU threads: 2
+........16:18:31 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpuch0_lzv\ppo_iter_0001.pt
+.....16:18:36 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpapz98pkv\ppo_iter_0001.pt
+16:18:37 [training.ppo_trainer] INFO: 已恢复 optimizer state
+...16:18:37 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmp99ifal76\ppo_iter_0001.pt
+16:18:37 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:37 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:37 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.16:18:38 [training.ppo_trainer] INFO: 已恢复 optimizer state
+...16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 2
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 2
+...........16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:38 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+16:18:39 [training.main_ppo] INFO: PyTorch CPU threads: 4
+.
+----------------------------------------------------------------------
+Ran 53 tests in 11.237s
+
+OK

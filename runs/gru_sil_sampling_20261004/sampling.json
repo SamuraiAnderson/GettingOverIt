@@ -1,0 +1,3962 @@
+{
+  "kind": "offline_sampling_preview_before_advantage_and_KL",
+  "draws_per_mode": 20000,
+  "seed": 7,
+  "sampling_iteration": 0,
+  "seq_len": 32,
+  "step_seconds": 0.008333333333333333,
+  "phase_rules": {
+    "version": "tree_motion_proxy_v1",
+    "tree_x_min": -33.0,
+    "tree_x_max": -27.0,
+    "elevated_tip_y": 0.0,
+    "upward_speed": 0.5,
+    "minimum_flight_steps": 8,
+    "minimum_flight_rise_m": 0.25,
+    "preparation_steps": 12,
+    "hold_steps": 120
+  },
+  "trajectories": [
+    {
+      "index": 0,
+      "D_m": 7.8489857115924835,
+      "cap": 83,
+      "steps": 1200,
+      "source_iteration": 113
+    },
+    {
+      "index": 1,
+      "D_m": 8.492514292763568,
+      "cap": 97,
+      "steps": 1200,
+      "source_iteration": 135
+    },
+    {
+      "index": 2,
+      "D_m": 8.920600307595036,
+      "cap": 98,
+      "steps": 1200,
+      "source_iteration": 101
+    },
+    {
+      "index": 3,
+      "D_m": 9.000711809799839,
+      "cap": 121,
+      "steps": 1200,
+      "source_iteration": 150
+    },
+    {
+      "index": 4,
+      "D_m": 9.388472919010614,
+      "cap": 126,
+      "steps": 1200,
+      "source_iteration": 117
+    },
+    {
+      "index": 5,
+      "D_m": 9.644758202648903,
+      "cap": 131,
+      "steps": 1200,
+      "source_iteration": 155
+    },
+    {
+      "index": 6,
+      "D_m": 10.034284886512278,
+      "cap": 134,
+      "steps": 1200,
+      "source_iteration": 133
+    },
+    {
+      "index": 7,
+      "D_m": 12.605438397687415,
+      "cap": 137,
+      "steps": 1200,
+      "source_iteration": 104
+    },
+    {
+      "index": 8,
+      "D_m": 12.68557483150285,
+      "cap": 152,
+      "steps": 1200,
+      "source_iteration": 138
+    },
+    {
+      "index": 9,
+      "D_m": 13.080037502177678,
+      "cap": 171,
+      "steps": 1200,
+      "source_iteration": 166
+    },
+    {
+      "index": 10,
+      "D_m": 13.162699548265822,
+      "cap": 176,
+      "steps": 1200,
+      "source_iteration": 146
+    },
+    {
+      "index": 11,
+      "D_m": 14.511302201696294,
+      "cap": 186,
+      "steps": 1200,
+      "source_iteration": 128
+    },
+    {
+      "index": 12,
+      "D_m": 21.88921426645702,
+      "cap": 446,
+      "steps": 1200,
+      "source_iteration": 97
+    },
+    {
+      "index": 13,
+      "D_m": 16.70850012622938,
+      "cap": 586,
+      "steps": 1200,
+      "source_iteration": 97
+    },
+    {
+      "index": 14,
+      "D_m": 10.116257558396814,
+      "cap": 157,
+      "steps": 1200,
+      "source_iteration": 160
+    },
+    {
+      "index": 15,
+      "D_m": 3.8919538679041614,
+      "cap": 90,
+      "steps": 1200,
+      "source_iteration": 74
+    }
+  ],
+  "modes": {
+    "trajectory_uniform": {
+      "chunks": [
+        {
+          "trajectory": 0,
+          "start": 0,
+          "end": 32,
+          "cap": 83,
+          "probability": 0.020833333333333332,
+          "observed_draws": 456,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 20,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 0,
+          "start": 32,
+          "end": 64,
+          "cap": 83,
+          "probability": 0.020833333333333332,
+          "observed_draws": 378,
+          "phase_counts": {
+            "approach_air_ascent": 17,
+            "approach_air_other": 15
+          }
+        },
+        {
+          "trajectory": 0,
+          "start": 64,
+          "end": 83,
+          "cap": 83,
+          "probability": 0.020833333333333332,
+          "observed_draws": 408,
+          "phase_counts": {
+            "approach_air_other": 19
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 0,
+          "end": 32,
+          "cap": 97,
+          "probability": 0.015625,
+          "observed_draws": 327,
+          "phase_counts": {
+            "approach_support": 25,
+            "takeoff_preparation": 7
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 32,
+          "end": 64,
+          "cap": 97,
+          "probability": 0.015625,
+          "observed_draws": 321,
+          "phase_counts": {
+            "approach_air_ascent": 23,
+            "approach_air_other": 4,
+            "takeoff_preparation": 5
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 64,
+          "end": 96,
+          "cap": 97,
+          "probability": 0.015625,
+          "observed_draws": 302,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_air_other": 29
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 96,
+          "end": 97,
+          "cap": 97,
+          "probability": 0.015625,
+          "observed_draws": 301,
+          "phase_counts": {
+            "approach_air_other": 1
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 0,
+          "end": 32,
+          "cap": 98,
+          "probability": 0.015625,
+          "observed_draws": 320,
+          "phase_counts": {
+            "approach_support": 21,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 32,
+          "end": 64,
+          "cap": 98,
+          "probability": 0.015625,
+          "observed_draws": 308,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "approach_air_other": 3,
+            "takeoff_preparation": 1
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 64,
+          "end": 96,
+          "cap": 98,
+          "probability": 0.015625,
+          "observed_draws": 339,
+          "phase_counts": {
+            "approach_air_other": 32
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 96,
+          "end": 98,
+          "cap": 98,
+          "probability": 0.015625,
+          "observed_draws": 308,
+          "phase_counts": {
+            "approach_air_other": 2
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 0,
+          "end": 32,
+          "cap": 121,
+          "probability": 0.015625,
+          "observed_draws": 322,
+          "phase_counts": {
+            "approach_support": 28,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 32,
+          "end": 64,
+          "cap": 121,
+          "probability": 0.015625,
+          "observed_draws": 295,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_air_other": 8,
+            "approach_support": 1,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 64,
+          "end": 96,
+          "cap": 121,
+          "probability": 0.015625,
+          "observed_draws": 325,
+          "phase_counts": {
+            "approach_air_ascent": 5,
+            "approach_air_other": 27
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 96,
+          "end": 121,
+          "cap": 121,
+          "probability": 0.015625,
+          "observed_draws": 330,
+          "phase_counts": {
+            "approach_air_other": 6,
+            "approach_support": 15,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 0,
+          "end": 32,
+          "cap": 126,
+          "probability": 0.015625,
+          "observed_draws": 339,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 20,
+            "takeoff_preparation": 9
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 32,
+          "end": 64,
+          "cap": 126,
+          "probability": 0.015625,
+          "observed_draws": 307,
+          "phase_counts": {
+            "approach_air_ascent": 20,
+            "approach_air_other": 12
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 64,
+          "end": 96,
+          "cap": 126,
+          "probability": 0.015625,
+          "observed_draws": 293,
+          "phase_counts": {
+            "approach_air_ascent": 4,
+            "approach_air_other": 23,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 96,
+          "end": 126,
+          "cap": 126,
+          "probability": 0.015625,
+          "observed_draws": 311,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_support": 20
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 0,
+          "end": 32,
+          "cap": 131,
+          "probability": 0.0125,
+          "observed_draws": 249,
+          "phase_counts": {
+            "approach_support": 30,
+            "takeoff_preparation": 2
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 32,
+          "end": 64,
+          "cap": 131,
+          "probability": 0.0125,
+          "observed_draws": 231,
+          "phase_counts": {
+            "approach_air_ascent": 12,
+            "approach_air_other": 10,
+            "approach_support": 4,
+            "takeoff_preparation": 6
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 64,
+          "end": 96,
+          "cap": 131,
+          "probability": 0.0125,
+          "observed_draws": 256,
+          "phase_counts": {
+            "approach_air_other": 29,
+            "approach_support": 3
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 96,
+          "end": 128,
+          "cap": 131,
+          "probability": 0.0125,
+          "observed_draws": 269,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 128,
+          "end": 131,
+          "cap": 131,
+          "probability": 0.0125,
+          "observed_draws": 274,
+          "phase_counts": {
+            "approach_support": 3
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 0,
+          "end": 32,
+          "cap": 134,
+          "probability": 0.0125,
+          "observed_draws": 251,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 14,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 32,
+          "end": 64,
+          "cap": 134,
+          "probability": 0.0125,
+          "observed_draws": 246,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_air_other": 26
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 64,
+          "end": 96,
+          "cap": 134,
+          "probability": 0.0125,
+          "observed_draws": 236,
+          "phase_counts": {
+            "approach_air_other": 12,
+            "approach_support": 12,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 96,
+          "end": 128,
+          "cap": 134,
+          "probability": 0.0125,
+          "observed_draws": 281,
+          "phase_counts": {
+            "approach_air_ascent": 24,
+            "approach_support": 2,
+            "takeoff_preparation": 6
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 128,
+          "end": 134,
+          "cap": 134,
+          "probability": 0.0125,
+          "observed_draws": 232,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 4
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 0,
+          "end": 32,
+          "cap": 137,
+          "probability": 0.0125,
+          "observed_draws": 256,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 16,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 32,
+          "end": 64,
+          "cap": 137,
+          "probability": 0.0125,
+          "observed_draws": 251,
+          "phase_counts": {
+            "approach_air_ascent": 14,
+            "approach_air_other": 18
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 64,
+          "end": 96,
+          "cap": 137,
+          "probability": 0.0125,
+          "observed_draws": 253,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_air_other": 20,
+            "approach_support": 10
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 96,
+          "end": 128,
+          "cap": 137,
+          "probability": 0.0125,
+          "observed_draws": 253,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_support": 5,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 128,
+          "end": 137,
+          "cap": 137,
+          "probability": 0.0125,
+          "observed_draws": 230,
+          "phase_counts": {
+            "approach_air_ascent": 1,
+            "tree_air_ascent": 8
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 0,
+          "end": 32,
+          "cap": 152,
+          "probability": 0.0125,
+          "observed_draws": 250,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 32,
+          "end": 64,
+          "cap": 152,
+          "probability": 0.0125,
+          "observed_draws": 237,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_air_other": 17,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 64,
+          "end": 96,
+          "cap": 152,
+          "probability": 0.0125,
+          "observed_draws": 232,
+          "phase_counts": {
+            "approach_air_ascent": 1,
+            "approach_air_other": 30,
+            "approach_support": 1
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 96,
+          "end": 128,
+          "cap": 152,
+          "probability": 0.0125,
+          "observed_draws": 265,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 128,
+          "end": 152,
+          "cap": 152,
+          "probability": 0.0125,
+          "observed_draws": 253,
+          "phase_counts": {
+            "approach_air_ascent": 16,
+            "tree_air_ascent": 8
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 0,
+          "end": 32,
+          "cap": 171,
+          "probability": 0.010416666666666666,
+          "observed_draws": 213,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 18,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 32,
+          "end": 64,
+          "cap": 171,
+          "probability": 0.010416666666666666,
+          "observed_draws": 214,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 21
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 64,
+          "end": 96,
+          "cap": 171,
+          "probability": 0.010416666666666666,
+          "observed_draws": 203,
+          "phase_counts": {
+            "approach_air_other": 24,
+            "approach_support": 8
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 96,
+          "end": 128,
+          "cap": 171,
+          "probability": 0.010416666666666666,
+          "observed_draws": 225,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_support": 11,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 128,
+          "end": 160,
+          "cap": 171,
+          "probability": 0.010416666666666666,
+          "observed_draws": 195,
+          "phase_counts": {
+            "approach_air_ascent": 23,
+            "tree_air_ascent": 7,
+            "tree_air_other": 2
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 160,
+          "end": 171,
+          "cap": 171,
+          "probability": 0.010416666666666666,
+          "observed_draws": 179,
+          "phase_counts": {
+            "tree_air_other": 11
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 0,
+          "end": 32,
+          "cap": 176,
+          "probability": 0.010416666666666666,
+          "observed_draws": 220,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 26
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 32,
+          "end": 64,
+          "cap": 176,
+          "probability": 0.010416666666666666,
+          "observed_draws": 207,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_air_other": 16,
+            "approach_support": 6
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 64,
+          "end": 96,
+          "cap": 176,
+          "probability": 0.010416666666666666,
+          "observed_draws": 185,
+          "phase_counts": {
+            "approach_air_other": 26,
+            "approach_support": 6
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 96,
+          "end": 128,
+          "cap": 176,
+          "probability": 0.010416666666666666,
+          "observed_draws": 194,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 128,
+          "end": 160,
+          "cap": 176,
+          "probability": 0.010416666666666666,
+          "observed_draws": 225,
+          "phase_counts": {
+            "approach_air_ascent": 32
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 160,
+          "end": 176,
+          "cap": 176,
+          "probability": 0.010416666666666666,
+          "observed_draws": 191,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "tree_air_ascent": 4,
+            "tree_air_other": 9
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 0,
+          "end": 32,
+          "cap": 186,
+          "probability": 0.010416666666666666,
+          "observed_draws": 215,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 20,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 32,
+          "end": 64,
+          "cap": 186,
+          "probability": 0.010416666666666666,
+          "observed_draws": 206,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 20,
+            "approach_support": 1
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 64,
+          "end": 96,
+          "cap": 186,
+          "probability": 0.010416666666666666,
+          "observed_draws": 216,
+          "phase_counts": {
+            "approach_air_other": 25,
+            "approach_support": 7
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 96,
+          "end": 128,
+          "cap": 186,
+          "probability": 0.010416666666666666,
+          "observed_draws": 196,
+          "phase_counts": {
+            "approach_air_ascent": 17,
+            "approach_support": 3,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 128,
+          "end": 160,
+          "cap": 186,
+          "probability": 0.010416666666666666,
+          "observed_draws": 200,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "tree_air_ascent": 4
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 160,
+          "end": 186,
+          "cap": 186,
+          "probability": 0.010416666666666666,
+          "observed_draws": 216,
+          "phase_counts": {
+            "tree_air_ascent": 14,
+            "tree_air_other": 12
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 0,
+          "end": 32,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 32,
+          "end": 64,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 83,
+          "phase_counts": {
+            "approach_air_ascent": 13,
+            "approach_air_other": 17,
+            "approach_support": 2
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 64,
+          "end": 96,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 14,
+            "approach_support": 7
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 96,
+          "end": 128,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 86,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_air_other": 1,
+            "approach_support": 20,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 128,
+          "end": 160,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 84,
+          "phase_counts": {
+            "approach_air_ascent": 24,
+            "approach_air_other": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 160,
+          "end": 192,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 77,
+          "phase_counts": {
+            "approach_air_other": 32
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 192,
+          "end": 224,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 97,
+          "phase_counts": {
+            "approach_air_other": 1,
+            "approach_support": 21,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 224,
+          "end": 256,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 88,
+          "phase_counts": {
+            "approach_air_ascent": 30,
+            "takeoff_preparation": 2
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 256,
+          "end": 288,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 100,
+          "phase_counts": {
+            "approach_air_ascent": 12,
+            "tree_air_ascent": 16,
+            "tree_air_other": 4
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 288,
+          "end": 320,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 90,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 19,
+            "tree_air_ascent": 3,
+            "tree_air_other": 10
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 320,
+          "end": 352,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 81,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 13,
+            "tree_air_ascent": 19
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 352,
+          "end": 384,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 83,
+          "phase_counts": {
+            "tree_air_ascent": 32
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 384,
+          "end": 416,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 84,
+          "phase_counts": {
+            "approach_air_other": 18,
+            "tree_air_ascent": 6,
+            "tree_air_other": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 416,
+          "end": 446,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 83,
+          "phase_counts": {
+            "approach_air_other": 30
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 0,
+          "end": 32,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 71,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 26
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 32,
+          "end": 64,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 78,
+          "phase_counts": {
+            "approach_air_ascent": 4,
+            "approach_air_other": 28
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 64,
+          "end": 96,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 66,
+          "phase_counts": {
+            "approach_air_ascent": 5,
+            "approach_air_other": 4,
+            "approach_support": 23
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 96,
+          "end": 128,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 71,
+          "phase_counts": {
+            "approach_air_ascent": 8,
+            "approach_air_other": 11,
+            "approach_support": 8,
+            "takeoff_preparation": 5
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 128,
+          "end": 160,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 54,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_support": 2,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 160,
+          "end": 192,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 63,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_air_other": 23
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 192,
+          "end": 224,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 56,
+          "phase_counts": {
+            "approach_air_other": 7,
+            "approach_support": 25
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 224,
+          "end": 256,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 68,
+          "phase_counts": {
+            "approach_air_ascent": 8,
+            "approach_support": 13,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 256,
+          "end": 288,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 61,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_air_other": 25
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 288,
+          "end": 320,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 57,
+          "phase_counts": {
+            "approach_air_other": 20,
+            "approach_support": 12
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 320,
+          "end": 352,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 74,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 352,
+          "end": 384,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 70,
+          "phase_counts": {
+            "approach_air_other": 14,
+            "approach_support": 18
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 384,
+          "end": 416,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 68,
+          "phase_counts": {
+            "approach_support": 13,
+            "tree_air_other": 9,
+            "tree_support": 10
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 416,
+          "end": 448,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 58,
+          "phase_counts": {
+            "approach_support": 8,
+            "takeoff_preparation": 12,
+            "tree_air_ascent": 9,
+            "tree_air_other": 1,
+            "tree_support": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 448,
+          "end": 480,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 61,
+          "phase_counts": {
+            "tree_air_ascent": 30,
+            "tree_air_other": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 480,
+          "end": 512,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 78,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 11,
+            "tree_air_other": 21
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 512,
+          "end": 544,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 72,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 30,
+            "tree_support": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 544,
+          "end": 576,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 68,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 23,
+            "tree_support": 9
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 576,
+          "end": 586,
+          "cap": 586,
+          "probability": 0.003289473684210526,
+          "observed_draws": 74,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 3,
+            "tree_air_other": 7
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 0,
+          "end": 32,
+          "cap": 157,
+          "probability": 0.0125,
+          "observed_draws": 276,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 19,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 32,
+          "end": 64,
+          "cap": 157,
+          "probability": 0.0125,
+          "observed_draws": 240,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_air_other": 13
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 64,
+          "end": 96,
+          "cap": 157,
+          "probability": 0.0125,
+          "observed_draws": 255,
+          "phase_counts": {
+            "approach_air_ascent": 15,
+            "approach_air_other": 13,
+            "approach_support": 4
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 96,
+          "end": 128,
+          "cap": 157,
+          "probability": 0.0125,
+          "observed_draws": 276,
+          "phase_counts": {
+            "approach_air_ascent": 13,
+            "approach_air_other": 2,
+            "approach_support": 5,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 128,
+          "end": 157,
+          "cap": 157,
+          "probability": 0.0125,
+          "observed_draws": 238,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "approach_air_other": 1
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 0,
+          "end": 32,
+          "cap": 90,
+          "probability": 0.020833333333333332,
+          "observed_draws": 402,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_support": 12,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 32,
+          "end": 64,
+          "cap": 90,
+          "probability": 0.020833333333333332,
+          "observed_draws": 401,
+          "phase_counts": {
+            "approach_air_ascent": 14,
+            "approach_air_other": 13,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 64,
+          "end": 90,
+          "cap": 90,
+          "probability": 0.020833333333333332,
+          "observed_draws": 423,
+          "phase_counts": {
+            "approach_air_other": 2,
+            "approach_support": 24
+          }
+        }
+      ],
+      "branch_draws": {
+        "trajectory_uniform": 20000
+      },
+      "expected_phase_frame_share": {
+        "approach_air_ascent": 0.2623224476906397,
+        "approach_support": 0.2829412505195396,
+        "takeoff_preparation": 0.10670800194033786,
+        "approach_air_other": 0.2790079425798897,
+        "tree_air_ascent": 0.03358857240835214,
+        "tree_air_other": 0.02022813077529954,
+        "elevated_tip_contact_candidate": 0.012582895726373293,
+        "tree_support": 0.002620758359568047
+      },
+      "sampled_phase_frame_share": {
+        "approach_air_ascent": 0.25992839666588335,
+        "approach_support": 0.2893973846813099,
+        "takeoff_preparation": 0.109010201401656,
+        "approach_air_other": 0.27350434734528567,
+        "tree_air_ascent": 0.03237700952407282,
+        "tree_air_other": 0.02002612554082634,
+        "elevated_tip_contact_candidate": 0.013074865570960563,
+        "tree_support": 0.002681669270005391
+      },
+      "expected_tree_frame_share": 0.06902035726959302,
+      "sampled_tree_frame_share": 0.06815966990586511,
+      "max_chunk_probability": 0.020833333333333332,
+      "max_chunk_frequency_error": 0.0019666666666666686,
+      "phase_groups": {}
+    },
+    "phase_mixture_v1": {
+      "chunks": [
+        {
+          "trajectory": 0,
+          "start": 0,
+          "end": 32,
+          "cap": 83,
+          "probability": 0.012648809523809524,
+          "observed_draws": 267,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 20,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 0,
+          "start": 32,
+          "end": 64,
+          "cap": 83,
+          "probability": 0.013818027210884353,
+          "observed_draws": 265,
+          "phase_counts": {
+            "approach_air_ascent": 17,
+            "approach_air_other": 15
+          }
+        },
+        {
+          "trajectory": 0,
+          "start": 64,
+          "end": 83,
+          "cap": 83,
+          "probability": 0.012797619047619047,
+          "observed_draws": 275,
+          "phase_counts": {
+            "approach_air_other": 19
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 0,
+          "end": 32,
+          "cap": 97,
+          "probability": 0.010044642857142856,
+          "observed_draws": 207,
+          "phase_counts": {
+            "approach_support": 25,
+            "takeoff_preparation": 7
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 32,
+          "end": 64,
+          "cap": 97,
+          "probability": 0.011213860544217687,
+          "observed_draws": 237,
+          "phase_counts": {
+            "approach_air_ascent": 23,
+            "approach_air_other": 4,
+            "takeoff_preparation": 5
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 64,
+          "end": 96,
+          "cap": 97,
+          "probability": 0.010193452380952381,
+          "observed_draws": 198,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_air_other": 29
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 96,
+          "end": 97,
+          "cap": 97,
+          "probability": 0.010193452380952381,
+          "observed_draws": 202,
+          "phase_counts": {
+            "approach_air_other": 1
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 0,
+          "end": 32,
+          "cap": 98,
+          "probability": 0.010044642857142856,
+          "observed_draws": 199,
+          "phase_counts": {
+            "approach_support": 21,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 32,
+          "end": 64,
+          "cap": 98,
+          "probability": 0.011213860544217687,
+          "observed_draws": 225,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "approach_air_other": 3,
+            "takeoff_preparation": 1
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 64,
+          "end": 96,
+          "cap": 98,
+          "probability": 0.010193452380952381,
+          "observed_draws": 217,
+          "phase_counts": {
+            "approach_air_other": 32
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 96,
+          "end": 98,
+          "cap": 98,
+          "probability": 0.010193452380952381,
+          "observed_draws": 239,
+          "phase_counts": {
+            "approach_air_other": 2
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 0,
+          "end": 32,
+          "cap": 121,
+          "probability": 0.010044642857142856,
+          "observed_draws": 189,
+          "phase_counts": {
+            "approach_support": 28,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 32,
+          "end": 64,
+          "cap": 121,
+          "probability": 0.011213860544217687,
+          "observed_draws": 210,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_air_other": 8,
+            "approach_support": 1,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 64,
+          "end": 96,
+          "cap": 121,
+          "probability": 0.010193452380952381,
+          "observed_draws": 215,
+          "phase_counts": {
+            "approach_air_ascent": 5,
+            "approach_air_other": 27
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 96,
+          "end": 121,
+          "cap": 121,
+          "probability": 0.010044642857142856,
+          "observed_draws": 214,
+          "phase_counts": {
+            "approach_air_other": 6,
+            "approach_support": 15,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 0,
+          "end": 32,
+          "cap": 126,
+          "probability": 0.010044642857142856,
+          "observed_draws": 202,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 20,
+            "takeoff_preparation": 9
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 32,
+          "end": 64,
+          "cap": 126,
+          "probability": 0.011213860544217687,
+          "observed_draws": 236,
+          "phase_counts": {
+            "approach_air_ascent": 20,
+            "approach_air_other": 12
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 64,
+          "end": 96,
+          "cap": 126,
+          "probability": 0.010193452380952381,
+          "observed_draws": 205,
+          "phase_counts": {
+            "approach_air_ascent": 4,
+            "approach_air_other": 23,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 96,
+          "end": 126,
+          "cap": 126,
+          "probability": 0.010044642857142856,
+          "observed_draws": 187,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_support": 20
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 0,
+          "end": 32,
+          "cap": 131,
+          "probability": 0.008482142857142858,
+          "observed_draws": 176,
+          "phase_counts": {
+            "approach_support": 30,
+            "takeoff_preparation": 2
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 32,
+          "end": 64,
+          "cap": 131,
+          "probability": 0.009651360544217688,
+          "observed_draws": 158,
+          "phase_counts": {
+            "approach_air_ascent": 12,
+            "approach_air_other": 10,
+            "approach_support": 4,
+            "takeoff_preparation": 6
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 64,
+          "end": 96,
+          "cap": 131,
+          "probability": 0.008630952380952382,
+          "observed_draws": 183,
+          "phase_counts": {
+            "approach_air_other": 29,
+            "approach_support": 3
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 96,
+          "end": 128,
+          "cap": 131,
+          "probability": 0.008482142857142858,
+          "observed_draws": 178,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 128,
+          "end": 131,
+          "cap": 131,
+          "probability": 0.008482142857142858,
+          "observed_draws": 187,
+          "phase_counts": {
+            "approach_support": 3
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 0,
+          "end": 32,
+          "cap": 134,
+          "probability": 0.008482142857142858,
+          "observed_draws": 173,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 14,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 32,
+          "end": 64,
+          "cap": 134,
+          "probability": 0.008630952380952382,
+          "observed_draws": 169,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_air_other": 26
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 64,
+          "end": 96,
+          "cap": 134,
+          "probability": 0.008630952380952382,
+          "observed_draws": 150,
+          "phase_counts": {
+            "approach_air_other": 12,
+            "approach_support": 12,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 96,
+          "end": 128,
+          "cap": 134,
+          "probability": 0.009651360544217688,
+          "observed_draws": 210,
+          "phase_counts": {
+            "approach_air_ascent": 24,
+            "approach_support": 2,
+            "takeoff_preparation": 6
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 128,
+          "end": 134,
+          "cap": 134,
+          "probability": 0.008482142857142858,
+          "observed_draws": 148,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 4
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 0,
+          "end": 32,
+          "cap": 137,
+          "probability": 0.008482142857142858,
+          "observed_draws": 157,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 16,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 32,
+          "end": 64,
+          "cap": 137,
+          "probability": 0.008630952380952382,
+          "observed_draws": 174,
+          "phase_counts": {
+            "approach_air_ascent": 14,
+            "approach_air_other": 18
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 64,
+          "end": 96,
+          "cap": 137,
+          "probability": 0.008630952380952382,
+          "observed_draws": 189,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_air_other": 20,
+            "approach_support": 10
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 96,
+          "end": 128,
+          "cap": 137,
+          "probability": 0.009651360544217688,
+          "observed_draws": 175,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_support": 5,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 128,
+          "end": 137,
+          "cap": 137,
+          "probability": 0.018154761904761903,
+          "observed_draws": 364,
+          "phase_counts": {
+            "approach_air_ascent": 1,
+            "tree_air_ascent": 8
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 0,
+          "end": 32,
+          "cap": 152,
+          "probability": 0.008482142857142858,
+          "observed_draws": 198,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 32,
+          "end": 64,
+          "cap": 152,
+          "probability": 0.008630952380952382,
+          "observed_draws": 168,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_air_other": 17,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 64,
+          "end": 96,
+          "cap": 152,
+          "probability": 0.008630952380952382,
+          "observed_draws": 174,
+          "phase_counts": {
+            "approach_air_ascent": 1,
+            "approach_air_other": 30,
+            "approach_support": 1
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 96,
+          "end": 128,
+          "cap": 152,
+          "probability": 0.008482142857142858,
+          "observed_draws": 155,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 128,
+          "end": 152,
+          "cap": 152,
+          "probability": 0.009651360544217688,
+          "observed_draws": 219,
+          "phase_counts": {
+            "approach_air_ascent": 16,
+            "tree_air_ascent": 8
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 0,
+          "end": 32,
+          "cap": 171,
+          "probability": 0.00744047619047619,
+          "observed_draws": 121,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 18,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 32,
+          "end": 64,
+          "cap": 171,
+          "probability": 0.007589285714285713,
+          "observed_draws": 169,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 21
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 64,
+          "end": 96,
+          "cap": 171,
+          "probability": 0.007589285714285713,
+          "observed_draws": 159,
+          "phase_counts": {
+            "approach_air_other": 24,
+            "approach_support": 8
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 96,
+          "end": 128,
+          "cap": 171,
+          "probability": 0.04092261904761905,
+          "observed_draws": 811,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_support": 11,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 128,
+          "end": 160,
+          "cap": 171,
+          "probability": 0.00860969387755102,
+          "observed_draws": 159,
+          "phase_counts": {
+            "approach_air_ascent": 23,
+            "tree_air_ascent": 7,
+            "tree_air_other": 2
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 160,
+          "end": 171,
+          "cap": 171,
+          "probability": 0.02306547619047619,
+          "observed_draws": 444,
+          "phase_counts": {
+            "tree_air_other": 11
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 0,
+          "end": 32,
+          "cap": 176,
+          "probability": 0.00744047619047619,
+          "observed_draws": 159,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 26
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 32,
+          "end": 64,
+          "cap": 176,
+          "probability": 0.007589285714285713,
+          "observed_draws": 158,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_air_other": 16,
+            "approach_support": 6
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 64,
+          "end": 96,
+          "cap": 176,
+          "probability": 0.007589285714285713,
+          "observed_draws": 144,
+          "phase_counts": {
+            "approach_air_other": 26,
+            "approach_support": 6
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 96,
+          "end": 128,
+          "cap": 176,
+          "probability": 0.00744047619047619,
+          "observed_draws": 136,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 128,
+          "end": 160,
+          "cap": 176,
+          "probability": 0.00860969387755102,
+          "observed_draws": 178,
+          "phase_counts": {
+            "approach_air_ascent": 32
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 160,
+          "end": 176,
+          "cap": 176,
+          "probability": 0.02306547619047619,
+          "observed_draws": 450,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "tree_air_ascent": 4,
+            "tree_air_other": 9
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 0,
+          "end": 32,
+          "cap": 186,
+          "probability": 0.00744047619047619,
+          "observed_draws": 169,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 20,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 32,
+          "end": 64,
+          "cap": 186,
+          "probability": 0.007589285714285713,
+          "observed_draws": 159,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 20,
+            "approach_support": 1
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 64,
+          "end": 96,
+          "cap": 186,
+          "probability": 0.007589285714285713,
+          "observed_draws": 160,
+          "phase_counts": {
+            "approach_air_other": 25,
+            "approach_support": 7
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 96,
+          "end": 128,
+          "cap": 186,
+          "probability": 0.00860969387755102,
+          "observed_draws": 160,
+          "phase_counts": {
+            "approach_air_ascent": 17,
+            "approach_support": 3,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 128,
+          "end": 160,
+          "cap": 186,
+          "probability": 0.00860969387755102,
+          "observed_draws": 165,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "tree_air_ascent": 4
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 160,
+          "end": 186,
+          "cap": 186,
+          "probability": 0.017113095238095236,
+          "observed_draws": 343,
+          "phase_counts": {
+            "tree_air_ascent": 14,
+            "tree_air_other": 12
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 0,
+          "end": 32,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 74,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 32,
+          "end": 64,
+          "cap": 446,
+          "probability": 0.004613095238095237,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_air_ascent": 13,
+            "approach_air_other": 17,
+            "approach_support": 2
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 64,
+          "end": 96,
+          "cap": 446,
+          "probability": 0.004613095238095237,
+          "observed_draws": 97,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 14,
+            "approach_support": 7
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 96,
+          "end": 128,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_air_other": 1,
+            "approach_support": 20,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 128,
+          "end": 160,
+          "cap": 446,
+          "probability": 0.0056335034013605435,
+          "observed_draws": 101,
+          "phase_counts": {
+            "approach_air_ascent": 24,
+            "approach_air_other": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 160,
+          "end": 192,
+          "cap": 446,
+          "probability": 0.004613095238095237,
+          "observed_draws": 105,
+          "phase_counts": {
+            "approach_air_other": 32
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 192,
+          "end": 224,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 78,
+          "phase_counts": {
+            "approach_air_other": 1,
+            "approach_support": 21,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 224,
+          "end": 256,
+          "cap": 446,
+          "probability": 0.0056335034013605435,
+          "observed_draws": 104,
+          "phase_counts": {
+            "approach_air_ascent": 30,
+            "takeoff_preparation": 2
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 256,
+          "end": 288,
+          "cap": 446,
+          "probability": 0.01413690476190476,
+          "observed_draws": 299,
+          "phase_counts": {
+            "approach_air_ascent": 12,
+            "tree_air_ascent": 16,
+            "tree_air_other": 4
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 288,
+          "end": 320,
+          "cap": 446,
+          "probability": 0.026041666666666664,
+          "observed_draws": 495,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 19,
+            "tree_air_ascent": 3,
+            "tree_air_other": 10
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 320,
+          "end": 352,
+          "cap": 446,
+          "probability": 0.01413690476190476,
+          "observed_draws": 299,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 13,
+            "tree_air_ascent": 19
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 352,
+          "end": 384,
+          "cap": 446,
+          "probability": 0.01413690476190476,
+          "observed_draws": 302,
+          "phase_counts": {
+            "tree_air_ascent": 32
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 384,
+          "end": 416,
+          "cap": 446,
+          "probability": 0.004613095238095237,
+          "observed_draws": 91,
+          "phase_counts": {
+            "approach_air_other": 18,
+            "tree_air_ascent": 6,
+            "tree_air_other": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 416,
+          "end": 446,
+          "cap": 446,
+          "probability": 0.004613095238095237,
+          "observed_draws": 89,
+          "phase_counts": {
+            "approach_air_other": 30
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 0,
+          "end": 32,
+          "cap": 586,
+          "probability": 0.00387687969924812,
+          "observed_draws": 82,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 26
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 32,
+          "end": 64,
+          "cap": 586,
+          "probability": 0.004025689223057644,
+          "observed_draws": 77,
+          "phase_counts": {
+            "approach_air_ascent": 4,
+            "approach_air_other": 28
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 64,
+          "end": 96,
+          "cap": 586,
+          "probability": 0.00387687969924812,
+          "observed_draws": 71,
+          "phase_counts": {
+            "approach_air_ascent": 5,
+            "approach_air_other": 4,
+            "approach_support": 23
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 96,
+          "end": 128,
+          "cap": 586,
+          "probability": 0.004025689223057644,
+          "observed_draws": 69,
+          "phase_counts": {
+            "approach_air_ascent": 8,
+            "approach_air_other": 11,
+            "approach_support": 8,
+            "takeoff_preparation": 5
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 128,
+          "end": 160,
+          "cap": 586,
+          "probability": 0.0050460973863229504,
+          "observed_draws": 100,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_support": 2,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 160,
+          "end": 192,
+          "cap": 586,
+          "probability": 0.004025689223057644,
+          "observed_draws": 68,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_air_other": 23
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 192,
+          "end": 224,
+          "cap": 586,
+          "probability": 0.00387687969924812,
+          "observed_draws": 76,
+          "phase_counts": {
+            "approach_air_other": 7,
+            "approach_support": 25
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 224,
+          "end": 256,
+          "cap": 586,
+          "probability": 0.00387687969924812,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_air_ascent": 8,
+            "approach_support": 13,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 256,
+          "end": 288,
+          "cap": 586,
+          "probability": 0.004025689223057644,
+          "observed_draws": 85,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_air_other": 25
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 288,
+          "end": 320,
+          "cap": 586,
+          "probability": 0.004025689223057644,
+          "observed_draws": 88,
+          "phase_counts": {
+            "approach_air_other": 20,
+            "approach_support": 12
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 320,
+          "end": 352,
+          "cap": 586,
+          "probability": 0.00387687969924812,
+          "observed_draws": 75,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 352,
+          "end": 384,
+          "cap": 586,
+          "probability": 0.00387687969924812,
+          "observed_draws": 66,
+          "phase_counts": {
+            "approach_air_other": 14,
+            "approach_support": 18
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 384,
+          "end": 416,
+          "cap": 586,
+          "probability": 0.00387687969924812,
+          "observed_draws": 78,
+          "phase_counts": {
+            "approach_support": 13,
+            "tree_air_other": 9,
+            "tree_support": 10
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 416,
+          "end": 448,
+          "cap": 586,
+          "probability": 0.037359022556390974,
+          "observed_draws": 758,
+          "phase_counts": {
+            "approach_support": 8,
+            "takeoff_preparation": 12,
+            "tree_air_ascent": 9,
+            "tree_air_other": 1,
+            "tree_support": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 448,
+          "end": 480,
+          "cap": 586,
+          "probability": 0.013549498746867167,
+          "observed_draws": 239,
+          "phase_counts": {
+            "tree_air_ascent": 30,
+            "tree_air_other": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 480,
+          "end": 512,
+          "cap": 586,
+          "probability": 0.019501879699248117,
+          "observed_draws": 398,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 11,
+            "tree_air_other": 21
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 512,
+          "end": 544,
+          "cap": 586,
+          "probability": 0.02545426065162907,
+          "observed_draws": 521,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 30,
+            "tree_support": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 544,
+          "end": 576,
+          "cap": 586,
+          "probability": 0.02545426065162907,
+          "observed_draws": 514,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 23,
+            "tree_support": 9
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 576,
+          "end": 586,
+          "cap": 586,
+          "probability": 0.019501879699248117,
+          "observed_draws": 379,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 3,
+            "tree_air_other": 7
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 0,
+          "end": 32,
+          "cap": 157,
+          "probability": 0.008482142857142858,
+          "observed_draws": 178,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 19,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 32,
+          "end": 64,
+          "cap": 157,
+          "probability": 0.009651360544217688,
+          "observed_draws": 190,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_air_other": 13
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 64,
+          "end": 96,
+          "cap": 157,
+          "probability": 0.009651360544217688,
+          "observed_draws": 189,
+          "phase_counts": {
+            "approach_air_ascent": 15,
+            "approach_air_other": 13,
+            "approach_support": 4
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 96,
+          "end": 128,
+          "cap": 157,
+          "probability": 0.009651360544217688,
+          "observed_draws": 211,
+          "phase_counts": {
+            "approach_air_ascent": 13,
+            "approach_air_other": 2,
+            "approach_support": 5,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 128,
+          "end": 157,
+          "cap": 157,
+          "probability": 0.009651360544217688,
+          "observed_draws": 169,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "approach_air_other": 1
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 0,
+          "end": 32,
+          "cap": 90,
+          "probability": 0.012648809523809524,
+          "observed_draws": 244,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_support": 12,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 32,
+          "end": 64,
+          "cap": 90,
+          "probability": 0.013818027210884353,
+          "observed_draws": 268,
+          "phase_counts": {
+            "approach_air_ascent": 14,
+            "approach_air_other": 13,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 64,
+          "end": 90,
+          "cap": 90,
+          "probability": 0.012648809523809524,
+          "observed_draws": 250,
+          "phase_counts": {
+            "approach_air_other": 2,
+            "approach_support": 24
+          }
+        }
+      ],
+      "branch_draws": {
+        "phase_balanced": 9942,
+        "trajectory_uniform": 10058
+      },
+      "expected_phase_frame_share": {
+        "approach_air_ascent": 0.22092837098455864,
+        "approach_support": 0.22656399198812865,
+        "takeoff_preparation": 0.10638541445287994,
+        "approach_air_other": 0.20809751706629473,
+        "tree_air_ascent": 0.08529708086996292,
+        "tree_air_other": 0.05872656561207008,
+        "elevated_tip_contact_candidate": 0.08027213316933157,
+        "tree_support": 0.013728925856773508
+      },
+      "sampled_phase_frame_share": {
+        "approach_air_ascent": 0.21827177138107054,
+        "approach_support": 0.22743315386616977,
+        "takeoff_preparation": 0.10509045249824928,
+        "approach_air_other": 0.21064368928139204,
+        "tree_air_ascent": 0.08590498776677767,
+        "tree_air_other": 0.057963295093962676,
+        "elevated_tip_contact_candidate": 0.08078467258448432,
+        "tree_support": 0.013907977527893668
+      },
+      "expected_tree_frame_share": 0.23802470550813806,
+      "sampled_tree_frame_share": 0.23856093297311834,
+      "max_chunk_probability": 0.04092261904761905,
+      "max_chunk_frequency_error": 0.0017565476190476194,
+      "phase_groups": {
+        "approach_support": {
+          "chunks": 32,
+          "trajectories": 16
+        },
+        "approach_air_ascent": {
+          "chunks": 21,
+          "trajectories": 16
+        },
+        "approach_air_other": {
+          "chunks": 30,
+          "trajectories": 14
+        },
+        "tree_air_ascent": {
+          "chunks": 6,
+          "trajectories": 4
+        },
+        "takeoff_preparation": {
+          "chunks": 2,
+          "trajectories": 2
+        },
+        "tree_air_other": {
+          "chunks": 4,
+          "trajectories": 3
+        },
+        "elevated_tip_contact_candidate": {
+          "chunks": 3,
+          "trajectories": 2
+        }
+      }
+    },
+    "phase_balanced_v1": {
+      "chunks": [
+        {
+          "trajectory": 0,
+          "start": 0,
+          "end": 32,
+          "cap": 83,
+          "probability": 0.004464285714285714,
+          "observed_draws": 101,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 20,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 0,
+          "start": 32,
+          "end": 64,
+          "cap": 83,
+          "probability": 0.006802721088435374,
+          "observed_draws": 137,
+          "phase_counts": {
+            "approach_air_ascent": 17,
+            "approach_air_other": 15
+          }
+        },
+        {
+          "trajectory": 0,
+          "start": 64,
+          "end": 83,
+          "cap": 83,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 106,
+          "phase_counts": {
+            "approach_air_other": 19
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 0,
+          "end": 32,
+          "cap": 97,
+          "probability": 0.004464285714285714,
+          "observed_draws": 90,
+          "phase_counts": {
+            "approach_support": 25,
+            "takeoff_preparation": 7
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 32,
+          "end": 64,
+          "cap": 97,
+          "probability": 0.006802721088435374,
+          "observed_draws": 149,
+          "phase_counts": {
+            "approach_air_ascent": 23,
+            "approach_air_other": 4,
+            "takeoff_preparation": 5
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 64,
+          "end": 96,
+          "cap": 97,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 107,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_air_other": 29
+          }
+        },
+        {
+          "trajectory": 1,
+          "start": 96,
+          "end": 97,
+          "cap": 97,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 86,
+          "phase_counts": {
+            "approach_air_other": 1
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 0,
+          "end": 32,
+          "cap": 98,
+          "probability": 0.004464285714285714,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_support": 21,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 32,
+          "end": 64,
+          "cap": 98,
+          "probability": 0.006802721088435374,
+          "observed_draws": 163,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "approach_air_other": 3,
+            "takeoff_preparation": 1
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 64,
+          "end": 96,
+          "cap": 98,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 92,
+          "phase_counts": {
+            "approach_air_other": 32
+          }
+        },
+        {
+          "trajectory": 2,
+          "start": 96,
+          "end": 98,
+          "cap": 98,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 99,
+          "phase_counts": {
+            "approach_air_other": 2
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 0,
+          "end": 32,
+          "cap": 121,
+          "probability": 0.004464285714285714,
+          "observed_draws": 88,
+          "phase_counts": {
+            "approach_support": 28,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 32,
+          "end": 64,
+          "cap": 121,
+          "probability": 0.006802721088435374,
+          "observed_draws": 146,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_air_other": 8,
+            "approach_support": 1,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 64,
+          "end": 96,
+          "cap": 121,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 98,
+          "phase_counts": {
+            "approach_air_ascent": 5,
+            "approach_air_other": 27
+          }
+        },
+        {
+          "trajectory": 3,
+          "start": 96,
+          "end": 121,
+          "cap": 121,
+          "probability": 0.004464285714285714,
+          "observed_draws": 96,
+          "phase_counts": {
+            "approach_air_other": 6,
+            "approach_support": 15,
+            "takeoff_preparation": 4
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 0,
+          "end": 32,
+          "cap": 126,
+          "probability": 0.004464285714285714,
+          "observed_draws": 93,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 20,
+            "takeoff_preparation": 9
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 32,
+          "end": 64,
+          "cap": 126,
+          "probability": 0.006802721088435374,
+          "observed_draws": 148,
+          "phase_counts": {
+            "approach_air_ascent": 20,
+            "approach_air_other": 12
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 64,
+          "end": 96,
+          "cap": 126,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 104,
+          "phase_counts": {
+            "approach_air_ascent": 4,
+            "approach_air_other": 23,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 4,
+          "start": 96,
+          "end": 126,
+          "cap": 126,
+          "probability": 0.004464285714285714,
+          "observed_draws": 74,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_support": 20
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 0,
+          "end": 32,
+          "cap": 131,
+          "probability": 0.004464285714285714,
+          "observed_draws": 88,
+          "phase_counts": {
+            "approach_support": 30,
+            "takeoff_preparation": 2
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 32,
+          "end": 64,
+          "cap": 131,
+          "probability": 0.006802721088435374,
+          "observed_draws": 133,
+          "phase_counts": {
+            "approach_air_ascent": 12,
+            "approach_air_other": 10,
+            "approach_support": 4,
+            "takeoff_preparation": 6
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 64,
+          "end": 96,
+          "cap": 131,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 97,
+          "phase_counts": {
+            "approach_air_other": 29,
+            "approach_support": 3
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 96,
+          "end": 128,
+          "cap": 131,
+          "probability": 0.004464285714285714,
+          "observed_draws": 81,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 5,
+          "start": 128,
+          "end": 131,
+          "cap": 131,
+          "probability": 0.004464285714285714,
+          "observed_draws": 82,
+          "phase_counts": {
+            "approach_support": 3
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 0,
+          "end": 32,
+          "cap": 134,
+          "probability": 0.004464285714285714,
+          "observed_draws": 93,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 14,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 32,
+          "end": 64,
+          "cap": 134,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 103,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_air_other": 26
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 64,
+          "end": 96,
+          "cap": 134,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 83,
+          "phase_counts": {
+            "approach_air_other": 12,
+            "approach_support": 12,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 96,
+          "end": 128,
+          "cap": 134,
+          "probability": 0.006802721088435374,
+          "observed_draws": 153,
+          "phase_counts": {
+            "approach_air_ascent": 24,
+            "approach_support": 2,
+            "takeoff_preparation": 6
+          }
+        },
+        {
+          "trajectory": 6,
+          "start": 128,
+          "end": 134,
+          "cap": 134,
+          "probability": 0.004464285714285714,
+          "observed_draws": 86,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 4
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 0,
+          "end": 32,
+          "cap": 137,
+          "probability": 0.004464285714285714,
+          "observed_draws": 88,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 16,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 32,
+          "end": 64,
+          "cap": 137,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 87,
+          "phase_counts": {
+            "approach_air_ascent": 14,
+            "approach_air_other": 18
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 64,
+          "end": 96,
+          "cap": 137,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 81,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_air_other": 20,
+            "approach_support": 10
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 96,
+          "end": 128,
+          "cap": 137,
+          "probability": 0.006802721088435374,
+          "observed_draws": 131,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_support": 5,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 7,
+          "start": 128,
+          "end": 137,
+          "cap": 137,
+          "probability": 0.023809523809523808,
+          "observed_draws": 494,
+          "phase_counts": {
+            "approach_air_ascent": 1,
+            "tree_air_ascent": 8
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 0,
+          "end": 32,
+          "cap": 152,
+          "probability": 0.004464285714285714,
+          "observed_draws": 87,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 32,
+          "end": 64,
+          "cap": 152,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 93,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_air_other": 17,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 64,
+          "end": 96,
+          "cap": 152,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 108,
+          "phase_counts": {
+            "approach_air_ascent": 1,
+            "approach_air_other": 30,
+            "approach_support": 1
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 96,
+          "end": 128,
+          "cap": 152,
+          "probability": 0.004464285714285714,
+          "observed_draws": 82,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 8,
+          "start": 128,
+          "end": 152,
+          "cap": 152,
+          "probability": 0.006802721088435374,
+          "observed_draws": 129,
+          "phase_counts": {
+            "approach_air_ascent": 16,
+            "tree_air_ascent": 8
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 0,
+          "end": 32,
+          "cap": 171,
+          "probability": 0.004464285714285714,
+          "observed_draws": 70,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 18,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 32,
+          "end": 64,
+          "cap": 171,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 85,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 21
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 64,
+          "end": 96,
+          "cap": 171,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 100,
+          "phase_counts": {
+            "approach_air_other": 24,
+            "approach_support": 8
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 96,
+          "end": 128,
+          "cap": 171,
+          "probability": 0.07142857142857142,
+          "observed_draws": 1410,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_support": 11,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 128,
+          "end": 160,
+          "cap": 171,
+          "probability": 0.006802721088435374,
+          "observed_draws": 134,
+          "phase_counts": {
+            "approach_air_ascent": 23,
+            "tree_air_ascent": 7,
+            "tree_air_other": 2
+          }
+        },
+        {
+          "trajectory": 9,
+          "start": 160,
+          "end": 171,
+          "cap": 171,
+          "probability": 0.03571428571428571,
+          "observed_draws": 730,
+          "phase_counts": {
+            "tree_air_other": 11
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 0,
+          "end": 32,
+          "cap": 176,
+          "probability": 0.004464285714285714,
+          "observed_draws": 102,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 26
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 32,
+          "end": 64,
+          "cap": 176,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 102,
+          "phase_counts": {
+            "approach_air_ascent": 10,
+            "approach_air_other": 16,
+            "approach_support": 6
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 64,
+          "end": 96,
+          "cap": 176,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 102,
+          "phase_counts": {
+            "approach_air_other": 26,
+            "approach_support": 6
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 96,
+          "end": 128,
+          "cap": 176,
+          "probability": 0.004464285714285714,
+          "observed_draws": 91,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 128,
+          "end": 160,
+          "cap": 176,
+          "probability": 0.006802721088435374,
+          "observed_draws": 136,
+          "phase_counts": {
+            "approach_air_ascent": 32
+          }
+        },
+        {
+          "trajectory": 10,
+          "start": 160,
+          "end": 176,
+          "cap": 176,
+          "probability": 0.03571428571428571,
+          "observed_draws": 682,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "tree_air_ascent": 4,
+            "tree_air_other": 9
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 0,
+          "end": 32,
+          "cap": 186,
+          "probability": 0.004464285714285714,
+          "observed_draws": 91,
+          "phase_counts": {
+            "approach_air_ascent": 2,
+            "approach_support": 20,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 32,
+          "end": 64,
+          "cap": 186,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 20,
+            "approach_support": 1
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 64,
+          "end": 96,
+          "cap": 186,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 94,
+          "phase_counts": {
+            "approach_air_other": 25,
+            "approach_support": 7
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 96,
+          "end": 128,
+          "cap": 186,
+          "probability": 0.006802721088435374,
+          "observed_draws": 117,
+          "phase_counts": {
+            "approach_air_ascent": 17,
+            "approach_support": 3,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 128,
+          "end": 160,
+          "cap": 186,
+          "probability": 0.006802721088435374,
+          "observed_draws": 128,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "tree_air_ascent": 4
+          }
+        },
+        {
+          "trajectory": 11,
+          "start": 160,
+          "end": 186,
+          "cap": 186,
+          "probability": 0.023809523809523808,
+          "observed_draws": 470,
+          "phase_counts": {
+            "tree_air_ascent": 14,
+            "tree_air_other": 12
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 0,
+          "end": 32,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 92,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_support": 13,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 32,
+          "end": 64,
+          "cap": 446,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 97,
+          "phase_counts": {
+            "approach_air_ascent": 13,
+            "approach_air_other": 17,
+            "approach_support": 2
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 64,
+          "end": 96,
+          "cap": 446,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 88,
+          "phase_counts": {
+            "approach_air_ascent": 11,
+            "approach_air_other": 14,
+            "approach_support": 7
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 96,
+          "end": 128,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 93,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_air_other": 1,
+            "approach_support": 20,
+            "takeoff_preparation": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 128,
+          "end": 160,
+          "cap": 446,
+          "probability": 0.006802721088435374,
+          "observed_draws": 141,
+          "phase_counts": {
+            "approach_air_ascent": 24,
+            "approach_air_other": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 160,
+          "end": 192,
+          "cap": 446,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 102,
+          "phase_counts": {
+            "approach_air_other": 32
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 192,
+          "end": 224,
+          "cap": 446,
+          "probability": 0.004464285714285714,
+          "observed_draws": 96,
+          "phase_counts": {
+            "approach_air_other": 1,
+            "approach_support": 21,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 224,
+          "end": 256,
+          "cap": 446,
+          "probability": 0.006802721088435374,
+          "observed_draws": 139,
+          "phase_counts": {
+            "approach_air_ascent": 30,
+            "takeoff_preparation": 2
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 256,
+          "end": 288,
+          "cap": 446,
+          "probability": 0.023809523809523808,
+          "observed_draws": 475,
+          "phase_counts": {
+            "approach_air_ascent": 12,
+            "tree_air_ascent": 16,
+            "tree_air_other": 4
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 288,
+          "end": 320,
+          "cap": 446,
+          "probability": 0.047619047619047616,
+          "observed_draws": 949,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 19,
+            "tree_air_ascent": 3,
+            "tree_air_other": 10
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 320,
+          "end": 352,
+          "cap": 446,
+          "probability": 0.023809523809523808,
+          "observed_draws": 483,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 13,
+            "tree_air_ascent": 19
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 352,
+          "end": 384,
+          "cap": 446,
+          "probability": 0.023809523809523808,
+          "observed_draws": 483,
+          "phase_counts": {
+            "tree_air_ascent": 32
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 384,
+          "end": 416,
+          "cap": 446,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 96,
+          "phase_counts": {
+            "approach_air_other": 18,
+            "tree_air_ascent": 6,
+            "tree_air_other": 8
+          }
+        },
+        {
+          "trajectory": 12,
+          "start": 416,
+          "end": 446,
+          "cap": 446,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 106,
+          "phase_counts": {
+            "approach_air_other": 30
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 0,
+          "end": 32,
+          "cap": 586,
+          "probability": 0.004464285714285714,
+          "observed_draws": 98,
+          "phase_counts": {
+            "approach_air_ascent": 6,
+            "approach_support": 26
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 32,
+          "end": 64,
+          "cap": 586,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 91,
+          "phase_counts": {
+            "approach_air_ascent": 4,
+            "approach_air_other": 28
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 64,
+          "end": 96,
+          "cap": 586,
+          "probability": 0.004464285714285714,
+          "observed_draws": 92,
+          "phase_counts": {
+            "approach_air_ascent": 5,
+            "approach_air_other": 4,
+            "approach_support": 23
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 96,
+          "end": 128,
+          "cap": 586,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 89,
+          "phase_counts": {
+            "approach_air_ascent": 8,
+            "approach_air_other": 11,
+            "approach_support": 8,
+            "takeoff_preparation": 5
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 128,
+          "end": 160,
+          "cap": 586,
+          "probability": 0.006802721088435374,
+          "observed_draws": 134,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_support": 2,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 160,
+          "end": 192,
+          "cap": 586,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 105,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_air_other": 23
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 192,
+          "end": 224,
+          "cap": 586,
+          "probability": 0.004464285714285714,
+          "observed_draws": 95,
+          "phase_counts": {
+            "approach_air_other": 7,
+            "approach_support": 25
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 224,
+          "end": 256,
+          "cap": 586,
+          "probability": 0.004464285714285714,
+          "observed_draws": 110,
+          "phase_counts": {
+            "approach_air_ascent": 8,
+            "approach_support": 13,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 256,
+          "end": 288,
+          "cap": 586,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 112,
+          "phase_counts": {
+            "approach_air_ascent": 7,
+            "approach_air_other": 25
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 288,
+          "end": 320,
+          "cap": 586,
+          "probability": 0.0047619047619047615,
+          "observed_draws": 101,
+          "phase_counts": {
+            "approach_air_other": 20,
+            "approach_support": 12
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 320,
+          "end": 352,
+          "cap": 586,
+          "probability": 0.004464285714285714,
+          "observed_draws": 82,
+          "phase_counts": {
+            "approach_support": 32
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 352,
+          "end": 384,
+          "cap": 586,
+          "probability": 0.004464285714285714,
+          "observed_draws": 89,
+          "phase_counts": {
+            "approach_air_other": 14,
+            "approach_support": 18
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 384,
+          "end": 416,
+          "cap": 586,
+          "probability": 0.004464285714285714,
+          "observed_draws": 79,
+          "phase_counts": {
+            "approach_support": 13,
+            "tree_air_other": 9,
+            "tree_support": 10
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 416,
+          "end": 448,
+          "cap": 586,
+          "probability": 0.07142857142857142,
+          "observed_draws": 1413,
+          "phase_counts": {
+            "approach_support": 8,
+            "takeoff_preparation": 12,
+            "tree_air_ascent": 9,
+            "tree_air_other": 1,
+            "tree_support": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 448,
+          "end": 480,
+          "cap": 586,
+          "probability": 0.023809523809523808,
+          "observed_draws": 453,
+          "phase_counts": {
+            "tree_air_ascent": 30,
+            "tree_air_other": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 480,
+          "end": 512,
+          "cap": 586,
+          "probability": 0.03571428571428571,
+          "observed_draws": 710,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 11,
+            "tree_air_other": 21
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 512,
+          "end": 544,
+          "cap": 586,
+          "probability": 0.047619047619047616,
+          "observed_draws": 952,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 30,
+            "tree_support": 2
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 544,
+          "end": 576,
+          "cap": 586,
+          "probability": 0.047619047619047616,
+          "observed_draws": 924,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 23,
+            "tree_support": 9
+          }
+        },
+        {
+          "trajectory": 13,
+          "start": 576,
+          "end": 586,
+          "cap": 586,
+          "probability": 0.03571428571428571,
+          "observed_draws": 723,
+          "phase_counts": {
+            "elevated_tip_contact_candidate": 3,
+            "tree_air_other": 7
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 0,
+          "end": 32,
+          "cap": 157,
+          "probability": 0.004464285714285714,
+          "observed_draws": 93,
+          "phase_counts": {
+            "approach_air_ascent": 3,
+            "approach_support": 19,
+            "takeoff_preparation": 10
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 32,
+          "end": 64,
+          "cap": 157,
+          "probability": 0.006802721088435374,
+          "observed_draws": 137,
+          "phase_counts": {
+            "approach_air_ascent": 19,
+            "approach_air_other": 13
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 64,
+          "end": 96,
+          "cap": 157,
+          "probability": 0.006802721088435374,
+          "observed_draws": 129,
+          "phase_counts": {
+            "approach_air_ascent": 15,
+            "approach_air_other": 13,
+            "approach_support": 4
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 96,
+          "end": 128,
+          "cap": 157,
+          "probability": 0.006802721088435374,
+          "observed_draws": 136,
+          "phase_counts": {
+            "approach_air_ascent": 13,
+            "approach_air_other": 2,
+            "approach_support": 5,
+            "takeoff_preparation": 12
+          }
+        },
+        {
+          "trajectory": 14,
+          "start": 128,
+          "end": 157,
+          "cap": 157,
+          "probability": 0.006802721088435374,
+          "observed_draws": 113,
+          "phase_counts": {
+            "approach_air_ascent": 28,
+            "approach_air_other": 1
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 0,
+          "end": 32,
+          "cap": 90,
+          "probability": 0.004464285714285714,
+          "observed_draws": 80,
+          "phase_counts": {
+            "approach_air_ascent": 9,
+            "approach_support": 12,
+            "takeoff_preparation": 11
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 32,
+          "end": 64,
+          "cap": 90,
+          "probability": 0.006802721088435374,
+          "observed_draws": 134,
+          "phase_counts": {
+            "approach_air_ascent": 14,
+            "approach_air_other": 13,
+            "approach_support": 5
+          }
+        },
+        {
+          "trajectory": 15,
+          "start": 64,
+          "end": 90,
+          "cap": 90,
+          "probability": 0.004464285714285714,
+          "observed_draws": 96,
+          "phase_counts": {
+            "approach_air_other": 2,
+            "approach_support": 24
+          }
+        }
+      ],
+      "branch_draws": {
+        "phase_balanced": 20000
+      },
+      "expected_phase_frame_share": {
+        "approach_air_ascent": 0.17892973590070796,
+        "approach_support": 0.16936334647304765,
+        "takeoff_preparation": 0.10605811559163086,
+        "approach_air_other": 0.1361514484069466,
+        "tree_air_ascent": 0.1377607894587414,
+        "tree_air_other": 0.09778726812488608,
+        "elevated_tip_contact_candidate": 0.14894996847066275,
+        "tree_support": 0.024999327573376688
+      },
+      "sampled_phase_frame_share": {
+        "approach_air_ascent": 0.17941598733356412,
+        "approach_support": 0.16917283323639035,
+        "takeoff_preparation": 0.10551204348200463,
+        "approach_air_other": 0.140184830150616,
+        "tree_air_ascent": 0.13654902884214928,
+        "tree_air_other": 0.09706306683091327,
+        "elevated_tip_contact_candidate": 0.14778855768166266,
+        "tree_support": 0.024313652442699667
+      },
+      "expected_tree_frame_share": 0.40949735362766687,
+      "sampled_tree_frame_share": 0.4057143057974249,
+      "max_chunk_probability": 0.07142857142857142,
+      "max_chunk_frequency_error": 0.001614285714285714,
+      "phase_groups": {
+        "approach_support": {
+          "chunks": 32,
+          "trajectories": 16
+        },
+        "approach_air_ascent": {
+          "chunks": 21,
+          "trajectories": 16
+        },
+        "approach_air_other": {
+          "chunks": 30,
+          "trajectories": 14
+        },
+        "tree_air_ascent": {
+          "chunks": 6,
+          "trajectories": 4
+        },
+        "takeoff_preparation": {
+          "chunks": 2,
+          "trajectories": 2
+        },
+        "tree_air_other": {
+          "chunks": 4,
+          "trajectories": 3
+        },
+        "elevated_tip_contact_candidate": {
+          "chunks": 3,
+          "trajectories": 2
+        }
+      }
+    }
+  },
+  "source_pool": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\elites\\full_episodes\\elites_iter_0184.npz",
+    "sha256": "9441602ad666fdf68807862688373bcc6c63fb04c25b374ca8f573521debda2b",
+    "bytes": 2514588
+  },
+  "checkpoint": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\checkpoints\\ppo_iter_0184.pt",
+    "sha256": "7f8ca3e9b4e533715de98ff8ffc0aec735e768ca9332b1d82a380ef842dae81b",
+    "bytes": 8727591
+  },
+  "pool_fingerprint": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\elites\\full_episodes\\elites_iter_0184.npz.fingerprint.json",
+    "sha256": "b2cd867193efba33dfe94f0b8967513e1c876a91ce4e4f4acd2fa29d238af95b",
+    "bytes": 871
+  },
+  "source_files": [
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\training\\gru_sil.py",
+      "sha256": "402835b653be8b5985b5cc6336a6cf1d9fa13bfec50ceba35e3e08e7117137a7",
+      "bytes": 16101
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\evaluation\\present\\plot_sil_td_envelope.py",
+      "sha256": "178fcad294b4a66d20c749de1b7ce85dee7eb8f66151fae71d7bd64493c736cb",
+      "bytes": 23420
+    }
+  ]
+}

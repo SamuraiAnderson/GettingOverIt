@@ -1,0 +1,50 @@
+..11:17:39 [training.main_ppo] INFO: PyTorch CPU threads: 2
+11:17:39 [training.main_ppo] INFO: PyTorch CPU threads: 2
+......11:17:39 [training.main_ppo] INFO: PyTorch CPU threads: 2
+11:17:39 [training.main_ppo] INFO: PyTorch CPU threads: 2
+...............11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+11:17:40 [training.main_ppo] INFO: PyTorch CPU threads: 4
+C:\Users\Symbol\AppData\Local\Temp\tmp0eafyhpy\one\envelope.png
+C:\Users\Symbol\AppData\Local\Temp\tmp0eafyhpy\one\envelope.json
+C:\Users\Symbol\AppData\Local\Temp\tmpohc8u224\td_envelope\envelope.png
+C:\Users\Symbol\AppData\Local\Temp\tmpohc8u224\td_envelope\envelope_history.png
+C:\Users\Symbol\AppData\Local\Temp\tmpohc8u224\td_envelope\envelope.json
+.....11:17:41 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpmgkk6kmf\ppo_iter_0001.pt
+....11:17:41 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmplwc5fcfm\ppo_iter_0001.pt
+11:17:42 [training.ppo_trainer] INFO: 已恢复 optimizer state
+...11:17:42 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpo2u6jp9j\ppo_iter_0001.pt
+11:17:42 [training.main_ppo] INFO: PyTorch CPU threads: 2
+11:17:42 [training.main_ppo] INFO: PyTorch CPU threads: 2
+11:17:42 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.11:17:42 [training.ppo_trainer] INFO: 已恢复 optimizer state
+...11:17:42 [training.main_ppo] INFO: PyTorch CPU threads: 2
+11:17:42 [training.main_ppo] INFO: PyTorch CPU threads: 2
+....11:17:42 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.......................
+----------------------------------------------------------------------
+Ran 67 tests in 6.118s
+
+OK

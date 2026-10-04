@@ -1,0 +1,195 @@
+{
+  "schema": "tree_climb_protocol_v1",
+  "phase_rules": {
+    "version": "tree_motion_proxy_v1",
+    "tree_x_min": -33.0,
+    "tree_x_max": -27.0,
+    "elevated_tip_y": 0.0,
+    "upward_speed": 0.5,
+    "minimum_flight_steps": 8,
+    "minimum_flight_rise_m": 0.25,
+    "preparation_steps": 12,
+    "hold_steps": 120
+  },
+  "arms": {
+    "control": {},
+    "guidance_wide": {
+      "reference_guidance_sigma": 3.0
+    },
+    "sil_phase": {
+      "gru_sil_sampling_mode": "phase_balanced_v1"
+    },
+    "long_discount": {
+      "gamma": 0.9975
+    }
+  },
+  "evaluation": {
+    "exact_spawn": true,
+    "agents": 8,
+    "steps": 1200,
+    "seed": 20261003,
+    "modes": [
+      "deterministic",
+      "exploration"
+    ],
+    "rounds_per_mode": 1,
+    "deterministic_duplicates_are_not_independent": true
+  },
+  "phase_sampler_groups_in_final_pool": {
+    "approach_support": 32,
+    "approach_air_ascent": 21,
+    "approach_air_other": 30,
+    "tree_air_ascent": 6,
+    "takeoff_preparation": 2,
+    "tree_air_other": 4,
+    "elevated_tip_contact_candidate": 3
+  },
+  "recipes": [
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_control_s7.json",
+      "stage": "precheck",
+      "arm": "control",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_guidance_wide_s7.json",
+      "stage": "precheck",
+      "arm": "guidance_wide",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_sil_phase_s7.json",
+      "stage": "precheck",
+      "arm": "sil_phase",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_long_discount_s7.json",
+      "stage": "precheck",
+      "arm": "long_discount",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_control_s17.json",
+      "stage": "precheck",
+      "arm": "control",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_guidance_wide_s17.json",
+      "stage": "precheck",
+      "arm": "guidance_wide",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_sil_phase_s17.json",
+      "stage": "precheck",
+      "arm": "sil_phase",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_long_discount_s17.json",
+      "stage": "precheck",
+      "arm": "long_discount",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_control_s47.json",
+      "stage": "precheck",
+      "arm": "control",
+      "seed": 47
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_guidance_wide_s47.json",
+      "stage": "precheck",
+      "arm": "guidance_wide",
+      "seed": 47
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_sil_phase_s47.json",
+      "stage": "precheck",
+      "arm": "sil_phase",
+      "seed": 47
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\precheck_long_discount_s47.json",
+      "stage": "precheck",
+      "arm": "long_discount",
+      "seed": 47
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_control_s7.json",
+      "stage": "screen",
+      "arm": "control",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_guidance_wide_s7.json",
+      "stage": "screen",
+      "arm": "guidance_wide",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_sil_phase_s7.json",
+      "stage": "screen",
+      "arm": "sil_phase",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_long_discount_s7.json",
+      "stage": "screen",
+      "arm": "long_discount",
+      "seed": 7
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_control_s17.json",
+      "stage": "screen",
+      "arm": "control",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_guidance_wide_s17.json",
+      "stage": "screen",
+      "arm": "guidance_wide",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_sil_phase_s17.json",
+      "stage": "screen",
+      "arm": "sil_phase",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_long_discount_s17.json",
+      "stage": "screen",
+      "arm": "long_discount",
+      "seed": 17
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_control_s47.json",
+      "stage": "screen",
+      "arm": "control",
+      "seed": 47
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_guidance_wide_s47.json",
+      "stage": "screen",
+      "arm": "guidance_wide",
+      "seed": 47
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_sil_phase_s47.json",
+      "stage": "screen",
+      "arm": "sil_phase",
+      "seed": 47
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\tree_climb_preflight_20261004\\recipes\\screen_long_discount_s47.json",
+      "stage": "screen",
+      "arm": "long_discount",
+      "seed": 47
+    }
+  ],
+  "online_preflight": "pending",
+  "training_authorization": "not_requested_by_prepare"
+}

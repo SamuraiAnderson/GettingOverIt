@@ -1,0 +1,83 @@
+{
+  "physical_probe": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\native_dynamics_validation_20261002\\hold_native_00.jsonl",
+    "sha256": "68c06ccd1b37d508c58a4308f97f3c40b9c29687a7be40d8517ad44f8bdac7e6",
+    "bytes": 323062
+  },
+  "source_pool": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\elites\\full_episodes\\elites_iter_0184.npz",
+    "sha256": "9441602ad666fdf68807862688373bcc6c63fb04c25b374ca8f573521debda2b",
+    "bytes": 2514588
+  },
+  "body_parameters_match": true,
+  "spec": {
+    "version": "com_contact_dynamics_v1",
+    "body_names": [
+      "Player",
+      "Hub",
+      "Slider",
+      "Handle",
+      "PoleMiddle",
+      "Tip"
+    ],
+    "velocity_indices": [
+      2,
+      7,
+      12,
+      17,
+      21,
+      25
+    ],
+    "masses": [
+      52.0,
+      10.0,
+      7.0,
+      3.0,
+      3.0,
+      4.0
+    ],
+    "linear_drag": [
+      0.2,
+      0.2,
+      0.2,
+      1.0,
+      0.0,
+      0.0
+    ],
+    "gravity_xy": [
+      0.0,
+      -30.0
+    ],
+    "minimum_acceleration_m_s2": 5.0,
+    "saturation_acceleration_m_s2": 150.0,
+    "passive_impact_speed_retention": 0.5,
+    "preparation_steps": 12,
+    "response_steps": 6,
+    "provenance": "native_dynamics_validation_20261002 bodyConfig; gravity checked against archived COM free flight"
+  },
+  "audit_window": "13-state contact-free interior, transitions before confirmed cap",
+  "frames": 1262,
+  "corrected_acceleration_quantiles_5_50_95_m_s2": [
+    [
+      -0.09906653901253026,
+      -30.086754182501593
+    ],
+    [
+      -0.004957159260037258,
+      -29.99129380274421
+    ],
+    [
+      0.09525214653988104,
+      -29.89737831929062
+    ]
+  ],
+  "com_residual_norm_quantiles_50_95_m_s2": [
+    0.06434054547189899,
+    0.16483242554120284
+  ],
+  "player_only_residual_norm_quantiles_50_95_m_s2": [
+    50.74062726310062,
+    149.06007366674365
+  ],
+  "fraction_com_residual_below_1_m_s2": 0.9992076069730587
+}

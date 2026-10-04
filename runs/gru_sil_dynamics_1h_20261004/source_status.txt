@@ -1,0 +1,25 @@
+ M .gitignore
+ M doc/training.md
+ M src/tests/analysis/campaign/README.md
+ M src/tests/control_interaction/test_l5_agent_isolation.py
+ M src/tests/evaluation/present/plot_sil_td_envelope.py
+ M src/tests/evaluation/present/render_episode_motion.py
+ M src/tests/training/test_gru_sil.py
+ M src/tests/training/test_plot_sil_td_envelope.py
+ M src/training/config.py
+ M src/training/experiment_options.py
+ M src/training/gru_sil.py
+ M src/training/main_ppo.py
+ M src/training/reference_corridor.py
+?? runs/gru_sil_8h_20261003/post_training_review/all_elite_motion/
+?? runs/gru_sil_8h_20261003/post_training_review/checkpoint_0184/tree_base_guidance/
+?? runs/gru_sil_dynamics_1h_20261004/
+?? runs/gru_sil_dynamics_sampling_20261004/
+?? runs/gru_sil_event_sampling_20261004/
+?? runs/gru_sil_sampling_20261004/
+?? runs/tree_climb_preflight_20261004/
+?? src/tests/analysis/campaign/prepare_tree_climb.py
+?? src/tests/training/test_climb_experiment.py
+?? src/tests/training/test_dynamics_sampling.py
+?? src/training/climb_diagnostics.py
+?? src/training/climb_experiment.py

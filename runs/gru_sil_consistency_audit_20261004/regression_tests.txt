@@ -1,0 +1,20 @@
+.......15:40:25 [training.main_ppo] INFO: PyTorch CPU threads: 2
+15:40:25 [training.main_ppo] INFO: PyTorch CPU threads: 2
+........15:40:26 [training.main_ppo] INFO: PyTorch CPU threads: 2
+15:40:26 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.......15:40:27 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmp3hxo2ipr\ppo_iter_0001.pt
+....15:40:27 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpwlqa82ba\ppo_iter_0001.pt
+15:40:27 [training.ppo_trainer] INFO: 已恢复 optimizer state
+...15:40:27 [training.main_ppo] INFO: Checkpoint saved: C:\Users\Symbol\AppData\Local\Temp\tmpx9p5q5xs\ppo_iter_0001.pt
+15:40:27 [training.main_ppo] INFO: PyTorch CPU threads: 2
+15:40:27 [training.main_ppo] INFO: PyTorch CPU threads: 2
+15:40:27 [training.main_ppo] INFO: PyTorch CPU threads: 2
+.15:40:28 [training.ppo_trainer] INFO: 已恢复 optimizer state
+.........15:40:28 [training.ppo_trainer] INFO: KL early stop BEFORE update 2: 0.727349 > 0.045000
+..15:40:28 [training.ppo_trainer] INFO: GradNormAdapter frozen: p95=9.0000, adaptive=13.5000, cap=5.0000 → max_grad_norm=5.0000
+.15:40:29 [training.ppo_trainer] INFO: KL early stop BEFORE update 2: 0.727349 > 0.045000
+.............
+----------------------------------------------------------------------
+Ran 55 tests in 5.260s
+
+OK

@@ -1,0 +1,511 @@
+{
+  "status": "completed",
+  "checks": {
+    "behavior_matches_checkpoint": true,
+    "exploration_rollout_decisions": 9600,
+    "pool_size": 17,
+    "same_first_four_sampling_choices_and_step_results": true,
+    "prefix_scalar_absolute_tolerance": 1e-08,
+    "prefix_scalar_differences": [
+      {
+        "field": "chunks/3/kl",
+        "absolute_difference": 5.820766091346741e-11
+      }
+    ],
+    "source_inputs_unchanged": true,
+    "source_code_unchanged": true,
+    "standard_deviation_unchanged": true,
+    "finite_model_and_optimizer": true,
+    "optimizer_step_deltas": {
+      "old_4": {
+        "0": 1,
+        "4": 46
+      },
+      "new_16": {
+        "0": 1,
+        "7": 46
+      }
+    }
+  },
+  "actual_ppo_updates": 0,
+  "budget_reference_updates": 16,
+  "baseline_common_16_draws": {
+    "action_rmse": 17.42383352073259,
+    "fixed_advantage_actor_loss": 0.1770204280037433
+  },
+  "cold_input_build_seconds": 464.86120930011384,
+  "arms": {
+    "old_4": {
+      "metrics": {
+        "gru_sil_updates": 4,
+        "gru_sil_budget": 4,
+        "gru_sil_attempts": 4,
+        "gru_sil_positive_frames": 127,
+        "gru_sil_sampled_frames": 128,
+        "gru_sil_rejected_steps": 0,
+        "gru_sil_kl": 0.000745555676985532,
+        "gru_sil_frame_kl_max": 0.019822418689727783,
+        "gru_sil_attempted_kl_max": 0.000745555676985532,
+        "gru_sil_loss": 0.16971980035305023,
+        "gru_sil_cache_hits": 4,
+        "gru_sil_cache_misses": 0,
+        "gru_sil_cache_evictions": 0,
+        "gru_sil_cache_obsolete": 0,
+        "gru_sil_cache_invalidations": 0,
+        "gru_sil_cache_oversized": 0,
+        "gru_sil_cache_build_seconds": 0.0,
+        "gru_sil_cache_lookup_seconds": 0.0005723000504076481,
+        "gru_sil_cache_context_seconds": 0.0041918999049812555,
+        "gru_sil_cache_bytes": 257729796,
+        "gru_sil_cache_entries": 9,
+        "gru_sil_cache_limit_bytes": 1073741824
+      },
+      "accepted_positive_presentations": 127,
+      "unique_accepted_positive_frames": 95,
+      "repeated_accepted_positive_presentations": 32,
+      "immediate_actor_loss_improved_steps": 4,
+      "key_window_coverage": [
+        {
+          "rank": 1,
+          "start": 160,
+          "end": 192,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 1,
+          "start": 192,
+          "end": 224,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 1,
+          "start": 224,
+          "end": 256,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 2,
+          "start": 160,
+          "end": 192,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 2,
+          "start": 192,
+          "end": 224,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 2,
+          "start": 224,
+          "end": 256,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        }
+      ],
+      "audited_kl_mean": 0.000745555676985532,
+      "audited_kl_max_frame": 0.019822418689727783,
+      "warm_update_seconds_including_instrumentation": 4.610432700021192,
+      "common_16_draws_after": {
+        "action_rmse": 17.404216732884173,
+        "fixed_advantage_actor_loss": 0.17664852913003415
+      },
+      "gru_weight_max_absolute_delta": 0.0006487173959612846
+    },
+    "new_16": {
+      "metrics": {
+        "gru_sil_updates": 7,
+        "gru_sil_budget": 16,
+        "gru_sil_attempts": 8,
+        "gru_sil_positive_frames": 249,
+        "gru_sil_sampled_frames": 256,
+        "gru_sil_rejected_steps": 1,
+        "gru_sil_kl": 0.0074659427627921104,
+        "gru_sil_frame_kl_max": 0.0875590443611145,
+        "gru_sil_attempted_kl_max": 0.012308661825954914,
+        "gru_sil_loss": 0.2445745819381305,
+        "gru_sil_cache_hits": 8,
+        "gru_sil_cache_misses": 0,
+        "gru_sil_cache_evictions": 0,
+        "gru_sil_cache_obsolete": 0,
+        "gru_sil_cache_invalidations": 0,
+        "gru_sil_cache_oversized": 0,
+        "gru_sil_cache_build_seconds": 0.0,
+        "gru_sil_cache_lookup_seconds": 0.0011227000504732132,
+        "gru_sil_cache_context_seconds": 0.003935899818316102,
+        "gru_sil_cache_bytes": 257729796,
+        "gru_sil_cache_entries": 9,
+        "gru_sil_cache_limit_bytes": 1073741824
+      },
+      "accepted_positive_presentations": 217,
+      "unique_accepted_positive_frames": 127,
+      "repeated_accepted_positive_presentations": 90,
+      "immediate_actor_loss_improved_steps": 6,
+      "key_window_coverage": [
+        {
+          "rank": 1,
+          "start": 160,
+          "end": 192,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 1,
+          "start": 192,
+          "end": 224,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 1,
+          "start": 224,
+          "end": 256,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 2,
+          "start": 160,
+          "end": 192,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 2,
+          "start": 192,
+          "end": 224,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        },
+        {
+          "rank": 2,
+          "start": 224,
+          "end": 256,
+          "unique_positive_frames": 0,
+          "positive_presentations": 0
+        }
+      ],
+      "audited_kl_mean": 0.0074659427627921104,
+      "audited_kl_max_frame": 0.0875590443611145,
+      "warm_update_seconds_including_instrumentation": 6.935446600196883,
+      "common_16_draws_after": {
+        "action_rmse": 17.314017548166348,
+        "fixed_advantage_actor_loss": 0.1730659183813259
+      },
+      "gru_weight_max_absolute_delta": 0.0012447899207472801
+    }
+  },
+  "key_windows": [
+    {
+      "arm": "old_4",
+      "rank": 1,
+      "start": 160,
+      "end": 192,
+      "before": {
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 22.241012573242188,
+        "fixed_advantage_actor_loss": 0.5357280373573303,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 3.2169241905212402
+      },
+      "after": {
+        "trajectory": 13,
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 22.29784393310547,
+        "fixed_advantage_actor_loss": 0.5382658243179321,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 3.1115643978118896
+      }
+    },
+    {
+      "arm": "old_4",
+      "rank": 1,
+      "start": 192,
+      "end": 224,
+      "before": {
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 19.89803123474121,
+        "fixed_advantage_actor_loss": 0.6465916037559509,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 4.1133294105529785
+      },
+      "after": {
+        "trajectory": 13,
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 19.863624572753906,
+        "fixed_advantage_actor_loss": 0.6441406607627869,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 3.8213558197021484
+      }
+    },
+    {
+      "arm": "old_4",
+      "rank": 1,
+      "start": 224,
+      "end": 256,
+      "before": {
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 17.993324279785156,
+        "fixed_advantage_actor_loss": 0.28521379828453064,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 2.3617894649505615
+      },
+      "after": {
+        "trajectory": 13,
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 18.16314697265625,
+        "fixed_advantage_actor_loss": 0.29082784056663513,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 2.0669455528259277
+      }
+    },
+    {
+      "arm": "old_4",
+      "rank": 2,
+      "start": 160,
+      "end": 192,
+      "before": {
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 17.171226501464844,
+        "fixed_advantage_actor_loss": 0.002746113808825612,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.009002272970974445
+      },
+      "after": {
+        "trajectory": 14,
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 16.994747161865234,
+        "fixed_advantage_actor_loss": 0.0027287157718092203,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.00552652170881629
+      }
+    },
+    {
+      "arm": "old_4",
+      "rank": 2,
+      "start": 192,
+      "end": 224,
+      "before": {
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 25.253602981567383,
+        "fixed_advantage_actor_loss": 0.028800133615732193,
+        "baseline_positive_frames": 18,
+        "fixed_return_value_huber": 0.012833131477236748
+      },
+      "after": {
+        "trajectory": 14,
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 25.090972900390625,
+        "fixed_advantage_actor_loss": 0.02829406037926674,
+        "baseline_positive_frames": 18,
+        "fixed_return_value_huber": 0.008020902052521706
+      }
+    },
+    {
+      "arm": "old_4",
+      "rank": 2,
+      "start": 224,
+      "end": 256,
+      "before": {
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 17.16868782043457,
+        "fixed_advantage_actor_loss": 0.006006601732224226,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.014460936188697815
+      },
+      "after": {
+        "trajectory": 14,
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 17.207443237304688,
+        "fixed_advantage_actor_loss": 0.005995267536491156,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.007062216755002737
+      }
+    },
+    {
+      "arm": "new_16",
+      "rank": 1,
+      "start": 160,
+      "end": 192,
+      "before": {
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 22.241012573242188,
+        "fixed_advantage_actor_loss": 0.5357280373573303,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 3.2169241905212402
+      },
+      "after": {
+        "trajectory": 13,
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 22.48931312561035,
+        "fixed_advantage_actor_loss": 0.5444009900093079,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 2.9110970497131348
+      }
+    },
+    {
+      "arm": "new_16",
+      "rank": 1,
+      "start": 192,
+      "end": 224,
+      "before": {
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 19.89803123474121,
+        "fixed_advantage_actor_loss": 0.6465916037559509,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 4.1133294105529785
+      },
+      "after": {
+        "trajectory": 13,
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 19.478126525878906,
+        "fixed_advantage_actor_loss": 0.6048622131347656,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 3.2905805110931396
+      }
+    },
+    {
+      "arm": "new_16",
+      "rank": 1,
+      "start": 224,
+      "end": 256,
+      "before": {
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 17.993324279785156,
+        "fixed_advantage_actor_loss": 0.28521379828453064,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 2.3617894649505615
+      },
+      "after": {
+        "trajectory": 13,
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 17.750051498413086,
+        "fixed_advantage_actor_loss": 0.27609479427337646,
+        "baseline_positive_frames": 32,
+        "fixed_return_value_huber": 1.5783116817474365
+      }
+    },
+    {
+      "arm": "new_16",
+      "rank": 2,
+      "start": 160,
+      "end": 192,
+      "before": {
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 17.171226501464844,
+        "fixed_advantage_actor_loss": 0.002746113808825612,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.009002272970974445
+      },
+      "after": {
+        "trajectory": 14,
+        "start": 160,
+        "end": 192,
+        "frames": 32,
+        "action_rmse": 15.811736106872559,
+        "fixed_advantage_actor_loss": 0.00271920976229012,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.011748595163226128
+      }
+    },
+    {
+      "arm": "new_16",
+      "rank": 2,
+      "start": 192,
+      "end": 224,
+      "before": {
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 25.253602981567383,
+        "fixed_advantage_actor_loss": 0.028800133615732193,
+        "baseline_positive_frames": 18,
+        "fixed_return_value_huber": 0.012833131477236748
+      },
+      "after": {
+        "trajectory": 14,
+        "start": 192,
+        "end": 224,
+        "frames": 32,
+        "action_rmse": 24.4356689453125,
+        "fixed_advantage_actor_loss": 0.02683222107589245,
+        "baseline_positive_frames": 18,
+        "fixed_return_value_huber": 0.005249272100627422
+      }
+    },
+    {
+      "arm": "new_16",
+      "rank": 2,
+      "start": 224,
+      "end": 256,
+      "before": {
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 17.16868782043457,
+        "fixed_advantage_actor_loss": 0.006006601732224226,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.014460936188697815
+      },
+      "after": {
+        "trajectory": 14,
+        "start": 224,
+        "end": 256,
+        "frames": 32,
+        "action_rmse": 16.87367057800293,
+        "fixed_advantage_actor_loss": 0.00543218944221735,
+        "baseline_positive_frames": 13,
+        "fixed_return_value_huber": 0.052421052008867264
+      }
+    }
+  ],
+  "limitations": [
+    "Fixed elite histories use recorded previous actions; fitting gains do not establish closed-loop jumping.",
+    "The KL guard uses the saved exploration evaluation histories, not a newly sampled post-PPO training rollout.",
+    "This is one preselected sampler stream (next iteration 210), not a multi-seed effectiveness estimate.",
+    "Advantages and returns are frozen at the starting policy for before/after fit comparisons, so critic changes cannot by themselves create apparent actor improvement."
+  ]
+}

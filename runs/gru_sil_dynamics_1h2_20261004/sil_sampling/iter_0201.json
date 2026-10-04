@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "mode": "gru_full_prefix_positive_advantage",
+  "iteration": 201,
+  "seed": 7,
+  "budget": 1,
+  "chunks": [
+    {
+      "trajectory": 2,
+      "source_iteration": 101,
+      "start": 0,
+      "end": 32,
+      "cap": 98,
+      "bootstrap": -0.995750367641449,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.014905528960920488,
+        "conditional_chunk_probability": 0.8757010972129091,
+        "probability": 0.013052788065616865,
+        "priority_mass": 19.091163905691655,
+        "core_frames": 26,
+        "free_flight_frames": 0,
+        "context_frames": 6
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "positive_by_phase": {
+        "approach_support": 21,
+        "takeoff_preparation": 11
+      },
+      "advantage_sum_by_phase": {
+        "approach_support": 23.500648498535156,
+        "takeoff_preparation": 7.49154806137085
+      },
+      "kl": 0.00010017213207902387,
+      "frame_kl_max": 0.0012271404266357422,
+      "loss": 0.08493918925523758
+    }
+  ],
+  "sampling_mode": "quality_dynamics_v3",
+  "phase_rules": {
+    "version": "tree_motion_proxy_v1",
+    "tree_x_min": -33.0,
+    "tree_x_max": -27.0,
+    "elevated_tip_y": 0.0,
+    "upward_speed": 0.5,
+    "minimum_flight_steps": 8,
+    "minimum_flight_rise_m": 0.25,
+    "preparation_steps": 12,
+    "hold_steps": 120
+  },
+  "phase_branch_probability": 0.0,
+  "weighting": {
+    "version": "quality_dynamics_v3",
+    "trajectory_uniform_fraction": 0.1,
+    "distance_rank_temperature_fraction": 0.25,
+    "chunk_uniform_fraction": 0.1,
+    "no_dynamics_fallback": "uniform_chunks_in_selected_trajectory",
+    "dynamics_spec": {
+      "version": "com_contact_dynamics_v1",
+      "body_names": [
+        "Player",
+        "Hub",
+        "Slider",
+        "Handle",
+        "PoleMiddle",
+        "Tip"
+      ],
+      "velocity_indices": [
+        2,
+        7,
+        12,
+        17,
+        21,
+        25
+      ],
+      "masses": [
+        52.0,
+        10.0,
+        7.0,
+        3.0,
+        3.0,
+        4.0
+      ],
+      "linear_drag": [
+        0.2,
+        0.2,
+        0.2,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "gravity_xy": [
+        0.0,
+        -30.0
+      ],
+      "minimum_acceleration_m_s2": 5.0,
+      "saturation_acceleration_m_s2": 150.0,
+      "passive_impact_speed_retention": 0.5,
+      "preparation_steps": 12,
+      "response_steps": 6,
+      "provenance": "native_dynamics_validation_20261002 bodyConfig; gravity checked against archived COM free flight"
+    },
+    "step_seconds": 0.008333333333333333,
+    "trajectory_probabilities": {
+      "0": 0.011518542039967872,
+      "1": 0.013013715105514866,
+      "2": 0.014905528960920488,
+      "3": 0.017299204814220683,
+      "4": 0.02032787704552958,
+      "5": 0.02415999803720641,
+      "6": 0.029008707363703496,
+      "7": 0.04290615803213656,
+      "8": 0.05272786471829719,
+      "9": 0.0651550821560398,
+      "10": 0.08087900246640128,
+      "11": 0.10077417780756032,
+      "12": 0.12594716228234373,
+      "13": 0.1980983857025098,
+      "14": 0.15779805761256666,
+      "15": 0.03514368644811193,
+      "16": 0.010336849406969432
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "offline_unit_test_evidence_v1",
+  "status": "passed",
+  "tests_run": 58,
+  "duration_seconds": 4.364,
+  "process_exit_code": 0,
+  "evidence_kind": "Recorded from the successful test command output in this task; not a raw console capture",
+  "environment": "getting-over-it-analysis",
+  "command": "conda run --no-capture-output -n getting-over-it-analysis python -m unittest src.tests.training.test_climb_experiment src.tests.training.test_gru_sil src.tests.training.test_gru_mainline src.tests.training.test_elite_archive src.tests.training.test_reference_fingerprint src.tests.training.test_training_consistency src.tests.training.test_policy_experiments",
+  "test_sources": [
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\training\\test_climb_experiment.py",
+      "sha256": "5f2859f77c4b887ef2927407428a2da8e9abdaf53f66fe3ca06450c465a34c07"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\training\\test_gru_sil.py",
+      "sha256": "3bec01a19d55c5fbe3ee0723086207f8000b05b37717a040bfbf33ff734299af"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\training\\test_gru_mainline.py",
+      "sha256": "55126595d20521e99d17d91aa6bd6a7d3dc089140060fee8567063fc3c89fddc"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\training\\test_elite_archive.py",
+      "sha256": "ba1b893dec5d87f77887d0c707d1b135f8fc68ddf00045d50eb420300f9648b4"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\training\\test_reference_fingerprint.py",
+      "sha256": "75a3984e6c6deac1012dea84ec3231f98ea2257cee6570196142391cb04eba56"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\training\\test_training_consistency.py",
+      "sha256": "d16c43d101904281d7d00a23ab2d5b1ac01db7e307f830544c00ce4c3143c7e4"
+    },
+    {
+      "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\training\\test_policy_experiments.py",
+      "sha256": "f2d2c2da189450c28c9ec835d30d1199004506ca8a8ac69e2c6327e347a8e657"
+    }
+  ]
+}

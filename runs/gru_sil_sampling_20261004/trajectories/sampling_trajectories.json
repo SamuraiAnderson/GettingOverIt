@@ -1,0 +1,132 @@
+{
+  "source_pool": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_8h_20261003\\elites\\full_episodes\\elites_iter_0184.npz",
+    "sha256": "9441602ad666fdf68807862688373bcc6c63fb04c25b374ca8f573521debda2b",
+    "bytes": 2514588
+  },
+  "sampling_report": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_sampling_20261004\\sampling.json",
+    "sha256": "fec7c4f1e88bf2bb9d1f0f2a68db1d6d7e82ae467fabdc7e39d9f8e385973183",
+    "bytes": 107521
+  },
+  "renderer": {
+    "path": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\src\\tests\\evaluation\\present\\render_episode_motion.py",
+    "sha256": "0384bd29a04a715637ae149b45af1fe859d0adfb412b713efdb395b00987e4ce",
+    "bytes": 30860
+  },
+  "kind": "archived_spatial_trajectory_with_expected_sampling_probability",
+  "probability_units": "percent inclusion per chunk draw before advantage/KL filters",
+  "segment_alignment": "action t -> states[t] to states[t+1]",
+  "vmin": 0,
+  "vmax": 4.092261904761905,
+  "shared_bounds": [
+    [
+      -52.12485122680664,
+      -5.189612865447998
+    ],
+    [
+      -20.90225601196289,
+      9.435335636138916
+    ]
+  ],
+  "reference_sha256": "8d8a278f72432949c9a3b4a10be11ea58c859fabbc9d0d02f6e54cb79daeb066",
+  "gallery": "all_elite_sampling.png",
+  "entries": [
+    {
+      "rank": 1,
+      "pool_index": 12,
+      "image": "elite_12_sampling.png",
+      "cap_step": 446
+    },
+    {
+      "rank": 2,
+      "pool_index": 13,
+      "image": "elite_13_sampling.png",
+      "cap_step": 586
+    },
+    {
+      "rank": 3,
+      "pool_index": 11,
+      "image": "elite_11_sampling.png",
+      "cap_step": 186
+    },
+    {
+      "rank": 4,
+      "pool_index": 10,
+      "image": "elite_10_sampling.png",
+      "cap_step": 176
+    },
+    {
+      "rank": 5,
+      "pool_index": 9,
+      "image": "elite_09_sampling.png",
+      "cap_step": 171
+    },
+    {
+      "rank": 6,
+      "pool_index": 8,
+      "image": "elite_08_sampling.png",
+      "cap_step": 152
+    },
+    {
+      "rank": 7,
+      "pool_index": 7,
+      "image": "elite_07_sampling.png",
+      "cap_step": 137
+    },
+    {
+      "rank": 8,
+      "pool_index": 14,
+      "image": "elite_14_sampling.png",
+      "cap_step": 157
+    },
+    {
+      "rank": 9,
+      "pool_index": 6,
+      "image": "elite_06_sampling.png",
+      "cap_step": 134
+    },
+    {
+      "rank": 10,
+      "pool_index": 5,
+      "image": "elite_05_sampling.png",
+      "cap_step": 131
+    },
+    {
+      "rank": 11,
+      "pool_index": 4,
+      "image": "elite_04_sampling.png",
+      "cap_step": 126
+    },
+    {
+      "rank": 12,
+      "pool_index": 3,
+      "image": "elite_03_sampling.png",
+      "cap_step": 121
+    },
+    {
+      "rank": 13,
+      "pool_index": 2,
+      "image": "elite_02_sampling.png",
+      "cap_step": 98
+    },
+    {
+      "rank": 14,
+      "pool_index": 1,
+      "image": "elite_01_sampling.png",
+      "cap_step": 97
+    },
+    {
+      "rank": 15,
+      "pool_index": 0,
+      "image": "elite_00_sampling.png",
+      "cap_step": 83
+    },
+    {
+      "rank": 16,
+      "pool_index": 15,
+      "image": "elite_15_sampling.png",
+      "cap_step": 90
+    }
+  ]
+}

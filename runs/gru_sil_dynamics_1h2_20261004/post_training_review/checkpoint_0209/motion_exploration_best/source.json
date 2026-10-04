@@ -1,0 +1,14 @@
+{
+  "episode": "C:\\Users\\Symbol\\aCodes\\GettingOverIt\\runs\\gru_sil_dynamics_1h2_20261004\\post_training_review\\checkpoint_0209\\exploration_000_agent6.json",
+  "physical_steps": 1200,
+  "physical_seconds": 10.0,
+  "rendered_frames": 301,
+  "fps": 30,
+  "type": "archived_state_reconstruction_not_game_recording",
+  "trail": "pot_transform_point_b",
+  "credited_progress_m": 5.1401869847526545,
+  "displayed_progress_m": 10.280373969505307,
+  "displayed_progress_name": "\u786e\u8ba4\u7ec8\u70b9 D",
+  "credited_state_index": 984,
+  "credited_seconds": 8.2
+}

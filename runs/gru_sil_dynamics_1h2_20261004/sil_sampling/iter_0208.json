@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "mode": "gru_full_prefix_positive_advantage",
+  "iteration": 208,
+  "seed": 7,
+  "budget": 4,
+  "chunks": [
+    {
+      "trajectory": 13,
+      "source_iteration": 97,
+      "start": 288,
+      "end": 320,
+      "cap": 446,
+      "bootstrap": -1.191142201423645,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.1980983857025098,
+        "conditional_chunk_probability": 0.18181304145796678,
+        "probability": 0.036016870012486706,
+        "priority_mass": 17.305675742566706,
+        "core_frames": 19,
+        "free_flight_frames": 1,
+        "context_frames": 12
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "positive_by_phase": {
+        "elevated_tip_contact_candidate": 19,
+        "tree_air_ascent": 3,
+        "tree_air_other": 10
+      },
+      "advantage_sum_by_phase": {
+        "elevated_tip_contact_candidate": 74.09823608398438,
+        "tree_air_ascent": 11.366633415222168,
+        "tree_air_other": 39.438697814941406
+      },
+      "kl": 0.0004846376250497997,
+      "frame_kl_max": 0.0049863457679748535,
+      "loss": 0.5361088514328003
+    },
+    {
+      "trajectory": 15,
+      "source_iteration": 200,
+      "start": 32,
+      "end": 64,
+      "cap": 186,
+      "bootstrap": -0.6140055656433105,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.04290615803213656,
+        "conditional_chunk_probability": 0.24348688950332517,
+        "probability": 0.010447086959783042,
+        "priority_mass": 14.416079705986938,
+        "core_frames": 5,
+        "free_flight_frames": 0,
+        "context_frames": 27
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "approach_air_other": 24,
+        "approach_support": 8
+      },
+      "positive_by_phase": {
+        "approach_air_other": 24,
+        "approach_support": 8
+      },
+      "advantage_sum_by_phase": {
+        "approach_air_other": 29.566707611083984,
+        "approach_support": 9.187026977539062
+      },
+      "kl": 0.0013210891047492623,
+      "frame_kl_max": 0.007937252521514893,
+      "loss": 0.22707970440387726
+    },
+    {
+      "trajectory": 14,
+      "source_iteration": 97,
+      "start": 320,
+      "end": 352,
+      "cap": 586,
+      "bootstrap": -0.060711923986673355,
+      "positive_frames": 32,
+      "accepted": true,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.15779805761256666,
+        "conditional_chunk_probability": 0.07056187487834892,
+        "probability": 0.011134526797304423,
+        "priority_mass": 11.697547832708455,
+        "core_frames": 32,
+        "free_flight_frames": 0,
+        "context_frames": 0
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "approach_support": 32
+      },
+      "positive_by_phase": {
+        "approach_support": 32
+      },
+      "advantage_sum_by_phase": {
+        "approach_support": 29.1284122467041
+      },
+      "kl": 0.004861343652009964,
+      "frame_kl_max": 0.03260844945907593,
+      "loss": 0.26267218589782715
+    },
+    {
+      "trajectory": 16,
+      "source_iteration": 74,
+      "start": 64,
+      "end": 90,
+      "cap": 90,
+      "bootstrap": 0.29250746965408325,
+      "positive_frames": 0,
+      "accepted": false,
+      "sampling_branch": "quality_dynamics",
+      "sampling_weight": {
+        "trajectory_probability": 0.010336849406969432,
+        "conditional_chunk_probability": 0.21342235730450643,
+        "probability": 0.0022061147675371054,
+        "priority_mass": 4.91190998850871,
+        "core_frames": 19,
+        "free_flight_frames": 0,
+        "context_frames": 7
+      },
+      "selected_phase": null,
+      "phase_counts": {
+        "approach_air_other": 2,
+        "approach_support": 24
+      },
+      "positive_by_phase": {},
+      "advantage_sum_by_phase": {
+        "approach_air_other": 0.0,
+        "approach_support": 0.0
+      }
+    }
+  ],
+  "sampling_mode": "quality_dynamics_v3",
+  "phase_rules": {
+    "version": "tree_motion_proxy_v1",
+    "tree_x_min": -33.0,
+    "tree_x_max": -27.0,
+    "elevated_tip_y": 0.0,
+    "upward_speed": 0.5,
+    "minimum_flight_steps": 8,
+    "minimum_flight_rise_m": 0.25,
+    "preparation_steps": 12,
+    "hold_steps": 120
+  },
+  "phase_branch_probability": 0.0,
+  "weighting": {
+    "version": "quality_dynamics_v3",
+    "trajectory_uniform_fraction": 0.1,
+    "distance_rank_temperature_fraction": 0.25,
+    "chunk_uniform_fraction": 0.1,
+    "no_dynamics_fallback": "uniform_chunks_in_selected_trajectory",
+    "dynamics_spec": {
+      "version": "com_contact_dynamics_v1",
+      "body_names": [
+        "Player",
+        "Hub",
+        "Slider",
+        "Handle",
+        "PoleMiddle",
+        "Tip"
+      ],
+      "velocity_indices": [
+        2,
+        7,
+        12,
+        17,
+        21,
+        25
+      ],
+      "masses": [
+        52.0,
+        10.0,
+        7.0,
+        3.0,
+        3.0,
+        4.0
+      ],
+      "linear_drag": [
+        0.2,
+        0.2,
+        0.2,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "gravity_xy": [
+        0.0,
+        -30.0
+      ],
+      "minimum_acceleration_m_s2": 5.0,
+      "saturation_acceleration_m_s2": 150.0,
+      "passive_impact_speed_retention": 0.5,
+      "preparation_steps": 12,
+      "response_steps": 6,
+      "provenance": "native_dynamics_validation_20261002 bodyConfig; gravity checked against archived COM free flight"
+    },
+    "step_seconds": 0.008333333333333333,
+    "trajectory_probabilities": {
+      "0": 0.011518542039967872,
+      "1": 0.013013715105514866,
+      "2": 0.014905528960920488,
+      "3": 0.017299204814220683,
+      "4": 0.02032787704552958,
+      "5": 0.02415999803720641,
+      "6": 0.029008707363703496,
+      "7": 0.03514368644811193,
+      "8": 0.05272786471829719,
+      "9": 0.0651550821560398,
+      "10": 0.08087900246640128,
+      "11": 0.10077417780756032,
+      "12": 0.12594716228234373,
+      "13": 0.1980983857025098,
+      "14": 0.15779805761256666,
+      "15": 0.04290615803213656,
+      "16": 0.010336849406969432
+    }
+  }
+}
