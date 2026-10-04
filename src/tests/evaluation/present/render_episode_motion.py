@@ -69,7 +69,8 @@ def corridor_score_marks(states: np.ndarray, cfg: TrainConfig, route: ReferenceC
 
 
 def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: ReferenceCorridor,
-                   rank: int | None = None, mark_prune: bool = False) -> dict:
+                   rank: int | None = None, mark_prune: bool = False,
+                   mark_cap: bool = False) -> dict:
     output.mkdir(parents=True, exist_ok=True)
     data = json.loads(episode.read_text(encoding="utf-8"))
     manifest = json.loads((episode.parent/"manifest.json").read_text(encoding="utf-8"))
@@ -80,9 +81,9 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
         raise ValueError(f"Invalid raw physical-state trajectory: {episode}")
     phys = physical_states(states)
     trail = path_xy(states)
-    marks = corridor_score_marks(states, cfg, route) if mark_prune else None
+    marks = corridor_score_marks(states, cfg, route) if mark_prune or mark_cap else None
     peak = None if marks is None else marks["credited_state_index"]
-    cut = None if marks is None else marks["prune_state_index"]
+    cut = marks["prune_state_index"] if mark_prune else None
     bounds = np.concatenate([trail, phys[:, [0, 1]], phys[:, [23, 24]]])
     low, high = bounds.min(axis=0)-1.6, bounds.max(axis=0)+1.6
     fig, ax = plt.subplots(figsize=(9.6, 6), facecolor="#faf9f6")
@@ -107,9 +108,11 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
         caption += "蓝线是 TransformPoint(b) 锅心轨迹。"
     else:
         caption += "蓝线是 Player 原点轨迹。"
-    if peak is not None or cut is not None:
+    if peak is not None:
         star = "金点为确认终点" if progress_mode_of(cfg) == PROGRESS_MODE_V2 else "金点为 credited 最高分（封顶）"
-        caption += f"{star}，红点为裁剪点，红线为其后被剪掉的段。"
+        caption += f"{star}。"
+    if cut is not None:
+        caption += "红点为裁剪点，红线为其后被剪掉的段。"
     fig.text(.5, .025, caption, ha="center", fontproperties=font, fontsize=9, color="#555555")
     for poly in terrain:
         if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):
@@ -208,6 +211,7 @@ def main():
     parser.add_argument("--ranking", type=Path, help="评估排名 JSON；与 --top 一起渲染前若干条")
     parser.add_argument("--top", type=int, default=10)
     parser.add_argument("--mark-prune", action="store_true", help="按走廊 credited 封顶口径标出裁剪点")
+    parser.add_argument("--mark-cap", action="store_true", help="标出最远确认点，保留完整轨迹显示")
     args = parser.parse_args()
     if args.ranking is None and args.episode is None:
         parser.error("需要 --episode 或 --ranking")
@@ -227,7 +231,7 @@ def main():
         out = args.output if args.ranking is None else args.output / f"rank{rank:02d}"
         summary.append(render_episode(episode, out, terrain, bodies, tip, route,
                                        rank=None if args.ranking is None else rank,
-                                       mark_prune=args.mark_prune))
+                                       mark_prune=args.mark_prune, mark_cap=args.mark_cap))
     if args.ranking is not None:
         (args.output/"index.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 

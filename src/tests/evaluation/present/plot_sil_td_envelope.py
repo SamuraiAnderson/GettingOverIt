@@ -16,6 +16,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
+import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "src"))
@@ -165,11 +166,84 @@ def write_report(catalogs: list[dict], output: Path) -> Path:
     return path
 
 
+def trajectory_comparison(trajs: list[Trajectory], index: int) -> dict:
+    """Compare stored confirmed D_t, not the straight lines between terminal points."""
+    if not 0 <= index < len(trajs):
+        raise ValueError("Trajectory index is outside the pool")
+    curves = []
+    for traj in trajs:
+        curve = np.asarray(traj.corridor_confirmed_progress, dtype=np.float64)
+        if (traj.progress_mode != "confirmed_endpoint_v2" or curve.ndim != 1
+                or len(curve) != len(traj.actions) + 1 or not np.isfinite(curve).all()
+                or np.any(np.diff(curve) < -1e-8)):
+            raise ValueError("Comparison requires full, monotone confirmed D_t histories")
+        curves.append(curve)
+    selected = curves[index]
+    horizon = len(selected)
+    # A shorter episode contributes its achieved progress at later time budgets.
+    aligned = np.stack([np.pad(c, (0, max(0, horizon - len(c))), mode="edge")[:horizon]
+                        for c in curves])
+    envelope = aligned.max(axis=0)
+    others = np.delete(aligned, index, axis=0)
+    other_envelope = others.max(axis=0) if len(others) else np.zeros(horizon)
+    leading = (selected > 0) & (selected >= envelope - 1e-8)
+    starts = np.flatnonzero(leading & ~np.r_[False, leading[:-1]])
+    ends = np.flatnonzero(leading & ~np.r_[leading[1:], False])
+    point = td_point(trajs[index])
+    if point is None:
+        raise ValueError("Selected trajectory has no valid confirmed endpoint")
+    return {"trajectory_index": index, "source_iteration": int(trajs[index].iteration),
+            "cap_t": int(point[0]), "cap_D": float(point[1]),
+            "t": list(range(horizon)), "D_t": selected.tolist(),
+            "prefix_envelope": envelope.tolist(), "other_prefix_envelope": other_envelope.tolist(),
+            "on_prefix_envelope_intervals": [[int(a), int(b)] for a, b in zip(starts, ends)]}
+
+
+def plot_trajectory_comparison(trajs: list[Trajectory], index: int, catalog: dict,
+                              output: Path) -> Path:
+    data = trajectory_comparison(trajs, index)
+    t, distance = np.asarray(data["t"]), np.asarray(data["D_t"])
+    front = catalog["envelope"]
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.3), facecolor="#faf9f6",
+                             gridspec_kw={"width_ratios": [1.5, 1]})
+    zoom = min(t[-1], max(data["cap_t"], max(row["t"] for row in front)) * 1.08)
+    for ax, limit, title in zip(axes, [zoom, t[-1]], ["确认进度增长阶段", "完整轨迹（含封顶后）"]):
+        ax.set_facecolor("#faf9f6")
+        ax.plot(t, data["prefix_envelope"], color="#7a868c", linewidth=3.5,
+                label="池内逐帧上包络 max D_i(t)")
+        ax.plot([r["t"] for r in front], [r["D"] for r in front], "o--",
+                color="#c0392b", linewidth=1.1, markersize=4,
+                label="封顶点前沿（虚线仅连接点）")
+        ax.plot(t, distance, color="#32789d", linewidth=1.8,
+                label=f"所选轨迹 D(t)（第 {data['source_iteration']} 轮）")
+        ax.scatter([data["cap_t"]], [data["cap_D"]], s=90, marker="*", color="#32789d", zorder=5)
+        ax.set_xlim(0, max(1, limit))
+        ax.set_ylim(bottom=0)
+        ax.set_title(title, fontproperties=FONT, fontsize=12)
+        ax.set_xlabel("时间 t（环境步；120 步 = 1 秒）", fontproperties=FONT)
+        ax.set_ylabel("累计确认进度 D(t)（米）", fontproperties=FONT)
+        ax.grid(True, color="#d8d2c8", linewidth=.6)
+    axes[0].legend(prop=FONT, loc="upper left", fontsize=9)
+    fig.suptitle(f"轨迹 (D(t), t) 与精英池包络 · 第 {data['source_iteration']} 轮 · "
+                 f"D={data['cap_D']:.2f} m，t={data['cap_t']}", fontproperties=FONT, fontsize=14)
+    fig.text(.5, .025, f"来源：{Path(catalog['source']).name}。D(t) 是单调的确认进度记录，回落不会令其下降；"
+             "灰线由所有已保存轨迹逐帧取最大值。", ha="center", fontproperties=FONT, fontsize=9)
+    fig.tight_layout(rect=(0, .06, 1, .94))
+    path = output / "trajectory_vs_envelope.png"
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+    data["source_pool"] = catalog["source"]
+    (output / "trajectory_vs_envelope.json").write_text(
+        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pool", type=Path, help="单个 elites_iter_*.npz")
     parser.add_argument("--elites-dir", type=Path, help="含 elites_iter_*.npz 的目录")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--trajectory-index", type=int, help="叠加最后一个池快照中指定轨迹的完整 D_t 曲线")
     args = parser.parse_args(argv)
     if args.pool is None and args.elites_dir is None:
         parser.error("需要 --pool 或 --elites-dir")
@@ -192,6 +266,9 @@ def main(argv=None):
     snapshot = plot_snapshot(catalogs[-1], args.output)
     history = plot_history(catalogs, args.output)
     report = write_report(catalogs, args.output)
+    if args.trajectory_index is not None:
+        print(plot_trajectory_comparison(load_trajectories(pools[-1]), args.trajectory_index,
+                                         catalogs[-1], args.output), flush=True)
     print(snapshot, flush=True)
     if history is not None:
         print(history, flush=True)

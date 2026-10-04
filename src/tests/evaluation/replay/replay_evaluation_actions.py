@@ -143,18 +143,165 @@ def render_comparison(output, cfg, original, replay, dt):
     plt.close(fig)
 
 
+def replay_elite(args, output):
+    """Broadcast the farthest complete elite's executed actions to native players."""
+    from env import make_goi_env
+    from start.multi_player import launch_players
+    from training.dataset import Trajectory
+    from training.elite_archive import EliteTrajectoryArchive
+    from training.reference_corridor import trajectory_endpoint
+    from training.rollout import _warmup_and_snapshot
+    from training.run_logging import load_elites
+
+    manifest = read(args.elite_manifest)
+    pool = Path(manifest["source_pool"])
+    with np.load(pool) as archive:
+        metadata = json.loads(str(archive["archive_metadata_json"]))
+    if (metadata.get("schema") != "full_episode_elites_v1"
+            or metadata.get("origin") != "episode_reset" or metadata.get("truncation") != "none"):
+        raise ValueError("Expected a complete reset-to-end elite archive")
+    trajectories = [Trajectory(**row) for row in load_elites(pool)]
+    if not trajectories or any(not EliteTrajectoryArchive._complete(t) for t in trajectories):
+        raise ValueError("Incomplete elite trajectories")
+    candidates = [(i, trajectory_endpoint(t)) for i, t in enumerate(trajectories)]
+    candidates = [(i, p) for i, p in candidates if p.valid and p.t_cap is not None]
+    index, endpoint = min(candidates, key=lambda item: (-item[1].distance, item[1].t_cap, item[0]))
+    trajectory = trajectories[index]
+    commands = np.asarray(trajectory.actions, dtype=np.float32)
+    original = np.asarray(trajectory.raw_states, dtype=np.float32)
+    if not np.isfinite(commands).all() or np.any(np.abs(commands) > 100.001):
+        raise ValueError("Invalid archived actions")
+    cfg = TrainConfig(**manifest["config"])
+    project = read(ROOT / "src/config/project.json")
+    cfg.game_root = str(Path(project["game"]["executable_path"]).parent)
+    cfg.port = project["tcp_port"]
+    cfg.num_agents = args.num_agents
+    if cfg.random_deploy:
+        raise ValueError("Elite replay requires the canonical spawn")
+    route = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg)
+    if route.metadata["sha256"] != manifest["reference"]["sha256"]:
+        raise ValueError("Archived reference file changed")
+    selected = {"pool": str(pool), "pool_sha256": hashlib.sha256(pool.read_bytes()).hexdigest(),
+                "pool_index": index, "source_iteration": int(trajectory.iteration),
+                "distance_m": endpoint.distance, "cap_step": endpoint.t_cap,
+                "steps": len(commands), "players": cfg.num_agents,
+                "criterion": "maximum confirmed route distance; earliest cap breaks ties",
+                "broadcast": "identical archived actions to every player"}
+    write(output / "selected.json", selected)
+    if args.select_only:
+        print(json.dumps(selected), flush=True)
+        return
+    if any(p.info["name"] == "GettingOverIt.exe" for p in psutil.process_iter(["name"])):
+        raise RuntimeError("An existing game is running; refusing to take it over")
+    runtime = Path(cfg.game_root) / "GoiData/runtime_config.json"
+    before = runtime.read_bytes() if runtime.exists() else None
+    if before is not None:
+        (output / "runtime_original.json").write_bytes(before)
+    worker = RolloutWorker(cfg)
+    replay = []
+    status = {"status": "starting", "started_at": datetime.now().astimezone().isoformat(),
+              "selected": selected, "config": asdict(cfg), "fps": args.fps,
+              "desktop": "current" if args.current_desktop else "GoiRuntime"}
+    write(output / "result.json", status)
+    try:
+        options = {"desktop": None} if args.current_desktop else {}
+        worker._game_process = launch_players(cfg.num_agents, game_root=cfg.game_root,
+                                               port=cfg.port, **options)
+        worker.env = make_goi_env(cfg)
+        worker.env.connect()
+        worker.env.reset()
+        _warmup_and_snapshot(worker.env, cfg.num_agents, cfg.warmup_steps)
+        worker.env._sock.settimeout(15.)
+        # Preserve training's wireframe renderer and free camera for live viewing.
+        worker.env.set_camera_free(True)
+        worker.env.toggle_collider_visual(True)
+        # Diagnostics are opt-in: enable capture before the canonical reset.
+        worker.env.observation_diagnostics()
+        obs = worker._reset_and_deploy()
+        packet = worker.env.observation_diagnostics()
+        dt = packet["fixedDeltaTime"] * packet["stepFrames"]
+        if not packet["aligned"] or not np.isclose(dt, cfg.feature_step_seconds, atol=1e-6):
+            raise ValueError(f"Game physical step does not match archive: {packet}")
+        physical = [i for i in range(original.shape[1]) if i != 28]
+        if obs.shape != (cfg.num_agents, original.shape[1]):
+            raise ValueError("Replay state schema differs from archive")
+        initial_error = float(np.max(np.abs(obs[:, physical] - original[0, physical])))
+        if initial_error > 1e-5:
+            raise ValueError(f"Canonical spawn mismatch: {initial_error}")
+        status.update(status="ready", game_pid=worker._game_process.pid,
+                      initial_physical_max_error=initial_error, physical_step_seconds=dt)
+        write(output / "result.json", status)
+        if args.start_signal:
+            deadline = time.monotonic() + 300
+            while not args.start_signal.exists():
+                if worker._game_process.poll() is not None:
+                    raise RuntimeError("Game exited before replay")
+                if time.monotonic() > deadline:
+                    raise TimeoutError("Replay start signal not received within 300 seconds")
+                time.sleep(.1)
+        logging.info("Native elite replay starts in 3 seconds: %s", selected)
+        time.sleep(3)
+        status.update(status="replaying")
+        write(output / "result.json", status)
+        replay.append(obs.copy())
+        for command in commands:
+            started = time.perf_counter()
+            obs, _ = worker.env.step(np.tile(command, (cfg.num_agents, 1)))
+            worker.env.observation_diagnostics()
+            replay.append(obs.copy())
+            time.sleep(max(0., 1 / args.fps - (time.perf_counter() - started)))
+        replay_array = np.asarray(replay, dtype=np.float32)
+        np.save(output / "replay_states.npy", replay_array)
+        np.save(output / "replayed_actions.npy", commands)
+        errors = np.abs(replay_array[:, :, physical] - original[:, None, physical])
+        body_errors = np.linalg.norm(replay_array[:, :, :2] - original[:, None, :2], axis=-1)
+        status.update(status="completed", actions_replayed=len(commands),
+                      maximum_physical_state_error=float(errors.max()),
+                      maximum_body_error_m=float(body_errors.max()),
+                      maximum_player_spread=float(np.max(np.abs(
+                          replay_array[:, :, physical] - replay_array[:, :1, physical]))),
+                      game_left_open=bool(args.keep_game_open))
+    except BaseException as exc:
+        status.update(status="failed", error=repr(exc))
+        if replay:
+            np.save(output / "partial_replay_states.npy", np.asarray(replay))
+        raise
+    finally:
+        if status["status"] == "completed" and args.keep_game_open:
+            worker.env.close()
+            worker.env = None
+            worker._game_process = None
+        else:
+            worker.teardown()
+        if before is not None:
+            runtime.write_bytes(before)
+        elif runtime.exists():
+            runtime.unlink()
+        status["finished_at"] = datetime.now().astimezone().isoformat()
+        write(output / "result.json", status)
+    print(json.dumps({k: v for k, v in status.items() if k != "config"}), flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign", type=Path, default=ROOT/"runs/corridor_formal_20260922")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--select-only", action="store_true")
     parser.add_argument("--fps", type=float, default=30., help="Maximum wall-clock STEP rate for selected episode")
+    parser.add_argument("--elite-manifest", type=Path, help="Saved elite export manifest; replay the farthest full-pool elite")
+    parser.add_argument("--num-agents", type=int, default=8, help="Player count for elite action broadcast")
+    parser.add_argument("--current-desktop", action="store_true", help="Launch elite replay on the visible desktop")
+    parser.add_argument("--keep-game-open", action="store_true", help="Leave successful elite replay paused at its last state")
+    parser.add_argument("--start-signal", type=Path, help="Wait up to 300 seconds for this file before elite replay")
     args = parser.parse_args()
     if not 1 <= args.fps <= 120:
         parser.error("fps must be in [1, 120]")
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    if args.elite_manifest:
+        replay_elite(args, output)
+        return
     ranking = select_episode(args.campaign.resolve())
     selected = ranking[0]
     write(output/"ranking.json", {"criterion": "credited corridor progress descending; terminal projection breaks ties; no dwell/height test", "episodes": ranking})
