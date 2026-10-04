@@ -22,11 +22,11 @@ def duration_gae(rewards, values, dones, durations, bootstrap, gamma, lam):
     return advantage, advantage + np.asarray(values, np.float32)
 
 
-def evaluated_batches(model, buffer, batch_size, normalize_advantages=True):
+def evaluated_batches(model, buffer, batch_size, normalize_advantages=True, *, rng=None):
     if isinstance(buffer, DecisionRolloutBuffer):
-        yield from buffer.evaluated_batches(model, batch_size, normalize_advantages)
+        yield from buffer.evaluated_batches(model, batch_size, normalize_advantages, rng=rng)
     else:
-        for batch in buffer.get_batches(batch_size, normalize_advantages):
+        for batch in buffer.get_batches(batch_size, normalize_advantages, rng=rng):
             yield (batch, *model.evaluate_actions(batch.dynamics, batch.patches, batch.act_history,
                 batch.actions, valid_mask=batch.valid_mask, noise_prev=batch.noise_prev,
                 noise_phi=buffer.policy_context["noise_phi"], raw_actions=batch.raw_actions,
@@ -106,7 +106,8 @@ class DecisionRolloutBuffer:
             return {}
         return {name: self._tensor(episode[name][start:end])[None] for name in _SPARSE_NAMES}
 
-    def evaluated_batches(self, model, batch_size, normalize_advantages=True):
+    def evaluated_batches(self, model, batch_size, normalize_advantages=True, *, rng=None):
+        sampler = np.random if rng is None else rng
         self.device = next(model.parameters()).device
         phi = self.policy_context["noise_phi"]
         advantages = [e["advantages"].copy() for e in self.episodes]
@@ -118,7 +119,7 @@ class DecisionRolloutBuffer:
             chunks = [(e, start, min(start + size, len(episode["decision_steps"])))
                       for e, episode in enumerate(self.episodes)
                       for start in range(0, len(episode["decision_steps"]), size)]
-            for chunk in np.random.permutation(len(chunks)):
+            for chunk in sampler.permutation(len(chunks)):
                 e, first, last = chunks[chunk]
                 episode = self.episodes[e]
                 steps = episode["decision_steps"][first:last]
@@ -142,7 +143,7 @@ class DecisionRolloutBuffer:
                     features, batch.raw_actions, batch.noise_prev, phi, noise_scale=batch.noise_scale))
         else:
             rows = [(e, i) for e, episode in enumerate(self.episodes) for i in range(len(episode["decision_steps"]))]
-            order = np.random.permutation(len(rows))
+            order = sampler.permutation(len(rows))
             ctx = model.config.context_len
             for begin in range(0, len(rows), batch_size):
                 selected = [rows[i] for i in order[begin:begin+batch_size]]

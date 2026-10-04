@@ -341,6 +341,16 @@ class TrainConfig:
     # 轨迹（如"过树好开局"）无法被复用/记住。修复：持久保存自身历史最优轨迹，每轮 PPO 更新后额外
     # 做几步 BC 监督（MSE-on-mean），把 actor 均值锚向精英动作。只作用 mean 不碰 log_std → 不压制探索。
     sil_enabled: bool = True
+    # Stateful SIL uses complete reset-to-end archives, independently of legacy windows.
+    gru_sil_enabled: bool = False
+    gru_sil_max_updates: int = 4
+    gru_sil_budget_ratio: float = 0.25
+    gru_sil_loss_coef: float = 0.1
+    gru_sil_value_coef: float = 0.05
+    gru_sil_target_kl: float = 0.01
+    gru_sil_max_frame_kl: float = 0.1
+    gru_sil_seed: int = 0
+    training_seed: int = 0  # Initial stream seed; resume restores RNG positions separately.
     sil_start_iter: int = 5             # 对齐 value_warmup_iters：critic 预热完再开 SIL
     sil_traj_cap: int = 20             # 精英池容量。map_elites 仍可按分数兜底；td_pareto 不按 score 截断
     sil_keep_ratio: float = 0.3        # 每轮新轨迹入池的 top-K 比例
@@ -416,6 +426,9 @@ class TrainConfig:
     tcp_protocol: str = "anchor35"
 
     # ── 训练控制 ──
+    # Archive complete episodes independently of SIL; never feeds PPO updates.
+    elite_archive_enabled: bool = False
+    elite_archive_capacity: int = 20
     max_iterations: int = 100
     save_interval: int = 5
     log_dir: str = "logs"

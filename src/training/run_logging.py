@@ -146,16 +146,19 @@ def _jsonable(value: Any) -> Any:
     return repr(value)
 
 
-def save_elites(path: Path, trajectories: Sequence[Any], fingerprint: dict[str, Any] | None = None) -> int:
+def save_elites(path: Path, trajectories: Sequence[Any], fingerprint: dict[str, Any] | None = None,
+                *, archive_metadata: dict[str, Any] | None = None) -> int:
     """把 SIL 精英池落盘成单个 npz。
 
     每条轨迹按 `t{i}_states / t{i}_actions / t{i}_contact` 存；分数与来源迭代存成
     并列数组。压缩后一池（cap=20 × 500 步）约 1~3 MB，相对 13.5MB 的 checkpoint
     可以忽略，却是"策略当时到底走出了什么行为"的唯一记录。
     """
-    if not trajectories:
+    if not trajectories and archive_metadata is None:
         return 0
     arrays: dict[str, np.ndarray] = {}
+    if archive_metadata is not None:
+        arrays["archive_metadata_json"] = np.asarray(json.dumps(archive_metadata, ensure_ascii=False))
     scores, iters = [], []
     for i, traj in enumerate(trajectories):
         arrays[f"t{i}_states"] = np.asarray(traj.raw_states, dtype=np.float32)
@@ -184,13 +187,22 @@ def save_elites(path: Path, trajectories: Sequence[Any], fingerprint: dict[str, 
             arrays[f"t{i}_terminated"] = np.asarray(terminated, dtype=bool)
         if getattr(traj, "progress_mode", None):
             arrays[f"t{i}_progress_mode"] = np.asarray(traj.progress_mode)
+        arrays[f"t{i}_trajectory_valid"] = np.asarray(getattr(traj, "trajectory_valid", True))
+        arrays[f"t{i}_termination_known"] = np.asarray(
+            getattr(traj, "termination_known", True) and terminated is not None)
+        if getattr(traj, "archive_role", None):
+            arrays[f"t{i}_archive_role"] = np.asarray(traj.archive_role)
         scores.append(float(getattr(traj, "score", 0.0)))
         iters.append(int(getattr(traj, "iteration", 0)))
-    arrays["scores"] = np.asarray(scores, dtype=np.float32)
+    # Full recurrent archives must preserve tie-break values across resume.
+    arrays["scores"] = np.asarray(scores, dtype=np.float64 if archive_metadata is not None else np.float32)
     arrays["iterations"] = np.asarray(iters, dtype=np.int32)
     arrays["n_trajectories"] = np.asarray(len(trajectories), dtype=np.int32)
     path.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(path, **arrays)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("wb") as stream:
+        np.savez_compressed(stream, **arrays)
+    temporary.replace(path)
     if fingerprint is not None:
         from .reference_fingerprint import write_fingerprint_sidecar
         write_fingerprint_sidecar(path, fingerprint)
@@ -220,7 +232,12 @@ def load_elites(path: str | Path) -> list[dict[str, Any]]:
                   "corridor_confirmed_progress": data[f"t{i}_confirmed_progress"] if f"t{i}_confirmed_progress" in data else None,
                   "step_rewards": data[f"t{i}_step_rewards"] if f"t{i}_step_rewards" in data else None,
                   "terminated": data[f"t{i}_terminated"] if f"t{i}_terminated" in data else None,
-                  "termination_known": f"t{i}_terminated" in data,
+                  "termination_known": (bool(data[f"t{i}_termination_known"])
+                                        if f"t{i}_termination_known" in data else f"t{i}_terminated" in data),
+                  "trajectory_valid": (bool(data[f"t{i}_trajectory_valid"])
+                                       if f"t{i}_trajectory_valid" in data else True),
+                  "archive_role": (str(data[f"t{i}_archive_role"])
+                                   if f"t{i}_archive_role" in data else None),
                   "progress_mode": (str(np.asarray(data[f"t{i}_progress_mode"]).reshape(-1)[0])
                                     if f"t{i}_progress_mode" in data else None),
             })

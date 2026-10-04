@@ -225,11 +225,12 @@ class PPORolloutBuffer:
         self,
         batch_size: int,
         normalize_advantages: bool = True,
+        *, rng=None,
     ) -> Generator[PPOBatch, None, None]:
         """随机打乱后按 batch_size 分割，yield PPOBatch。"""
         assert self._advantages is not None, "先调用 compute_gae()"
         n = self.size
-        indices = np.random.permutation(n)
+        indices = (np.random if rng is None else rng).permutation(n)
 
         actions_arr = np.array(self._actions)
         log_probs_arr = np.array(self._log_probs, dtype=np.float32)

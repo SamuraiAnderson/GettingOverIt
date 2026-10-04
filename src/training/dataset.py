@@ -859,6 +859,40 @@ class TrajectoryDataset(Dataset):
     def __len__(self) -> int:
         return len(self._index)
 
+    def encode_sequence(self, traj: Trajectory) -> dict[str, np.ndarray]:
+        """Reset-to-end inputs including bootstrap state; no padding or hidden states.
+
+        Action at input t is the executed action t-1 (zero at reset), exactly as
+        in collect_decisions. Only raw, weight-independent inputs may be cached.
+        """
+        from .policy_features import feature_layout
+        if feature_layout(self.config)[1] or self.config.action_segment_steps != 1:
+            raise ValueError("Archive sequence encoding supports base features and frame actions only")
+        if len(traj.raw_states) != len(traj.actions) + 1 or traj.contact is None:
+            raise ValueError("Sequence needs complete states, actions and contact context")
+        if traj.guidance_index is not None and self.reference_maps is None:
+            raise ValueError("Corridor sequence requires reference_maps")
+        gids = traj.guidance_index if traj.guidance_index is not None else [None] * len(traj.raw_states)
+        result = {
+            "dynamics": build_dynamics(traj.raw_states, traj.contact),
+            "patches": np.stack([self._build_patch(s, g) for s, g in zip(traj.raw_states, gids)]),
+            "act_history": np.concatenate([np.zeros((1, 2), np.float32), traj.actions]).astype(np.float32),
+        }
+        if self.config.sparse_geometry:
+            sparse = [self._build_sparse(s) for s in traj.raw_states]
+            for k, name in enumerate(("contour_tokens", "contour_mask", "relation_tokens", "relation_mask")):
+                result[name] = np.stack([row[k] for row in sparse])
+        # The collector stores a blank terminal spatial frame, never a bootstrap
+        # observation. Match that convention; full raw terminal state stays archived.
+        if traj.terminated is not None and len(traj.terminated) and traj.terminated[-1]:
+            result["patches"][-1] = 0
+            if self.config.sparse_geometry:
+                from .sparse_geometry import empty_sparse_frame
+                for name, value in zip(("contour_tokens", "contour_mask", "relation_tokens", "relation_mask"),
+                                       empty_sparse_frame(self.config)):
+                    result[name][-1] = value
+        return result
+
     def encode_window(self, traj: Trajectory, tau: int, *, need_action: bool = True):
         ctx = self.config.context_len
         raw = traj.raw_states       # (T+1, 33)

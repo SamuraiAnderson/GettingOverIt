@@ -181,7 +181,7 @@ class PPOContractTests(unittest.TestCase):
         from training.local_evaluation import score_corridor_episode, summarize
         from training.dataset import Trajectory
         from training.reference_corridor import CorridorSegment, ReferenceCorridor
-        cfg = config()
+        cfg = config(reference_anchor_id="player_origin")  # This fixture deliberately supplies legacy33.
         route = ReferenceCorridor([CorridorSegment(np.array([[0., 5.], [20., 5.]]), np.ones(1))], cfg)
         states = np.zeros((8, 33), dtype=np.float32)
         states[:, 0] = [0, 1, 2, 3, 4, 5, 5, 5]

@@ -139,6 +139,36 @@ class PPOTrainer:
         """暂存 optimizer state_dict，在首次 update 创建 optimizer 后应用。"""
         self._pending_optim_state = state_dict
 
+    def _restore_optimizer(self, optimizer, state):
+        optimizer.load_state_dict(state)
+        # CLI overrides are already resolved into config. Adam's saved param
+        # groups must not silently undo --lr after the configuration is logged.
+        for group in optimizer.param_groups:
+            group["lr"] = self.config.lr
+            group["weight_decay"] = self.config.weight_decay
+
+    def checkpoint_state(self):
+        return {"version": 1, "global_step": self._global_step,
+                "kl_target": self._kl_adapter.target,
+                "grad_norms": list(self._grad_norm_adapter._norms),
+                "frozen_grad_norm": self._grad_norm_adapter._frozen_norm,
+                "critic_optimizer": (self.critic_optimizer.state_dict()
+                                     if self.critic_optimizer is not None else None)}
+
+    def restore_checkpoint_state(self, state, model):
+        if state.get("version") != 1:
+            raise ValueError("Unsupported PPO trainer checkpoint")
+        self._global_step = int(state["global_step"])
+        if self.config.ppo_target_kl_adaptive:
+            self._kl_adapter.target = state["kl_target"]
+        if self.config.max_grad_norm_adaptive:
+            self._grad_norm_adapter._norms = list(state["grad_norms"])
+            self._grad_norm_adapter._frozen_norm = state["frozen_grad_norm"]
+        if state.get("critic_optimizer") is not None:
+            self.critic_optimizer = AdamW(model.critic_head.parameters(), lr=self.config.lr,
+                                          weight_decay=self.config.weight_decay)
+            self._restore_optimizer(self.critic_optimizer, state["critic_optimizer"])
+
     def update_critic_only(
         self,
         model: ActorCritic,
@@ -229,7 +259,7 @@ class PPOTrainer:
                 weight_decay=self.config.weight_decay,
             )
             if self._pending_optim_state is not None:
-                self.optimizer.load_state_dict(self._pending_optim_state)
+                self._restore_optimizer(self.optimizer, self._pending_optim_state)
                 logger.info("已恢复 optimizer state")
                 self._pending_optim_state = None
         _reset_first_moment(self.optimizer)
@@ -614,7 +644,7 @@ class PPOTrainer:
                 weight_decay=cfg.weight_decay,
             )
             if self._pending_optim_state is not None:
-                self.optimizer.load_state_dict(self._pending_optim_state)
+                self._restore_optimizer(self.optimizer, self._pending_optim_state)
                 self._pending_optim_state = None
 
         # 预算约束（防线一）：SIL minibatch 数 ≤ sil_budget_ratio × 当轮 PPO 实际

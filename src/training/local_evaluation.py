@@ -310,7 +310,8 @@ def main():
     parser.add_argument("--jitter", type=float, default=0., help="Spawn position jitter in meters; default exact spawn")
     parser.add_argument("--goal-progress", type=float, default=5.)
     parser.add_argument("--dwell", type=int, default=10)
-    parser.add_argument("--noise-phi", type=float, default=.85)
+    parser.add_argument("--noise-phi", type=float, default=None,
+                        help="Override exploration OU coefficient; default inherits checkpoint (0 for iid)")
     parser.add_argument("--inference-batch-size", type=int, default=0)
     parser.add_argument("--geometry-profile", choices=("native-pose-v1", "legacy"), default=None)
     parser.add_argument("--native-diagnostics", action="store_true")
@@ -324,7 +325,7 @@ def main():
     args.modes = [mode.strip() for mode in args.modes.split(",") if mode.strip()]
     if (args.steps < 1 or args.rounds < 1 or args.num_agents < 1 or args.jitter < 0
             or args.train_smoke < 0 or args.goal_progress <= 0 or args.dwell < 1
-            or args.inference_batch_size < 0 or not 0 <= args.noise_phi < 1
+            or args.inference_batch_size < 0 or (args.noise_phi is not None and not 0 <= args.noise_phi < 1)
             or not args.modes or any(mode not in ("deterministic", "exploration") for mode in args.modes)):
         raise ValueError("Invalid evaluation lengths, jitter, goal, batch size, noise_phi or modes")
     args.output.mkdir(parents=True, exist_ok=True)
@@ -346,10 +347,12 @@ def main():
     cfg.num_agents = args.num_agents
     if args.game_root is not None:
         cfg.game_root = str(args.game_root.resolve())
-    cfg.random_deploy = cfg.sil_enabled = cfg.explore_boost_enabled = False
+    cfg.random_deploy = cfg.sil_enabled = cfg.gru_sil_enabled = cfg.explore_boost_enabled = False
     reference_path = args.reference_trajectory or cfg.reference_trajectory or (
         ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory_game_world.json")
     cfg.reference_trajectory = str(Path(reference_path).resolve())
+    if args.noise_phi is None:
+        args.noise_phi = cfg.ou_phi if cfg.ou_enabled else 0.0
     cfg.ou_enabled, cfg.ou_phi = args.noise_phi > 0, args.noise_phi
     cfg.ppo_inference_batch_size = args.inference_batch_size
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

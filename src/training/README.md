@@ -18,6 +18,7 @@
 - `experimental_policy.py` — 当前 GRU 主线及表征、动作段候选，通过统一工厂选择网络。
 - `model.py` — 行为克隆用的动作预测网络。
 - `ppo_trainer.py` — 对一批 rollout 做 PPO 更新，并接上 SIL。
+- `gru_sil.py` — 完整前缀重建、正优势连续片段监督、累计 KL 约束及模型/优化器回滚。
 - `trainer.py` — 对示范动作做监督学习微调。
 - `rollout.py` — 在游戏里按物理步采集 PPO 样本。
 - `experimental_rollout.py` — 为表征实验和动作段采集变长决策。
@@ -35,12 +36,14 @@
 - `delayed_exploration.py` — 按玩家档位推迟探索噪声的开启。
 - `policy_features.py` — 组装在线采集和离线重放共用的观测特征。
 - `policy_audit.py` — 用冻结权重重放，检查行为策略的概率是否对得上。
+- `random_state.py` — 在完整迭代边界保存/恢复训练随机流，避免断点续训重新开始探索序列。
 - `sparse_geometry.py` — 构造以玩家为中心的轮廓 token 和表面关系。
 - `contact_features.py` — 用几何近似锤头和锅的地形接触。
 - `geometry_profile.py` — 在加载旧 checkpoint 时保持原来的几何标定，不默默换成新标定。
 - `deploy_sampling.py` — 从可着陆表面抽空投落点，并应用排除区。
 - `state_schema.py` — 规定原始状态每一维的含义；线上宽度和网络输入宽度分开。
 - `sil_archive.py` — 维护 SIL 精英池，可选 MAP-Elites 或 (t, D) Pareto。
+- `elite_archive.py` — 与 SIL 独立的完整回合精英归档；保留 GRU 所需前缀及回落尾段，不参与更新。
 - `run_logging.py` — 把一次实验的指标、元数据和精英池写进 `runs/<tag>/`。
 - `run_log_parser.py` — 从控制台文本还原 `metrics.csv`。
 - `migrate_legacy_runs.py` — 把旧的 checkpoint 和日志目录收成 `runs/<tag>/`。

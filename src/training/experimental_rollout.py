@@ -94,7 +94,8 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
     peaks = {i: float(obs[i, 1]) for i in agents}
     phi = cfg.ou_phi if cfg.ou_enabled and not deterministic else 0.
     buffer = DecisionRolloutBuffer(policy_context(model, phi, deterministic))
-    noises = {i: np.random.randn(model.parameter_dim).astype(np.float32) for i in agents}
+    noises = {i: (np.random.randn(model.parameter_dim).astype(np.float32) if phi
+                  else np.zeros(model.parameter_dim, np.float32)) for i in agents}
     hidden = {i: None for i in agents}
     sparse_names = ("contour_tokens", "contour_mask", "relation_tokens", "relation_mask")
     use_sparse = bool(cfg.sparse_geometry)

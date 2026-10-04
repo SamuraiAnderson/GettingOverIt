@@ -794,7 +794,8 @@ class RolloutWorker:
         for b in agent_buffers.values():
             b.policy_context = policy_context(model, ou_phi, deterministic)
         ou_state: dict[int, np.ndarray] = {
-            i: np.random.randn(self.config.action_dim).astype(np.float32)
+            i: (np.random.randn(self.config.action_dim).astype(np.float32) if ou_phi
+                else np.zeros(self.config.action_dim, np.float32))
             for i in stable_agents
         }
         prev_obs = obs.copy()

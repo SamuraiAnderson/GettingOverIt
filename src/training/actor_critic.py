@@ -85,11 +85,11 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
 
         # ── Actor head ──
         self.actor_mean = nn.Linear(d, config.action_dim)
-        self.actor_log_std = nn.Parameter(torch.zeros(config.action_dim))
+        self.actor_log_std = nn.Parameter(torch.full((config.action_dim,), float(config.ppo_init_log_std)))
         if config.contact_heads_enabled:
             self.actor_mean_contact = nn.Linear(d, config.action_dim)
             self.actor_log_std_contact = nn.Parameter(torch.full(
-                (config.action_dim,), config.contact_log_std_offset,
+                (config.action_dim,), float(config.ppo_init_log_std + config.contact_log_std_offset),
             ))
 
         # 运行时探索 boost：非可学习标量，仅在 forward 里叠加到 log_std（采集+更新一致），

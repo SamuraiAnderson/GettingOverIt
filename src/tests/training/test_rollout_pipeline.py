@@ -97,7 +97,8 @@ class PipelineContractTests(unittest.TestCase):
         cfg, model, _, buffer, _, _ = self.fixture.collect()
         behavior = copy.deepcopy(model)
         with torch.no_grad():
-            model.actor_mean.bias.add_(.02)
+            # Define a small lag relative to the configured exploration std.
+            model.actor_mean.bias.add_(.02 * model.actor_log_std.exp())
         with self.assertRaisesRegex(ValueError, "Frozen behavior-policy replay failed"):
             PPOTrainer(cfg).update(model, buffer)
         metrics = PPOTrainer(cfg).update(model, buffer, behavior_model=behavior)

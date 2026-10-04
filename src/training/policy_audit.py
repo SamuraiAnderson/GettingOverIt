@@ -48,7 +48,9 @@ def policy_replay_metrics(model, buffer, batch_size=64, max_samples=None):
     errors, kls, saturated = [], [], []
     count = 0
     from .decision_buffer import evaluated_batches
-    for batch, lp, _, _ in evaluated_batches(model, buffer, batch_size, normalize_advantages=False):
+    # Diagnostics must neither draw from nor reseed the training shuffle/OU RNG.
+    for batch, lp, _, _ in evaluated_batches(model, buffer, batch_size, normalize_advantages=False,
+                                            rng=np.random.default_rng(0)):
         log_ratio = lp - batch.old_log_probs
         errors.extend(torch.expm1(log_ratio).abs().cpu().tolist())
         kls.extend((torch.expm1(log_ratio) - log_ratio).cpu().tolist())

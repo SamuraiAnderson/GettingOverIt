@@ -20,7 +20,6 @@ import argparse
 import json
 import logging
 import sys
-import random
 import time
 from dataclasses import asdict, fields
 from pathlib import Path
@@ -91,6 +90,7 @@ def save_checkpoint(
     config: TrainConfig | None = None,
     reference_metadata: dict | None = None,
     value_warmup_end: int | None = None,
+    *, trainer=None, deployment_rng=None, loop_state=None,
 ) -> None:
     out_dir = Path(checkpoint_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -105,7 +105,17 @@ def save_checkpoint(
         state["reference_corridor"] = reference_metadata
     if value_warmup_end is not None:
         state["value_warmup_end"] = value_warmup_end
-    torch.save(state, path)
+    from training.random_state import capture_random_state
+    state["rng_state"] = capture_random_state(deployment_rng)
+    if trainer is not None:
+        state["trainer_state"] = trainer.checkpoint_state()
+        if optimizer is None and trainer._pending_optim_state is not None:
+            state["optimizer"] = trainer._pending_optim_state
+    if loop_state is not None:
+        state["loop_state"] = loop_state
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    torch.save(state, temporary)
+    temporary.replace(path)
     logger.info("Checkpoint saved: %s", path)
 
 
@@ -209,7 +219,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PPO 训练 — 策略梯度迭代循环")
     add_experiment_arguments(parser)
     parser.add_argument("--num-agents", type=int, default=None)
-    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Initial seed (fresh default 0); resume retains the saved random streams")
+    parser.add_argument("--reset-rng", action="store_true",
+                        help="On resume, explicitly start new random streams with --seed instead of restoring them")
     parser.add_argument("--geometry-profile", choices=("native-pose-v1", "legacy"), default=None,
                         help="Explicitly select contact/patch pose calibration; resume otherwise preserves checkpoint geometry")
     parser.add_argument("--save-rollout-inputs", action="store_true",
@@ -220,9 +233,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--max-hours", type=float, default=None,
                         help="墙钟小时上限。到点后不再开始新一轮，当前轮会跑完")
     parser.add_argument(
-        "--delayed-exploration", action="store_true",
+        "--delayed-exploration", action=argparse.BooleanOptionalAction, default=None,
         help="8 个 player 按 0/200/400/600 四档延迟探索；延迟期保留 15%% 噪声，再经 50 步线性升到满幅度。"
-             "不随 --resume 继承，每次启动需显式给出",
+             "续训继承 checkpoint；--no-delayed-exploration 显式关闭",
     )
     parser.add_argument("--target-physical-samples", type=int, default=None,
                         help="Fresh run: stop after the first complete iteration reaching this sample count (includes critic warmup)")
@@ -236,6 +249,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--ppo-batch-size", type=int, default=None)
     parser.add_argument("--save-interval", type=int, default=None,
                         help="Checkpoint interval in completed training iterations")
+    parser.add_argument("--elite-archive", action=argparse.BooleanOptionalAction, default=None,
+                        help="Archive complete elite episodes independently of SIL (reference v2 only)")
+    parser.add_argument("--elite-archive-capacity", type=int, default=None)
+    parser.add_argument("--gru-sil", action=argparse.BooleanOptionalAction, default=None,
+                        help="Positive-advantage recurrent SIL from complete elite episodes; enables full archive")
+    parser.add_argument("--elite-archive-resume", type=str, default=None,
+                        help="Restore a full-episode archive; otherwise use the resumed checkpoint's matching snapshot")
+    parser.add_argument("--stop-file", type=str, default=None,
+                        help="Finish the current iteration and save when this file exists")
     parser.add_argument("--torch-threads", type=int, default=None,
                         help="CPU threads used by PyTorch in this process")
     parser.add_argument(
@@ -364,7 +386,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--reference-deviation-weight", type=float, default=None,
                         help="Maximum corridor deviation penalty per physical step")
     args = parser.parse_args(argv)
-    for name in ("ppo_batch_size", "save_interval", "torch_threads"):
+    if args.seed is not None and not 0 <= args.seed < 2**32:
+        parser.error("--seed must be in [0, 2**32)")
+    if args.reset_rng and not args.resume:
+        parser.error("--reset-rng requires --resume")
+    for name in ("ppo_batch_size", "save_interval", "torch_threads", "elite_archive_capacity"):
         value = getattr(args, name)
         if value is not None and value < 1:
             parser.error(f"--{name.replace('_', '-')} must be positive")
@@ -546,7 +572,7 @@ def run_sil_only(
             save_checkpoint(
                 model, ppo_trainer.optimizer, iteration, config.checkpoint_dir,
                 config=config, reference_metadata=reference_meta,
-                value_warmup_end=warmup_end,
+                value_warmup_end=warmup_end, trainer=ppo_trainer,
             )
             if recorder is not None:
                 recorder.save_elites(sil_dataset.trajectories, iteration)
@@ -575,7 +601,7 @@ def main() -> None:
     if args.run_dir and (args.checkpoint_dir or args.log_dir):
         raise SystemExit("--run-dir 与 --checkpoint-dir/--log-dir 互斥，二选一")
 
-    resume_state = torch.load(args.resume, weights_only=False) if args.resume else {}
+    resume_state = torch.load(args.resume, map_location="cpu", weights_only=False) if args.resume else {}
     config = ppo_config(resume_state, legacy_bc=bool(args.resume_bc))
     if args.init_from and (args.resume or args.resume_bc):
         raise ValueError("--init-from is mutually exclusive with --resume / --resume-bc")
@@ -588,9 +614,13 @@ def main() -> None:
         config.contact_heads_enabled = False
     geometry_changed = configure_geometry(config, resume_state or init_state or ({"bc": True} if args.resume_bc else None),
                                            args.geometry_profile)
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
+    if (resume_state.get("rng_state") and not args.reset_rng and args.seed is not None
+            and args.seed != config.training_seed):
+        raise ValueError("Changing --seed on resume requires --reset-rng; otherwise the saved RNG is restored")
+    args.seed = config.training_seed if args.seed is None else args.seed
+    config.training_seed = args.seed
+    from training.random_state import seed_training, restore_random_state
+    seed_training(args.seed)
     if args.recipe:
         if args.resume and "actor_mean_contact.weight" in resume_state["model"]:
             raise ValueError("Fixed single-head baseline requires a single-head checkpoint")
@@ -604,7 +634,8 @@ def main() -> None:
         config.num_agents = args.num_agents
     if args.max_iterations is not None:
         config.max_iterations = args.max_iterations
-    config.delayed_exploration_enabled = bool(args.delayed_exploration)
+    if args.delayed_exploration is not None:
+        config.delayed_exploration_enabled = args.delayed_exploration
     if args.max_hours is not None and args.max_hours <= 0:
         raise ValueError("--max-hours 必须是正数")
     if args.steps_per_rollout is not None:
@@ -647,7 +678,7 @@ def main() -> None:
     if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
         raise ValueError("GRU/representation policies support PPO --init-from/--resume and disable legacy BC/SIL")
     if args.corridor_sil and config.policy_backbone == "gru":
-        raise ValueError("GRU does not support legacy corridor SIL sequence reconstruction; use PPO without --corridor-sil")
+        raise ValueError("GRU does not support legacy corridor SIL; use --gru-sil")
     if args.corridor_sil and config.reference_trajectory:
         # 走廊 SIL 机械（corridor_score / prune_trajectory 走廊分支 / MAP-Elites bd /
         # 种子 corridor 字段重放 / P3.2 优势加权）已就绪；configure_reference 与
@@ -657,13 +688,43 @@ def main() -> None:
         config.sil_advantage_weighting_enabled = True
         logger.info("--corridor-sil: 走廊模式启用 SIL（评分/剪枝/入池/优势加权均走走廊口径）")
     configure_sil_sampling(config, args, resume_state)
+    if args.elite_archive is not None:
+        config.elite_archive_enabled = args.elite_archive
+    if args.elite_archive_capacity is not None:
+        config.elite_archive_capacity = args.elite_archive_capacity
+    if args.gru_sil is not None:
+        config.gru_sil_enabled = args.gru_sil
+    if config.gru_sil_enabled:
+        from training.gru_sil import validate_gru_sil
+        validate_gru_sil(config)
+        if args.elite_archive is False:
+            raise ValueError("--gru-sil requires full elite archival; cannot use --no-elite-archive")
+        if args.sil_seed or args.sil_resume_pool or args.sil_init_pool or args.sil_only:
+            raise ValueError("GRU SIL uses --elite-archive-resume, not legacy SIL pools or SIL-only mode")
+        config.elite_archive_enabled = True
+        if args.reset_rng or not resume_state.get("config", {}).get("gru_sil_enabled", False):
+            config.gru_sil_seed = args.seed
+    if args.elite_archive_resume and not config.elite_archive_enabled:
+        raise ValueError("--elite-archive-resume requires --elite-archive")
+    if config.elite_archive_enabled and (not args.run_dir or not config.reference_trajectory
+                                       or config.reference_progress_mode != "confirmed_endpoint_v2"):
+        raise ValueError("--elite-archive requires --run-dir and confirmed_endpoint_v2 reference scoring")
     if args.dry_run:
         payload = {
             "policy_backbone": config.policy_backbone,
+            "training_seed": config.training_seed,
+            "rng_resume_mode": ("restore" if resume_state.get("rng_state") and not args.reset_rng else "seed"),
+            "delayed_exploration_enabled": config.delayed_exploration_enabled,
             "normalize_action_history": config.normalize_action_history,
             "recurrent_seq_len": config.recurrent_seq_len,
             "random_deploy": config.random_deploy,
             "sil_enabled": config.sil_enabled,
+            "gru_sil_enabled": config.gru_sil_enabled,
+            "gru_sil_max_updates": config.gru_sil_max_updates,
+            "gru_sil_budget_ratio": config.gru_sil_budget_ratio,
+            "gru_sil_target_kl": config.gru_sil_target_kl,
+            "elite_archive_enabled": config.elite_archive_enabled,
+            "elite_archive_capacity": config.elite_archive_capacity,
             "sil_td_sampling_mode": config.sil_td_sampling_mode,
             "sil_td_sampling_horizon_steps": config.sil_td_sampling_horizon_steps,
             "sil_td_windows_per_traj": config.sil_td_windows_per_traj,
@@ -799,6 +860,24 @@ def main() -> None:
         logger.info("奖励目标改变：从当前迭代重新预热 critic %d 轮", config.value_warmup_iters)
     if geometry_changed:
         logger.info("几何输入标定改变：从当前迭代重新预热 critic %d 轮", config.value_warmup_iters)
+    if not semantics_changed and resume_state.get("trainer_state"):
+        ppo_trainer.restore_checkpoint_state(resume_state["trainer_state"], model)
+
+    # Independent archive preserves the entire episode, never supplies SIL batches.
+    elite_archive = None
+    if config.elite_archive_enabled:
+        from training.elite_archive import EliteTrajectoryArchive
+        elite_archive = EliteTrajectoryArchive(
+            config, recorder.paths.elites / "full_episodes", reference_fp)
+        archive_source = Path(args.elite_archive_resume) if args.elite_archive_resume else (
+            Path(args.resume).resolve().parent.parent / "elites" / "full_episodes"
+            / f"elites_iter_{start_iteration:04d}.npz" if args.resume else None)
+        if archive_source is not None and (args.elite_archive_resume or archive_source.exists()
+                                          or resume_state.get("config", {}).get("elite_archive_enabled", False)):
+            logger.info("Full-episode elite archive restored: %d trajectories from %s",
+                        elite_archive.restore(archive_source), archive_source)
+        logger.info("Full-episode elite archive enabled (capacity=%d, legacy_SIL=%s, GRU_SIL=%s)",
+                    config.elite_archive_capacity, config.sil_enabled, config.gru_sil_enabled)
 
     # ── 加载地形数据 ──
     game_root = Path(config.game_root)
@@ -855,7 +934,7 @@ def main() -> None:
     # 剪枝/排序/BC 截断走 credited 口径，patch wide 通道按 guidance_index 从
     # reference_maps 选引导段地图重建，与在线采集逐点一致）
     reference_maps = None
-    if reference is not None and config.sil_enabled:
+    if reference is not None and (config.sil_enabled or config.gru_sil_enabled):
         reference_maps = reference.guidance_maps(
             eff_map.traversable.shape, eff_map._min_gx, eff_map._min_gy,
             config.grid_resolution,
@@ -863,7 +942,7 @@ def main() -> None:
         # 共享给 rollout_worker，避免在线采集时重复栅格化
         if rollout_worker._reference_maps is None:
             rollout_worker._reference_maps = reference_maps
-    sil_dataset = (
+    sequence_encoder = (
         TrajectoryDataset(
             config, eff_map.traversable, eff_map.get_arr(),
             min_gx=eff_map._min_gx, min_gy=eff_map._min_gy,
@@ -872,8 +951,9 @@ def main() -> None:
             body_local=extract_body_local(player_data),
             reference_maps=reference_maps,
         )
-        if config.sil_enabled else None
+        if config.sil_enabled or config.gru_sil_enabled else None
     )
+    sil_dataset = sequence_encoder if config.sil_enabled else None
 
     # ── 精英池冷启动种子（可选）：外部剪枝后的优质轨迹直接入池，iteration=-1 标记；
     # 首轮 add_trajectories_map_elites 会用当前池重建 cell_map，种子照常参与竞争/被替换。
@@ -964,6 +1044,9 @@ def main() -> None:
     # ── 奖励归一化器 ──
     calibration_steps = config.steps_per_rollout * config.num_agents * 10
     reward_normalizer = RewardNormalizer(calibration_steps=calibration_steps) if reference is None else None
+    saved_loop = resume_state.get("loop_state", {}) if not semantics_changed else {}
+    if reward_normalizer is not None and saved_loop.get("reward_normalizer"):
+        reward_normalizer.__dict__.update(saved_loop["reward_normalizer"])
     if reward_normalizer is not None:
         logger.info(
             "RewardNormalizer: %d calibration steps (≈%d rollouts)",
@@ -996,7 +1079,16 @@ def main() -> None:
     else:
         logger.info("观测归一化: 沿用 checkpoint 携带的统计量")
 
+    def restore_training_rng():
+        if args.resume and resume_state.get("rng_state") and not args.reset_rng:
+            restore_random_state(resume_state["rng_state"], rollout_worker._rng)
+            logger.info("恢复 Python/NumPy/Torch/CUDA/投放随机数状态，继续 checkpoint 随机序列")
+        elif args.resume:
+            logger.warning("%s：随机序列从 seed=%d 重新开始，不能视为不中断训练的逐步复现",
+                           "显式 --reset-rng" if args.reset_rng else "旧 checkpoint 缺少 RNG 状态", args.seed)
+
     if args.sil_only:
+        restore_training_rng()
         run_sil_only(
             args, config, model, ppo_trainer, sil_dataset, recorder,
             start_iteration, reference_meta, warmup_end,
@@ -1011,9 +1103,16 @@ def main() -> None:
         rollout_worker.launch_game()
 
     # ── 停滞探测器状态（精英池峰值竖直高度停滞 → 自适应提方差）──
-    _best_pool_sdy = float("-inf")
-    _stall = 0
-    _boost = 0.0
+    _best_pool_sdy = float(saved_loop.get("best_pool_sdy", float("-inf")))
+    _stall = int(saved_loop.get("stall", 0))
+    _boost = float(saved_loop.get("boost", 0.0)) if config.explore_boost_enabled else 0.0
+    model.exploration_boost = _boost
+
+    def checkpoint_loop_state():
+        return {"best_pool_sdy": _best_pool_sdy, "stall": _stall, "boost": _boost,
+                "reward_normalizer": dict(vars(reward_normalizer)) if reward_normalizer is not None else None}
+
+    restore_training_rng()  # After model creation, normalization and game startup consume their own work.
 
     # ── 主循环 ──
     last_iteration = start_iteration
@@ -1029,6 +1128,9 @@ def main() -> None:
         )
     try:
         for iteration in range(start_iteration, config.max_iterations):
+            if args.stop_file and Path(args.stop_file).exists():
+                logger.info("Stop file received; saving completed iteration %d", completed_iterations)
+                break
             if hour_limit is not None and time.monotonic() >= hour_limit:
                 logger.info("达到 %.2f 小时墙钟上限，停止于第 %d 轮之前",
                             args.max_hours, iteration + 1)
@@ -1054,6 +1156,9 @@ def main() -> None:
             )
             logger.info("  采集完成: buffer size=%d, trajectories=%d",
                         buffer.size, len(trajectories))
+            if elite_archive is not None:
+                archive_stats = elite_archive.ingest(trajectories, iteration + 1)
+                recorder.stage_metrics(**archive_stats)
             if hasattr(rollout_worker, "last_feature_scales"):
                 diagnostics_dir = Path(config.checkpoint_dir) / "feature_diagnostics"
                 diagnostics_dir.mkdir(parents=True, exist_ok=True)
@@ -1193,6 +1298,18 @@ def main() -> None:
                 if recorder is not None and sampling_record is not None:
                     recorder.save_sil_sampling(iteration + 1, sampling_record)
 
+            if config.gru_sil_enabled and not value_only and iteration >= config.sil_start_iter:
+                from training.gru_sil import gru_sil_update
+                gru_metrics = gru_sil_update(
+                    ppo_trainer, model, elite_archive, sequence_encoder, buffer,
+                    budget_updates=int(metrics.get("n_updates", 0)), iteration=iteration + 1)
+                metrics.update(gru_metrics)
+                logger.info("GRU SIL: %d/%d updates, positive=%d/%d, KL=%.6f, rejected=%d",
+                            gru_metrics["gru_sil_updates"], gru_metrics["gru_sil_budget"],
+                            gru_metrics["gru_sil_positive_frames"], gru_metrics["gru_sil_sampled_frames"],
+                            gru_metrics["gru_sil_kl"], gru_metrics["gru_sil_rejected_steps"])
+                recorder.save_sil_sampling(iteration + 1, ppo_trainer.last_gru_sil_sampling)
+
             # Phase 2.55: σ 退火（M2 修复）：巩固进展 → 探索噪声线性退火，
             # 下限 ppo_log_std_min；预热轮不动（策略未训练）。forward 内 clamp 兜底。
             if config.ppo_log_std_anneal_rate > 0 and not value_only:
@@ -1262,6 +1379,8 @@ def main() -> None:
                     iteration + 1, config.checkpoint_dir,
                     config=config, reference_metadata=reference_meta,
                     value_warmup_end=warmup_end,
+                    trainer=ppo_trainer, deployment_rng=rollout_worker._rng,
+                    loop_state=checkpoint_loop_state(),
                 )
                 if reference is None:
                     save_efficiency_map(eff_map, env_data, iteration + 1, config.log_dir)
@@ -1269,6 +1388,8 @@ def main() -> None:
                 # 走出了什么行为"就只能靠事后重新拉游戏在环采样去猜。
                 if recorder is not None and sil_dataset is not None:
                     recorder.save_elites(sil_dataset.trajectories, iteration + 1)
+                if elite_archive is not None:
+                    elite_archive.save(iteration + 1)
 
             if sample_target is not None and physical_samples >= sample_target:
                 logger.info("实际物理样本终点: %d >= %d，完成 %d 轮（含 critic 预热）",
@@ -1281,10 +1402,14 @@ def main() -> None:
             completed_iterations, config.checkpoint_dir,
             config=config, reference_metadata=reference_meta,
             value_warmup_end=warmup_end,
+            trainer=ppo_trainer, deployment_rng=rollout_worker._rng,
+            loop_state=checkpoint_loop_state(),
         )
         if recorder is not None:
             if sil_dataset is not None:
                 recorder.save_elites(sil_dataset.trajectories, completed_iterations)
+            if elite_archive is not None:
+                elite_archive.save(completed_iterations)
             recorder.finalize("completed", last_iteration=completed_iterations)
         logger.info("PPO 训练完成")
 

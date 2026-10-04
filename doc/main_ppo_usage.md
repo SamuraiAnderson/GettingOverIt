@@ -20,7 +20,43 @@ conda run --no-capture-output -n getting-over-it-analysis python -m src.training
 语义，不把 Transformer 权重当作 GRU；转换架构须使用 `--init-from PATH`，且会重新
 开始迭代与优化器。旧 BC 入口仍保留其原结构。
 
-GRU 尚不支持旧 SIL 的序列重建，`--corridor-sil` 和 `--recipe ppo-ou-sil` 会明确报错。
+GRU 使用独立的 `--gru-sil` 路径；`--corridor-sil` 和 `--recipe ppo-ou-sil` 仍会明确报错。
+走廊 v2 任务可另加 `--elite-archive`，独立保存完整精英回合，SIL 仍关闭。
+归档沿用 (到达时间 t, 确认距离 D) Pareto 与少量空间多样性准入，拒绝落水及无效轨迹，
+默认容量 20（`--elite-archive-capacity`）。保留从 reset 起的全部状态、动作、接触、
+奖励、终止及走廊字段，既不截掉历史前缀，也不删除末端回落；归档不参与 PPO 梯度。
+快照与 checkpoint 同步保存到 `elites/full_episodes/elites_iter_NNNN.npz`，包括任务指纹
+与完整回合格式标记。`--resume` 自动恢复源 checkpoint 同迭代的快照；
+`--elite-archive-resume PATH` 可显式指定同任务的完整回合池，不接受旧剪枝 SIL 池。
+旧 checkpoint 未启用归档时从空池开始；之前未保存的轨迹无法补回。
+保存的是既有观测和执行动作，不保存作为训练真值的旧隐藏态。
+
+### GRU SIL（显式启用）
+
+在上述命令或 `--resume` 命令中加 `--gru-sil`，会自动启用完整精英归档。
+`--no-gru-sil` 关闭模仿但保留已经启用的归档；续训默认恢复 checkpoint 的开关。
+当前支持主线基础观测（含稀疏几何）、单头 GRU、逐帧动作与走廊 v2，额外事件/趋势
+特征和动作段会拒绝。旧窗口 SIL 池不含可靠的完整 reset 前缀，不能混用。
+
+每次更新均匀抽取一条精英轨迹及一个连续 TBPTT 片段。用**当前权重**从 reset 无梯度
+重放全部前缀，再对片段反传。第 t 帧输入的是实际执行的第 t−1 帧动作，首帧为零。
+只模仿最后一次确认进展之前、`R−V>0` 的动作；折扣回报 R 使用完整奖励尾段，真正
+终止取零 bootstrap，时间截断用当前网络重建到末帧后的 V。归档本身仍保留回落尾段。
+
+这是正优势加权的动作均值模仿：目标为执行动作的 inverse-tanh（限幅 ±3），优势限幅 5，
+策略系数 0.1、正优势帧的 Huber 价值系数 0.05。SIL 不更新探索方差，不对负优势强行
+提供监督；含 OU 噪声的精英动作不能解释为无噪声最优动作或 PPO 的离策略似然。
+
+默认每轮最多 `min(4, floor(PPO实际更新数 × 0.25))` 个候选片段，预热期间与前 5 轮
+不启用。每次更新后，对本轮全部在线决策重放当前网络，计算相对 **PPO 更新后** 策略的
+累计 OU 条件 KL（包含各帧噪声倍率）。平均 KL 上限 0.01、单帧上限 0.1；超限同时回滚
+模型与 Adam 状态并结束本轮 SIL。这只约束已采样历史上的漂移，不保证未知状态上的行为。
+超参数存于 `config.py` 的 `gru_sil_*` 字段；指标为 `metrics.csv` 的 `gru_sil_*` 列，
+逐片段起止、正优势数量、bootstrap、KL 和接受状态保存于 `sil_sampling/iter_NNNN.json`。
+
+可加 `--stop-file PATH`；创建该文件后训练完成当前轮，再保存并正常退出。
+重新启动前须移除该文件或换一个新路径。
+
 固定出生评估默认不扰动；可显式写出完整验证命令：
 
 ```powershell
@@ -42,9 +78,23 @@ conda run --no-capture-output -n getting-over-it-analysis python -m src.training
 
 下面这条 2 人、40 轮的「当前主线」命令已删除。续训用 `main_ppo --resume`，配方见后来的实验记录。
 
-`--recipe ppo` 关闭 OU，`ppo-ou` 保留 OU；两者均关闭 SIL、停滞加噪、接触分头、阶段权重及 SIL 优势权重。历史 Transformer/SIL 路径另行保留，不适用于 GRU 主线。
+`--recipe ppo` 关闭 OU，`ppo-ou` 保留 OU；两者均关闭旧 SIL、停滞加噪、接触分头、阶段权重及旧 SIL 优势权重。`--gru-sil` 独立控制 GRU 模仿更新。历史 Transformer/SIL 路径另行保留，不适用于 GRU 主线。
 
 `--seed` 固定 Python、NumPy、Torch 和投放采样 RNG；当前隔离物理运行时已通过精确出生状态的重复一致性验证。`--geometry-profile native-pose-v1` 使用原生姿态标定（锤头 −180°、身体约 −84.498°）；`legacy` 为原来的 −90°/−90°。不传时，新模型使用新标定，旧 checkpoint 恢复其配置，缺少配置的旧权重回退 legacy。BC 入口继续使用 legacy。
+
+2026-10-03 一致性修复后，checkpoint 在完整迭代边界保存 Python、NumPy、Torch CPU/CUDA
+以及投放器的随机状态，连同 critic 预热优化器、KL/梯度范数适配器及循环状态一起恢复。
+`--resume` 默认继续原来的随机序列；省略 `--seed` 时沿用保存的初始 seed。确需换序列时
+显式传 `--reset-rng --seed N`。旧 checkpoint 没有这些状态时仍可续训，但会记录 seed
+重启提示，不能声称等同于不中断训练。跨设备/运行时的数值逐位复现不在此保证范围内。
+策略概率审计使用独立 RNG，不再消耗训练的随机序列；GRU SIL 仍使用独立的 seed+迭代采样。
+完整精英池恢复保留原顺序和 float64 分数，避免相同抽样索引在恢复后指向另一条轨迹。
+
+全新模型按 `ppo_init_log_std` 初始化（默认 −1.6，raw std≈0.202）；`--resume` 保留学到的
+方差，`--init-from` 默认也继承来源方差。`--lr` 在恢复 Adam 后仍生效。
+GRU 不支持 `--phase-noise`，会明确报错；`--delayed-exploration` 则在续训时默认继承，
+可用 `--no-delayed-exploration` 显式关闭。评估的 `--noise-phi` 默认沿用 checkpoint：
+训练为 iid 则评估探索也为 iid；显式指定该参数才覆盖。
 
 `--resume` 先恢复保存的配置，再应用显式 CLI 覆盖（本机 game_root/port 除外）。更换参考奖励或几何标定会从当前迭代重新预热 critic。`--max-iterations` 是累计迭代上限：从 335 恢复并传 337，只执行两轮。`--value-warmup-iters 0` 仅在明确需要跳过预热时使用。
 

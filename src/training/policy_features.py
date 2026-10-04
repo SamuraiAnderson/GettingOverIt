@@ -41,6 +41,8 @@ def feature_layout(config):
 def validate_experiments(config):
     if config.policy_backbone not in ("transformer", "gru"):
         raise ValueError("policy_backbone must be transformer or gru")
+    if config.policy_backbone == "gru" and config.phase_noise_enabled:
+        raise ValueError("GRU does not implement phase_noise_enabled; use --no-phase-noise")
     if config.event_source not in ("native", "geometry"):
         raise ValueError("event_source must be native or geometry")
     if config.action_segment_steps < 1 or config.recurrent_seq_len < 1:

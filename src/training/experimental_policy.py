@@ -38,7 +38,7 @@ class ExperimentalActorCritic(ActorCritic):
         self.parameter_dim = 4 if config.action_segment_steps > 1 else config.action_dim
         if self.parameter_dim != config.action_dim:
             self.actor_mean = nn.Linear(d, self.parameter_dim)
-            self.actor_log_std = nn.Parameter(torch.zeros(self.parameter_dim))
+            self.actor_log_std = nn.Parameter(torch.full((self.parameter_dim,), float(config.ppo_init_log_std)))
             self._init_weights()
 
     def initialize_from(self, state):
