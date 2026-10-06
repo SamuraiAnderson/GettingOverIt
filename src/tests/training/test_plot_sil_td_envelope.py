@@ -13,6 +13,20 @@ from src.training.sil_archive import pareto_front
 
 
 class SILTdEnvelopePlotTests(unittest.TestCase):
+    def test_layer_peeling_removes_whole_front_and_deduplicates_endpoints(self):
+        # Two first-front points are incomparable. Removing just one would
+        # incorrectly push the remaining first-front point into layer two.
+        a, b = _traj(100, 4.), _traj(200, 6.)
+        c, d = _traj(150, 3.), _traj(250, 5.)
+        e = _traj(300, 2.)
+        duplicate = _traj(150, 3., iteration=8)
+        layers = plot.peel_layers([e, a, c, b, d, duplicate])
+        self.assertEqual([{plot.td_point(t) for t in layer} for layer in layers],
+                         [{(100, 4.), (200, 6.)}, {(150, 3.), (250, 5.)}, {(300, 2.)}])
+        self.assertTrue(any(t is duplicate for t in layers[1]))
+        self.assertFalse(any(t is c for layer in layers for t in layer))
+        self.assertEqual(plot.peel_layers([]), [])
+
     def test_catalog_marks_upper_left_front(self):
         trajs = [_traj(100, 4.0), _traj(377, 6.0), _traj(200, 3.0)]
         catalog = plot.catalog_pool(trajs, source="memory")

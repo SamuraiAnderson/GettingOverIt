@@ -256,6 +256,25 @@ class TrainConfig:
     delayed_exploration_floor: float = 0.15
     delayed_exploration_ramp_steps: int = 50
 
+    # Opt-in temporal noise windows: low/full/finite/suffix = 1/1/4/2 agents.
+    exploration_windows_enabled: bool = False
+    exploration_window_floor: float = 0.0
+    exploration_window_peak: float = 1.0
+    exploration_window_min_steps: int = 32
+    exploration_window_max_steps: int = 480
+    exploration_window_suffix_min_steps: int = 120
+    exploration_window_transition_steps: int = 0
+    # Legacy checkpoint field: only the old soft-loss normalization is retained.
+    # It no longer imposes an action bound or rejects PPO/SIL updates.
+    exploration_window_action_limit: float = 1.0
+    exploration_window_anchor_scale: float | None = None  # Mouse units; None uses legacy soft-loss scale.
+    exploration_window_anchor_coef: float = 1.0
+
+    @property
+    def deterministic_anchor_scale(self) -> float:
+        return (self.exploration_window_action_limit if self.exploration_window_anchor_scale is None
+                else self.exploration_window_anchor_scale)
+
     # ── 相位探索噪声（空中相放大，2026-09-24）──
     # 物理依据：空中相是弹道运动，动作只影响锤子为下一次接触的预定位——噪声不扰动
     # 当前轨迹，是"安全探索"通道；接触相是挥杆执行，其噪声是发现引擎
@@ -356,6 +375,11 @@ class TrainConfig:
     gru_sil_seed: int = 0
     gru_sil_sampling_mode: str = "trajectory_uniform"  # legacy fallback; fresh PPO uses quality/dynamics weighting
     gru_sil_phase_rules: dict | None = None  # versioned geometric proxy rules; no native branch claim
+    recovery_archive_enabled: bool = False  # explicit opt-in; old checkpoints remain elite-only
+    gru_sil_recovery_fraction: float = 0.25
+    recovery_min_forward_m: float = 2.0
+    recovery_start_bin_m: float = 1.0
+    recovery_delta_bin_m: float = 1.0
     training_seed: int = 0  # Initial stream seed; resume restores RNG positions separately.
     sil_start_iter: int = 5             # 对齐 value_warmup_iters：critic 预热完再开 SIL
     sil_traj_cap: int = 20             # 精英池容量。map_elites 仍可按分数兜底；td_pareto 不按 score 截断

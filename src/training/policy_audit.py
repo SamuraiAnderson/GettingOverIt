@@ -6,8 +6,9 @@ import torch
 
 
 def policy_context(model, noise_phi: float, deterministic: bool = False) -> dict:
+    from .exploration_windows import zero_noise_enabled
     context = {
-        "log_prob_version": 2, "noise_phi": float(noise_phi),
+        "log_prob_version": 3 if zero_noise_enabled(model.config) else 2, "noise_phi": float(noise_phi),
         "exploration_boost": float(model.exploration_boost),
         "action_scale": float(model.config.action_scale),
         "log_std_min": float(model.config.ppo_log_std_min),
@@ -22,6 +23,9 @@ def policy_context(model, noise_phi: float, deterministic: bool = False) -> dict
             "open_steps": list(OPEN_STEPS),
         }
     from .policy_features import experimental_enabled
+    if model.config.exploration_windows_enabled:
+        from .exploration_windows import settings
+        context["exploration_windows"] = settings(model.config)
     if experimental_enabled(model.config):
         context["experiment"] = {"version": 1, **{name: getattr(model.config, name) for name in (
             "policy_backbone", "relation_features", "event_features", "event_branch", "geometry_features",
@@ -45,15 +49,22 @@ def policy_replay_metrics(model, buffer, batch_size=64, max_samples=None):
         raise ValueError("Behavior-policy settings changed after collection")
     model.eval()
     buffer.device = next(model.parameters()).device
-    errors, kls, saturated = [], [], []
+    errors, kls, saturated, deterministic_errors = [], [], [], []
     count = 0
-    from .decision_buffer import evaluated_batches
+    from .decision_buffer import evaluated_batches, DecisionRolloutBuffer, validate_likelihood
+    if isinstance(buffer, DecisionRolloutBuffer):
+        for episode in buffer.episodes:
+            validate_likelihood(episode, context)
     # Diagnostics must neither draw from nor reseed the training shuffle/OU RNG.
     for batch, lp, _, _ in evaluated_batches(model, buffer, batch_size, normalize_advantages=False,
                                             rng=np.random.default_rng(0)):
-        log_ratio = lp - batch.old_log_probs
+        active = batch.noise_scale > 0
+        log_ratio = (lp - batch.old_log_probs)[active]
         errors.extend(torch.expm1(log_ratio).abs().cpu().tolist())
         kls.extend((torch.expm1(log_ratio) - log_ratio).cpu().tolist())
+        if (~active).any():
+            deterministic_errors.extend((batch.mean_actions[~active] - batch.actions[~active])
+                                        .norm(dim=-1).cpu().tolist())
         saturated.extend((batch.actions.abs() >= .999 * model.config.action_scale)
                          .any(dim=-1).float().cpu().tolist())
         if not torch.allclose(model._squash_action(batch.raw_actions), batch.actions,
@@ -63,12 +74,16 @@ def policy_replay_metrics(model, buffer, batch_size=64, max_samples=None):
         if max_samples is not None and count >= max_samples:
             break
     metrics = {
-        "preupdate_ratio_max_error": float(np.max(errors)),
-        "preupdate_kl": float(np.mean(kls)),
+        "preupdate_ratio_max_error": float(np.max(errors)) if errors else 0.,
+        "preupdate_kl": float(np.mean(kls)) if kls else 0.,
         "action_saturation_fraction": float(np.mean(saturated)),
         "audit_samples": float(count),
     }
-    if not np.isfinite(errors).all() or not np.isfinite(kls).all():
+    if deterministic_errors:
+        metrics.update(audit_stochastic_samples=float(len(errors)),
+                       audit_deterministic_samples=float(len(deterministic_errors)),
+                       deterministic_action_max_error=float(np.max(deterministic_errors)))
+    if not np.isfinite(errors).all() or not np.isfinite(kls).all() or not np.isfinite(deterministic_errors).all():
         raise ValueError(f"Non-finite policy replay: {metrics}")
     return metrics
 
@@ -82,4 +97,6 @@ def audit_policy(model, buffer, batch_size=64, max_samples=None, tolerance=1e-3)
     metrics = policy_replay_metrics(model, buffer, batch_size, max_samples)
     if metrics["preupdate_ratio_max_error"] > tolerance:
         raise ValueError(f"Frozen behavior-policy replay failed: {metrics}")
+    if metrics.get("deterministic_action_max_error", 0.) > 1e-3:
+        raise ValueError(f"Frozen deterministic-action replay failed: {metrics}")
     return metrics

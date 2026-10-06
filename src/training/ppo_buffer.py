@@ -361,7 +361,7 @@ class PPORolloutBuffer:
         buffer = cls(device)
         with np.load(path, allow_pickle=False) as data:
             metadata = json.loads(str(data["metadata"]))
-            if metadata["version"] == 3:
+            if metadata["version"] in (3, 4):
                 from .decision_buffer import DecisionRolloutBuffer
                 return DecisionRolloutBuffer.load(path, device)
             if metadata["version"] not in (1, 2):

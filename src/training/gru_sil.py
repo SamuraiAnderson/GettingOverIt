@@ -19,6 +19,7 @@ from .reference_corridor import PROGRESS_MODE_V2, trajectory_endpoint
 from .climb_diagnostics import (PhaseRules, classify_motion, phase_counts, launch_event_windows,
                                 contact_dynamics_importance, DYNAMICS_SPEC)
 from .sequence_cache import SILObservationCache
+from .sil_pool_schedule import pool_for_slot
 
 _INPUTS = ("dynamics", "patches", "act_history")
 _SPARSE = ("contour_tokens", "contour_mask", "relation_tokens", "relation_mask")
@@ -52,6 +53,10 @@ def bounded_target_distribution(target, base):
 
 
 def validate_gru_sil(config):
+    if config.recovery_archive_enabled:
+        pool_for_slot(0, config.gru_sil_recovery_fraction)
+        if config.gru_sil_sampling_mode != DYNAMICS_SAMPLING_MODE:
+            raise ValueError("Two-pool SIL requires quality_dynamics_v3")
     if (not isinstance(config.gru_sil_max_updates, int) or isinstance(config.gru_sil_max_updates, bool)
             or config.gru_sil_max_updates < 1):
         raise ValueError("GRU SIL maximum updates must be a positive integer")
@@ -139,7 +144,8 @@ def rollout_distributions(model, buffer):
         mean, std = mean[steps], std[steps]
         scale = torch.as_tensor(episode["noise_scale"], device=mean.device)[:, None]
         previous = torch.as_tensor(episode["noise_prev"], device=mean.device)
-        std = model._scaled_std(std, scale)
+        from .exploration_windows import zero_noise_enabled
+        std = model._scaled_std(std, scale, allow_zero=zero_noise_enabled(model.config))
         conditional_mean, conditional_std = model._ou_conditional(mean, std, previous, phi)
         means.append(conditional_mean)
         stds.append(conditional_std)
@@ -149,8 +155,29 @@ def rollout_distributions(model, buffer):
 def conditional_kl(baseline, current):
     mean0, std0 = baseline
     mean1, std1 = current
+    # Dirac actions have no finite Gaussian KL. Their drift is diagnostic only.
+    active = (std0 > 0).all(-1)
+    if not torch.equal(active, (std1 > 0).all(-1)):
+        raise ValueError("Noise regime changed during policy update")
+    mean0, std0, mean1, std1 = mean0[active], std0[active], mean1[active], std1[active]
     return (torch.log(std1 / std0) + (std0.square() + (mean0 - mean1).square())
             / (2 * std1.square()) - 0.5).sum(-1).clamp_min(0)
+
+
+@torch.no_grad()
+def deterministic_action_drift(model, buffer, current=None):
+    """Actual mouse-action drift on archived deterministic histories, not a KL."""
+    from .decision_buffer import has_zero_noise
+    if not has_zero_noise(buffer):
+        return {"deterministic_action_max_delta": 0., "deterministic_action_rms_delta": 0.}
+    means, _ = rollout_distributions(model, buffer) if current is None else current
+    mask = torch.as_tensor(np.concatenate([e["noise_scale"] == 0 for e in buffer.episodes]), device=means.device)
+    targets = torch.as_tensor(np.concatenate([e["actions"] for e in buffer.episodes]), device=means.device)
+    delta = (model._squash_action(means[mask]) - targets[mask]).norm(dim=-1)
+    if not torch.isfinite(delta).all():
+        raise FloatingPointError("Non-finite deterministic action drift")
+    return {"deterministic_action_max_delta": float(delta.max()),
+            "deterministic_action_rms_delta": float(delta.square().mean().sqrt())}
 
 
 def phase_chunk_groups(trajectories, candidates, length, rules):
@@ -322,18 +349,53 @@ class GRUSILSamplingPlan:
         return result
 
 
-def gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates, iteration):
+class RecoverySamplingPlan:
+    """Uniform total mass per retained segment, dynamics weighting within it."""
+    def __init__(self, archive, length, step_seconds):
+        if type(length) is not int or length < 1 or not archive.segments:
+            raise ValueError("Recovery sampling requires nonempty segments and a positive chunk length")
+        self.chunks, marginal, self.chunk_details = [], [], {}
+        for i, segment in enumerate(archive.segments):
+            traj, start, end = segment.trajectory, segment.start, segment.end
+            if not 0 <= start < end <= len(traj.actions):
+                raise ValueError("Invalid recovery learning interval")
+            diag = contact_dynamics_importance(traj.raw_states, traj.contact, end, step_seconds)
+            chunks = [(i, a, min(a+length, end), end) for a in range(start, end, length)]
+            salience = np.array([diag["priority"][a:b].sum() for _,a,b,_ in chunks])
+            targeted = salience/salience.sum() if salience.sum() else np.full(len(chunks), 1/len(chunks))
+            uniform = DYNAMICS_SAMPLING_SPEC["chunk_uniform_fraction"]
+            conditional = uniform/len(chunks)+(1-uniform)*targeted
+            for chunk, local_p in zip(chunks, conditional):
+                p = float(local_p)/len(archive.segments)
+                self.chunks.append(chunk)
+                marginal.append(p)
+                self.chunk_details[chunk] = dict(segment_probability=1/len(archive.segments),
+                    conditional_chunk_probability=float(local_p), probability=p,
+                    segment_id=segment.descriptor["candidate_id"], learning_start=start, learning_end=end)
+        self.marginal = np.asarray(marginal)
+
+    def draw(self, rng):
+        return (*self.chunks[int(rng.choice(len(self.chunks), p=self.marginal))], None, "recovery_dynamics")
+
+    def probabilities(self):
+        return dict(zip(self.chunks, self.marginal.tolist()))
+
+
+def gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates, iteration, recovery_archive=None):
+    if getattr(buffer, "collection_metadata", {}).get("evaluation_only"):
+        raise ValueError("Evaluation-only rollouts cannot be used for GRU SIL training")
     cache = getattr(encoder, "_gru_sil_observation_cache", None)
     if cache is None:
         cache = encoder._gru_sil_observation_cache = SILObservationCache()
     try:
         return _gru_sil_update(trainer, model, archive, encoder, buffer,
-                               budget_updates=budget_updates, iteration=iteration, cache=cache)
+                               budget_updates=budget_updates, iteration=iteration, cache=cache,
+                               recovery_archive=recovery_archive)
     finally:
         cache.end_round()
 
 
-def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates, iteration, cache):
+def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates, iteration, cache, recovery_archive=None):
     cfg = trainer.config
     validate_gru_sil(cfg)
     if not isinstance(buffer, DecisionRolloutBuffer) or not buffer.size:
@@ -352,8 +414,28 @@ def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
               "phase_branch_probability": SAMPLING_PHASE_PROBABILITY[cfg.gru_sil_sampling_mode]}
     trainer.last_gru_sil_sampling = record
     candidates = eligible_sil_trajectories(archive.trajectories)
-    cache.begin_round(encoder, archive.trajectories, cfg.gru_sil_cache_mb * 1024**2)
-    if not limit or not candidates:
+    if cfg.recovery_archive_enabled and recovery_archive is None:
+        raise ValueError("Recovery sampling enabled but no independent recovery archive supplied")
+    recovery = recovery_archive if cfg.recovery_archive_enabled else None
+    have_recovery = recovery is not None and bool(recovery.segments)
+    for pool in ("elite", "recovery"):
+        for name in ("budget", "candidates", "sampled_frames", "positive_frames", "attempts", "updates",
+                     "rejected_steps", "accepted_positive_frames", "zero_advantage_chunks",
+                     "advantage_sum", "accepted_advantage_sum"):
+            metrics[f"gru_sil_{pool}_{name}"] = 0
+    both = bool(candidates) and have_recovery
+    cursor = trainer.gru_sil_pool_cursor
+    planned = [pool_for_slot(cursor+i, cfg.gru_sil_recovery_fraction) if both
+               else "elite" if candidates else "recovery" for i in range(limit)] if candidates or have_recovery else []
+    for pool in planned:
+        metrics[f"gru_sil_{pool}_budget"] += 1
+    record.update(pool_quota=dict(enabled=cfg.recovery_archive_enabled,
+                  recovery_fraction=cfg.gru_sil_recovery_fraction, cursor_before=cursor, cursor_after=cursor,
+                  planned=planned, both_available=both,
+                  note="quota is consumed on candidate draw, even if advantage/KL rejects; empty pools lend their share"))
+    active = [*archive.trajectories, *(recovery.trajectories if have_recovery else [])]
+    cache.begin_round(encoder, active, cfg.gru_sil_cache_mb * 1024**2)
+    if not limit or not planned:
         metrics.update(cache.metrics())
         return metrics
     if trainer.optimizer is None:
@@ -361,15 +443,32 @@ def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
     model.eval()
     optimizer = trainer.optimizer
     baseline = rollout_distributions(model, buffer)
+    from .decision_buffer import has_zero_noise
+    hybrid = has_zero_noise(buffer)
+    if hybrid:
+        # Keep the retired rejection counter at zero for historical log compatibility.
+        metrics.update(gru_sil_deterministic_rejections=0., gru_sil_deterministic_action_max_delta=0.,
+                       gru_sil_attempted_action_delta_max=0.)
     rng = np.random.default_rng(np.random.SeedSequence([cfg.gru_sil_seed, iteration, 714]))
     plan = GRUSILSamplingPlan(archive.trajectories, candidates, cfg.recurrent_seq_len,
-                              cfg.gru_sil_sampling_mode, rules, step_seconds=cfg.feature_step_seconds)
-    if cfg.gru_sil_sampling_mode in (EVENT_SAMPLING_MODE, DYNAMICS_SAMPLING_MODE):
+                              cfg.gru_sil_sampling_mode, rules, step_seconds=cfg.feature_step_seconds) if candidates else None
+    recovery_plan = RecoverySamplingPlan(recovery, cfg.recurrent_seq_len, cfg.feature_step_seconds) if have_recovery else None
+    if plan is not None and cfg.gru_sil_sampling_mode in (EVENT_SAMPLING_MODE, DYNAMICS_SAMPLING_MODE):
         record["weighting"] = plan.distribution_summary
+    if have_recovery:
+        record["recovery_weighting"] = dict(segment_count=len(recovery.segments),
+            segment_probability=1/len(recovery.segments), chunk_uniform_fraction=DYNAMICS_SAMPLING_SPEC["chunk_uniform_fraction"],
+            segments=[s.descriptor for s in recovery.segments])
     phase_cache = {}
-    for _ in range(limit):
-        ti, start, end, cap, selected_phase, branch = plan.draw(rng)
-        traj = archive.trajectories[ti]
+    for pool in planned:
+        selected_plan = plan if pool == "elite" else recovery_plan
+        ti, start, end, cap, selected_phase, branch = selected_plan.draw(rng)
+        if both:
+            trainer.gru_sil_pool_cursor += 1
+            record["pool_quota"]["cursor_after"] = trainer.gru_sil_pool_cursor
+        traj = archive.trajectories[ti] if pool == "elite" else recovery.segments[ti].trajectory
+        prefix = f"gru_sil_{pool}_"
+        metrics[prefix+"candidates"] += 1
         frames = cache.get(encoder, traj)
         # Bootstrap is rebuilt with current weights, just like the prefix.
         _, _, all_values = sequence_predictions(model, frames)
@@ -383,14 +482,22 @@ def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
         count = int(positive.sum())
         row = {"trajectory": ti, "source_iteration": traj.iteration, "start": start, "end": end,
                "cap": cap, "bootstrap": bootstrap, "positive_frames": count, "accepted": False,
-               "sampling_branch": branch}
-        if plan.chunk_details:
-            row["sampling_weight"] = plan.chunk_details[(ti, start, end, cap)]
+               "sampling_branch": branch, "pool":pool,
+               "cap_kind":"confirmed_endpoint" if pool == "elite" else "first_return",
+               "advantage_sum":float(advantage.sum())}
+        if selected_plan.chunk_details:
+            row["sampling_weight"] = dict(selected_plan.chunk_details[(ti, start, end, cap)])
+            share = (1-cfg.gru_sil_recovery_fraction if pool == "elite" else cfg.gru_sil_recovery_fraction) if both else 1.
+            row["sampling_weight"].update(pool_share_target=share,
+                target_marginal_probability=share*row["sampling_weight"]["probability"])
+        if pool == "recovery":
+            row["segment_id"] = recovery.segments[ti].descriptor["candidate_id"]
         # Older/synthetic 33D pools still support legacy sampling; phase ablation requires 35D.
         if traj.raw_states.shape[1] == 35:
-            if ti not in phase_cache:
-                phase_cache[ti] = classify_motion(traj.raw_states, traj.contact, rules)[0]
-            labels = phase_cache[ti][start:end]
+            key = id(traj)
+            if key not in phase_cache:
+                phase_cache[key] = classify_motion(traj.raw_states, traj.contact, rules)[0]
+            labels = phase_cache[key][start:end]
             pos = positive.detach().cpu().numpy()
             weights = advantage.detach().cpu().numpy()
             row.update(selected_phase=selected_phase, phase_counts=phase_counts(labels),
@@ -399,7 +506,12 @@ def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
         record["chunks"].append(row)
         metrics["gru_sil_sampled_frames"] += end - start
         metrics["gru_sil_positive_frames"] += count
+        metrics[prefix+"sampled_frames"] += end-start
+        metrics[prefix+"positive_frames"] += count
+        metrics[prefix+"advantage_sum"] += row["advantage_sum"]
         if not count:
+            metrics[prefix+"zero_advantage_chunks"] += 1
+            row["skip_reason"] = "no_positive_advantage"
             continue
         action = torch.as_tensor(traj.actions[start:end], device=values.device)
         raw = torch.atanh((action / cfg.action_scale).clamp(-1 + 1e-6, 1 - 1e-6))
@@ -427,10 +539,13 @@ def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
         try:
             optimizer.step()
             metrics["gru_sil_attempts"] += 1
+            metrics[prefix+"attempts"] += 1
             if not all(torch.isfinite(p).all() for p in model.parameters()):
                 raise FloatingPointError("Non-finite parameters after GRU SIL step")
             with torch.no_grad():
-                kl = conditional_kl(baseline, rollout_distributions(model, buffer))
+                current = rollout_distributions(model, buffer)
+                kl = conditional_kl(baseline, current)
+                drift = deterministic_action_drift(model, buffer, current) if hybrid else {}
             if not torch.isfinite(kl).all():
                 raise FloatingPointError("Non-finite KL after GRU SIL step")
         except BaseException:
@@ -439,19 +554,30 @@ def _gru_sil_update(trainer, model, archive, encoder, buffer, *, budget_updates,
             optimizer.load_state_dict(optimizer_before)
             optimizer.zero_grad(set_to_none=True)
             raise
-        mean_kl, max_kl = float(kl.mean()), float(kl.max())
+        mean_kl, max_kl = (float(kl.mean()), float(kl.max())) if kl.numel() else (0., 0.)
         row.update(kl=mean_kl, frame_kl_max=max_kl, loss=float(loss.detach()))
+        row.update(drift)
+        if hybrid:
+            metrics["gru_sil_attempted_action_delta_max"] = max(
+                metrics["gru_sil_attempted_action_delta_max"], drift["deterministic_action_max_delta"])
         metrics["gru_sil_attempted_kl_max"] = max(metrics["gru_sil_attempted_kl_max"], mean_kl)
         if mean_kl > cfg.gru_sil_target_kl or max_kl > cfg.gru_sil_max_frame_kl:
             model.load_state_dict(weights_before)
             optimizer.load_state_dict(optimizer_before)
             optimizer.zero_grad(set_to_none=True)
             metrics["gru_sil_rejected_steps"] += 1
+            metrics[prefix+"rejected_steps"] += 1
+            row["rejection_reason"] = "stochastic_kl"
             break
         row["accepted"] = True
         metrics["gru_sil_updates"] += 1
+        metrics[prefix+"updates"] += 1
+        metrics[prefix+"accepted_positive_frames"] += count
+        metrics[prefix+"accepted_advantage_sum"] += row["advantage_sum"]
         metrics["gru_sil_loss"] += float(loss.detach())
         metrics["gru_sil_kl"], metrics["gru_sil_frame_kl_max"] = mean_kl, max_kl
+        if hybrid:
+            metrics["gru_sil_deterministic_action_max_delta"] = drift["deterministic_action_max_delta"]
         optimizer.zero_grad(set_to_none=True)
     metrics["gru_sil_loss"] /= max(1, metrics["gru_sil_updates"])
     metrics.update(cache.metrics())

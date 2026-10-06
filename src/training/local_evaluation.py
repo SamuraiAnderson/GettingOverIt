@@ -22,6 +22,7 @@ from training.experimental_policy import create_actor_critic
 from training.experiment_options import add_experiment_arguments, apply_experiment_arguments, restore_initialization_shape, ppo_config
 from training.model import expand_state_dict_for_dynamics_dim
 from training.policy_audit import audit_policy
+from training.exploration_windows import add_arguments as add_window_arguments, apply_arguments as apply_window_arguments
 from training.ppo_trainer import PPOTrainer
 from training.reward import ClimbingEfficiencyMap, is_water
 from training.rollout import RolloutWorker, _warmup_and_snapshot
@@ -298,6 +299,7 @@ def compare_native_contacts(contacts, packets, agent):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     add_experiment_arguments(parser)
+    add_window_arguments(parser)
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--reference-trajectory", type=Path, default=None,
                         help="Override the saved route; defaults to checkpoint route or the project's video reference")
@@ -316,13 +318,29 @@ def main():
     parser.add_argument("--geometry-profile", choices=("native-pose-v1", "legacy"), default=None)
     parser.add_argument("--native-diagnostics", action="store_true")
     parser.add_argument("--no-launch", action="store_true")
+    parser.add_argument("--current-desktop", action="store_true",
+                        help="Show the policy-controlled game on the current desktop")
+    parser.add_argument("--collider-visual", action="store_true",
+                        help="Display training collision outlines instead of scene textures")
     parser.add_argument("--train-smoke", type=int, default=0, help="Fresh rollouts and updates after frozen evaluation")
     parser.add_argument("--replay", type=Path, help="Offline audit of archived NPZ; requires behavior checkpoint")
     parser.add_argument("--modes", default="deterministic,exploration",
                         help="Comma-separated rollout modes: deterministic and/or exploration")
+    parser.add_argument("--prefix-archive", type=Path, help="Full elite archive for frozen demonstration-prefix handoff")
+    parser.add_argument("--prefix-source-iteration", type=int, help="Unique source iteration in the selected elite archive")
+    parser.add_argument("--prefix-steps", help="Comma-separated prefix lengths, one per agent; action k is first policy action")
+    parser.add_argument("--noise-plan", type=Path,
+                        help="Fixed per-agent noise windows JSON; frozen exact-spawn exploration only")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     args.modes = [mode.strip() for mode in args.modes.split(",") if mode.strip()]
+    prefix_args = (args.prefix_archive is not None, args.prefix_source_iteration is not None, args.prefix_steps is not None)
+    if args.noise_plan and (any(prefix_args) or args.train_smoke or args.replay or args.jitter
+                           or not args.checkpoint or args.modes != ["exploration"]):
+        raise ValueError("Noise-plan evaluation requires a checkpoint, exploration-only, exact spawn and no prefix/training/replay")
+    if any(prefix_args) and (not all(prefix_args) or args.train_smoke or args.replay
+                            or args.modes != ["deterministic"] or args.jitter or not args.checkpoint):
+        raise ValueError("Prefix handoff requires all three prefix options, checkpoint, deterministic-only, exact spawn and no training/replay")
     if (args.steps < 1 or args.rounds < 1 or args.num_agents < 1 or args.jitter < 0
             or args.train_smoke < 0 or args.goal_progress <= 0 or args.dwell < 1
             or args.inference_batch_size < 0 or (args.noise_phi is not None and not 0 <= args.noise_phi < 1)
@@ -344,10 +362,19 @@ def main():
         cfg.contact_heads_enabled = "actor_mean_contact.weight" in checkpoint["model"]
     configure_geometry(cfg, checkpoint or init_state, args.geometry_profile)
     apply_experiment_arguments(cfg, args, checkpoint)
-    cfg.num_agents = args.num_agents
+    if not args.replay:
+        cfg.num_agents = args.num_agents
+        cfg.steps_per_rollout = args.steps
+        cfg.training_seed = args.seed
+    apply_window_arguments(cfg, args)
     if args.game_root is not None:
         cfg.game_root = str(args.game_root.resolve())
     cfg.random_deploy = cfg.sil_enabled = cfg.gru_sil_enabled = cfg.explore_boost_enabled = False
+    noise_plan = None
+    if args.noise_plan:
+        from training.evaluation_noise_plan import fixed_plan
+        noise_plan = json.loads(args.noise_plan.read_text(encoding="utf-8"))
+        fixed_plan(noise_plan, cfg, args.steps)
     reference_path = args.reference_trajectory or cfg.reference_trajectory or (
         ROOT / "src/Data/video_reference/37258923076-1-192/reference_trajectory_game_world.json")
     cfg.reference_trajectory = str(Path(reference_path).resolve())
@@ -377,6 +404,23 @@ def main():
     saved_hash = (checkpoint.get("reference_corridor") or {}).get("sha256")
     if saved_hash and args.reference_trajectory is None and saved_hash != worker.reference_corridor.metadata["sha256"]:
         raise ValueError("Checkpoint reference file changed; select --reference-trajectory explicitly to switch")
+    prefix = None
+    if args.prefix_archive is not None:
+        from training.elite_archive import EliteTrajectoryArchive
+        from training.prefix_handoff import PrefixHandoff
+        from training.reference_fingerprint import reference_fingerprint
+        fingerprint = reference_fingerprint(cfg, route_meta=worker.reference_corridor.metadata,
+            schema_id="anchor35" if cfg.tcp_protocol == "anchor35" else "legacy33",
+            raw_dim=35 if cfg.tcp_protocol == "anchor35" else 33)
+        archive = EliteTrajectoryArchive(cfg, args.output / "unused", fingerprint)
+        archive.restore(args.prefix_archive)
+        matches = [t for t in archive.trajectories if t.iteration == args.prefix_source_iteration]
+        if len(matches) != 1:
+            raise ValueError(f"Expected unique source iteration; found {len(matches)}")
+        prefix = PrefixHandoff(matches[0], [int(s) for s in args.prefix_steps.split(",")], {
+            "archive": str(args.prefix_archive.resolve()), "iteration": args.prefix_source_iteration,
+            "archive_sha256": hashlib.sha256(args.prefix_archive.read_bytes()).hexdigest()})
+        prefix.validate(cfg, args.steps, True)
     env_data, player_data = load_colliders(Path(cfg.game_root))
     polygons = extract_polygons(env_data)
     eff_map = ClimbingEfficiencyMap(polygons, grid_resolution=cfg.grid_resolution,
@@ -388,6 +432,9 @@ def main():
     offsets = rng.uniform(-args.jitter, args.jitter, (args.rounds, args.num_agents, 2)).astype(np.float32)
     offsets[0] = 0  # Always include unperturbed repeated reset.
     manifest = {"version": 1, "seed": args.seed, "config": asdict(cfg),
+        "presentation": {"current_desktop": args.current_desktop, "collider_visual": args.collider_visual},
+        "torch_precision": {"matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+                            "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32},
         "checkpoint": str(args.checkpoint) if args.checkpoint else (
             f"warm start from {args.init_from}" if args.init_from else "random initialization (engineering smoke only)"),
         "init_from": args.init_from,
@@ -403,10 +450,18 @@ def main():
         "initialization": "warmup then canonical snapshot; teleport jitter also clears rigid-body velocities",
         "geometry_sha256": hashlib.sha256(json.dumps([env_data, player_data], sort_keys=True).encode()).hexdigest()}
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if prefix is not None:
+        manifest["prefix_handoff"] = prefix.metadata()
+        (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if noise_plan is not None:
+        manifest["evaluation_noise_plan"] = noise_plan
+        manifest["noise_plan_sha256"] = hashlib.sha256(args.noise_plan.read_bytes()).hexdigest()
+        (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     torch.save({"model": model.state_dict(), "config": asdict(cfg),
                 "reference_corridor": worker.reference_corridor.metadata,
                 "policy_context": {"exploration_boost": model.exploration_boost}}, args.output / "behavior.pt")
     records, runs, updates = [], [], []
+    frozen_weights = {name: value.detach().cpu().clone() for name, value in model.state_dict().items()}
     failure = None
     try:
         if args.no_launch:
@@ -415,8 +470,11 @@ def main():
             worker.env.connect()
             worker.env.reset()
             _warmup_and_snapshot(worker.env, cfg.num_agents, cfg.warmup_steps)
+            if args.collider_visual:
+                worker.env.set_camera_free(True)
+                worker.env.toggle_collider_visual(True)
         else:
-            worker.launch_game()
+            worker.launch_game(current_desktop=args.current_desktop, collider_visual=args.collider_visual)
         for mode in args.modes:
             for trial in range(args.rounds):
                 # Paired initial perturbations and explicitly recorded independent policy seeds.
@@ -424,26 +482,39 @@ def main():
                 torch.manual_seed(args.seed + trial)
                 buffer, trajectories = worker.collect_ppo(model, args.steps, eff_map,
                     deterministic=mode == "deterministic", initial_offsets=offsets[trial],
-                    native_diagnostics=args.native_diagnostics)
-                audit = audit_policy(model, buffer)
+                    native_diagnostics=args.native_diagnostics, evaluation_prefix=prefix,
+                    evaluation_noise_plan=noise_plan)
                 stem = f"{mode}_{trial:03d}"
-                buffer.save(args.output / f"{stem}.npz")
+                # Keep the evidence even when the frozen-probability audit rejects it.
+                buffer.save(args.output / (f"{stem}_policy_probes.npz" if prefix else f"{stem}.npz"))
                 if hasattr(worker, "last_feature_scales"):
                     (args.output / f"{stem}_features.json").write_text(json.dumps({
-                        "scales": worker.last_feature_scales, "segments": worker.last_segment_trace}, indent=2), encoding="utf-8")
+                        "scales": worker.last_feature_scales, "segments": worker.last_segment_trace,
+                        "collection": buffer.collection_metadata}, indent=2), encoding="utf-8")
                 if worker.last_native_diagnostics:
                     (args.output / f"{stem}_native.json").write_text(
                         json.dumps(worker.last_native_diagnostics), encoding="utf-8")
-                for agent, trajectory in enumerate(trajectories):
+                for episode_index, trajectory in enumerate(trajectories):
+                    agent = getattr(buffer, "collection_metadata", {}).get(
+                        "episode_agent_ids", list(range(len(trajectories))))[episode_index]
                     metrics, trace = score_corridor_episode(trajectory, worker.reference_corridor,
                                                            args.goal_progress, args.dwell)
                     records.append({"mode": mode, "trial": trial, "agent": agent, **metrics})
+                    if noise_plan is not None:
+                        records[-1]["noise_intervention"] = noise_plan["agents"][agent]
+                    if prefix is not None:
+                        records[-1]["prefix_handoff"] = prefix.compare(
+                            trajectory, agent, buffer.episodes[episode_index]["actions"])
                     if worker.last_native_diagnostics:
                         records[-1]["native_comparison"] = compare_native_contacts(
                             trajectory.contact, worker.last_native_diagnostics, agent)
                     (args.output / f"{stem}_agent{agent}.json").write_text(json.dumps({
                         "metrics": records[-1], "states": trajectory.raw_states.tolist(),
                         "contacts": trajectory.contact.tolist(), "trace": trace}), encoding="utf-8")
+                audit = audit_policy(model, buffer)
+                if prefix is not None:
+                    audit = {"policy_probe_replay_audit": audit,
+                             "audit_scope": "Frozen policy predictions on actual histories; does not attribute demonstration actions to policy"}
                 runs.append({"mode": mode, "trial": trial, **audit, **worker.last_profile})
                 logging.info("%s trial=%d audit=%s profile=%s", mode, trial, audit, worker.last_profile)
         trainer = PPOTrainer(cfg)
@@ -457,6 +528,9 @@ def main():
                             "parameter_delta_l2": delta.norm().item(), "update_seconds": time.perf_counter()-start})
             logging.info("Smoke update: %s", updates[-1])
         print(json.dumps(summarize(records), indent=2))
+        if not args.train_smoke and not all(torch.equal(frozen_weights[k], v.detach().cpu())
+                                            for k, v in model.state_dict().items()):
+            raise RuntimeError("Frozen evaluation changed model weights")
     except BaseException as exc:
         failure = f"{type(exc).__name__}: {exc}"
         raise
@@ -465,6 +539,8 @@ def main():
                   "updates": updates, "contact_native_validation": "measured" if any(
                       "native_comparison" in record for record in records) else "pending",
                   "failure": failure}
+        result["model_weights_unchanged"] = all(torch.equal(frozen_weights[k], v.detach().cpu())
+                                               for k, v in model.state_dict().items())
         (args.output / "results.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
         worker.teardown()
 

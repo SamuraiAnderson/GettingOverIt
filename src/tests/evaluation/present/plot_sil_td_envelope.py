@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -25,7 +26,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from training.config import TrainConfig
 from training.dataset import Trajectory
 from training.run_logging import load_elites
-from training.sil_archive import pareto_front, td_point
+from training.sil_archive import dedup_td, dominates, pareto_front, td_point
 
 FONT = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
 STEP_SECONDS = TrainConfig.feature_step_seconds
@@ -76,6 +77,172 @@ def catalog_pool(trajs: list[Trajectory], *, source: str | None = None) -> dict:
         "points": records,
         "envelope": envelope,
     }
+
+
+def peel_layers(trajs: list[Trajectory]) -> list[list[Trajectory]]:
+    """Exact successive fronts after the training endpoint dedup; no bins/cap."""
+    remaining = dedup_td(trajs)
+    layers = []
+    while remaining:
+        front = pareto_front(remaining)
+        layers.append(sorted(front, key=lambda t: (-td_point(t)[1], td_point(t)[0])))
+        removed = {id(t) for t in front}
+        remaining = [t for t in remaining if id(t) not in removed]
+    return layers
+
+
+def episode_identity(traj):
+    return hashlib.sha256(np.asarray(traj.raw_states, np.float32).tobytes()
+                          + np.asarray(traj.actions, np.float32).tobytes()).hexdigest()
+
+
+def plot_layers(report, output):
+    """Use this viewer for both endpoint fronts and the second-front inventory."""
+    colors = ["#bf493c", "#236f9e", "#c79036"]
+    fig, ax = plt.subplots(figsize=(10.5, 6.5), facecolor="#faf9f6")
+    ax.set_facecolor("#faf9f6")
+    rest = [r for r in report["points"] if r["layer"] > 3]
+    _scatter(ax, rest, s=22, color="#b6b6b6", label=f"第四层及以后（{len(rest)}）")
+    for layer, color in enumerate(colors, 1):
+        rows = sorted((r for r in report["points"] if r["layer"] == layer), key=lambda r:r["t"])
+        _scatter(ax, rows, front=True, color=color, marker="o", markersize=4, linewidth=1.2,
+                 label=f"第 {layer} 层（{len(rows)}）")
+        if layer == 2:
+            for row in rows:
+                ax.annotate(str(row["rank"]), (row["t"], row["D"]), xytext=(5, 5),
+                            textcoords="offset points", fontsize=9, color=color)
+    ax.set(xlabel="", ylabel="")
+    ax.set_xlabel("封顶时间 t（环境步；120 步 = 1 秒）", fontproperties=FONT)
+    ax.set_ylabel("最远确认路线进度 D（米）", fontproperties=FONT)
+    ax.set_title("已保存历史候选：逐层剥离的 (t, D) 包络", fontproperties=FONT, fontsize=15)
+    ax.grid(alpha=.2)
+    ax.legend(prop=FONT, loc="lower right")
+    fig.text(.5, .055, f"{report['n_snapshots']} 份完整池快照 → {report['n_unique_episodes']} 条去重轨迹；"
+             "蓝色编号对应第二层轨迹图。", ha="center", fontproperties=FONT, fontsize=10)
+    fig.text(.5, .025, "未入池且未保存的轨迹不在此统计；连线仅连接封顶点，不是某条轨迹的 D(t)。",
+             ha="center", fontproperties=FONT, fontsize=9)
+    fig.tight_layout(rect=(0, .09, 1, 1))
+    fig.savefig(output/"layers.png", dpi=150)
+    plt.close(fig)
+
+    rows = report["second_layer"]
+    if not rows:
+        return
+    headers = ["编号", "采集轮次", "D（米）", "t（步）", "t（秒）", "仍在最新池", "第一层支配者：轮次 / D / t"]
+    cells = []
+    for r in rows:
+        dominators = r["first_layer_dominators"]
+        nearest = min(dominators, key=lambda d:(d["D"]-r["D"], r["t"]-d["t"]))
+        cells.append([r["rank"], r["iteration"], f"{r['D']:.3f}", r["t"], f"{r['seconds']:.3f}",
+                      "是" if r["in_latest_pool"] else "否",
+                      f"{nearest['iteration']} / {nearest['D']:.3f} / {nearest['t']}"])
+    fig, ax = plt.subplots(figsize=(13, 2.2 + .43*len(rows)), facecolor="#faf9f6")
+    ax.axis("off")
+    table = ax.table(cellText=cells, colLabels=headers, cellLoc="center", loc="center",
+                     colWidths=[.06, .09, .10, .08, .09, .12, .42])
+    table.auto_set_font_size(False)
+    for (r, c), cell in table.get_celld().items():
+        cell.set_height(1/(len(rows)+2))
+        cell.set_edgecolor("#d4d6d7")
+        cell.set_facecolor("#ddeaf1" if r == 0 else ("#ffffff" if r%2 else "#f3f4f1"))
+        cell.get_text().set_fontproperties(FONT)
+        cell.get_text().set_fontsize(10)
+    ax.set_title(f"第二层包络：{len(rows)} 条完整轨迹", fontproperties=FONT, fontsize=16, pad=18)
+    fig.text(.5, .025, "每行只展示一位第一层支配者（D 最接近）；完整来源、所有支配者见 layers.json。",
+             ha="center", fontproperties=FONT, fontsize=9)
+    fig.tight_layout(rect=(0, .06, 1, .98))
+    fig.savefig(output/"second_layer_inventory.png", dpi=150)
+    plt.close(fig)
+
+
+def inspect_archive_layers(runs, output):
+    """Read only full archived episodes; never imply coverage of rejected rollouts."""
+    from training.elite_archive import EliteTrajectoryArchive
+    from training.reference_corridor import ReferenceCorridor
+    from training.reference_fingerprint import (assert_fingerprint_compatible, load_fingerprint_sidecar,
+                                               reference_fingerprint)
+    from training.reward import is_water_trajectory
+    from training.run_logging import save_elites
+
+    base = json.loads((runs[-1]/"run_meta.json").read_text(encoding="utf-8-sig"))
+    cfg = TrainConfig(**base["config"])
+    route = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg)
+    expected = base["reference_fingerprint"]
+    actual = reference_fingerprint(cfg, route_meta=route.metadata,
+                                   schema_id=expected["state_schema"], raw_dim=expected["raw_dim"])
+    assert_fingerprint_compatible(expected, actual, context="current reference")
+    episodes, sources, inputs, latest_trajs = {}, {}, [], []
+    for run in runs:
+        meta = json.loads((run/"run_meta.json").read_text(encoding="utf-8-sig"))
+        assert_fingerprint_compatible(expected, meta["reference_fingerprint"], context=str(run))
+        if meta["config"]["feature_step_seconds"] != cfg.feature_step_seconds:
+            raise ValueError(f"Different time base: {run}")
+        pools = discover_pools(run/"elites/full_episodes")
+        if not pools:
+            raise ValueError(f"No complete elite snapshots: {run}")
+        for pool in pools:
+            assert_fingerprint_compatible(expected, load_fingerprint_sidecar(pool), context=str(pool))
+            with np.load(pool, allow_pickle=False) as data:
+                metadata = json.loads(str(data["archive_metadata_json"]))
+            if (metadata.get("schema") != "full_episode_elites_v1"
+                    or metadata.get("origin") != "episode_reset" or metadata.get("truncation") != "none"):
+                raise ValueError(f"Not a full episode archive: {pool}")
+            latest_trajs = load_trajectories(pool)
+            for index, traj in enumerate(latest_trajs):
+                if (not EliteTrajectoryArchive._complete(traj) or td_point(traj) is None
+                        or is_water_trajectory(traj.raw_states, cfg)):
+                    raise ValueError(f"Invalid archived candidate: {pool} / {index}")
+                key = episode_identity(traj)
+                if key in episodes:
+                    previous = episodes[key]
+                    if (td_point(previous) != td_point(traj)
+                            or not np.array_equal(previous.corridor_confirmed_progress, traj.corridor_confirmed_progress)
+                            or not np.array_equal(previous.corridor_credit_events, traj.corridor_credit_events)):
+                        raise ValueError(f"Identical episode has inconsistent scoring: {pool} / {index}")
+                episodes[key] = traj
+                sources.setdefault(key, []).append(dict(path=str(pool.resolve()), pool_index=index,
+                                                         iteration=int(traj.iteration), role=traj.archive_role))
+            inputs.append(dict(path=str(pool.resolve()), sha256=hashlib.sha256(pool.read_bytes()).hexdigest()))
+        print(f"Read {run.name}: {len(pools)} snapshots, {len(episodes)} unique episodes", flush=True)
+    layers = peel_layers(list(episodes.values()))
+    latest_ids = {episode_identity(t): i for i, t in enumerate(latest_trajs)}
+    points = []
+    for level, layer in enumerate(layers, 1):
+        for rank, traj in enumerate(layer, 1):
+            key = episode_identity(traj)
+            t, d = td_point(traj)
+            dominators = [dict(iteration=int(other.iteration), t=td_point(other)[0], D=td_point(other)[1],
+                               identity=episode_identity(other)) for other in layers[0]
+                          if dominates(td_point(other), (t, d))]
+            points.append(dict(layer=level, rank=rank, identity=key, iteration=int(traj.iteration),
+                               t=t, D=d, seconds=t*cfg.feature_step_seconds, steps=len(traj.actions),
+                               in_latest_pool=key in latest_ids, latest_pool_index=latest_ids.get(key),
+                               first_layer_dominators=dominators, sources=sources[key]))
+    report = dict(kind="offline_saved_history_pareto_layers", scope="full episodes that appeared in saved elite snapshots",
+                  limitation="Never-saved rejected rollouts are unavailable; not the full training candidate population",
+                  rule="training dedup_td, then repeatedly remove exact pareto_front; no bucket or capacity pruning",
+                  step_seconds=cfg.feature_step_seconds, reference=route.metadata,
+                  n_snapshots=len(inputs), n_episode_references=sum(map(len, sources.values())),
+                  n_unique_episodes=len(episodes), n_unique_td_points=len(points),
+                  layer_counts=[len(layer) for layer in layers], latest_pool=inputs[-1],
+                  latest_pool_layer_counts=[len(layer) for layer in peel_layers(latest_trajs)],
+                  second_layer=[r for r in points if r["layer"] == 2], points=points, inputs=inputs,
+                  source_files=[dict(path=str(p.resolve()), sha256=hashlib.sha256(p.read_bytes()).hexdigest())
+                                for p in [Path(__file__), ROOT/"src/training/sil_archive.py"]])
+    output.mkdir(parents=True, exist_ok=True)
+    (output/"layers.json").write_text(json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
+    (output/"manifest.json").write_text(json.dumps(dict(config=base["config"], reference=route.metadata),
+                                                   ensure_ascii=False, indent=2), encoding="utf-8")
+    if len(layers) > 1:
+        save_elites(output/"second_layer.npz", layers[1], expected, archive_metadata={
+            "schema":"full_episode_elites_v1", "origin":"episode_reset", "truncation":"none",
+            "selection":"offline_saved_history_pareto_layer", "pareto_layer":2,
+            "display_title":"历史已保存候选 · 第二层包络", "display_role":"第二层",
+            "source_report":str((output/"layers.json").resolve())})
+    plot_layers(report, output)
+    print(json.dumps({k:report[k] for k in ["n_snapshots", "n_unique_episodes", "n_unique_td_points",
+                                           "layer_counts", "latest_pool_layer_counts"]}), flush=True)
+    return report
 
 
 def _scatter(ax, rows, *, front=False, **kwargs):
@@ -475,19 +642,27 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pool", type=Path, help="单个 elites_iter_*.npz")
     parser.add_argument("--elites-dir", type=Path, help="含 elites_iter_*.npz 的目录")
+    parser.add_argument("--archive-runs", nargs="+", type=Path,
+                        help="按时间顺序合并正式 run 的全部完整精英快照，离线查看第二层包络")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--trajectory-index", type=int, help="叠加最后一个池快照中指定轨迹的完整 D_t 曲线")
     parser.add_argument("--sampling-checkpoint", type=Path, help="离线比较原 / 多数阶段 / 软阶段事件加权的采样机会；不训练")
     parser.add_argument("--sampling-draws", type=int, default=20000)
     parser.add_argument("--sampling-seed", type=int, default=7)
     args = parser.parse_args(argv)
-    if args.pool is None and args.elites_dir is None:
-        parser.error("需要 --pool 或 --elites-dir")
+    if args.archive_runs:
+        if args.pool or args.elites_dir or args.sampling_checkpoint or args.trajectory_index is not None:
+            parser.error("--archive-runs 不能与单池、历史曲线或采样预览模式混用")
+    elif args.pool is None and args.elites_dir is None:
+        parser.error("需要 --pool、--elites-dir 或 --archive-runs")
     return args
 
 
 def main(argv=None):
     args = parse_args(argv)
+    if args.archive_runs:
+        inspect_archive_layers(args.archive_runs, args.output)
+        return 0
     pools = [args.pool] if args.pool is not None else []
     if args.elites_dir is not None:
         found = discover_pools(args.elites_dir)

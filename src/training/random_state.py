@@ -12,7 +12,7 @@ def seed_training(seed):
     torch.manual_seed(seed)
 
 
-def capture_random_state(deployment_rng=None):
+def capture_random_state(deployment_rng=None, exploration_rng=None):
     return {
         "version": 1,
         "python": random.getstate(),
@@ -21,10 +21,12 @@ def capture_random_state(deployment_rng=None):
         "torch_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
         "deployment": (copy.deepcopy(deployment_rng.bit_generator.state)
                        if deployment_rng is not None else None),
+        "exploration_windows": (copy.deepcopy(exploration_rng.bit_generator.state)
+                                if exploration_rng is not None else None),
     }
 
 
-def restore_random_state(state, deployment_rng=None):
+def restore_random_state(state, deployment_rng=None, exploration_rng=None):
     if state.get("version") != 1:
         raise ValueError("Unsupported training RNG checkpoint")
     cuda = state["torch_cuda"]
@@ -37,3 +39,5 @@ def restore_random_state(state, deployment_rng=None):
         torch.cuda.set_rng_state_all([s.cpu() for s in cuda])
     if deployment_rng is not None and state.get("deployment") is not None:
         deployment_rng.bit_generator.state = copy.deepcopy(state["deployment"])
+    if exploration_rng is not None and state.get("exploration_windows") is not None:
+        exploration_rng.bit_generator.state = copy.deepcopy(state["exploration_windows"])

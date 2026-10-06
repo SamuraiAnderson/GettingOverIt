@@ -3,7 +3,7 @@
 The coarse dualscale CNN keeps the low-resolution map. Fine interaction uses
 continuous collision edges inside an 8.64 m window (256-cell precision budget):
 air generates no tokens. Static terrain edges / normals / spatial index and
-player/tip local shapes are cached. Terrain contours and normals are filled
+player/tip local shapes are cached. Terrain contours, normals and midpoints are filled
 only for polygons that have entered the current window; unreached terrain is
 not precomputed. Each step only rebuilds part poses, nearby queries, and
 relative features. Trainable encoder outputs are never cached.
@@ -77,7 +77,23 @@ def _in_window(points: np.ndarray, center: np.ndarray, half: float) -> np.ndarra
 def _polygon_to_segment(
     poly: np.ndarray, a: np.ndarray, b: np.ndarray,
 ) -> tuple[float, np.ndarray, np.ndarray]:
+    return _prepared_polygon_to_segment(_prepare_polygon_edges(poly), a, b)
+
+
+def _prepare_polygon_edges(poly: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Pose-dependent edges; reuse only within the current frame."""
     poly = np.asarray(poly, dtype=np.float64)
+    if len(poly) < 2:
+        return poly, np.zeros_like(poly), np.zeros(len(poly), dtype=np.float64)
+    edge = np.roll(poly, -1, axis=0) - poly
+    return poly, edge, np.sum(edge * edge, axis=1)
+
+
+def _prepared_polygon_to_segment(
+    prepared: tuple[np.ndarray, np.ndarray, np.ndarray], a: np.ndarray, b: np.ndarray,
+) -> tuple[float, np.ndarray, np.ndarray]:
+    # Preserve the scalar arithmetic and strict tie rule of _polygon_to_segment.
+    poly, edge, edge2 = prepared
     a = np.asarray(a, dtype=np.float64)
     b = np.asarray(b, dtype=np.float64)
     if len(poly) < 2:
@@ -94,9 +110,6 @@ def _polygon_to_segment(
     best_on_seg = on_seg[best_i].copy()
 
     p0 = poly
-    p1 = np.roll(poly, -1, axis=0)
-    edge = p1 - p0
-    edge2 = np.sum(edge * edge, axis=1)
     for point in (a, b):
         w = np.clip(np.sum((point - p0) * edge, axis=1) / np.maximum(edge2, 1e-12), 0.0, 1.0)
         on_poly = p0 + w[:, None] * edge
@@ -125,6 +138,22 @@ class SparseGeometryCache:
     _edges: dict[int, tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]] = field(
         default_factory=dict,
     )
+    _polygon_ids: dict[int, int] = field(default_factory=dict, init=False, repr=False)
+    _midpoints: dict[int, np.ndarray] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        # The index owns immutable polygons; replace the cache if colliders change.
+        self._polygon_ids = {id(p): i for i, p in enumerate(self.index.polygons)}
+
+    def polygon_index(self, poly: np.ndarray) -> int | None:
+        idx = self._polygon_ids.get(id(poly))
+        if idx is None or self.index.polygons[idx] is not poly:
+            # Preserve support for spatial queries returning polygon copies.
+            for i, cached in enumerate(self.index.polygons):
+                if cached is poly or (cached.shape == poly.shape and np.array_equal(cached, poly)):
+                    return i
+            return None
+        return idx
 
     @classmethod
     def build(
@@ -142,6 +171,14 @@ class SparseGeometryCache:
         if cached is None:
             cached = _edge_frames(self.index.polygons[idx])
             self._edges[idx] = cached
+        return cached
+
+    def edge_midpoints(self, idx: int) -> np.ndarray:
+        cached = self._midpoints.get(idx)
+        if cached is None:
+            p0, p1, _, _ = self.edge_frames(idx)
+            cached = 0.5 * (p0 + p1)
+            self._midpoints[idx] = cached
         return cached
 
 
@@ -280,33 +317,41 @@ def build_sparse_geometry(
     tip_tokens: list[np.ndarray] = []
     _append_poly_tokens(tip_tokens, parts[PART_TIP], CLASS_TIP, player, half, pos_scale)
 
-    terrain_scored: list[tuple[float, np.ndarray]] = []
-    nearby = cache.index.nearby(player - half, player + half, 0.0)
-    id_lookup = {id(p): i for i, p in enumerate(cache.index.polygons)}
-    for poly in nearby:
-        idx = id_lookup.get(id(poly))
+    # Window membership depends on this pose/config, so it must not outlive the
+    # frame. Contour and all three relation queries can share the same result.
+    frame_edges: dict[int, tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]] = {}
+
+    def visible_edges(poly: np.ndarray):
+        idx = cache.polygon_index(poly)
         if idx is None:
-            for i, cached in enumerate(cache.index.polygons):
-                if cached is poly or (cached.shape == poly.shape and np.array_equal(cached, poly)):
-                    idx = i
-                    break
-        if idx is None:
+            return None
+        if idx not in frame_edges:
+            p0, p1, normals, lengths = cache.edge_frames(idx)
+            mids = cache.edge_midpoints(idx)
+            mask = ~(lengths < 1e-12) & (
+                _in_window(p0, player, half) | _in_window(p1, player, half)
+                | _in_window(mids, player, half)
+            )
+            frame_edges[idx] = p0, p1, normals, mids, np.flatnonzero(mask)
+        return frame_edges[idx]
+
+    terrain_scored: list[tuple[float, tuple[np.ndarray, np.ndarray, np.ndarray]]] = []
+    for poly in cache.index.nearby(player - half, player + half, 0.0):
+        edges = visible_edges(poly)
+        if edges is None:
             continue
-        p0, p1, normals, lengths = cache.edge_frames(idx)
-        for i in range(len(p0)):
-            if lengths[i] < 1e-12:
-                continue
-            mid = 0.5 * (p0[i] + p1[i])
-            if not (_in_window(p0[i], player, half) or _in_window(p1[i], player, half)
-                    or _in_window(mid, player, half)):
-                continue
-            token = _contour_token(CLASS_TERRAIN, p0[i], p1[i], normals[i], player, pos_scale)
-            terrain_scored.append((float(np.linalg.norm(mid - player)), token))
+        p0, p1, normals, mids, indices = edges
+        for i in indices:
+            terrain_scored.append((float(np.linalg.norm(mids[i] - player)), (p0[i], p1[i], normals[i])))
+    # Keep stable sorting and original polygon/edge order for equal distances.
     terrain_scored.sort(key=lambda item: item[0])
 
     reserved = player_tokens + tip_tokens
     remaining = max(0, max_n - len(reserved))
-    selected = reserved + [item[1] for item in terrain_scored[:remaining]]
+    selected = reserved + [
+        _contour_token(CLASS_TERRAIN, *edge, player, pos_scale)
+        for _dist, edge in terrain_scored[:remaining]
+    ]
     n_use = min(len(selected), max_n)
     if n_use:
         stacked = np.clip(np.stack(selected[:n_use]), -clip, clip)
@@ -319,35 +364,21 @@ def build_sparse_geometry(
         if poly is None or len(poly) < 3:
             continue
         velocity = _part_velocity(state, part)
-        candidates: list[tuple[float, np.ndarray]] = []
+        prepared = _prepare_polygon_edges(poly)
+        candidates: list[tuple[float, tuple[np.ndarray, np.ndarray, np.ndarray]]] = []
         for env_poly in cache.index.nearby(poly.min(axis=0), poly.max(axis=0), half):
-            idx = id_lookup.get(id(env_poly))
-            if idx is None:
-                for i, cached in enumerate(cache.index.polygons):
-                    if cached is env_poly or (
-                        cached.shape == env_poly.shape and np.array_equal(cached, env_poly)
-                    ):
-                        idx = i
-                        break
-            if idx is None:
+            edges = visible_edges(env_poly)
+            if edges is None:
                 continue
-            p0, p1, normals, lengths = cache.edge_frames(idx)
-            for i in range(len(p0)):
-                if lengths[i] < 1e-12:
-                    continue
-                mid = 0.5 * (p0[i] + p1[i])
-                if not (_in_window(mid, player, half) or _in_window(p0[i], player, half)
-                        or _in_window(p1[i], player, half)):
-                    continue
-                dist, on_part, on_surf = _polygon_to_segment(poly, p0[i], p1[i])
+            p0, p1, normals, _mids, indices = edges
+            for i in indices:
+                dist, on_part, on_surf = _prepared_polygon_to_segment(prepared, p0[i], p1[i])
                 if not np.isfinite(dist) or dist > 2.0 * half:
                     continue
-                token = _relation_token(
-                    part, on_part, on_surf, normals[i], velocity, pos_scale, vel_scale,
-                )
-                candidates.append((dist, token))
+                candidates.append((dist, (on_part, on_surf, normals[i])))
         candidates.sort(key=lambda item: item[0])
-        for j, (_dist, token) in enumerate(candidates[:k_keep]):
+        for j, (_dist, points) in enumerate(candidates[:k_keep]):
+            token = _relation_token(part, *points, velocity, pos_scale, vel_scale)
             relation[slot0 + j] = np.clip(token, -clip, clip)
             rmask[slot0 + j] = 1.0
 

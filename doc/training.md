@@ -6,6 +6,19 @@
 
 ## 一、整体架构
 
+零噪声窗口更新（2026-10-05）：取消“确定性动作最大差异超过 1 鼠标单位”硬门槛，
+PPO 不再因此撤销整轮更新，GRU SIL 也不再因此拒绝单步。最大/RMS 动作差异继续
+记录为诊断，不代表闭环轨迹一定变好或变坏。PPO 保留随机帧的概率比率、裁剪和 KL
+早停；SIL 保留随机帧 KL 验收及单步回滚；数值异常或更新异常仍恢复未完成的更新。
+
+确定性帧不进入随机策略损失；PPO 仍使用原有软约束
+`anchor_coef × mean(||(新均值动作 − 采样动作) / anchor_scale||²) / 2`。
+`--exploration-window-anchor-scale` 只控制该损失尺度，没有硬性动作上限。
+旧 checkpoint 的 `exploration_window_action_limit` 仅在新 scale 未设置时沿用为
+软约束尺度，以保持原损失强度；旧 CLI `--exploration-window-action-limit` 已移除。
+窗外零噪声、窗口随机流、SIL 采样权重和预算规则不变：预算仍根据实际接受的随机
+PPO minibatch 数量计算，而非尝试次数。取消硬门槛不等于保证每轮都有有效 SIL 更新。
+
 2026-10-03 起，新建 PPO 任务默认使用单层 GRU128、动作历史除以 100、TBPTT 32，
 只从精确出生状态训练。选择依据为 `runs/backbone_compare_20261002/comparison.json`。
 默认配置由 `TrainConfig.ppo_mainline()` 提供；旧 checkpoint 按保存的架构恢复，
@@ -39,9 +52,49 @@
 SIL 抽的是轨迹中连续的至多 32 步，目标仍为逐帧浮点鼠标位移 `(dx,dy)`，没有动作
 离散化。对片段 `[s,e)`，先用当前权重无梯度重放 `[0,s)`，再在片段内反传；动作前
 状态 `o_t` 和上一执行动作 `a_(t-1)` 对应目标 `a_t`。收益使用完整尾部，不在 32 步
-边界截断；仅对确认进度封顶之前的片段训练，正优势和 KL 回滚约束不变。当前 SIL
+边界截断；精英池仅对确认进度封顶之前的片段训练，正优势和 KL 回滚约束不变。当前 SIL
 是正优势加权的动作均值回归，精英动作含 OU 噪声，不能作为旧数据的 PPO 概率样本。
 前缀重建保留历史信息，但梯度仍截断在片段内；它也不保证当前策略能到达精英中的状态。
+
+2026-10-06 增加独立的离开—返回片段池。显式启用 `--recovery-archive` 后，SIL
+候选配额为精英池 75%、恢复池 25%（`--gru-sil-recovery-fraction 0.25`）；精英池内部
+`quality_dynamics_v3` 的轨迹概率和片段概率保持不变。恢复池每个入选片段总份额相等，
+片段内部同样按 10% 均匀、90% 接触动力学重要性抽连续块；不再按长度或 Δs/T 额外
+加权。权重只用于抽样，不重复乘到 loss。第二包络数据不加入精英池。
+
+恢复池从每轮全部完整物理轨迹中独立筛选，无须先入选精英池或产生新的历史进度。
+按有序参考路线投影，记录最后在走廊内的状态 a 到首次返回状态 b；要求净前进
+Δs ≥ 2m、起点/返回点都不在参考投影上方、返回那一步的投影速度非负，且无重置、
+无效跳变或参考断点。标识为 `(reference_segment, floor(s_start/1m), floor(Δs/1m))`；
+同标识保留耗时 T 最短者，同耗时依次按 Δs 较大、s_start 较小、稳定内容 ID 排序。
+没有追加隐含的起始状态分类或全局数量淘汰。恢复池不改变精英池准入与淘汰规则。
+
+恢复学习区间为 `[a+1,b)`：从已经离开走廊的状态开始，包含导致首次返回的动作，
+不模仿导致离开的动作。保存的是原始 reset 到结束的完整 episode；GRU 仍从 reset
+重建前缀，收益仍使用原始逐步奖励及完整尾部 bootstrap，不加恢复奖励、不重算为
+局部片段回报，也不受精英轨迹的全局确认进度封顶限制。原有正优势、优化器和累计
+KL 验收保持不变。成功入池并不保证当前 critic 给正优势，更不保证闭环恢复改善。
+
+配额按候选交错执行，25% 时四个周期依次为 `REEE / EREE / EERE / EEER`（R 为恢复池）。
+只在实际抽到候选后推进游标；无正优势或 KL 拒绝也消耗该候选配额。KL 提前停止
+后剩余位置留待下一轮，防止小预算长期只访问某一池。游标进入 trainer checkpoint，
+续训保持顺序；`--reset-rng` 重置为 0。某池为空时将本轮机会交给另一池，不推进
+双池游标、不积欠补偿配额。16 个候选的目标是 12/4，实际接受更新比例不强制为 75/25。
+
+每个模型保存点同时写 `recovery/recovery_iter_XXXX.npz`，保存完整上下文、片段标识、
+准入规则和路线指纹；加载时重新计算几何标识，拒绝不兼容或被改动的片段描述。
+两池共用有容量上限的原始观测缓存，同一 episode 可跨池命中。
+`gru_sil_{elite,recovery}_*` 分别记录配额、候选、抽到帧数、正优势、优化器尝试、接受、
+KL 拒绝、无优势跳过、接受的正优势帧数和优势权重总和；逐片段日志标明池、片段 ID、
+条件概率及目标总体概率。接受的帧数含重复练习，不能解释为独立覆盖量。
+
+旧 checkpoint 缺少恢复池字段时仍保持旧的单池行为。首次启用可用
+`--recovery-archive --recovery-archive-resume <独立恢复池.npz> --gru-sil-recovery-fraction 0.25`；
+不指定初始池时从空池开始在线收集。启用后的 checkpoint 默认恢复同轮恢复池，缺文件
+时拒绝续训，不悄悄清空。既有筛选报告用 `src.tests.analysis.campaign.prepare_recovery_archive`
+显式导入，需核对完整原始 episode；来自冻结探针的导入数据从此视为示范，不再作为
+独立评估样本。离线双池更新预检入口为 `src.tests.analysis.campaign.validate_two_pool_sil`，
+只更新模型副本并输出逐池验收记录，不启动游戏、不替换正式 checkpoint。
 
 GRU SIL 的完整轨迹观测在 CPU 上跨轮复用：`--gru-sil-cache-mb 1024`（默认）限制
 LRU 中保留的 NumPy 数据为 1 GiB，按需构建；设为 `0` 回到原来的仅本轮复用。
@@ -51,7 +104,7 @@ LRU 中保留的 NumPy 数据为 1 GiB，按需构建；设为 `0` 回到原来�
 
 键包含状态、动作、接触、引导索引、终止数组的内容/形状/dtype，以及独立观测指纹。
 每轮检查 patch/稀疏几何参数、实际地图/碰撞轮廓和网格原点，变化时同时清理观测与
-编码器的静态几何缓存；移出精英池的条目及时释放。一次同步 SIL 更新内不得修改这些
+编码器的静态几何缓存；移出两池并集的条目及时释放。一次同步 SIL 更新内不得修改这些
 观测依赖。观测编码语义变化需更新 `sequence_cache.OBSERVATION_VERSION` 和依赖字段。
 参考路线的计分指纹不能代替观测指纹。缓存数组只读，不包含神经编码、隐藏态、价值、
 收益或优势；修改奖励、SIL 权重/预算或模型参数不会使原始观测过期。
@@ -137,6 +190,7 @@ LRU 中保留的 NumPy 数据为 1 GiB，按需构建；设为 `0` 回到原来�
   - 轮廓 token：类别（terrain / player / tip）one-hot + 中点相对 player 位移 + 法线 + 切线 + 边长 + known。坐标系保持世界轴与固定物理尺度，不随朝向旋转。优先保留 player/tip 边，再按距 player 远近填地形边，上限 `sparse_max_contour_tokens=128`。
   - 接触关系：对 tip / 锅 / 身体各保留 `K=8` 个候选面（最近点位移、距离、法线、法向/切向相对速度）。部件速度 tip 用 `state[25:27]`，锅/身体用 player `state[2:4]`。查询对象是碰撞多边形本身，不是部件原点。
   - 静态几何按**已到达区域**惰性缓存：`SparseGeometryCache` 只对进入当前 8.64 m 窗的地形多边形物化轮廓/法线；未到达区域不算边。player/tip 局部形状仍一次缓存。每步只更新部件位姿、附近查询和相对关系。**可训练编码器输出随权重变化，禁止缓存**。
+  - 观测构建复用静态多边形索引与边中点；窗口筛选在同一帧内共享，部件边只按当前位姿准备一次。仍按原有稳定排序选候选，仅为保留项生成 token，距离计算与等距次序不变。地形变化必须重建 `SparseGeometryCache`；窗口筛选与部件世界坐标不跨帧保存。`test_sparse_geometry_equivalence.py` 对照冻结的旧标量实现检查输出字节一致性。
   - 编码：共享小型 ReLU MLP（`sparse_mlp_hidden=32`）分别编码轮廓与关系，再按类别/部件做 mean+max 聚合，残差加到 fusion 后的 `obs_embed`。输出投影零初始化，缺 token 或旧 checkpoint 暖启动时残差为 0。attention 留作后续对照，第一版不用。
   - `TrajectoryDataset.__getitem__` 现返回九元组；PPO buffer 存原始 token 窗口，不存编码器隐向量。
 
@@ -340,3 +394,19 @@ python src/tests/control_interaction/test_l8_airdrop_deploy.py
 # 模型评估（不更新权重）
 python -m src.training.local_evaluation --checkpoint runs/<tag>/checkpoints/ppo_iter_XXXX.pt --output runs/<tag>/eval_view
 ```
+
+时间窗口探索通过 `--exploration-windows` 显式开启，默认关闭；训练和冻结评估使用同一采样入口。目前限定 GRU、单步动作、8 个 agent：每轮随机分配 1 个全程确定性、1 个全程满噪声、4 个有限窗口、2 个后缀窗口。有限窗口长度在 32–480 步间按对数区间分层抽样，后缀开启后至少保留 120 步；新方案窗外/窗内噪声倍率默认为 **0/1**，过渡为 0 步（矩形切换）。窗外执行 `tanh(mean) * action_scale`，并非零鼠标输入。OU 潜变量在后台逐步演化，GRU 始终读取完整观测和实际动作历史；窗口边界不重置二者，不截断奖励或 GAE，不叠加旧延迟探索或阶段噪声。
+
+零噪声对应显式的确定性决策。每步保存 `likelihood_valid = (noise_scale > 0)`，确定性步的 `log_probs=0` 仅为存储占位，绝不作为高斯密度参与 PPO。新零噪声行为契约为 `log_prob_version=3`，窗口版本为 2，含零噪声的物理轨迹归档为 NPZ v4；旧正噪声归档继续读取，旧 checkpoint 保存的 0.15 倍率继续保留，切换时显式传 `--exploration-window-floor 0`。窗口随机流随 checkpoint 保存恢复，首次启用时从训练 seed 派生。每轮诊断及归档保存实际窗口、agent 对应关系和逐步倍率，不重抽历史窗口。
+
+更新目标为**窗口内 PPO + 窗外行为软约束**：概率比、熵、KL 统计及优势标准化仅使用随机动作；全部步骤仍用于价值学习及完整前缀重建。窗外增加对本轮采样均值动作的锚定损失，并在整次 PPO 更新后重建全部确定性历史，记录鼠标动作 L2 偏移。动作偏移不再触发整轮回滚；数值异常或更新/检查异常仍恢复模型、优化器及 trainer 自适应状态。`--exploration-window-anchor-scale` 控制软损失的归一化尺度，`--exploration-window-anchor-coef` 控制系数，当前均为 1。旧 checkpoint 的 `action_limit` 只兼容原软损失尺度，不恢复硬门槛。该软约束作用于已采样历史，不能保证闭环轨迹不变，也不等价于整个混合策略具有普通 PPO 的概率比或有限 Dirac KL。
+
+GRU SIL 保留现有精英权重和正优势均值模仿；随机步骤的 KL 超限仍回滚当前 SIL 步骤，确定性步骤的动作偏移只作诊断，不再拒绝更新。SIL 预算使用实际接受的 `policy_updates`（包含随机决策的 PPO 批次），纯价值/动作锚定更新不增加该预算。冻结审计分别报告随机动作概率误差与确定性动作误差，拒绝伪造的掩码或确定性概率值。
+
+启用窗口探索时，模型工厂将当前进程的 cuDNN/CUDA 矩阵计算统一设置为完整 FP32（关闭 TF32），贯穿采样、PPO、SIL 和回算；低噪声会放大不同批量形状的 TF32 舍入差异。默认关闭窗口的独立进程保留原精度设置。冻结预检使用 `local_evaluation --exploration-windows --steps 1200 --rounds 1 --num-agents 8 --modes exploration --seed 20261003`，不加 `--train-smoke`；评估记录实际精度开关、检查模型权重未变，并在概率审计前保存轨迹以保留失败证据。
+
+冻结示范前缀接管也使用 `src.training.local_evaluation`：增加 `--prefix-archive <完整精英池.npz> --prefix-source-iteration <唯一来源轮次> --prefix-steps 0,160,192,208,224,256,300,1200`，并设置 `--checkpoint ... --steps 1200 --num-agents 8 --rounds 1 --modes deterministic --no-exploration-windows`。每个数字对应一个 agent；前缀长度 k 表示执行示范动作 [0,k)，从动作 k 开始由当前策略接管。0 是纯策略对照，1200 是完整动作回放对照。只允许精确出生、GRU、单步动作，拒绝训练、探索或位置扰动。GRU 在前缀期间也持续读取实际游戏观测和实际执行动作，切换时不重置记忆、不传送。
+
+接管评估的 `*_policy_probes.npz` 保存实际状态历史上的策略预测，前缀预测不是送入游戏的动作，不能作为训练 rollout；已有确定性评估保护会拒绝 PPO/SIL 更新。实际执行动作保存在 episode JSON 的 `trace[].action`，输入中的 `act_history` 同样使用实际执行动作。结果分别核对示范前缀动作、策略后缀动作和可观测物理状态误差；时间戳不参与物理一致性比较。必须先检查完整回放和各接管前缀的复现性，再解释接管结果；35D 状态匹配不能证明未归档的物理求解器状态完全一致，各 agent 的不同接管条件也不是独立重复实验。
+
+冻结噪声干预评估使用 `local_evaluation --checkpoint ... --exploration-windows --exploration-window-floor 0 --steps 1200 --num-agents 8 --modes exploration --noise-plan <计划.json>`。计划包含 `version: 1`、与步数一致的 `horizon`，以及按 agent 0–7 排列的 `agents` 列表；每项包含整数 `agent/start/stop` 和非空 `condition`。窗口为动作索引 `[start, stop)`，`0/0` 为全确定性，`0/horizon` 为全程探索。只允许精确出生和冻结评估，拒绝与示范前缀、训练或离线 replay 参数混用。显式计划不消耗窗口调度随机流，OU 与 GRU 仍逐步连续演化。计划及文件哈希写入 manifest，实际倍率与概率掩码逐步归档；该类 rollout 标记 `evaluation_only`，PPO、critic 预热和 GRU SIL 均拒绝用它更新。条件标签只用于实验记录，不进入模型或充当阶段分类器。比较时先核对无噪声前缀状态/观测一致，再分别报告窗口内改变和撤掉噪声后的继续推进；不能将干预成功直接当作策略学会恢复。

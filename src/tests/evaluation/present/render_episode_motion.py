@@ -92,18 +92,43 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
     fig.subplots_adjust(left=.035, right=.985, bottom=.075, top=.87)
     font = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
     title = "原始状态回放" if rank is None else f"第 {rank} 名 · 原始状态回放"
+    handoff = data["metrics"].get("prefix_handoff")
+    noise_window = data["metrics"].get("noise_intervention")
+    return_segment = data["metrics"].get("return_segment")
+    handoff_step = None if handoff is None else int(handoff["prefix_steps"])
+    if handoff is not None:
+        title = ("纯策略回放（对照）" if handoff_step == 0 else "完整示范回放（对照）"
+                 if handoff_step >= len(states)-1 else f"示范前 {handoff_step} 步 → 冻结策略接管")
+    if noise_window is not None:
+        title = f"冻结策略 · 噪声窗口 [{noise_window['start']}, {noise_window['stop']}) 步"
+    if return_segment is not None:
+        title = f"离开—返回片段 {return_segment['display_rank']:02d} · 原始状态回放"
     fig.suptitle(title, fontproperties=font, fontsize=17, y=.97)
     progress_name = "确认终点 D" if progress_mode_of(cfg) == PROGRESS_MODE_V2 else "累计有效进度"
-    progress = (data["metrics"].get("cap_progress_m")
+    progress = (return_segment["delta_s_m"] if return_segment is not None else data["metrics"].get("cap_progress_m")
                 if progress_mode_of(cfg) == PROGRESS_MODE_V2 else data["metrics"]["credited_progress_m"])
     if progress is None:
         progress = (marks or corridor_score_marks(states, cfg, route))["credited_progress_m"]
+    if return_segment is not None:
+        progress_name, progress = "正向投影跨度", return_segment["delta_s_m"]
     label=f"{progress_name} {progress:.2f} 米 · {episode.parent.name}"
+    if handoff is not None:
+        source = manifest["prefix_handoff"]["source"]["iteration"]
+        checkpoint = Path(manifest["checkpoint"]).stem
+        label = f"{progress_name} {progress:.2f} 米 · 示范 {source} · {checkpoint}"
     if peak is not None:
         label += f" · 封顶于 {peak * cfg.feature_step_seconds:.2f}s / 第 {peak} 步"
     if cut is not None:
         label += f" · 裁剪于 {cut * cfg.feature_step_seconds:.2f}s / 第 {cut} 步"
-    fig.text(.5, .91, label, ha="center", fontproperties=font, fontsize=10)
+    if return_segment is not None:
+        label = (f"s 起点={return_segment['s_start_m']:.3f} m · Δs={progress:.3f} m · "
+                 f"T={return_segment['T_steps']} 步 / {return_segment['T_seconds']:.3f} s\n"
+                 f"原回合第 {return_segment['start_step']} → {return_segment['end_step']} 步 · "
+                 f"{return_segment['source_label']}")
+    if return_segment is not None:
+        fig.subplots_adjust(top=.80)
+    fig.text(.5, .89 if return_segment is not None else .91, label, ha="center",
+             va="center" if return_segment is not None else "baseline", fontproperties=font, fontsize=10)
     caption = "根据保存状态重建的运动示意，非游戏录像；绿色线为参考路线。"
     if states.shape[1] == 35:
         caption += "蓝线是 TransformPoint(b) 锅心轨迹。"
@@ -114,6 +139,14 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
         caption += f"{star}。"
     if cut is not None:
         caption += "红点为裁剪点，红线为其后被剪掉的段。"
+    if handoff is not None:
+        caption = "保存状态重建，非游戏录像；灰虚线为示范前缀，蓝线为策略接管后；黑方块为接管点，绿色为参考路线。"
+    if noise_window is not None:
+        caption = "保存状态重建，非游戏录像；灰虚线为加噪前，橙线为噪声窗口，蓝线为撤噪后；黑方块为撤噪点，绿色为参考路线。"
+        if noise_window["stop"] >= len(states)-1:
+            caption = "保存状态重建，非游戏录像；橙线为全程探索，绿色为参考路线；本条没有撤噪后的观测。"
+    if return_segment is not None:
+        caption = "保存状态重建，非游戏录像；橙线为入选片段，灰线为前后上下文；蓝圆为离开前，紫方块为首次返回，绿色为参考路线。"
     fig.text(.5, .025, caption, ha="center", fontproperties=font, fontsize=9, color="#555555")
     for poly in terrain:
         if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):
@@ -127,6 +160,11 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
     tip_patch=Polygon(np.zeros_like(tip), closed=True, facecolor="#596169", edgecolor="#323b41", zorder=5) if tip is not None else None
     if tip_patch is not None: ax.add_patch(tip_patch)
     kept,=ax.plot([],[],color="#32789d",linewidth=1.6,alpha=.85,zorder=2)
+    prefix_line,=ax.plot([],[],color="#777777",linewidth=1.6,ls="--",zorder=2)
+    noise_line,=ax.plot([],[],color="#df861d",linewidth=2,zorder=3)
+    handoff_marker,=ax.plot([],[],marker="s",color="#333333",markersize=5,zorder=7)
+    return_start_marker,=ax.plot([],[],marker="o",color="#246b9b",markersize=6,zorder=7)
+    return_end_marker,=ax.plot([],[],marker="s",color="#824da1",markersize=6,zorder=7)
     dropped,=ax.plot([],[],color="#c0392b",linewidth=1.3,alpha=.75,zorder=2)
     peak_marker,=ax.plot([],[],marker="*",color="#d4a017",markersize=13,markeredgecolor="#fff7f0",markeredgewidth=0.8,zorder=7)
     marker,=ax.plot([],[],"o",color="#c0392b",markersize=7,markeredgecolor="#fff7f0",markeredgewidth=1.2,zorder=6)
@@ -139,6 +177,39 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
         row=phys[i]
         split = len(states)-1 if cut is None else cut
         kept.set_data(trail[:min(i, split)+1,0], trail[:min(i, split)+1,1])
+        if handoff_step is not None:
+            end = min(i, handoff_step)
+            prefix_line.set_data(trail[:end+1,0], trail[:end+1,1])
+            kept.set_data(trail[handoff_step:i+1,0], trail[handoff_step:i+1,1])
+            if handoff_step < len(states)-1 and i >= handoff_step:
+                handoff_marker.set_data([trail[handoff_step,0]], [trail[handoff_step,1]])
+            else:
+                handoff_marker.set_data([], [])
+        if noise_window is not None:
+            noise_start, noise_stop = noise_window["start"], noise_window["stop"]
+            end = min(i, noise_start)
+            prefix_line.set_data(trail[:end+1,0], trail[:end+1,1])
+            noise_line.set_data(trail[noise_start:min(i,noise_stop)+1,0], trail[noise_start:min(i,noise_stop)+1,1])
+            kept.set_data(trail[noise_stop:i+1,0], trail[noise_stop:i+1,1])
+            if i >= noise_stop and noise_stop < len(states)-1:
+                handoff_marker.set_data([trail[noise_stop,0]], [trail[noise_stop,1]])
+            else:
+                handoff_marker.set_data([], [])
+        if return_segment is not None:
+            a = return_segment["start_step"] - return_segment["render_start_step"]
+            b = return_segment["end_step"] - return_segment["render_start_step"]
+            prefix_line.set_data(trail[:min(i, a)+1, 0], trail[:min(i, a)+1, 1])
+            noise_line.set_data(trail[a:min(i, b)+1, 0], trail[a:min(i, b)+1, 1])
+            kept.set_color("#999999")
+            kept.set_data(trail[b:i+1, 0], trail[b:i+1, 1])
+            if i >= a:
+                return_start_marker.set_data([trail[a, 0]], [trail[a, 1]])
+            else:
+                return_start_marker.set_data([], [])
+            if i >= b:
+                return_end_marker.set_data([trail[b, 0]], [trail[b, 1]])
+            else:
+                return_end_marker.set_data([], [])
         if peak is not None and i >= peak:
             peak_marker.set_data([trail[peak,0]], [trail[peak,1]])
         else:
@@ -160,10 +231,17 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
         if tip_patch is not None:
             tip_patch.set_xy(reconstruct_polygon_world(row[23:25],rod_angle_deg(row,cfg.tip_angle_source)+cfg.tip_angle_offset,tip,cfg.tip_scale))
         note = f"{i*cfg.feature_step_seconds:4.2f} / {(len(states)-1)*cfg.feature_step_seconds:.2f} s"
+        if handoff_step is not None:
+            note += "\n示范动作" if i < handoff_step else "\n策略动作（权重冻结）"
+        if noise_window is not None:
+            decision = min(i, len(states)-2)
+            note += "\n噪声开启" if noise_window["start"] <= decision < noise_window["stop"] else "\n零噪声（权重冻结）"
         if peak is not None and i >= peak:
             note += "\ncredited 封顶之后"
         if cut is not None and i >= cut:
             note += "\n裁剪点之后"
+        if return_segment is not None:
+            note += f"\n原回合第 {i + return_segment['render_start_step']} 步"
         timer.set_text(note)
     frames=sorted(set([*range(0,len(states),4),len(states)-1]))
     ffmpeg=shutil.which("ffmpeg")
@@ -185,15 +263,26 @@ def render_episode(episode: Path, output: Path, terrain, bodies, tip, route: Ref
     if cut is not None:
         draw(len(states)-1)
         fig.savefig(output/"prune.png",dpi=120)
+    if return_segment is not None:
+        for field, name in [("start_step", "departure"), ("end_step", "return")]:
+            draw(return_segment[field] - return_segment["render_start_step"])
+            fig.savefig(output/f"{name}.png", dpi=120)
     plt.close(fig)
     meta = {"episode":str(episode.resolve()),"physical_steps":len(states)-1,
             "physical_seconds":(len(states)-1)*cfg.feature_step_seconds,
             "rendered_frames":len(frames),"fps":30,
             "type":"archived_state_reconstruction_not_game_recording",
             "trail": "pot_transform_point_b" if states.shape[1] == 35 else "player_origin",
-            "credited_progress_m": data["metrics"]["credited_progress_m"]}
+            "credited_progress_m": data["metrics"].get("credited_progress_m")}
     meta["displayed_progress_m"] = progress
     meta["displayed_progress_name"] = progress_name
+    if return_segment is not None:
+        meta["return_segment"] = return_segment
+        meta.pop("credited_progress_m", None)
+    if handoff is not None:
+        meta["prefix_handoff"] = handoff
+    if noise_window is not None:
+        meta["noise_intervention"] = noise_window
     if peak is not None:
         meta["credited_state_index"] = int(peak)
         meta["credited_seconds"] = peak * cfg.feature_step_seconds
@@ -367,6 +456,13 @@ def render_elite_pool(pool: Path, manifest_path: Path, output: Path, *, video=Fa
         raise ValueError("Reference file differs from the archived manifest")
     with np.load(pool) as data:
         width = data["t0_states"].shape[1]
+        pool_metadata = json.loads(str(data["archive_metadata_json"])) if "archive_metadata_json" in data else {}
+        pool_size = int(data["n_trajectories"])
+    offline_layer = pool_metadata.get("selection") == "offline_saved_history_pareto_layer"
+    if offline_layer:
+        # A visualization must not silently compress the supplied offline layer.
+        from dataclasses import replace
+        cfg = replace(cfg, elite_archive_capacity=max(cfg.elite_archive_capacity, pool_size))
     fingerprint = reference_fingerprint(cfg, route_meta=route.metadata,
                                         schema_id=schema_from_raw_width(width).schema_id, raw_dim=width)
     archive = EliteTrajectoryArchive(cfg, pool.parent, fingerprint)
@@ -409,7 +505,7 @@ def render_elite_pool(pool: Path, manifest_path: Path, output: Path, *, video=Fa
         ax.plot(*trail[0], marker="o", color=colors["prefix"], ms=3)
         ax.plot(*trail[cap], marker="*", color="#c69716", ms=9, mec="white", mew=.4, zorder=5)
         ax.plot(*trail[-1], marker="s", color="#303a43", ms=3, zorder=5)
-        role = "前沿" if traj.archive_role == "pareto" else "多样性"
+        role = pool_metadata["display_role"] if offline_layer else ("前沿" if traj.archive_role == "pareto" else "多样性")
         ax.set_title(f"{rank:02d} · 池索引 {index} · 第 {traj.iteration} 轮 · {role}\n"
                      f"D={endpoint.distance:.2f} m · t={cap} 步 / {cap*cfg.feature_step_seconds:.2f} s",
                      fontproperties=font, fontsize=9)
@@ -419,14 +515,17 @@ def render_elite_pool(pool: Path, manifest_path: Path, output: Path, *, video=Fa
         ax.grid(alpha=.12)
         return endpoint
 
-    cols = 4
+    cols = (2 if len(order) <= 6 else 3) if offline_layer else 4
     rows = int(np.ceil(len(order)/cols))
-    fig, axes = plt.subplots(rows, cols, figsize=(16, rows*3.6), squeeze=False, facecolor="#faf9f6")
-    fig.subplots_adjust(top=.90, bottom=.055, left=.045, right=.99, hspace=.48, wspace=.30)
-    title = fig.suptitle(f"完整精英池 · {len(order)} 条运动轨迹", fontproperties=font, fontsize=20, y=.986)
-    fig.text(.5, .959, f"{pool.name} · 按确认距离 D 降序 · 所有小图同尺度 · D 为路线进度，不是高度",
+    height = rows*3.6 + (1.8 if offline_layer else 0)
+    fig, axes = plt.subplots(rows, cols, figsize=(16, height), squeeze=False, facecolor="#faf9f6")
+    fig.subplots_adjust(top=1-1.8/height if offline_layer else .90, bottom=.065, left=.045, right=.99, hspace=.48, wspace=.30)
+    pool_title = pool_metadata["display_title"] if offline_layer else "完整精英池"
+    title = fig.suptitle(f"{pool_title} · {len(order)} 条运动轨迹", fontproperties=font, fontsize=20,
+                         y=1-.2/height if offline_layer else .986)
+    fig.text(.5, 1-.8/height if offline_layer else .959, f"{pool.name} · 按确认距离 D 降序 · 所有小图同尺度 · D 为路线进度，不是高度",
              ha="center", fontproperties=font, fontsize=10)
-    fig.legend(handles=legends, loc="upper center", bbox_to_anchor=(.5, .948), ncol=5, prop=font, frameon=False)
+    fig.legend(handles=legends, loc="upper center", bbox_to_anchor=(.5, 1-1.05/height if offline_layer else .948), ncol=5, prop=font, frameon=False)
     fig.text(.5, .018, "保存状态重建；线条为锅心轨迹。每条完整 1200 步 = 10 秒；与当前策略评估能力分开解读。"
              if all(len(t.actions)==1200 for t in trajectories) else "保存状态重建；线条为锅心轨迹，末端停留到共同时间轴结束。",
              ha="center", fontproperties=font, fontsize=9)
@@ -466,15 +565,162 @@ def render_elite_pool(pool: Path, manifest_path: Path, output: Path, *, video=Fa
                     xy = row[33:35] if len(row)==35 else row[:2]
                     dot.set_data([xy[0]], [xy[1]])
                     shaft.set_data([row[15], row[23]], [row[16], row[24]])
-                title.set_text(f"完整精英池 · {len(order)} 条运动轨迹 · {step*cfg.feature_step_seconds:.2f} / {end*cfg.feature_step_seconds:.2f} 秒")
+                title.set_text(f"{pool_title} · {len(order)} 条运动轨迹 · {step*cfg.feature_step_seconds:.2f} / {end*cfg.feature_step_seconds:.2f} 秒")
                 writer.grab_frame()
     plt.close(fig)
     metadata = {"source_pool":str(pool.resolve()), "source_sha256":hashlib.sha256(pool.read_bytes()).hexdigest(),
+                "archive_metadata":pool_metadata,
                 "manifest":str(manifest_path.resolve()), "type":"archived_state_reconstruction_not_game_recording",
                 "trail":"pot_transform_point_b" if width==35 else "player_origin", "unpruned":True,
                 "reference_sha256":route.metadata["sha256"], "shared_bounds":[low.tolist(),high.tolist()], "entries":entries}
     (output/"index.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
     print(output/"all_elite_trajectories.png", flush=True)
+
+
+def render_return_segments(report_path: Path, output: Path, video_ranks=()):
+    """Show selected excursions from screening reports or retained pool snapshots."""
+    from matplotlib.lines import Line2D
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    cfg = TrainConfig(**report["config"])
+    route = ReferenceCorridor.from_file(cfg.reference_trajectory, cfg)
+    if route.metadata["sha256"] != report["reference"]["sha256"]:
+        raise ValueError("Reference differs from the screening report")
+    selected = report["selected"]
+    if not selected:
+        raise ValueError("No selected return segments to render")
+    output.mkdir(parents=True, exist_ok=True)
+    env, player = load_colliders(Path(cfg.game_root))
+    terrain, bodies, tip = extract_polygons(env), extract_body_local(player), extract_tip_local(player)
+    font = FontProperties(fname="C:/Windows/Fonts/msyh.ttc")
+    offsets = np.r_[0., np.cumsum([s.length for s in route.segments])]
+    source_data = {}
+    with np.load(report_path.parent / report["data_archive"], allow_pickle=False) as archive:
+        for row in report["candidates"]:
+            index = row["episode_index"]
+            if index not in source_data:
+                source_data[index] = (archive[f"e{index}_states"], archive[f"e{index}_actions"])
+
+    def source_label(row):
+        source = report["episodes"][row["episode_index"]]["sources"][0]
+        if source["kind"] == "full_episode_archive":
+            return f"历史完整轨迹 · 采集第 {source['iteration']} 轮"
+        return f"冻结测试 · {Path(source['path']).stem}"
+
+    def on_route(row, value):
+        segment = route.segments[row["segment_index"]]
+        s = value - offsets[row["segment_index"]]
+        k = min(len(segment.lengths)-1, max(0, int(np.searchsorted(segment.starts, s, side="right")-1)))
+        t = np.clip((s-segment.starts[k])/segment.lengths[k], 0., 1.)
+        return segment.points[k] + t * segment.vectors[k]
+
+    def panel(ax, row, title=None):
+        states, _ = source_data[row["episode_index"]]
+        a, b = row["start_step"], row["end_step"]
+        left, right = max(0, a-24), min(len(states)-1, b+24)
+        xy = path_xy(states)
+        projected = np.stack([on_route(row, row[k]) for k in ["s_start_m", "s_end_m"]])
+        bounds = np.concatenate([xy[left:right+1], projected])
+        center = (bounds.min(axis=0)+bounds.max(axis=0))/2
+        span = np.maximum(bounds.max(axis=0)-bounds.min(axis=0)+2., [7., 5.])
+        low, high = center-span/2, center+span/2
+        for poly in terrain:
+            if np.all(poly.max(axis=0) >= low) and np.all(poly.min(axis=0) <= high):
+                ax.fill(poly[:, 0], poly[:, 1], color="#e5e1d9", ec="#c0b9ac", lw=.5, zorder=0)
+        for segment in route.segments:
+            ax.plot(segment.points[:, 0], segment.points[:, 1], color="#648d69", lw=1., zorder=1)
+        ax.plot(xy[left:right+1, 0], xy[left:right+1, 1], color="#a4a4a4", lw=1., ls="--", zorder=2)
+        ax.plot(xy[a:b+1, 0], xy[a:b+1, 1], color="#cc6b27", lw=1.8, zorder=3)
+        ax.plot(*xy[a], "o", color="#246b9b", ms=6, mec="white", mew=.6, zorder=5)
+        ax.plot(*xy[b], "s", color="#824da1", ms=6, mec="white", mew=.6, zorder=5)
+        for p, q, color in zip([xy[a], xy[b]], projected, ["#246b9b", "#824da1"]):
+            ax.plot([p[0], q[0]], [p[1], q[1]], ":", color=color, lw=.8)
+            ax.plot(*q, ".", color=color, ms=4)
+        cell = row["decision"].get("cell")
+        prior = f" · 原 {row['previous_display_rank']:02d}" if "previous_display_rank" in row else ""
+        head = title or f"{row['display_rank']:02d}{prior} · 分桶 ({cell[1]}, {cell[2]})"
+        boundary_note = ""
+        if "return_projection_speed_mps" in row:
+            boundary_note = f"返回投影速度 {row['return_projection_speed_mps']:+.3f} m/s\n"
+        duration_note = f" ({row['T_seconds']:.3f} s)" if "T_seconds" in row else ""
+        ax.set_title(f"{head}\ns_start={row['s_start_m']:.3f} m · Δs={row['delta_s_m']:.3f} m · T={row['T_steps']} 步{duration_note}\n"
+                     f"{boundary_note}{source_label(row)} · {a} → {b} 步", fontproperties=font, fontsize=9)
+        ax.set(xlim=(low[0], high[0]), ylim=(low[1], high[1]), xlabel="World x (m)", ylabel="World y (m)")
+        ax.set_aspect("equal")
+        ax.tick_params(labelsize=7)
+        ax.grid(alpha=.12)
+
+    legends = [Line2D([], [], color="#cc6b27", label="离开—返回片段"),
+               Line2D([], [], color="#a4a4a4", ls="--", label="前后各 24 步上下文"),
+               Line2D([], [], color="#648d69", label="参考路线"),
+               Line2D([], [], marker="o", color="#246b9b", ls="", label="离开前最后内点"),
+               Line2D([], [], marker="s", color="#824da1", ls="", label="首次返回内点")]
+    cols = 2 if len(selected) <= 6 else 3
+    rows = int(np.ceil(len(selected)/cols))
+    height = rows*4.2+2.3
+    fig, axes = plt.subplots(rows, cols, figsize=(6*cols, height), squeeze=False, facecolor="#faf9f6")
+    fig.subplots_adjust(top=1-2.3/height, bottom=.7/height, left=.055, right=.985, hspace=.7, wspace=.30)
+    rule = report["rule"]
+    fig.suptitle(report.get("display_title", f"离开—返回片段 · {len(selected)} 个入选代表"),
+                 fontproperties=font, fontsize=20, y=1-.08/height)
+    fig.text(.5, 1-.48/height, f"Δs ≥ {rule['min_forward_m']:g} m · s_start 分桶 {rule['start_bin_m']:g} m · Δs 分桶 {rule['delta_bin_m']:g} m · 同桶取最短 T",
+             ha="center", fontproperties=font, fontsize=11)
+    filters = []
+    if rule.get("reject_upper_boundary"):
+        filters.append("排除从上方离开或返回（相对投影点的世界 y）")
+    if rule.get("reject_negative_return_speed"):
+        filters.append("返回投影速度 ≥ 0")
+    if filters:
+        fig.text(.5, 1-.77/height, " · ".join(filters), ha="center", fontproperties=font, fontsize=10)
+    fig.legend(handles=legends, loc="upper center", bbox_to_anchor=(.5,1-.94/height),
+               ncol=3 if cols==2 else 5, prop=font, frameon=False)
+    fig.text(.5, .014, report.get("display_note", "各图局部放大，坐标单位为米；s_start 为参考路径绝对弧长，Δs 为净正向跨度；1 步 = 1/120 秒。仅离线筛选，未接入训练。"),
+             ha="center", fontproperties=font, fontsize=9)
+    entries = []
+    for row, ax in zip(selected, axes.flat):
+        panel(ax, row)
+        rank = row["display_rank"]
+        single, single_ax = plt.subplots(figsize=(9, 7), facecolor="#faf9f6")
+        single.subplots_adjust(top=.84, bottom=.16)
+        panel(single_ax, row)
+        single.legend(handles=legends, loc="lower center", ncol=3, prop=font, frameon=False)
+        single.savefig(output / f"segment_{rank:02d}.png", dpi=150)
+        plt.close(single)
+        states, actions = source_data[row["episode_index"]]
+        a, b = row["start_step"], row["end_step"]
+        left, right = max(0, a-24), min(len(actions), b+24)
+        detail = dict(row, render_start_step=left, source_label=source_label(row))
+        episode_dir = output / f"segment_{rank:02d}"
+        episode_dir.mkdir(exist_ok=True)
+        (episode_dir / "manifest.json").write_text(json.dumps({"config":report["config"], "reference":report["reference"]}, ensure_ascii=False), encoding="utf-8")
+        episode_path = episode_dir / "episode.json"
+        episode_path.write_text(json.dumps({"metrics":{"return_segment":detail},
+            "states":states[left:right+1].tolist(),
+            "trace":[{"step":t+1, "action":actions[t].tolist()} for t in range(left, right)]}, ensure_ascii=False), encoding="utf-8")
+        if rank in video_ranks:
+            render_episode(episode_path, episode_dir, terrain, bodies, tip, route)
+        entries.append(dict(rank=rank, candidate_id=row["candidate_id"], image=f"segment_{rank:02d}.png",
+                            video=f"segment_{rank:02d}/best-motion.mp4" if rank in video_ranks else None))
+    for ax in list(axes.flat)[len(selected):]:
+        ax.set_visible(False)
+    fig.savefig(output / "all_selected_segments.png", dpi=160)
+    plt.close(fig)
+    by_id = {r["candidate_id"]:r for r in report["candidates"]}
+    replacements = [(by_id[r["decision"]["winner_id"]], r) for r in report["candidates"]
+                    if r["decision"]["reason"] == "same_cell_replaced"
+                    and r["content_sha256"] != by_id[r["decision"]["winner_id"]]["content_sha256"]]
+    if replacements:
+        compare, axes = plt.subplots(len(replacements), 2, figsize=(12, 4.5*len(replacements)+.6), squeeze=False)
+        compare.subplots_adjust(top=.84, bottom=.14, hspace=.6, wspace=.28)
+        compare.suptitle("同桶替换实例 · 只按三个标识比较", fontproperties=font, fontsize=17)
+        for (winner, removed), pair in zip(replacements, axes):
+            panel(pair[0], winner, "保留 · T 更短")
+            panel(pair[1], removed, "淘汰 · 同桶内 T 更长")
+        compare.legend(handles=legends, loc="lower center", ncol=3, prop=font, frameon=False)
+        compare.savefig(output / "replacement_examples.png", dpi=150)
+        plt.close(compare)
+    (output / "index.json").write_text(json.dumps({"report":str(report_path.resolve()), "entries":entries}, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(output / "all_selected_segments.png", flush=True)
 
 
 def main():
@@ -488,10 +734,19 @@ def main():
     parser.add_argument("--elite-pool", type=Path, help="绘制完整精英池的全部运动轨迹")
     parser.add_argument("--manifest", type=Path, help="精英池模式所需的 config/reference manifest")
     parser.add_argument("--pool-video", action="store_true", help="额外生成所有精英同步运动的视频")
+    parser.add_argument("--return-segments", type=Path, help="绘制离线筛选报告中全部入选离开—返回片段")
+    parser.add_argument("--return-video", nargs="*", type=int, default=[], help="额外渲染指定展示序号的片段视频")
     parser.add_argument("--sampling-report", type=Path, help="将 sampling.json 的采样概率标在完整精英空间轨迹上")
     parser.add_argument("--sampling-focus", nargs=2, type=int, metavar=("POOL_INDEX", "ACTION"),
                         help="在并排图上额外标注指定池索引和动作所在的采样片段")
     args = parser.parse_args()
+    if args.return_segments:
+        if args.episode or args.ranking or args.elite_pool or args.sampling_report:
+            parser.error("--return-segments 不能与其他输入模式同用")
+        render_return_segments(args.return_segments, args.output, args.return_video)
+        return
+    if args.return_video:
+        parser.error("--return-video 需要 --return-segments")
     if args.sampling_focus and not args.sampling_report:
         parser.error("--sampling-focus 需要 --sampling-report")
     if args.elite_pool:

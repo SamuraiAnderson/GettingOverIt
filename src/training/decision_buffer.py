@@ -9,6 +9,24 @@ from .dataset import left_pad_sequence
 _SPARSE_NAMES = ("contour_tokens", "contour_mask", "relation_tokens", "relation_mask")
 
 
+def has_zero_noise(buffer):
+    return isinstance(buffer, DecisionRolloutBuffer) and any(np.any(e["noise_scale"] == 0) for e in buffer.episodes)
+
+
+def validate_likelihood(episode, context):
+    scale = episode["noise_scale"]
+    if not np.isfinite(scale).all() or np.any(scale < 0):
+        raise ValueError("noise_scale must be finite and nonnegative")
+    expected = scale > 0
+    if "likelihood_valid" in episode and not np.array_equal(episode["likelihood_valid"], expected):
+        raise ValueError("Likelihood mask disagrees with recorded noise scale")
+    if np.any(~expected):
+        if context.get("log_prob_version") != 3 or "likelihood_valid" not in episode:
+            raise ValueError("Zero-noise decisions require the explicit hybrid likelihood contract")
+        if np.any(episode["log_probs"][~expected] != 0):
+            raise ValueError("Deterministic rows must have the zero log-probability sentinel")
+
+
 def duration_gae(rewards, values, dones, durations, bootstrap, gamma, lam):
     """Rewards already contain sum_j gamma**j * r_j; lambda decays on the environment clock."""
     advantage = np.zeros(len(values), dtype=np.float32)
@@ -40,6 +58,7 @@ class DecisionRolloutBuffer:
         self.policy_context = policy_context or {}
         self.device = torch.device(device)
         self.episodes = []
+        self.collection_metadata = {}
 
     @property
     def size(self):
@@ -63,8 +82,9 @@ class DecisionRolloutBuffer:
                 np.int64 if name in ("decision_steps", "durations") else np.float32))
         episode["noise_scale"] = np.asarray(
             [float(d.get("noise_scale", 1.0)) for d in decisions], dtype=np.float32)
-        if np.any(episode["noise_scale"] <= 0):
-            raise ValueError("noise_scale must be positive")
+        episode["likelihood_valid"] = np.asarray(
+            [d.get("likelihood_valid", d.get("noise_scale", 1.) > 0) for d in decisions], dtype=bool)
+        validate_likelihood(episode, self.policy_context)
         if not all(np.isfinite(x).all() for x in episode.values()):
             raise ValueError("Non-finite decision episode")
         starts, durations = episode["decision_steps"], episode["durations"]
@@ -91,7 +111,9 @@ class DecisionRolloutBuffer:
             noise_scale=self._tensor([
                 1.0 if "noise_scale" not in self.episodes[e] else self.episodes[e]["noise_scale"][i]
                 for e, i in rows
-            ]))
+            ]), likelihood_valid=self._tensor([
+                self.episodes[e].get("likelihood_valid", self.episodes[e]["noise_scale"] > 0)[i]
+                for e, i in rows]).bool())
 
     def _inputs(self, episode, start, end):
         return tuple(self._tensor(episode[name][start:end])[None]
@@ -112,8 +134,9 @@ class DecisionRolloutBuffer:
         phi = self.policy_context["noise_phi"]
         advantages = [e["advantages"].copy() for e in self.episodes]
         if normalize_advantages and self.size > 1:
-            all_adv = np.concatenate(advantages)
-            advantages = [(a-all_adv.mean()) / (all_adv.std()+1e-8) for a in advantages]
+            all_adv = np.concatenate([a[e["noise_scale"] > 0] for a, e in zip(advantages, self.episodes)])
+            if len(all_adv) > 1:
+                advantages = [(a-all_adv.mean()) / (all_adv.std()+1e-8) for a in advantages]
         if model.config.policy_backbone == "gru":
             size = min(batch_size, model.config.recurrent_seq_len)
             chunks = [(e, start, min(start + size, len(episode["decision_steps"])))
@@ -139,6 +162,8 @@ class DecisionRolloutBuffer:
                 )
                 features = features[0, torch.as_tensor(steps-start, device=self.device)]
                 batch = self._batch([(e, i) for i in range(first, last)], advantages)
+                if not batch.likelihood_valid.all():
+                    batch.mean_actions = model._squash_action(model.distribution_from_features(features)[0].mean)
                 yield (batch, *model.evaluate_features(
                     features, batch.raw_actions, batch.noise_prev, phi, noise_scale=batch.noise_scale))
         else:
@@ -171,17 +196,24 @@ class DecisionRolloutBuffer:
         if not self.size:
             raise ValueError("Cannot archive an empty decision buffer")
         arrays = {f"episode_{i}_{name}": array for i, ep in enumerate(self.episodes) for name, array in ep.items()}
-        metadata = {"version": 3, "kind": "physical_sequences", "policy_context": self.policy_context,
-                    "episodes": len(self.episodes), "fields": list(self.episodes[0])}
+        metadata = {"version": 4 if has_zero_noise(self) else 3,
+                    "kind": "physical_sequences", "policy_context": self.policy_context,
+                    "episodes": len(self.episodes), "fields": list(self.episodes[0]),
+                    "collection_metadata": self.collection_metadata}
         np.savez_compressed(path, **arrays, metadata=json.dumps(metadata))
 
     @classmethod
     def load(cls, path, device="cpu"):
         with np.load(path, allow_pickle=False) as data:
             meta = json.loads(str(data["metadata"]))
-            if meta["version"] != 3 or meta.get("kind") != "physical_sequences":
+            if meta["version"] not in (3, 4) or meta.get("kind") != "physical_sequences":
                 raise ValueError("Unsupported decision archive")
             result = cls(meta["policy_context"], device)
+            result.collection_metadata = meta.get("collection_metadata", {})
             result.episodes = [{name: data[f"episode_{i}_{name}"] for name in meta["fields"]}
                                for i in range(meta["episodes"])]
+            for episode in result.episodes:
+                validate_likelihood(episode, result.policy_context)
+            if meta["version"] == 3 and has_zero_noise(result):
+                raise ValueError("Zero-noise archive requires version 4")
         return result

@@ -206,6 +206,9 @@ class RolloutWorker:
 
     def __init__(self, config: TrainConfig):
         self.config = config
+        from .exploration_windows import make_rng, validate
+        validate(config)
+        self._exploration_rng = make_rng(config)
         self.env: GoiEnv | None = None
         self._game_process: subprocess.Popen | None = None
         self._terrain_mask: np.ndarray | None = None
@@ -404,10 +407,12 @@ class RolloutWorker:
             logger.info("运行时人工排除区: 从 %s 载入 %d 个圆",
                         path, len(self._exclusion_zones))
 
-    def launch_game(self) -> None:
+    def launch_game(self, *, current_desktop: bool = False, collider_visual: bool = False) -> None:
         """启动游戏进程、TCP 连接、warmup、拍快照、开启自由相机。可多次调用。"""
         game_root = Path(self.config.game_root)
-        self._game_process = launch_players(self.config.num_agents, game_root=game_root, port=self.config.port)
+        launch_options = {"desktop": None} if current_desktop else {}
+        self._game_process = launch_players(self.config.num_agents, game_root=game_root,
+                                            port=self.config.port, **launch_options)
 
         self.env = make_goi_env(self.config)
         self.env.connect()
@@ -417,6 +422,8 @@ class RolloutWorker:
             self.env, self.config.num_agents, self.config.warmup_steps
         )
         self.env.set_camera_free(True)
+        if collider_visual:
+            self.env.toggle_collider_visual(True)
 
         logger.info("游戏已启动，%d agents 就绪", self.config.num_agents)
 
@@ -699,6 +706,8 @@ class RolloutWorker:
         deterministic: bool = False,
         initial_offsets: np.ndarray | None = None,
         native_diagnostics: bool = False,
+        evaluation_prefix=None,
+        evaluation_noise_plan=None,
     ) -> tuple[PPORolloutBuffer, list[Trajectory]]:
         """
         PPO 采集：每步记录 (action, log_prob, value, reward)。
@@ -715,7 +724,11 @@ class RolloutWorker:
         if experimental_enabled(self.config):
             from .experimental_rollout import collect_decisions
             return collect_decisions(self, model, n_steps, eff_map, normalizer,
-                deterministic=deterministic, initial_offsets=initial_offsets, native_diagnostics=native_diagnostics)
+                deterministic=deterministic, initial_offsets=initial_offsets, native_diagnostics=native_diagnostics,
+                evaluation_prefix=evaluation_prefix, evaluation_noise_plan=evaluation_noise_plan)
+
+        if evaluation_prefix is not None or evaluation_noise_plan is not None:
+            raise ValueError("Frozen prefix/noise evaluation requires the experimental GRU collector")
 
         started = time.perf_counter()
         timings = {name: 0.0 for name in ("patch", "contact", "inference", "env", "bootstrap", "diagnostics")}

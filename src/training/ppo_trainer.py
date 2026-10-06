@@ -12,6 +12,7 @@ PPO Trainer — Proximal Policy Optimization 训练器。
 from __future__ import annotations
 
 import logging
+import copy
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -130,6 +131,7 @@ class PPOTrainer:
         self.critic_optimizer: AdamW | None = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._global_step = 0
+        self.gru_sil_pool_cursor = 0
         self._pending_optim_state: dict | None = None
         self._kl_adapter = _KLAdapter(config.target_kl)
         self._grad_norm_adapter = _GradNormAdapter(
@@ -149,6 +151,7 @@ class PPOTrainer:
 
     def checkpoint_state(self):
         return {"version": 1, "global_step": self._global_step,
+                "gru_sil_pool_cursor": self.gru_sil_pool_cursor,
                 "kl_target": self._kl_adapter.target,
                 "grad_norms": list(self._grad_norm_adapter._norms),
                 "frozen_grad_norm": self._grad_norm_adapter._frozen_norm,
@@ -159,6 +162,10 @@ class PPOTrainer:
         if state.get("version") != 1:
             raise ValueError("Unsupported PPO trainer checkpoint")
         self._global_step = int(state["global_step"])
+        cursor = state.get("gru_sil_pool_cursor", 0)
+        if type(cursor) is not int or cursor < 0:
+            raise ValueError("Invalid saved SIL pool quota cursor")
+        self.gru_sil_pool_cursor = cursor
         if self.config.ppo_target_kl_adaptive:
             self._kl_adapter.target = state["kl_target"]
         if self.config.max_grad_norm_adaptive:
@@ -181,6 +188,8 @@ class PPOTrainer:
         策略推爆。先用独立优化器（仅含 critic_head 参数，避免 AdamW 权重衰减污染冻结的 BC 权重）
         在冻结的 BC 特征上拟合价值，使优势值有意义后再开策略更新。
         """
+        if getattr(buffer, "collection_metadata", {}).get("evaluation_only"):
+            raise ValueError("Evaluation-only rollouts cannot be used for PPO training")
         model = model.to(self.device)
         model.eval()  # 关 dropout：保证与采集/PPO 更新的 log_prob 口径一致（见 update 注释）
         buffer.device = self.device
@@ -232,7 +241,54 @@ class PPOTrainer:
             **audit,
         }
 
-    def update(
+    def update(self, model, buffer, *, behavior_model=None, max_behavior_kl=0.01):
+        if getattr(buffer, "collection_metadata", {}).get("evaluation_only"):
+            raise ValueError("Evaluation-only rollouts cannot be used for PPO training")
+        from .decision_buffer import has_zero_noise
+        if not has_zero_noise(buffer):
+            return self._update(model, buffer, behavior_model=behavior_model, max_behavior_kl=max_behavior_kl)
+        if behavior_model is not None:
+            raise ValueError("Zero-noise window updates require synchronous collection")
+        from .gru_sil import deterministic_action_drift
+        # The shared backbone can change mean actions even on critic-only chunks.
+        # Record drift on all deterministic histories, without a hard veto.
+        # Restore this transaction only if it fails or produces non-finite data.
+        weights = copy.deepcopy(model.state_dict())
+        optimizer = copy.deepcopy(self.optimizer.state_dict()) if self.optimizer is not None else None
+        pending = copy.deepcopy(self._pending_optim_state)
+        counters = copy.deepcopy((self._global_step, self._kl_adapter.__dict__, self._grad_norm_adapter.__dict__))
+        self.last_update_trace = []
+
+        def rollback():
+            model.load_state_dict(weights)
+            if optimizer is None:
+                self.optimizer = None
+            else:
+                self.optimizer.load_state_dict(optimizer)
+            self._pending_optim_state = pending
+            self._global_step, kl_state, grad_state = counters
+            self._kl_adapter.__dict__.update(kl_state)
+            self._grad_norm_adapter.__dict__.update(grad_state)
+            model.zero_grad(set_to_none=True)
+            for row in getattr(self, "last_update_trace", []):
+                row.update(applied=False, rolled_back=True)
+
+        try:
+            metrics = self._update(model, buffer, max_behavior_kl=max_behavior_kl)
+            if not all(torch.isfinite(p).all() for p in model.parameters()):
+                raise FloatingPointError("Non-finite parameters after zero-noise PPO update")
+            drift = deterministic_action_drift(model, buffer)
+            metrics.update(ppo_attempted_deterministic_action_max_delta=drift["deterministic_action_max_delta"],
+                           ppo_deterministic_guard_rejected=0.,  # Historical log compatibility; guard retired.
+                           ppo_attempted_updates=metrics["n_updates"],
+                           ppo_attempted_policy_updates=metrics["policy_updates"])
+            metrics.update(drift)
+            return metrics
+        except BaseException:
+            rollback()
+            raise
+
+    def _update(
         self,
         model: ActorCritic,
         buffer: PPORolloutBuffer,
@@ -289,6 +345,8 @@ class PPOTrainer:
         total_clip_frac = 0.0
         total_loss_sum = 0.0
         n_updates = 0
+        policy_updates = 0
+        total_anchor_loss = 0.
         early_stopped = False
         self.last_update_trace = []
         stop_kl = 0.0
@@ -303,18 +361,20 @@ class PPOTrainer:
                 normalize_advantages=cfg.normalize_advantages,
             ):
                 # ── 策略损失 (clipped surrogate) ──
-                log_ratio = new_log_prob - batch.old_log_probs
+                active = batch.noise_scale > 0
+                log_ratio = (new_log_prob - batch.old_log_probs)[active]
                 ratio = log_ratio.exp()
 
                 # These probabilities describe the CURRENT parameters, before
                 # optimizer.step(). Stop before applying another excessive step.
                 with torch.no_grad():
-                    approx_kl = ((ratio - 1.0) - log_ratio).mean().item()
+                    approx_kl = ((ratio - 1.0) - log_ratio).mean().item() if ratio.numel() else 0.
                 effective_kl = self._kl_adapter.target
                 if not np.isfinite(approx_kl):
                     raise ValueError("Non-finite minibatch KL")
                 trace = {"epoch": epoch, "pre_step_kl": approx_kl,
-                         "samples": len(batch.actions), "applied": False}
+                         "samples": len(batch.actions), "applied": False,
+                         "stochastic_samples": int(active.sum()), "deterministic_samples": int((~active).sum())}
                 self.last_update_trace.append(trace)
                 if effective_kl is not None and approx_kl > cfg.ppo_kl_stop_factor * effective_kl:
                     early_stopped, stop_kl = True, approx_kl
@@ -322,12 +382,12 @@ class PPOTrainer:
                                 n_updates + 1, approx_kl, cfg.ppo_kl_stop_factor * effective_kl)
                     break
 
-                surr1 = ratio * batch.advantages
+                surr1 = ratio * batch.advantages[active]
                 surr2 = (
                     ratio.clamp(1.0 - cfg.clip_epsilon, 1.0 + cfg.clip_epsilon)
-                    * batch.advantages
+                    * batch.advantages[active]
                 )
-                policy_loss = -torch.min(surr1, surr2).mean()
+                policy_loss = -torch.min(surr1, surr2).mean() if ratio.numel() else new_value.sum() * 0.
 
                 # ── 价值损失 (clipped) ──
                 value_pred_clipped = batch.old_values + (
@@ -338,7 +398,7 @@ class PPOTrainer:
                 value_loss = 0.5 * torch.max(vl_unclipped, vl_clipped).mean()
 
                 # ── 熵奖励 ──
-                entropy_mean = entropy.mean()
+                entropy_mean = entropy[active].mean() if ratio.numel() else new_value.sum() * 0.
                 entropy_loss = -entropy_mean
 
                 # ── 总损失 ──
@@ -347,6 +407,12 @@ class PPOTrainer:
                     + cfg.vf_coef * value_loss
                     + cfg.ent_coef * entropy_loss
                 )
+                if (~active).any():
+                    delta = (batch.mean_actions[~active] - batch.actions[~active]) / cfg.deterministic_anchor_scale
+                    anchor_loss = .5 * delta.square().sum(-1).mean()
+                    loss = loss + cfg.exploration_window_anchor_coef * anchor_loss
+                    total_anchor_loss += float(anchor_loss.detach())
+                    trace["deterministic_anchor_loss"] = float(anchor_loss.detach())
 
                 if not torch.isfinite(loss):
                     logger.warning(
@@ -378,9 +444,9 @@ class PPOTrainer:
 
                 # ── 统计 ──
                 with torch.no_grad():
-                    approx_kl = ((ratio - 1.0) - log_ratio).mean().item()
+                    approx_kl = ((ratio - 1.0) - log_ratio).mean().item() if ratio.numel() else 0.
                     clip_frac = (
-                        (ratio - 1.0).abs().gt(cfg.clip_epsilon).float().mean().item()
+                        (ratio - 1.0).abs().gt(cfg.clip_epsilon).float().mean().item() if ratio.numel() else 0.
                     )
 
                 total_policy_loss += policy_loss.item()
@@ -390,22 +456,26 @@ class PPOTrainer:
                 total_clip_frac += clip_frac
                 total_loss_sum += loss.item()
                 n_updates += 1
+                policy_updates += int(ratio.numel() > 0)
                 self._global_step += 1
 
         n = max(n_updates, 1)
-        final_avg_kl = total_approx_kl / n
+        policy_n = max(policy_updates, 1)
+        final_avg_kl = total_approx_kl / policy_n
 
-        if cfg.ppo_target_kl_adaptive:
+        if cfg.ppo_target_kl_adaptive and policy_updates:
             self._kl_adapter.adapt(max(final_avg_kl, stop_kl))
 
         metrics = {
-            "policy_loss": total_policy_loss / n,
+            "policy_loss": total_policy_loss / policy_n,
             "value_loss": total_value_loss / n,
-            "entropy": total_entropy / n,
+            "entropy": total_entropy / policy_n,
             "approx_kl": final_avg_kl,
-            "clip_fraction": total_clip_frac / n,
+            "clip_fraction": total_clip_frac / policy_n,
             "total_loss": total_loss_sum / n,
             "n_updates": float(n_updates),
+            "policy_updates": float(policy_updates),
+            "deterministic_anchor_loss": total_anchor_loss / n,
             "early_stopped": float(early_stopped),
             "stop_kl": stop_kl,
             "behavior_kl": lag,

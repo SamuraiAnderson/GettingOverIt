@@ -8,6 +8,7 @@ from .decision_buffer import DecisionRolloutBuffer
 from .policy_audit import policy_context
 from .policy_features import FeatureBuilder, SurfaceIndex, scale_report
 from .delayed_exploration import scales_for_agents
+from .exploration_windows import sample_plan, scales_for_plan
 from .reward import NewHighConfirmer, is_water, step_reward
 
 
@@ -21,10 +22,22 @@ def segment_action(parameters, elapsed, horizon):
 
 
 def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
-                      deterministic=False, initial_offsets=None, native_diagnostics=False):
+                      deterministic=False, initial_offsets=None, native_diagnostics=False, evaluation_prefix=None,
+                      evaluation_noise_plan=None):
     cfg, env = worker.config, worker.env
     if n_steps < 1 or env is None:
         raise ValueError("Positive rollout length and connected environment required")
+    if evaluation_prefix is not None:
+        evaluation_prefix.validate(cfg, n_steps, deterministic, initial_offsets)
+    if evaluation_noise_plan is not None:
+        from .evaluation_noise_plan import fixed_plan
+        if evaluation_prefix is not None:
+            raise ValueError("Fixed noise and demonstration-prefix evaluations cannot be combined")
+        plan = fixed_plan(evaluation_noise_plan, cfg, n_steps, deterministic=deterministic,
+                          initial_offsets=initial_offsets)
+    else:
+        plan = sample_plan(cfg, n_steps, worker._exploration_rng, deterministic=deterministic)
+    worker.last_exploration_windows = plan
     started = time.perf_counter()
     initial_encoded_frames = model.encoded_frame_count
     timings = {name: 0. for name in ("patch", "contact", "features", "inference", "env", "bootstrap", "diagnostics")}
@@ -94,6 +107,11 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
     peaks = {i: float(obs[i, 1]) for i in agents}
     phi = cfg.ou_phi if cfg.ou_enabled and not deterministic else 0.
     buffer = DecisionRolloutBuffer(policy_context(model, phi, deterministic))
+    buffer.collection_metadata = {"exploration_windows": plan, "episode_agent_ids": []}
+    if evaluation_noise_plan is not None:
+        buffer.collection_metadata["evaluation_only"] = True
+    if evaluation_prefix is not None:
+        buffer.collection_metadata["prefix_handoff"] = evaluation_prefix.metadata()
     noises = {i: (np.random.randn(model.parameter_dim).astype(np.float32) if phi
                   else np.zeros(model.parameter_dim, np.float32)) for i in agents}
     hidden = {i: None for i in agents}
@@ -190,7 +208,8 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
             for start in range(0, len(ready), batch_size):
                 ids = ready[start:start+batch_size]
                 previous_noise = tensor([noises[i] for i in ids])
-                scale_np = scales_for_agents(cfg, ids, step, deterministic)
+                scale_np = (scales_for_plan(plan, ids, step) if plan is not None else
+                            scales_for_agents(cfg, ids, step, deterministic))
                 scale_t = torch.from_numpy(scale_np).to(device)
                 if cfg.policy_backbone == "gru":
                     av = model.sample_features(torch.stack([recurrent[i] for i in ids]), previous_noise, phi, deterministic, noise_scale=scale_t)
@@ -209,13 +228,15 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
                     active_segments[i] = {"decision_steps": step, "durations": 0, "actions": parameters.copy(),
                         "raw_actions": raw.copy(), "noise_prev": noises[i].copy(), "log_probs": float(lp),
                         "values": float(value), "rewards": 0., "dones": False,
-                        "noise_scale": float(scale_np[j])}
+                        "noise_scale": float(scale_np[j]), "likelihood_valid": bool(scale_np[j] > 0)}
                     noises[i] = noise.copy()
         timings["inference"] += time.perf_counter() - clock
         executed = np.zeros((cfg.num_agents, 2), dtype=np.float32)
         for i in active:
             option = active_segments[i]
             executed[i] = segment_action(option["actions"], option["durations"], cfg.action_segment_steps)
+        if evaluation_prefix is not None:
+            executed = evaluation_prefix.override(step, active, executed)
         clock = time.perf_counter()
         new_obs, dones = env.step(executed)
         timings["env"] += time.perf_counter() - clock
@@ -304,6 +325,7 @@ def collect_decisions(worker, model, n_steps, eff_map=None, normalizer=None, *,
         if i in invalid_agents:
             continue
         buffer.add_episode(frames[i], records[i], value, cfg.gamma, cfg.gae_lambda)
+        buffer.collection_metadata["episode_agent_ids"].append(i)
         trajectories.append(Trajectory(np.asarray(raw_states[i]), np.asarray(raw_actions[i]),
                                        contact=np.asarray(contact_history[i], np.float32),
                                        corridor_progress=(np.asarray(corridor_credit[i], np.float32)

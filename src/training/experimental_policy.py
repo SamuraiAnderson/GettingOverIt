@@ -10,6 +10,8 @@ from .policy_features import experimental_enabled, feature_layout, validate_expe
 
 
 def create_actor_critic(config):
+    from .exploration_windows import configure_precision
+    configure_precision(config)
     return ExperimentalActorCritic(config) if experimental_enabled(config) else ActorCritic(config)
 
 
@@ -149,8 +151,24 @@ class ExperimentalActorCritic(ActorCritic):
 
     def sample_features(self, features, noise_prev, noise_phi, deterministic=False, noise_scale=None):
         from .actor_critic import ActionValue
+        from .exploration_windows import zero_noise_enabled
         distribution, value = self.distribution_from_features(features)
         mean, std = distribution.mean, distribution.stddev
+        if zero_noise_enabled(self.config) and not deterministic:
+            std_t = self._scaled_std(std, noise_scale, allow_zero=True)
+            cm, cs = self._ou_conditional(mean, std_t, noise_prev, noise_phi)
+            # Advance the latent OU process even while its action multiplier is zero.
+            # Never reconstruct it by dividing by a zero action standard deviation.
+            innovation = torch.randn_like(mean)
+            noise = (innovation if noise_prev is None else
+                     noise_phi * noise_prev + (1-noise_phi**2)**.5 * innovation).detach()
+            raw = mean + std_t * noise
+            active = (std_t > 0).all(-1)
+            lp = mean.new_zeros(mean.shape[0])  # Sentinel; no density on deterministic rows.
+            if active.any():
+                conditional = Normal(cm[active], cs[active])
+                lp[active] = self._log_prob_squash(conditional.log_prob(raw[active]).sum(-1), raw[active])
+            return ActionValue(self._squash_action(raw), lp, value, noise, raw.detach())
         std_t = self._scaled_std(std, noise_scale)
         cm, cs = self._ou_conditional(mean, std_t, noise_prev, noise_phi)
         conditional = Normal(cm, cs)
@@ -160,7 +178,18 @@ class ExperimentalActorCritic(ActorCritic):
         return ActionValue(self._squash_action(raw), lp, value, noise, raw.detach())
 
     def evaluate_features(self, features, raw, noise_prev, noise_phi, noise_scale=None):
+        from .exploration_windows import zero_noise_enabled
         distribution, values = self.distribution_from_features(features)
+        if zero_noise_enabled(self.config):
+            std_t = self._scaled_std(distribution.stddev, noise_scale, allow_zero=True)
+            mean, std = self._ou_conditional(distribution.mean, std_t, noise_prev, noise_phi)
+            active = (std > 0).all(-1)
+            lp, entropy = mean.new_zeros(mean.shape[0]), mean.new_zeros(mean.shape[0])
+            if active.any():
+                conditional = Normal(mean[active], std[active])
+                lp[active] = self._log_prob_squash(conditional.log_prob(raw[active]).sum(-1), raw[active])
+                entropy[active] = conditional.entropy().sum(-1)
+            return lp, entropy, values
         std_t = self._scaled_std(distribution.stddev, noise_scale)
         mean, std = self._ou_conditional(distribution.mean, std_t, noise_prev, noise_phi)
         conditional = Normal(mean, std)

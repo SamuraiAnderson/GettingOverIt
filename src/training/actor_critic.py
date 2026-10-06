@@ -338,15 +338,16 @@ class ActorCritic(SparseGeometryMixin, _DynamicsNormMixin, nn.Module):
         return dist, value
 
     @staticmethod
-    def _scaled_std(std: torch.Tensor, noise_scale: torch.Tensor | None) -> torch.Tensor:
+    def _scaled_std(std: torch.Tensor, noise_scale: torch.Tensor | None, *, allow_zero=False) -> torch.Tensor:
         """Multiply the marginal std by this step's exploration scale. None means 1."""
         if noise_scale is None:
             return std
         scale = torch.as_tensor(noise_scale, dtype=std.dtype, device=std.device)
         if scale.ndim == 1:
             scale = scale.unsqueeze(-1)
-        if not torch.isfinite(scale).all() or torch.any(scale <= 0):
-            raise ValueError("noise_scale must be finite and positive")
+        if not torch.isfinite(scale).all() or torch.any(scale < 0 if allow_zero else scale <= 0):
+            raise ValueError("noise_scale must be finite and nonnegative" if allow_zero else
+                             "noise_scale must be finite and positive")
         return std * scale
 
     @staticmethod

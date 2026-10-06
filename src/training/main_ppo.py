@@ -90,7 +90,7 @@ def save_checkpoint(
     config: TrainConfig | None = None,
     reference_metadata: dict | None = None,
     value_warmup_end: int | None = None,
-    *, trainer=None, deployment_rng=None, loop_state=None,
+    *, trainer=None, deployment_rng=None, exploration_rng=None, loop_state=None,
 ) -> None:
     out_dir = Path(checkpoint_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -106,7 +106,7 @@ def save_checkpoint(
     if value_warmup_end is not None:
         state["value_warmup_end"] = value_warmup_end
     from training.random_state import capture_random_state
-    state["rng_state"] = capture_random_state(deployment_rng)
+    state["rng_state"] = capture_random_state(deployment_rng, exploration_rng)
     if trainer is not None:
         state["trainer_state"] = trainer.checkpoint_state()
         if optimizer is None and trainer._pending_optim_state is not None:
@@ -220,6 +220,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--experiment-config", type=str, default=None,
                         help="Hash-locked tree-climb ablation recipe; --dry-run validates without launching")
     add_experiment_arguments(parser)
+    from training.exploration_windows import add_arguments
+    add_arguments(parser)
     parser.add_argument("--num-agents", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None,
                         help="Initial seed (fresh default 0); resume retains the saved random streams")
@@ -267,6 +269,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="Override recurrent SIL sampling; old resumes retain their saved/legacy mode unless specified")
     parser.add_argument("--elite-archive-resume", type=str, default=None,
                         help="Restore a full-episode archive; otherwise use the resumed checkpoint's matching snapshot")
+    parser.add_argument("--recovery-archive", action=argparse.BooleanOptionalAction, default=None,
+                        help="Independent departure/return archive and two-pool GRU SIL sampling")
+    parser.add_argument("--recovery-archive-resume", type=str, default=None,
+                        help="Initial recovery snapshot, or the resumed checkpoint's matching recovery snapshot")
+    parser.add_argument("--gru-sil-recovery-fraction", type=float, default=None,
+                        help="Recovery share of SIL candidate draws; default 0.25, elite share 0.75")
     parser.add_argument("--stop-file", type=str, default=None,
                         help="Finish the current iteration and save when this file exists")
     parser.add_argument("--torch-threads", type=int, default=None,
@@ -699,6 +707,8 @@ def main() -> None:
     configure_credit(config, args, resume_state)
     configure_reference(config, args, resume_state)
     apply_experiment_arguments(config, args, resume_state)
+    from training.exploration_windows import apply_arguments as apply_window_arguments
+    apply_window_arguments(config, args)
     from training.policy_features import experimental_enabled
     if experimental_enabled(config) and (args.resume_bc or args.recipe == "ppo-ou-sil"):
         raise ValueError("GRU/representation policies support PPO --init-from/--resume and disable legacy BC/SIL")
@@ -723,6 +733,14 @@ def main() -> None:
         config.gru_sil_sampling_mode = args.gru_sil_sampling_mode
     if args.gru_sil_cache_mb is not None:
         config.gru_sil_cache_mb = args.gru_sil_cache_mb
+    if args.recovery_archive is not None:
+        config.recovery_archive_enabled = args.recovery_archive
+    if args.gru_sil_recovery_fraction is not None:
+        config.gru_sil_recovery_fraction = args.gru_sil_recovery_fraction
+    if args.recovery_archive_resume and not config.recovery_archive_enabled:
+        raise ValueError("--recovery-archive-resume requires --recovery-archive")
+    if config.recovery_archive_enabled and not config.gru_sil_enabled:
+        raise ValueError("--recovery-archive requires GRU SIL")
     for name in ("gru_sil_max_updates", "gru_sil_budget_ratio"):
         if getattr(args, name) is not None:
             setattr(config, name, getattr(args, name))
@@ -749,6 +767,10 @@ def main() -> None:
             "training_seed": config.training_seed,
             "rng_resume_mode": ("restore" if resume_state.get("rng_state") and not args.reset_rng else "seed"),
             "delayed_exploration_enabled": config.delayed_exploration_enabled,
+            "exploration_windows_enabled": config.exploration_windows_enabled,
+            "exploration_window_floor": config.exploration_window_floor,
+            "exploration_window_anchor_scale": config.deterministic_anchor_scale,
+            "exploration_window_anchor_coef": config.exploration_window_anchor_coef,
             "normalize_action_history": config.normalize_action_history,
             "recurrent_seq_len": config.recurrent_seq_len,
             "random_deploy": config.random_deploy,
@@ -758,6 +780,11 @@ def main() -> None:
             "gru_sil_sampling_mode": config.gru_sil_sampling_mode,
             "gru_sil_max_updates": config.gru_sil_max_updates,
             "gru_sil_budget_ratio": config.gru_sil_budget_ratio,
+            "recovery_archive_enabled": config.recovery_archive_enabled,
+            "gru_sil_recovery_fraction": config.gru_sil_recovery_fraction,
+            "recovery_min_forward_m": config.recovery_min_forward_m,
+            "recovery_start_bin_m": config.recovery_start_bin_m,
+            "recovery_delta_bin_m": config.recovery_delta_bin_m,
             "gru_sil_target_kl": config.gru_sil_target_kl,
             "elite_archive_enabled": config.elite_archive_enabled,
             "elite_archive_capacity": config.elite_archive_capacity,
@@ -904,7 +931,7 @@ def main() -> None:
     if not semantics_changed and resume_state.get("trainer_state"):
         ppo_trainer.restore_checkpoint_state(resume_state["trainer_state"], model)
 
-    # Independent archive preserves the entire episode, never supplies SIL batches.
+    # Independent full episode storage; GRU SIL reconstructs each sampled prefix.
     elite_archive = None
     if config.elite_archive_enabled:
         from training.elite_archive import EliteTrajectoryArchive
@@ -919,6 +946,22 @@ def main() -> None:
                         elite_archive.restore(archive_source), archive_source)
         logger.info("Full-episode elite archive enabled (capacity=%d, legacy_SIL=%s, GRU_SIL=%s)",
                     config.elite_archive_capacity, config.sil_enabled, config.gru_sil_enabled)
+
+    recovery_archive = None
+    if config.recovery_archive_enabled:
+        from training.recovery_archive import RecoveryArchive
+        recovery_archive = RecoveryArchive(config, recorder.paths.root / "recovery", reference_fp, reference)
+        recovery_source = Path(args.recovery_archive_resume) if args.recovery_archive_resume else (
+            Path(args.resume).resolve().parent.parent / "recovery" / f"recovery_iter_{start_iteration:04d}.npz"
+            if args.resume and resume_state.get("config", {}).get("recovery_archive_enabled", False) else None)
+        if recovery_source is not None:
+            logger.info("Recovery archive restored: %d segments from %s",
+                        recovery_archive.restore(recovery_source), recovery_source)
+        if args.reset_rng:
+            ppo_trainer.gru_sil_pool_cursor = 0
+        logger.info("Two-pool SIL enabled: elite %.1f%%, recovery %.1f%%; quota cursor=%d",
+                    100*(1-config.gru_sil_recovery_fraction), 100*config.gru_sil_recovery_fraction,
+                    ppo_trainer.gru_sil_pool_cursor)
 
     # ── 加载地形数据 ──
     game_root = Path(config.game_root)
@@ -1122,7 +1165,9 @@ def main() -> None:
 
     def restore_training_rng():
         if args.resume and resume_state.get("rng_state") and not args.reset_rng:
-            restore_random_state(resume_state["rng_state"], rollout_worker._rng)
+            restore_random_state(resume_state["rng_state"], rollout_worker._rng, rollout_worker._exploration_rng)
+            if config.exploration_windows_enabled and resume_state["rng_state"].get("exploration_windows") is None:
+                logger.info("旧 checkpoint 无窗口调度状态：仅窗口独立流从 seed=%d 开始", config.training_seed)
             logger.info("恢复 Python/NumPy/Torch/CUDA/投放随机数状态，继续 checkpoint 随机序列")
         elif args.resume:
             logger.warning("%s：随机序列从 seed=%d 重新开始，不能视为不中断训练的逐步复现",
@@ -1200,12 +1245,15 @@ def main() -> None:
             if elite_archive is not None:
                 archive_stats = elite_archive.ingest(trajectories, iteration + 1)
                 recorder.stage_metrics(**archive_stats)
+            if recovery_archive is not None:
+                recorder.stage_metrics(**recovery_archive.ingest(trajectories, iteration + 1))
             if hasattr(rollout_worker, "last_feature_scales"):
                 diagnostics_dir = Path(config.checkpoint_dir) / "feature_diagnostics"
                 diagnostics_dir.mkdir(parents=True, exist_ok=True)
                 (diagnostics_dir / f"iter_{iteration + 1:04d}.json").write_text(json.dumps({
                     "feature_scales": rollout_worker.last_feature_scales,
                     "segments": rollout_worker.last_segment_trace,
+                    "exploration_windows": rollout_worker.last_exploration_windows,
                     "profile": rollout_worker.last_profile}, indent=2), encoding="utf-8")
             if args.save_rollout_inputs and buffer.size:
                 archive_dir = Path(config.checkpoint_dir) / "rollouts"
@@ -1343,13 +1391,20 @@ def main() -> None:
                 from training.gru_sil import gru_sil_update
                 gru_metrics = gru_sil_update(
                     ppo_trainer, model, elite_archive, sequence_encoder, buffer,
-                    budget_updates=int(metrics.get("n_updates", 0)), iteration=iteration + 1)
+                    budget_updates=int(metrics.get("policy_updates", metrics.get("n_updates", 0))), iteration=iteration + 1,
+                    recovery_archive=recovery_archive)
                 metrics.update(gru_metrics)
                 logger.info("GRU SIL: %d/%d updates, positive=%d/%d, KL=%.6f, rejected=%d",
                             gru_metrics["gru_sil_updates"], gru_metrics["gru_sil_budget"],
                             gru_metrics["gru_sil_positive_frames"], gru_metrics["gru_sil_sampled_frames"],
                             gru_metrics["gru_sil_kl"], gru_metrics["gru_sil_rejected_steps"])
                 recorder.save_sil_sampling(iteration + 1, ppo_trainer.last_gru_sil_sampling)
+                if recovery_archive is not None:
+                    logger.info("SIL by pool: elite candidates=%d accepted=%d positive=%d; recovery candidates=%d accepted=%d positive=%d",
+                                gru_metrics["gru_sil_elite_candidates"], gru_metrics["gru_sil_elite_updates"],
+                                gru_metrics["gru_sil_elite_accepted_positive_frames"],
+                                gru_metrics["gru_sil_recovery_candidates"], gru_metrics["gru_sil_recovery_updates"],
+                                gru_metrics["gru_sil_recovery_accepted_positive_frames"])
                 logger.info("GRU SIL cache: hits=%d misses=%d retained=%.1f MiB build=%.3fs",
                             gru_metrics["gru_sil_cache_hits"], gru_metrics["gru_sil_cache_misses"],
                             gru_metrics["gru_sil_cache_bytes"] / 1024**2,
@@ -1425,6 +1480,7 @@ def main() -> None:
                     config=config, reference_metadata=reference_meta,
                     value_warmup_end=warmup_end,
                     trainer=ppo_trainer, deployment_rng=rollout_worker._rng,
+                    exploration_rng=rollout_worker._exploration_rng,
                     loop_state=checkpoint_loop_state(),
                 )
                 if reference is None:
@@ -1435,6 +1491,8 @@ def main() -> None:
                     recorder.save_elites(sil_dataset.trajectories, iteration + 1)
                 if elite_archive is not None:
                     elite_archive.save(iteration + 1)
+                if recovery_archive is not None:
+                    recovery_archive.save(iteration + 1)
 
             if sample_target is not None and physical_samples >= sample_target:
                 logger.info("实际物理样本终点: %d >= %d，完成 %d 轮（含 critic 预热）",
@@ -1448,6 +1506,7 @@ def main() -> None:
             config=config, reference_metadata=reference_meta,
             value_warmup_end=warmup_end,
             trainer=ppo_trainer, deployment_rng=rollout_worker._rng,
+            exploration_rng=rollout_worker._exploration_rng,
             loop_state=checkpoint_loop_state(),
         )
         if recorder is not None:
@@ -1455,6 +1514,8 @@ def main() -> None:
                 recorder.save_elites(sil_dataset.trajectories, completed_iterations)
             if elite_archive is not None:
                 elite_archive.save(completed_iterations)
+            if recovery_archive is not None:
+                recovery_archive.save(completed_iterations)
             recorder.finalize("completed", last_iteration=completed_iterations)
         logger.info("PPO 训练完成")
 

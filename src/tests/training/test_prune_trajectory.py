@@ -87,8 +87,8 @@ def test_prune_preserves_metrics() -> None:
     assert abs(s_full - s_pruned) < 1e-6                 # score 一致（abs_height 峰在保留窗内）
 
     ds = TrajectoryDataset(cfg, np.ones((4, 4), dtype=np.float32), None)
-    assert ds._behavior_cell_id(pruned.raw_states, 5.0) == \
-        ds._behavior_cell_id(traj.raw_states, 5.0)       # MAP-Elites bd 不变
+    assert ds._behavior_cell_id(pruned, 5.0) == \
+        ds._behavior_cell_id(traj, 5.0)                # MAP-Elites bd 不变
 
 
 def test_prune_monotonic_rise_is_noop() -> None:
@@ -292,7 +292,7 @@ def test_corridor_behavior_cell() -> None:
     )
     traj = _make_corridor_traj(T=200, push_to=100)
     ds = TrajectoryDataset(cfg, np.ones((4, 4), dtype=np.float32), None)
-    cid = ds._behavior_cell_id(traj.raw_states, 5.0, traj.corridor_progress)
+    cid = ds._behavior_cell_id(traj, 5.0)
     # cap=99 → 状态索引 100 → x = 8.0 * 100/200 = 4.0 → cell (0, ?)
     expected_x = 8.0 * 100 / 200
     assert cid == (int(np.floor(expected_x / 5.0)), int(np.floor(2.0 * 100 / 200 / 5.0)))
